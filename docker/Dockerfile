@@ -66,8 +66,8 @@ RUN /opt/conda/condabin/conda init bash
 # RUN source /opt/conda/etc/profile.d/conda.sh
 
 # COPY scaffanweb .
-COPY ../environment.yml .
-COPY ../requirements_pip.txt .
+COPY environment.yml .
+COPY requirements_pip.txt .
 
 RUN conda env create -f environment.yml
 RUN conda list
