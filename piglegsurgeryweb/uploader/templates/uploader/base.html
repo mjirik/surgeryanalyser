@@ -1,0 +1,132 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+
+    <!-- ajax-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<!--    icons-->
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <!-- <script src='https://kit.fontawesome.com/a076d05399.js'></script> -->
+    <script type="text/javascript"> (function() { var css = document.createElement('link'); css.href = 'https://use.fontawesome.com/releases/v5.1.0/css/all.css'; css.rel = 'stylesheet'; css.type = 'text/css'; document.getElementsByTagName('head')[0].appendChild(css); })(); </script>
+
+
+
+    <link rel="stylesheet" href="{% static 'microimprocessing/main.css' %}" type="text/css" />
+    <script src="{% static 'microimprocessing/main.js' %}"></script> <!-- This is how to include a static file -->
+    <title>ScaffAn</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'microimprocessing/favicon.ico' %}"/>
+    <!-- link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous"> -->
+<!--    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">-->
+    <!-- Latest compiled and minified JavaScript -->
+<!--    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>-->
+
+    {% block head %}
+    {% endblock %}
+    <script>
+    $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+    </script>
+</head>
+
+<body>
+<!-- A grey horizontal navbar that becomes vertical on small screens -->
+<!--    <div class="jumbotron p-1">-->
+<nav class="navbar navbar-expand-sm bg-light">
+<!--<nav class="navbar navbar-default ">-->
+<!--    <div class="container-fluid">-->
+
+<!--        <div class="float-left">-->
+<!--    <a href="{% url 'microimprocessing:index' %}" >-->
+<!--        <div class="navbar-header">-->
+
+            <a class="navbar-brand" href="{% url 'login' %}" >
+                <img id="scaffanlogo" class="m-0" src="{% static 'microimprocessing/scaffan_icon512.png' %}" alt="ScaffAn">
+            </a>
+<!--        </div>-->
+<!--    <ul class="nav navbar-nav">-->
+    <ul class="navbar-nav ml-auto">
+
+        {% if user.is_authenticated %}
+        <li class="nav-item">
+            <div class="btn">
+                {{ user.username }}
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="btn btn-light" href="{% url 'microimprocessing:logout_view' %}">Logout
+<!--                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>-->
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+<!--    </div>-->
+
+</nav>
+<!--    </div>-->
+
+<!--<nav class="navbar navbar-default">-->
+<!--  <div class="container-fluid">-->
+<!--    <div class="navbar-header">-->
+<!--      <a class="navbar-brand" href="#">WebSiteName</a>-->
+<!--    </div>-->
+<!--    <ul class="nav navbar-nav">-->
+<!--      <li class="active"><a href="#">Home</a></li>-->
+<!--      <li><a href="#">Page 1</a></li>-->
+<!--      <li><a href="#">Page 2</a></li>-->
+<!--      <li><a href="#">Page 3</a></li>-->
+<!--    </ul>-->
+<!--  </div>-->
+<!--</nav>-->
+<!--    <div class="jumbotron p-0">-->
+<!--        <img id="scaffanlogo" class="m-0" src="{% static 'microimprocessing/scaffan_icon512.png' %}" alt="ScaffAn">-->
+<!--        <h1>ScaffAn</h1>-->
+<!--        <a class="btn btn-secondary ml-auto" href="{% url 'microimprocessing:logout_view' %}"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>-->
+<!--    </div>-->
+
+<!--    <div id="myDiv" class="container-fluid-xl" >-->
+    <div id="myDiv">
+<!--    <div class="container-fluid" >-->
+<!--        <div class="row content">-->
+<!--            <div class="col-md-1 sidenav bg-light">-->
+<!--                <a href="{% url 'microimprocessing:index' %}" >-->
+<!--                    <img id="scaffanlogo" class="m-0" src="{% static 'microimprocessing/scaffan_icon512.png' %}" alt="ScaffAn">-->
+<!--                </a>-->
+<!--                <p>-->
+<!--                    ahoj-->
+<!--                </p>-->
+<!--            </div>-->
+<!--            <div class="col-md-9">-->
+<!--                <div id="myDiv" class="container-fluid">-->
+<!--                <div id="myDiv" class="container">-->
+
+<!--                    <div id="appbody" class="container">-->
+                    <div id="appbody">
+<!--                        <div class="container">-->
+                            {% block body %}
+                            {% endblock %}
+                            {% block content %}
+                            {% endblock %}
+<!--                        </div>-->
+                    </div>
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+</body>
+</html>
