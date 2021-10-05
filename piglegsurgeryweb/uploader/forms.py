@@ -1,8 +1,8 @@
 from django import forms
-from .models import UploadedFile, Tag
+from .models import UploadedFile
 
 
-class ImageQuatroForm(forms.ModelForm):
+class UploadedFileForm(forms.ModelForm):
     class Meta:
         model = UploadedFile
         fields = ('email', 'mediafile')

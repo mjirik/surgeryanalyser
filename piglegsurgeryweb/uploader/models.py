@@ -1,5 +1,5 @@
 from django.db import models
-from .models_tools import upload_to_unqiue_folder
+from .models_tools import upload_to_unqiue_folder, get_output_dir
 from datetime import datetime
 
 # Create your models here.
@@ -13,3 +13,4 @@ class UploadedFile(models.Model):
         default=datetime.now
     )
     mediafile = models.FileField("Media File", upload_to=upload_to_unqiue_folder, blank=True, null=True, max_length=500)
+    outputdir = models.CharField(max_length=255, blank=True, default=get_output_dir)
