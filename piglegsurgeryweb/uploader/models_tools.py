@@ -15,6 +15,7 @@ import os.path as op
 from loguru import logger
 
 import random
+
 try:
     from hashlib import sha1 as sha_constructor
 except ImportError:
@@ -39,17 +40,18 @@ def generate_sha1(string, salt=None):
     if not salt:
         salt = str(sha_constructor(str(random.random())).hexdigest()[:5])
     import hashlib
+
     # >> > sha = hashlib.sha256()
     # >> > sha.update('somestring'.encode())
     # >> > sha.hexdigest()
-    hash = sha_constructor((salt+string).encode()).hexdigest()
+    hash = sha_constructor((salt + string).encode()).hexdigest()
 
     return hash
 
 
 def randomString(stringLength=8):
     letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(stringLength))
+    return "".join(random.choice(letters) for i in range(stringLength))
 
 
 def get_output_dir():
@@ -61,7 +63,7 @@ def get_output_dir():
     filename = op.join(
         op.expanduser(OUTPUT_DIRECTORY_PATH),
         "SA_" + datetimestr + "_" + models_tools.randomString(12),
-        "SA_" + datetimestr
+        "SA_" + datetimestr,
     )
     return filename
 
@@ -85,5 +87,5 @@ def upload_to_unqiue_folder(instance, filename):
     return op.join(
         settings.UPLOAD_RELATIVE_PATH,
         datetimestr + "_" + instance_filename + "_" + hash,
-        filename
+        filename,
     )

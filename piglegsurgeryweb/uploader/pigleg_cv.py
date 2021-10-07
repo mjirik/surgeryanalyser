@@ -8,13 +8,16 @@ def run_media_processing(filename:Path, outputdir:Path) -> dict:
     :return:
     """
     #TODO here will be tracking
+
+def run_video_processing(filename: Path, outputdir: Path) -> dict:
+    # TODO here will be tracking
     return {
         "Needle Holder Tip Track Length [m]": 123.5,
         "Needle Holder Tip Avg Velocity [ms^1]": 123.5,
     }
 
 
-def run_image_processing(filename:Path, outputdir:Path) -> dict:
+def run_image_processing(filename: Path, outputdir: Path) -> dict:
     # TODO here will be angle measurement
     return {
         "Stitch Angle 1 [°]": 0.75,
