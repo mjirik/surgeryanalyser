@@ -17,6 +17,8 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('uploader/', include('uploader.urls')),
+    path('uploader/', include('uploader.urls'
+                              # , namespace="uploader"
+                              )),
     path('admin/', admin.site.urls),
 ]

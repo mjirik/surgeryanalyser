@@ -3,7 +3,7 @@
 
 ```commandline
 docker build -t piglegsurgery .
-docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery/piglegsurgeryweb" -p 8000:8000 -p 8080:80 --name piglegsurgery piglegsurgery
+docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 8000:8000 -p 8080:80 --name piglegsurgery piglegsurgery
 ```
 
 

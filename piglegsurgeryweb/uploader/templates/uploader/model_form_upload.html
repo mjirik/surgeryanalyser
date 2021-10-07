@@ -2,7 +2,6 @@
 
 {% block body%}
 <div class="container">
-    {% if user.is_authenticated %}
     <div class="container">
         <h1>{{ headline }}</h1>
         <p class="text-danger">{{error_text}}</p>
@@ -18,6 +17,5 @@
 
         </form>
     </div>
-    {% endif %}
 </div>
 {% endblock %}

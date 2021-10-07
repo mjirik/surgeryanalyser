@@ -18,6 +18,7 @@ dependencies:
     - google-auth
     # maybe not necessary
     - google-auth-oauthlib
+    - loguru
 #    - scikit-image
 #    - scipy
 #    - io3d

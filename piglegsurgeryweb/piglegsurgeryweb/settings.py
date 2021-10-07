@@ -130,7 +130,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR/ 'media'
 STATIC_URL = '/static/'
+# use python manage.py collectstatic
+STATIC_ROOT = BASE_DIR / "static"
+# STATIC_ROOT = "static"
+# STATICFILES_DIRS = (
+#     os.path.join(BASE_DIR, "static"),
+# )
+# UPLOAD_PATH = os.path.join(MEDIA_ROOT, 'upload')
+UPLOAD_RELATIVE_PATH = 'upload'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

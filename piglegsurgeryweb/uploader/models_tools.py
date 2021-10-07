@@ -6,6 +6,13 @@ import zipfile
 from pathlib import Path
 import random
 import string
+from . import models_tools
+
+from django.conf import settings
+from datetime import datetime
+import os.path as op
+
+from loguru import logger
 
 import random
 try:
@@ -53,7 +60,7 @@ def get_output_dir():
     datetimestr = datetime.now().strftime("%Y%m%d-%H%M%S")
     filename = op.join(
         op.expanduser(OUTPUT_DIRECTORY_PATH),
-        "SA_" + datetimestr + "_" + scaffanweb_tools.randomString(12),
+        "SA_" + datetimestr + "_" + models_tools.randomString(12),
         "SA_" + datetimestr
     )
     return filename
@@ -68,7 +75,7 @@ def upload_to_unqiue_folder(instance, filename):
     logger.debug(instance)
     logger.debug(filename)
     logger.debug(instance.uploaded_at)
-    hash = scaffanweb_tools.generate_sha1(instance.uploaded_at, "_")
+    hash = models_tools.generate_sha1(instance.uploaded_at, "_")
 
     # instance_filename = Path(instance.imagefile.path).stem # sometimes the instance.imagefile does not exist
     instance_filename = Path(filename).stem

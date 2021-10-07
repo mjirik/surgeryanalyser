@@ -1,6 +1,12 @@
 from pathlib import Path
 
-def run_video_processing(filename:Path, outputdir:Path) -> dict:
+def run_media_processing(filename:Path, outputdir:Path) -> dict:
+    """
+    Based on filename suffix the processing
+    :param filename:
+    :param outputdir:
+    :return:
+    """
     #TODO here will be tracking
     return {
         "Needle Holder Tip Track Length [m]": 123.5,

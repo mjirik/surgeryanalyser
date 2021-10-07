@@ -49,51 +49,15 @@
 <!--    <a href="{% url 'uploader:index' %}" >-->
 <!--        <div class="navbar-header">-->
 
-            <a class="navbar-brand" href="{% url 'login' %}" >
                 <img id="scaffanlogo" class="m-0" src="{% static 'uploader/scaffan_icon512.png' %}" alt="ScaffAn">
-            </a>
 <!--        </div>-->
 <!--    <ul class="nav navbar-nav">-->
     <ul class="navbar-nav ml-auto">
 
-        {% if user.is_authenticated %}
-        <li class="nav-item">
-            <div class="btn">
-                {{ user.username }}
-            </div>
-        </li>
-        <li class="nav-item">
-            <a class="btn btn-light" href="{% url 'uploader:logout_view' %}">Logout
-<!--                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>-->
-            </a>
-        </li>
-        {% endif %}
     </ul>
-<!--    </div>-->
 
 </nav>
-<!--    </div>-->
 
-<!--<nav class="navbar navbar-default">-->
-<!--  <div class="container-fluid">-->
-<!--    <div class="navbar-header">-->
-<!--      <a class="navbar-brand" href="#">WebSiteName</a>-->
-<!--    </div>-->
-<!--    <ul class="nav navbar-nav">-->
-<!--      <li class="active"><a href="#">Home</a></li>-->
-<!--      <li><a href="#">Page 1</a></li>-->
-<!--      <li><a href="#">Page 2</a></li>-->
-<!--      <li><a href="#">Page 3</a></li>-->
-<!--    </ul>-->
-<!--  </div>-->
-<!--</nav>-->
-<!--    <div class="jumbotron p-0">-->
-<!--        <img id="scaffanlogo" class="m-0" src="{% static 'uploader/scaffan_icon512.png' %}" alt="ScaffAn">-->
-<!--        <h1>ScaffAn</h1>-->
-<!--        <a class="btn btn-secondary ml-auto" href="{% url 'uploader:logout_view' %}"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>-->
-<!--    </div>-->
-
-<!--    <div id="myDiv" class="container-fluid-xl" >-->
     <div id="myDiv">
 <!--    <div class="container-fluid" >-->
 <!--        <div class="row content">-->
