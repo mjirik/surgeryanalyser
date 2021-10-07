@@ -29,7 +29,7 @@ USER root
 SHELL ["/bin/bash", "--login", "-c"]
 RUN apt-get update --yes
 # PyQt5 => ffmpeg libsm6 libxext6
-RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl
+RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl supervisor
 # Install our public GPG key to trusted store
 RUN curl https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc | gpg --dearmor > conda.gpg
 RUN install -o root -g root -m 644 conda.gpg /usr/share/keyrings/conda-archive-keyring.gpg
@@ -92,7 +92,13 @@ ENV FVCORE_CACHE="/tmp"
 #WORKDIR /home/appuser/detectron2_repo
 WORKDIR /webapps
 
-CMD cd /webapps/piglegsurgery && conda run -n piglegsurgery --no-capture-output python manage.py qcluster
-CMD cd /webapps/piglegsurgery && conda run -n piglegsurgery --no-capture-output python manage.py runserver
-CMD service redis-server start && tail -F /var/log/redis/error.log
-CMD tail -f /dev/null
+RUN conda run -n piglegsurgery --no-capture-output pip install django-q
+#CMD cd /webapps/piglegsurgery/piglegsurgeryweb && conda run -n piglegsurgery --no-capture-output python manage.py qcluster
+#CMD service redis-server start && tail -F /var/log/redis/error.log
+#CMD tail -f /dev/null
+CMD cd /webapps/piglegsurgery/piglegsurgeryweb && \
+    service redis-server start && \
+#    conda run -n piglegsurgery --no-capture-output python manage.py qcluster && \
+    conda run -n piglegsurgery --no-capture-output python manage.py runserver 0:8000 && \
+
+    tail -f /dev/null
