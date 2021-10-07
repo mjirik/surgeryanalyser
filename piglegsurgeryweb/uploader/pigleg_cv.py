@@ -1,13 +1,15 @@
 from pathlib import Path
 
-def run_media_processing(filename:Path, outputdir:Path) -> dict:
+
+def run_media_processing(filename: Path, outputdir: Path) -> dict:
     """
     Based on filename suffix the processing
     :param filename:
     :param outputdir:
     :return:
     """
-    #TODO here will be tracking
+    # TODO here will be tracking
+
 
 def run_video_processing(filename: Path, outputdir: Path) -> dict:
     # TODO here will be tracking

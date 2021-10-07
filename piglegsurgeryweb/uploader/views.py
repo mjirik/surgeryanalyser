@@ -18,10 +18,12 @@ class DetailView(generic.DetailView):
 
 
 def model_form_upload(request):
-    if request.method == 'POST':
-        form = UploadedFileForm(request.POST, request.FILES,
-                               # owner=request.user
-                               )
+    if request.method == "POST":
+        form = UploadedFileForm(
+            request.POST,
+            request.FILES,
+            # owner=request.user
+        )
         if form.is_valid():
             from django_q.tasks import async_task
 
@@ -42,12 +44,11 @@ def model_form_upload(request):
             # async_task('uploader.tasks.make_thumbnail', serverfile,
             #            # hook='tasks.email_report'
             #            )
-            return redirect('/uploader/')
+            return redirect("/uploader/")
     else:
         form = UploadedFileForm()
-    return render(request, 'uploader/model_form_upload.html', {
-        'form': form,
-        "headline": "Upload",
-        "button": "Upload"
-    })
-
+    return render(
+        request,
+        "uploader/model_form_upload.html",
+        {"form": form, "headline": "Upload", "button": "Upload"},
+    )
