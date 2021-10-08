@@ -8,7 +8,11 @@ def run_media_processing(filename: Path, outputdir: Path) -> dict:
     :param outputdir:
     :return:
     """
-    # TODO here will be tracking
+    isvideo = True
+    if isvideo:
+        return run_video_processing(filename, outputdir)
+    else:
+        return run_image_processing(filename, outputdir)
 
 
 def run_video_processing(filename: Path, outputdir: Path) -> dict:
@@ -25,4 +29,3 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
         "Stitch Angle 1 [°]": 0.75,
         "Stitch Angle 2 [°]": 0.75,
     }
-    pass
