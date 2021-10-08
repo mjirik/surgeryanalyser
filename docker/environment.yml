@@ -1,6 +1,6 @@
 name: piglegsurgery
 channels:
-    - mjirik
+#    - mjirik
 #    - SimpleITK
     - conda-forge
     - anaconda
@@ -11,7 +11,7 @@ dependencies:
     - django
     - django-allauth
     - redis
-    - openslide
+#    - openslide
     - pandas>=1.1
     - google-api-python-client
     - google-auth-httplib2
