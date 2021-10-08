@@ -8,16 +8,16 @@ import os.path as op
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
 
+
 def email_media_recived(serverfile: UploadedFile):
     # async_task('django.core.mail.send_mail',
     send_mail(
-        'Media file recived',
-        'Thank you for uploading a file. We will let you know when the processing will be finished.',
-        'mjirik@kky.zcu.cz',
+        "Media file recived",
+        "Thank you for uploading a file. We will let you know when the processing will be finished.",
+        "mjirik@kky.zcu.cz",
         [serverfile.email],
         fail_silently=False,
     )
-
 
 
 def run_processing(serverfile: UploadedFile):
@@ -66,7 +66,7 @@ def run_processing(serverfile: UploadedFile):
     logger.remove(logger_id)
 
 
-def get_zip_fn(serverfile:UploadedFile):
+def get_zip_fn(serverfile: UploadedFile):
     logger.trace(f"serverfile.imagefile={serverfile.imagefile.name}")
     if not serverfile.imagefile.name:
         logger.debug(f"No file uploaded for {serverfile.imagefile}")
@@ -79,10 +79,11 @@ def get_zip_fn(serverfile:UploadedFile):
     return pth_zip
 
 
-def make_zip(serverfile:UploadedFile):
+def make_zip(serverfile: UploadedFile):
     pth_zip = get_zip_fn(serverfile)
     if pth_zip:
         import shutil
+
         # remove last letters.because of .zip is added by make_archive
         shutil.make_archive(pth_zip[:-4], "zip", serverfile.outputdir)
 
