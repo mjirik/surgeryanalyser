@@ -12,9 +12,11 @@ from .tasks import email_media_recived
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index. HAHA")
 
+
 def thanks(request):
     context = {}
-    return render(request, 'uploader/thanks.html', context)
+    return render(request, "uploader/thanks.html", context)
+
 
 class DetailView(generic.DetailView):
     model = UploadedFile
