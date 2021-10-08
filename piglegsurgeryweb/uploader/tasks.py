@@ -1,4 +1,23 @@
+from django.core.mail import send_mail
 from .models import UploadedFile
+import loguru
+from django.conf import settings
+from loguru import logger
+from pathlib import Path
+import os.path as op
+from django_q.tasks import async_task, schedule
+from django_q.models import Schedule
+
+def email_media_recived(serverfile: UploadedFile):
+    # async_task('django.core.mail.send_mail',
+    send_mail(
+        'Media file recived',
+        'Thank you for uploading a file. We will let you know when the processing will be finished.',
+        'mjirik@kky.zcu.cz',
+        [serverfile.email],
+        fail_silently=False,
+    )
+
 
 
 def run_processing(serverfile: UploadedFile):
@@ -11,28 +30,28 @@ def run_processing(serverfile: UploadedFile):
         backtrace=True,
         diagnose=True,
     )
-    delete_generated_images(
-        serverfile
-    )  # remove images from database and the output directory
-    mainapp = scaffan.algorithm.Scaffan()
-    mainapp.set_input_file(serverfile.imagefile.path)
-    mainapp.set_output_dir(serverfile.outputdir)
-    fn, _, _ = models.get_common_spreadsheet_file(serverfile.owner)
-    mainapp.set_common_spreadsheet_file(str(fn).replace("\\", "/"))
+    # delete_generated_images(
+    #     serverfile
+    # )  # remove images from database and the output directory
+    # mainapp = scaffan.algorithm.Scaffan()
+    # mainapp.set_input_file(serverfile.imagefile.path)
+    # mainapp.set_output_dir(serverfile.outputdir)
+    # fn, _, _ = models.get_common_spreadsheet_file(serverfile.owner)
+    # mainapp.set_common_spreadsheet_file(str(fn).replace("\\", "/"))
     # settings.SECRET_KEY
     logger.debug("Scaffan processing run")
-    if len(centers_mm) > 0:
-        mainapp.set_parameter("Input;Lobulus Selection Method", "Manual")
-    else:
-        mainapp.set_parameter("Input;Lobulus Selection Method", "Auto")
-    mainapp.run_lobuluses(seeds_mm=centers_mm)
-    serverfile.score = _clamp(
-        mainapp.report.df["SNI area prediction"].mean() * 0.5, 0.0, 1.0
-    )
-    serverfile.score_skeleton_length = mainapp.report.df["Skeleton length"].mean()
-    serverfile.score_branch_number = mainapp.report.df["Branch number"].mean()
-    serverfile.score_dead_ends_number = mainapp.report.df["Dead ends number"].mean()
-    serverfile.score_area = mainapp.report.df["Area"].mean()
+    # if len(centers_mm) > 0:
+    #     mainapp.set_parameter("Input;Lobulus Selection Method", "Manual")
+    # else:
+    #     mainapp.set_parameter("Input;Lobulus Selection Method", "Auto")
+    # mainapp.run_lobuluses(seeds_mm=centers_mm)
+    # serverfile.score = _clamp(
+    #     mainapp.report.df["SNI area prediction"].mean() * 0.5, 0.0, 1.0
+    # )
+    # serverfile.score_skeleton_length = mainapp.report.df["Skeleton length"].mean()
+    # serverfile.score_branch_number = mainapp.report.df["Branch number"].mean()
+    # serverfile.score_dead_ends_number = mainapp.report.df["Dead ends number"].mean()
+    # serverfile.score_area = mainapp.report.df["Area"].mean()
 
     add_generated_images(serverfile)  # add generated images to database
 
@@ -45,3 +64,29 @@ def run_processing(serverfile: UploadedFile):
     views.make_zip(serverfile)
     serverfile.save()
     logger.remove(logger_id)
+
+
+def get_zip_fn(serverfile:UploadedFile):
+    logger.trace(f"serverfile.imagefile={serverfile.imagefile.name}")
+    if not serverfile.imagefile.name:
+        logger.debug(f"No file uploaded for {serverfile.imagefile}")
+        return None
+        # file is not uploaded
+
+    nm = str(Path(serverfile.imagefile.path).name)
+    # prepare output zip file path
+    pth_zip = serverfile.outputdir + nm + ".zip"
+    return pth_zip
+
+
+def make_zip(serverfile:UploadedFile):
+    pth_zip = get_zip_fn(serverfile)
+    if pth_zip:
+        import shutil
+        # remove last letters.because of .zip is added by make_archive
+        shutil.make_archive(pth_zip[:-4], "zip", serverfile.outputdir)
+
+        serverfile.processed = True
+        pth_rel = op.relpath(pth_zip, settings.MEDIA_ROOT)
+        serverfile.zip_file = pth_rel
+        serverfile.save()

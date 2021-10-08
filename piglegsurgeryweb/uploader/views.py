@@ -6,6 +6,7 @@ from django.views import generic
 from django.http import HttpResponse
 from .models import UploadedFile
 from .forms import UploadedFileForm
+from .tasks import email_media_recived
 
 
 def index(request):
@@ -38,6 +39,7 @@ def model_form_upload(request):
             #     })
 
             serverfile = form.save()
+            email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
             # serverfile.owner = request.user
             # serverfile.save()

@@ -98,7 +98,9 @@ RUN conda run -n piglegsurgery --no-capture-output pip install django-q
 #CMD tail -f /dev/null
 CMD cd /webapps/piglegsurgery/piglegsurgeryweb && \
     service redis-server start && \
-#    conda run -n piglegsurgery --no-capture-output python manage.py qcluster && \
-    conda run -n piglegsurgery --no-capture-output python manage.py runserver 0:8000 && \
-
+#    /webapps/piglegsurgery/docker/bin/qcluster_start  & && \
+#    /webapps/piglegsurgery/docker/bin/gunicorn_start & && \
     tail -f /dev/null
+
+#    conda run -n piglegsurgery --no-capture-output python manage.py qcluster && \
+#    conda run -n piglegsurgery --no-capture-output python manage.py runserver 0:8000 && \

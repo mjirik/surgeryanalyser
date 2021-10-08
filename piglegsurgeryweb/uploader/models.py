@@ -17,3 +17,4 @@ class UploadedFile(models.Model):
         max_length=500,
     )
     outputdir = models.CharField(max_length=255, blank=True, default=get_output_dir)
+    zip_file = models.FileField(upload_to="cellimage/", blank=True, null=True)
