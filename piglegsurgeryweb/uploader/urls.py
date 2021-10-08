@@ -8,4 +8,5 @@ urlpatterns = [
     path("", views.index, name="index"),
     # path('a/', views.index, name='index2'),
     path("upload/", views.model_form_upload, name="model_form_upload"),
+    path("thanks/", views.thanks, name="thanks"),
 ]

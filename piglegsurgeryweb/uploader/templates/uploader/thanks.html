@@ -2,7 +2,10 @@
 
 {% block body%}
 <div class="container">
-    <H1>Thank you</H1>
-    <button type="button" class="btn btn-secondary">Secondary</button>
+    <H2>Thank you</H2>
+    <p>
+        Thank you for uploading media file. We will let you know when the processing will be finished.
+    </p>
+    <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
 </div>
 {% endblock %}

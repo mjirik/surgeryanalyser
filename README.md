@@ -12,8 +12,17 @@ docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" 
 
 ## Install
 
+### Ubuntu
+
 ```bash
+cd piglegsurgery
+conda env create -f docker/environment.yml
+conda activate piglegsurgery
+pip install -r docker/requirements_pip.txt
 cd piglegsurgeryweb/
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
 python manage.py runserver 0:8000
 ```
 

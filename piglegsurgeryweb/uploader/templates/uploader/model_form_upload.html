@@ -2,8 +2,54 @@
 
 {% block body%}
 <div class="container">
+
+    <h2> How it works</h2>
+    <div class="jumbotron">
+        <div class="container">
+            <div class="row justify-content-md-center align-items-center">
+                <div class="col">
+                    <p class="text-center">
+                        <i class="fas fa-upload fa-6x"></i>
+                        <br>
+                        <br>
+                        Upload image or video of surgery
+
+                    </p>
+                </div>
+                <div class="col">
+                    <p class="text-center">
+                        <i class="fas fa-long-arrow-alt-right fa-4x"></i>
+                    </p>
+                </div>
+                <div class="col">
+                    <p class="text-center">
+                        <i class="fas fa-chart-line fa-6x"></i>
+                        <br>
+                        <br>
+                        Image processing analysis is performed automatically
+                    </p>
+                </div>
+                <div class="col">
+                    <p class="text-center">
+                        <i class="fas fa-long-arrow-alt-right fa-4x"></i>
+                    </p>
+                </div>
+                <div class="col">
+                    <p class="text-center">
+                        <i class="far fa-envelope fa-6x"></i>
+                        <br>
+                        <br>
+                        Wait for an email with the results
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <div class="container">
-        <h1>{{ headline }}</h1>
+        <h2>{{ headline }}</h2>
         <p class="text-danger">{{error_text}}</p>
 
         <form method="post" enctype="multipart/form-data">
@@ -13,7 +59,6 @@
             <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
             {{ button }}
         </button>
-            <a class="btn btn-secondary" href="{% url 'uploader:index' %}">Cancel</a>
 
         </form>
     </div>
