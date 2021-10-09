@@ -20,6 +20,7 @@ dependencies:
     # maybe not necessary
     - google-auth-oauthlib
     - loguru
+    - gunicorn
 #    - scikit-image
 #    - scipy
 #    - io3d
