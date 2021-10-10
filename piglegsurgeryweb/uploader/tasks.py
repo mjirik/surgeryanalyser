@@ -13,14 +13,15 @@ def email_media_recived(serverfile: UploadedFile):
     # async_task('django.core.mail.send_mail',
     send_mail(
         "Media file recived",
-        "Thank you for uploading a file. " +
-        "Now we are in an early stage of the project when we plan to collect the data." +
-        " The outputs of the analysis will be introduced in few weeks. " +
-        "We will let you know when the processing will be finished. " +
-        "mjirik@kky.zcu.cz",
+        "Thank you for uploading a file. "
+        + "Now we are in an early stage of the project when we plan to collect the data."
+        + " The outputs of the analysis will be introduced in few weeks. "
+        + "We will let you know when the processing will be finished. "
+        + "mjirik@kky.zcu.cz",
         [serverfile.email],
         fail_silently=False,
     )
+
 
 def run_processing(serverfile: UploadedFile):
     outputdir = Path(serverfile.outputdir)
@@ -43,6 +44,7 @@ def run_processing(serverfile: UploadedFile):
     serverfile.save()
     logger.remove(logger_id)
 
+
 def email_report(serverfile: UploadedFile):
     # async_task('django.core.mail.send_mail',
     send_mail(
@@ -52,6 +54,7 @@ def email_report(serverfile: UploadedFile):
         ["miroslav.jirik@gmail.com"],
         fail_silently=False,
     )
+
 
 def run_processing2(serverfile: UploadedFile):
     log_format = loguru._defaults.LOGURU_FORMAT

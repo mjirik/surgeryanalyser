@@ -50,9 +50,9 @@ def model_form_upload(request):
             # print(f"user id={request.user.id}")
             # serverfile.owner = request.user
             # serverfile.save()
-            async_task('uploader.tasks.run_processing', serverfile,
-                       hook='tasks.email_report'
-                       )
+            async_task(
+                "uploader.tasks.run_processing", serverfile, hook="tasks.email_report"
+            )
             return redirect("/uploader/thanks/")
     else:
         form = UploadedFileForm()
