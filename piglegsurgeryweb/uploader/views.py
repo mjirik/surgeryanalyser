@@ -44,6 +44,8 @@ def model_form_upload(request):
             #     })
 
             serverfile = form.save()
+            async_task('uploader.tasks.email_media_recived', serverfile)
+
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
             # serverfile.owner = request.user
