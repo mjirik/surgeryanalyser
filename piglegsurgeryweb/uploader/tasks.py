@@ -16,7 +16,7 @@ def email_media_recived(serverfile: UploadedFile):
         "Thank you for uploading a file. "
         + "Now we are in an early stage of the project when we plan to collect the data."
         + " The outputs of the analysis will be introduced in few weeks. "
-        + "We will let you know when the processing will be finished. "
+        + "We will let you know when the processing will be finished. ",
         + "mjirik@kky.zcu.cz",
         [serverfile.email],
         fail_silently=False,
