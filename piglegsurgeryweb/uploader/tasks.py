@@ -103,13 +103,13 @@ def run_processing2(serverfile: UploadedFile):
 
 
 def get_zip_fn(serverfile: UploadedFile):
-    logger.trace(f"serverfile.imagefile={serverfile.imagefile.name}")
-    if not serverfile.imagefile.name:
-        logger.debug(f"No file uploaded for {serverfile.imagefile}")
+    logger.trace(f"serverfile.imagefile={serverfile.mediafile.name}")
+    if not serverfile.mediafile.name:
+        logger.debug(f"No file uploaded for {serverfile.mediafile}")
         return None
         # file is not uploaded
 
-    nm = str(Path(serverfile.imagefile.path).name)
+    nm = str(Path(serverfile.mediafile.path).name)
     # prepare output zip file path
     pth_zip = serverfile.outputdir + nm + ".zip"
     return pth_zip
