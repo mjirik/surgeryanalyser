@@ -34,4 +34,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 ]
 
-urlpatterns += staticfiles_urlpatterns()  # used for static files with gunicorn not for production
+urlpatterns += (
+    staticfiles_urlpatterns()
+)  # used for static files with gunicorn not for production
