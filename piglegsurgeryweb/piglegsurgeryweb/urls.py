@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
+# from ..uploader import views
 
 urlpatterns = [
     path(
@@ -24,5 +26,7 @@ urlpatterns = [
             # , namespace="uploader"
         ),
     ),
+    # path("", RedirectView.as_view(pattern_name='model_form_upload')),
+    # path("", views.model_form_upload, name="model_form_upload"),
     path("admin/", admin.site.urls),
 ]

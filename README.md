@@ -24,7 +24,15 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py collectstatic
+```
+
+Run server for development
+```commandline
 python manage.py runserver 0:8000
+```
+or run server for production (multithreaded)
+```commandline
+gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000
 ```
 
 

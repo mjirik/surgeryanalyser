@@ -13,14 +13,47 @@ def email_media_recived(serverfile: UploadedFile):
     # async_task('django.core.mail.send_mail',
     send_mail(
         "Media file recived",
-        "Thank you for uploading a file. We will let you know when the processing will be finished.",
+        "Thank you for uploading a file. " +
+        "Now we are in an early stage of the project when we plan to collect the data." +
+        " The outputs of the analysis will be introduced in few weeks. " +
+        "We will let you know when the processing will be finished. " +
         "mjirik@kky.zcu.cz",
         [serverfile.email],
         fail_silently=False,
     )
 
-
 def run_processing(serverfile: UploadedFile):
+    outputdir = Path(serverfile.outputdir)
+    outputdir.mkdir(parents=True, exist_ok=True)
+    log_format = loguru._defaults.LOGURU_FORMAT
+    logger_id = logger.add(
+        str(Path(serverfile.outputdir) / "log.txt"),
+        format=log_format,
+        level="DEBUG",
+        rotation="1 week",
+        backtrace=True,
+        diagnose=True,
+    )
+    if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
+        serverfile.zip_file.delete()
+
+    (outputdir / "empty.txt").touch(exist_ok=True)
+
+    make_zip(serverfile)
+    serverfile.save()
+    logger.remove(logger_id)
+
+def email_report(serverfile: UploadedFile):
+    # async_task('django.core.mail.send_mail',
+    send_mail(
+        "[Pig Leg Surgery]",
+        f"Finished. Email:{serverfile.email}, filename: {serverfile.mediafile}",
+        "mjirik@kky.zcu.cz",
+        ["miroslav.jirik@gmail.com"],
+        fail_silently=False,
+    )
+
+def run_processing2(serverfile: UploadedFile):
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
         str(Path(serverfile.outputdir) / "log.txt"),

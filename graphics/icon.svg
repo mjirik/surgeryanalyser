@@ -9,6 +9,9 @@
    id="svg5"
    inkscape:version="1.1 (c68e22c387, 2021-05-23)"
    sodipodi:docname="icon.svg"
+   inkscape:export-filename="C:\Users\Jirik\bitmapa.png"
+   inkscape:export-xdpi="63"
+   inkscape:export-ydpi="63"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -49,7 +52,10 @@
        width="206.16495"
        height="206.16495"
        x="2.0412371"
-       y="1.701031" />
+       y="1.701031"
+       inkscape:export-filename="C:\Users\Jirik\projects\piglegsurgery\graphics\logo512.png"
+       inkscape:export-xdpi="63"
+       inkscape:export-ydpi="63" />
     <path
        style="fill:#507cd5;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 144.81838,129.66297 32.23532,21.16946 57.73491,54.12648 -17.8016,34.15981 -61.10277,-71.92806 z"
