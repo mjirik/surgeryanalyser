@@ -56,10 +56,8 @@ def email_report(task):
     # async_task('django.core.mail.send_mail',
     send_mail(
         "[Pig Leg Surgery]",
-        f"Finished. Email:{serverfile.email}, filename: {serverfile.mediafile}" +
-        f'<a url="{serverfile.zip_file.url}">Download output here</a>'
-
-        ,
+        f"Finished. Email:{serverfile.email}, filename: {serverfile.mediafile}"
+        + f'<a url="{serverfile.zip_file.url}">Download output here</a>',
         "mjirik@kky.zcu.cz",
         ["miroslav.jirik@gmail.com"],
         fail_silently=False,
