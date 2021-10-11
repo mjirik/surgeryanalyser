@@ -60,20 +60,22 @@ def email_report(task):
     # absolute uri is http://127.0.0.1:8000/. We have to remove last '/' because the url already contains it.
     absolute_uri = task.args[1][:-1]
     # logger.debug(dir(task))
-    html_message = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'\
-                   '<html xmlns="http://www.w3.org/1999/xhtml">\n' \
-                   '<head> \n'\
-                   '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'\
-                   '<title>Order received</title>'\
-                   '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'\
-                   '</head>'\
-                   f"<body>" \
-                   f"Finished. Email: {serverfile.email}, filename: {serverfile.mediafile} " \
-                   f'<p><a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a></p>' \
-                   f'</body></html>'
+    html_message = (
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
+        '<html xmlns="http://www.w3.org/1999/xhtml">\n'
+        "<head> \n"
+        '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'
+        "<title>Order received</title>"
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
+        "</head>"
+        f"<body>"
+        f"Finished. Email: {serverfile.email}, filename: {serverfile.mediafile} "
+        f'<p><a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a></p>'
+        f"</body></html>"
+    )
 
     # f'http://127.0.0.1:8000/{request.buld_absolute_uri(serverfile.zip_file.url)}' \
-        # logger.debug(f"email_text={html_message}")
+    # logger.debug(f"email_text={html_message}")
     subject = "Pig Leg Surgery Analyser: Report"
     from_email = "mjirik@kky.zcu.cz"
     to_email = "mjirik@gapps.zcu.cz"
@@ -82,7 +84,14 @@ def email_report(task):
     # message = EmailMessage(subject, html_message, from_email, [to_email])
     # message.content_subtype = 'html'  # this is required because there is no plain text email message
     # message.send()
-    send_mail(subject,html_message, from_email, [to_email], fail_silently=False, html_message=html_message)
+    send_mail(
+        subject,
+        html_message,
+        from_email,
+        [to_email],
+        fail_silently=False,
+        html_message=html_message,
+    )
     # send_mail(
     #     "[Pig Leg Surgery]",
     #     html_message,
