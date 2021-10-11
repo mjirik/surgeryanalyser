@@ -16,9 +16,9 @@ def email_media_recived(serverfile: UploadedFile):
         "Thank you for uploading a file. \n"
         + "Now we are in an early stage of the project when we plan to collect the data."
         + " The outputs of the analysis will be introduced in few weeks. "
-        + "We will let you know when the processing will be finished. \n\n "
+        + "We will let you know when the processing will be finished. \n\n"
         + "Best regards,\n"
-        "Miroslav Jirik, Ph.D.\n"
+        "Miroslav Jirik, Ph.D.\n\n"
         "Faculty of Applied Sciences\n"
         "University of West Bohemia\n"
         "Pilsen, Czech Republic",
