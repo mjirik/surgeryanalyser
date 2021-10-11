@@ -40,6 +40,7 @@ def run_processing(serverfile: UploadedFile):
         backtrace=True,
         diagnose=True,
     )
+    logger.debug(f"Image processing of '{serverfile.mediafile}' initiated")
     if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
         serverfile.zip_file.delete()
 
@@ -95,17 +96,17 @@ def run_processing2(serverfile: UploadedFile):
     # serverfile.score_dead_ends_number = mainapp.report.df["Dead ends number"].mean()
     # serverfile.score_area = mainapp.report.df["Area"].mean()
 
-    add_generated_images(serverfile)  # add generated images to database
-
-    serverfile.processed_in_version = scaffan.__version__
-    serverfile.process_started = False
-    serverfile.last_error_message = ""
-    if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
-        serverfile.zip_file.delete()
-
-    views.make_zip(serverfile)
-    serverfile.save()
-    logger.remove(logger_id)
+    # add_generated_images(serverfile)  # add generated images to database
+    #
+    # serverfile.processed_in_version = scaffan.__version__
+    # serverfile.process_started = False
+    # serverfile.last_error_message = ""
+    # if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
+    #     serverfile.zip_file.delete()
+    #
+    # views.make_zip(serverfile)
+    # serverfile.save()
+    # logger.remove(logger_id)
 
 
 def get_zip_fn(serverfile: UploadedFile):
