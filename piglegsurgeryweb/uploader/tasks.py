@@ -50,7 +50,8 @@ def run_processing(serverfile: UploadedFile):
     logger.remove(logger_id)
 
 
-def email_report(serverfile: UploadedFile):
+def email_report(task):
+    serverfile:UploadedFile = task.args[0]
     # async_task('django.core.mail.send_mail',
     send_mail(
         "[Pig Leg Surgery]",
