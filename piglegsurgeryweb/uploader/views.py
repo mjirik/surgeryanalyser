@@ -53,6 +53,7 @@ def model_form_upload(request):
             async_task(
                 "uploader.tasks.run_processing",
                 serverfile,
+                request.build_absolute_uri("/"),
                 hook="uploader.tasks.email_report",
             )
             return redirect("/uploader/thanks/")

@@ -5,8 +5,10 @@ from django.conf import settings
 from loguru import logger
 from pathlib import Path
 import os.path as op
+from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
+from django.utils.html import strip_tags
 
 
 def email_media_recived(serverfile: UploadedFile):
@@ -28,7 +30,7 @@ def email_media_recived(serverfile: UploadedFile):
     )
 
 
-def run_processing(serverfile: UploadedFile):
+def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir = Path(serverfile.outputdir)
     outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
@@ -52,18 +54,42 @@ def run_processing(serverfile: UploadedFile):
 
 
 def email_report(task):
-    serverfile: UploadedFile = task.args[0]
-    # async_task('django.core.mail.send_mail',
-    send_mail(
-        "[Pig Leg Surgery]",
-        f"Finished. Email:{serverfile.email}, filename: {serverfile.mediafile}" +
-        f'<a url="{serverfile.zip_file.url}">Download output here</a>'
+    logger.debug("Sending email report")
 
-        ,
-        "mjirik@kky.zcu.cz",
-        ["miroslav.jirik@gmail.com"],
-        fail_silently=False,
-    )
+    serverfile: UploadedFile = task.args[0]
+    # absolute uri is http://127.0.0.1:8000/. We have to remove last '/' because the url already contains it.
+    absolute_uri = task.args[1][:-1]
+    # logger.debug(dir(task))
+    html_message = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'\
+                   '<html xmlns="http://www.w3.org/1999/xhtml">\n' \
+                   '<head> \n'\
+                   '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'\
+                   '<title>Order received</title>'\
+                   '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'\
+                   '</head>'\
+                   f"<body>" \
+                   f"Finished. Email: {serverfile.email}, filename: {serverfile.mediafile} " \
+                   f'<p><a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a></p>' \
+                   f'</body></html>'
+
+    # f'http://127.0.0.1:8000/{request.buld_absolute_uri(serverfile.zip_file.url)}' \
+        # logger.debug(f"email_text={html_message}")
+    subject = "Pig Leg Surgery Analyser: Report"
+    from_email = "mjirik@kky.zcu.cz"
+    to_email = "mjirik@gapps.zcu.cz"
+
+    # async_task('django.core.mail.send_mail',
+    # message = EmailMessage(subject, html_message, from_email, [to_email])
+    # message.content_subtype = 'html'  # this is required because there is no plain text email message
+    # message.send()
+    send_mail(subject,html_message, from_email, [to_email], fail_silently=False, html_message=html_message)
+    # send_mail(
+    #     "[Pig Leg Surgery]",
+    #     html_message,
+    #     "mjirik@kky.zcu.cz",
+    #     ["miroslav.jirik@gmail.com"],
+    #     fail_silently=False,
+    # )
 
 
 def run_processing2(serverfile: UploadedFile):
