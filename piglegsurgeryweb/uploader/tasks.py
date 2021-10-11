@@ -70,7 +70,7 @@ def email_report(task):
         "</head>"
         f"<body>"
         f"Finished. Email: {serverfile.email}, filename: {serverfile.mediafile} "
-        f'<p><a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a></p>'
+        f'<p> <a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a> </p>'
         f"</body></html>"
     )
 

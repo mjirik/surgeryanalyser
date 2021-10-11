@@ -47,7 +47,7 @@ python manage.py runserver 0:8000
 ```
 or run server for production (multithreaded)
 ```commandline
-gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000
+gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 150 --workers 3
 ```
 
 
