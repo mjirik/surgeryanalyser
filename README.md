@@ -14,6 +14,8 @@ docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" 
 
 ### Ubuntu
 
+Install prerequisites and deploy django
+
 ```bash
 cd piglegsurgery
 conda env create -f docker/environment.yml
@@ -22,8 +24,21 @@ pip install -r docker/requirements_pip.txt
 cd piglegsurgeryweb/
 python manage.py makemigrations
 python manage.py migrate
-python manage.py createsuperuser
 python manage.py collectstatic
+```
+
+Prepare admin
+```commandline
+python manage.py createsuperuser
+```
+
+Setup email parameters by creating `.env` file. 
+You will need to [generate new "application password"](https://support.google.com/accounts/answer/185833?hl=en) for gmail.
+See [django tutorial](https://www.sitepoint.com/django-send-email/) for more details.
+```ini
+EMAIL_HOST=smtp.gmail.com
+EMAIL_HOST_USER=YourEmail@address
+EMAIL_HOST_PASSWORD=YourAppPassword
 ```
 
 Run server for development
