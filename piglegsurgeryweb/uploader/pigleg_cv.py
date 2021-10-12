@@ -29,14 +29,14 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     fps = int(cap.get(cv2.CAP_PROP_FPS))
 
     frame_id = 0
-    while (cap.isOpened()):
+    while cap.isOpened():
         ret, frame = cap.read()
 
         frame_id += 1
         if not ret:
             break
         else:
-            file_name = '{}/frame_{:0>6}.png'.format(tmp_dir, frame_id)
+            file_name = "{}/frame_{:0>6}.png".format(tmp_dir, frame_id)
             cv2.imwrite(file_name, frame)
     cap.release()
 
