@@ -79,3 +79,8 @@ http://127.0.0.1:8000/uploader/
 # Contribute CV
 
 All computer vision processing is done in `piglegsurgeryweb/uploader/pigleg_cv.py`.
+
+It can be tested from command line:
+```commandline
+python piglegsurgeryweb\uploader\pigleg_cv.py "H:\biomedical\orig\pigleg_surgery\first_dataset\b6c6fb92-d8ad-4ccf-994c-5241a89a9274.mp4" "test_outpudir"
+```

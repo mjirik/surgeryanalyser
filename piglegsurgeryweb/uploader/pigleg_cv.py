@@ -55,3 +55,13 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
         "Stitch Angle 1 [°]": 0.75,
         "Stitch Angle 2 [°]": 0.75,
     }
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Process media file')
+    parser.add_argument('filename', type=str)
+    parser.add_argument('outputdir', type=str)
+    args = parser.parse_args()
+    run_media_processing(Path(args.filename), Path(args.outputdir))
