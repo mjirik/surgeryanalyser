@@ -41,13 +41,24 @@ EMAIL_HOST_USER=YourEmail@address
 EMAIL_HOST_PASSWORD=YourAppPassword
 ```
 
+Start `redis` service
+```bash
+service redis-server start
+```
+
+Run qcluster for comunicating between webapp and `redis`
+```bash
+python manage.py qcluster
+
+```
+
 Run server for development
 ```commandline
 python manage.py runserver 0:8000
 ```
 or run server for production (multithreaded)
 ```commandline
-gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 150 --workers 3
+gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 150 --workers 6
 ```
 
 

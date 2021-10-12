@@ -9,6 +9,7 @@ from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
 from django.utils.html import strip_tags
+from .pigleg_cv import run_media_processing
 
 
 def email_media_recived(serverfile: UploadedFile):
@@ -45,7 +46,11 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     logger.debug(f"Image processing of '{serverfile.mediafile}' initiated")
     if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
         serverfile.zip_file.delete()
-
+    input_file = Path(serverfile.mediafile.path)
+    logger.debug(input_file)
+    outputdir = Path(serverfile.outputdir)
+    logger.debug(outputdir)
+    run_media_processing(input_file, outputdir)
     (outputdir / "empty.txt").touch(exist_ok=True)
 
     make_zip(serverfile)

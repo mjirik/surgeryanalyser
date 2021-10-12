@@ -21,6 +21,8 @@ dependencies:
     - google-auth-oauthlib
     - loguru
     - gunicorn
+    - opencv
+    - ffmpeg
 #    - scikit-image
 #    - scipy
 #    - io3d
