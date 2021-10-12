@@ -73,3 +73,9 @@ python manage.py runserver 0:8000
 In your web browser:
 
 http://127.0.0.1:8000/uploader/
+
+
+
+# Contribute CV
+
+All computer vision processing is done in `piglegsurgeryweb/uploader/pigleg_cv.py`.
