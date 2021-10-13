@@ -27,7 +27,7 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     outputdir.mkdir(parents=True, exist_ok=True)
 
     # TODO here should be video processing with detectron2 (J. Vyskocil + Z. Krnoul)
-    tmp_dir_with_images:Path = _make_images_from_video(filename)
+    tmp_dir_with_images: Path = _make_images_from_video(filename)
 
     # TODO here should be processing of the outptut of detectron2 (Z. Krnoul)
 
