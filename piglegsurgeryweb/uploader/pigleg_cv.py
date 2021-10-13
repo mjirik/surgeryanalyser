@@ -4,7 +4,6 @@ import json
 from loguru import logger
 
 
-
 def run_media_processing(filename: Path, outputdir: Path) -> dict:
     """
     Based on filename suffix the processing
@@ -68,14 +67,13 @@ def _make_images_from_video(filename: Path) -> Path:
             logger.trace(file_name)
     cap.release()
 
-    metadata = {
-        "filename": str(filename),
-        "fps": fps}
+    metadata = {"filename": str(filename), "fps": fps}
     json_file = tmp_dir / "meta.json"
     with open(json_file, "w") as f:
         json.dump(metadata, f)
 
     return tmp_dir
+
 
 if __name__ == "__main__":
     import argparse
