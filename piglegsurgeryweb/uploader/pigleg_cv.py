@@ -79,8 +79,8 @@ def _make_images_from_video(filename: Path) -> Path:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description='Process media file')
-    parser.add_argument('filename', type=str)
-    parser.add_argument('outputdir', type=str)
+    parser = argparse.ArgumentParser(description="Process media file")
+    parser.add_argument("filename", type=str)
+    parser.add_argument("outputdir", type=str)
     args = parser.parse_args()
     run_media_processing(Path(args.filename), Path(args.outputdir))
