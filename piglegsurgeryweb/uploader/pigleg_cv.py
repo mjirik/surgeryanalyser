@@ -2,6 +2,8 @@ from pathlib import Path
 import cv2
 import json
 from loguru import logger
+from typing import Optional
+import shutil
 
 
 def run_media_processing(filename: Path, outputdir: Path) -> dict:
@@ -23,11 +25,17 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     outputdir = Path(outputdir)
     filename = Path(str(filename))
     logger.debug("Video processing initiated...")
-    logger.debug(f"File '{filename.stem}' exists={filename.exists()}")
+    logger.debug(f"File '{filename.name}' exists={filename.exists()}")
     outputdir.mkdir(parents=True, exist_ok=True)
 
     # TODO here should be video processing with detectron2 (J. Vyskočil + Z. Krňoul)
-    tmp_dir_with_images: Path = _make_images_from_video(filename)
+    tmp_dir_with_images = Path("tmp_video_processing") / filename.name
+    _make_images_from_video(filename, tmp_dir_with_images)
+
+    # Copy middle image to output dir
+    png_files = list(tmp_dir_with_images.glob("*.png"))
+    middle_img = Path(sorted(png_files)[int(len(png_files)/2)])
+    shutil.copy(str(middle_img), str(outputdir))
 
     # TODO here should be processing of the outptut of detectron2 (Z. Krňoul)
 
@@ -47,9 +55,8 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
     }
 
 
-def _make_images_from_video(filename: Path) -> Path:
-    tmp_dir = Path("tmp_video_processing") / filename.stem
-    tmp_dir.mkdir(parents=True, exist_ok=True)
+def _make_images_from_video(filename: Path, outputdir:Path) -> Path:
+    outputdir.mkdir(parents=True, exist_ok=True)
 
     cap = cv2.VideoCapture(str(filename))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -62,17 +69,15 @@ def _make_images_from_video(filename: Path) -> Path:
         if not ret:
             break
         else:
-            file_name = "{}/frame_{:0>6}.png".format(tmp_dir, frame_id)
+            file_name = "{}/frame_{:0>6}.png".format(outputdir, frame_id)
             cv2.imwrite(file_name, frame)
             logger.trace(file_name)
     cap.release()
 
     metadata = {"filename": str(filename), "fps": fps}
-    json_file = tmp_dir / "meta.json"
+    json_file = outputdir / "meta.json"
     with open(json_file, "w") as f:
         json.dump(metadata, f)
-
-    return tmp_dir
 
 
 if __name__ == "__main__":
