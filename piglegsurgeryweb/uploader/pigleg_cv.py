@@ -34,7 +34,7 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
 
     # Copy middle image to output dir
     png_files = list(tmp_dir_with_images.glob("*.png"))
-    middle_img = Path(sorted(png_files)[int(len(png_files)/2)])
+    middle_img = Path(sorted(png_files)[int(len(png_files) / 2)])
     shutil.copy(str(middle_img), str(outputdir))
 
     # TODO here should be processing of the outptut of detectron2 (Z. Krňoul)
@@ -55,7 +55,7 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
     }
 
 
-def _make_images_from_video(filename: Path, outputdir:Path) -> Path:
+def _make_images_from_video(filename: Path, outputdir: Path) -> Path:
     outputdir.mkdir(parents=True, exist_ok=True)
 
     cap = cv2.VideoCapture(str(filename))
