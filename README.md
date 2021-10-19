@@ -1,5 +1,43 @@
-# pythontemplate
+# 
 
+# Pig Leg Surgery - Computer Vision REST API
+
+```commandline
+sudo apt-get install redis
+conda install -c conda-forge rq flask loguru
+```
+
+
+start redis
+```commandline
+redis-server
+```
+
+start worker
+```commandline
+python piglegcv/worker.py
+```
+
+start rest api
+```commandline
+python piglegcv/app.py
+```
+
+
+## Test
+
+Start new image processing
+```commandline
+curl -X POST 127.0.0.1:5000/run?filename=myfile.avi
+```
+
+
+
+
+
+
+
+# Pig Leg Surgery - Web App
 
 ```commandline
 docker build -t piglegsurgery .
