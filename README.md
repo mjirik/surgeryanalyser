@@ -2,6 +2,44 @@
 
 # Pig Leg Surgery - Computer Vision REST API
 
+## With Docker
+
+Build docker
+```bash
+cd piglegcv
+docker build -t piglegcv .
+```
+
+Run from Windows
+```bash
+docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 5000:5000 --name piglegcv piglegcv 
+```
+
+Run from Linux
+```bash
+DATADIR="/home/dnn-user/data_detectron2"
+docker run --gpus all -it --rm \
+  --shm-size=8gb --env="DISPLAY" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+  -v $DATADIR:/home/appuser/data \
+  -p 5000:5000 \
+  --name=piglegcv piglegcv \
+  $1
+```
+
+
+### check Function
+
+Start new processing
+```bash
+curl -X POST 127.0.0.1:5000/run?filename=myfile.avi?outputdir=neco
+```
+
+Check it is finised
+```bash
+curl -X GET 127.0.0.1:5000/is_finished/8caa5441-4983-447f-9edc-28fbf4cdf2
+```
+
+## Run on Linux (without Docker)
 ```commandline
 sudo apt-get install redis
 conda install -c conda-forge rq flask loguru
@@ -10,7 +48,7 @@ conda install -c conda-forge rq flask loguru
 
 start redis
 ```commandline
-redis-server
+service redis-server start
 ```
 
 start worker

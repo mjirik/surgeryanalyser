@@ -1,10 +1,13 @@
+import rq.exceptions
 from rq import Queue
 from rq.job import Job
 from worker import conn
+from pathlib import Path
 from loguru import logger
 import flask
 from flask import request, jsonify, render_template
 import time
+from pigleg_cv import run_media_processing
 
 
 app = flask.Flask(__name__)
@@ -13,7 +16,8 @@ q = Queue(connection=conn)
 
 def do_computer_vision(filename, outputdir):
     logger.debug(f"working on {filename}, outputdir={outputdir}")
-    time.sleep(30)
+    run_media_processing(Path(filename), Path(outputdir))
+    # time.sleep(10)
     logger.debug("work finished")
 
 
@@ -54,7 +58,11 @@ def index():
 def get_results(job_key):
     logger.debug(job_key)
 
-    job = Job.fetch(job_key, connection=conn)
+    try:
+        job = Job.fetch(job_key, connection=conn)
+    except rq.exceptions.NoSuchJobError as e:
+        logger.debug(f"Job not found. Job ID={job_key}")
+        return jsonify(False)
     logger.debug(f"job finished={job.is_finished}")
 
     return jsonify(job.is_finished)
@@ -65,4 +73,8 @@ def get_results(job_key):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        debug=True,
+        host='0.0.0.0',
+        port=5000
+    )
