@@ -18,11 +18,7 @@ from extern.sort import sort
 
 CFG = {
     "output_dir": "./__OUTPUT__/",
-    "SORT": {
-        "max_age": 4,           # int
-        "min_hits": 6,          # int
-        "iou_threshold": 0.0    # float
-    }
+    "SORT": {"max_age": 4, "min_hits": 6, "iou_threshold": 0.0},  # int  # int  # float
 }
 
 
@@ -55,10 +51,21 @@ class CustomPredictor(DefaultPredictor):
                 original_image = original_image[:, :, ::-1]
             height, width = original_image.shape[:2]
 
-            image = T.Resize((
-                int(height * CFG['R-CNN']['INPUT']['RESIZE']['RELATIVE']['ratio']),
-                int(width * CFG['R-CNN']['INPUT']['RESIZE']['RELATIVE']['ratio'])
-            )).get_transform(original_image).apply_image(original_image)
+            image = (
+                T.Resize(
+                    (
+                        int(
+                            height
+                            * CFG["R-CNN"]["INPUT"]["RESIZE"]["RELATIVE"]["ratio"]
+                        ),
+                        int(
+                            width * CFG["R-CNN"]["INPUT"]["RESIZE"]["RELATIVE"]["ratio"]
+                        ),
+                    )
+                )
+                .get_transform(original_image)
+                .apply_image(original_image)
+            )
 
             if self.input_format == "L":
                 image = torch.as_tensor(np.ascontiguousarray(image))
@@ -88,34 +95,38 @@ def get_detectron_cfg() -> CfgNode:
     cfg = get_cfg()
 
     # model specification
-    cfg.merge_from_file(model_zoo.get_config_file(f"COCO-Detection/{CFG['R-CNN']['model']}.yaml"))
-    cfg.MODEL.WEIGHTS = CFG['R-CNN']['weights']
-    cfg.MODEL.ROI_HEADS.NUM_CLASSES = CFG['DATA']['num_classes']
+    cfg.merge_from_file(
+        model_zoo.get_config_file(f"COCO-Detection/{CFG['R-CNN']['model']}.yaml")
+    )
+    cfg.MODEL.WEIGHTS = CFG["R-CNN"]["weights"]
+    cfg.MODEL.ROI_HEADS.NUM_CLASSES = CFG["DATA"]["num_classes"]
 
     # proposals of bounding boxes
-    cfg.MODEL.ANCHOR_GENERATOR.ASPECT_RATIOS = CFG['R-CNN']['ANCHOR']['aspect_ratios']
-    cfg.MODEL.ANCHOR_GENERATOR.SIZES = CFG['R-CNN']['ANCHOR']['sizes']
+    cfg.MODEL.ANCHOR_GENERATOR.ASPECT_RATIOS = CFG["R-CNN"]["ANCHOR"]["aspect_ratios"]
+    cfg.MODEL.ANCHOR_GENERATOR.SIZES = CFG["R-CNN"]["ANCHOR"]["sizes"]
 
     # input image
-    cfg.INPUT.FORMAT = CFG['R-CNN']['INPUT']['format']
+    cfg.INPUT.FORMAT = CFG["R-CNN"]["INPUT"]["format"]
 
     # which dataset shall be used for training and validation
     cfg.DATASETS.TRAIN = ()
     cfg.DATASETS.TEST = ()
 
     # evaluation
-    cfg.TEST.DETECTIONS_PER_IMAGE = CFG['DATA']['max_dets']
+    cfg.TEST.DETECTIONS_PER_IMAGE = CFG["DATA"]["max_dets"]
 
     # dataloader
-    cfg.DATALOADER.NUM_WORKERS = CFG['DATA']['num_workers']
+    cfg.DATALOADER.NUM_WORKERS = CFG["DATA"]["num_workers"]
 
     # batch size
-    cfg.SOLVER.IMS_PER_BATCH = CFG['SOLVER']['batch_size']
+    cfg.SOLVER.IMS_PER_BATCH = CFG["SOLVER"]["batch_size"]
 
     # output path
-    prefix = "" if (CFG['OUTPUT']['prefix'] == "") else f"{CFG['OUTPUT']['prefix']}_"
-    suffix = "" if (CFG['OUTPUT']['suffix'] == "") else f"_{CFG['OUTPUT']['suffix']}"
-    cfg.OUTPUT_DIR = os.path.join(CFG['output_dir'], 'tracker', f"{prefix}{CFG['R-CNN']['model']}{suffix}")
+    prefix = "" if (CFG["OUTPUT"]["prefix"] == "") else f"{CFG['OUTPUT']['prefix']}_"
+    suffix = "" if (CFG["OUTPUT"]["suffix"] == "") else f"_{CFG['OUTPUT']['suffix']}"
+    cfg.OUTPUT_DIR = os.path.join(
+        CFG["output_dir"], "tracker", f"{prefix}{CFG['R-CNN']['model']}{suffix}"
+    )
 
     # check if output path exists
     output_orig = cfg.OUTPUT_DIR
@@ -128,7 +139,7 @@ def get_detectron_cfg() -> CfgNode:
 
 
 def read_img(img_name: str):
-    if CFG['R-CNN']['INPUT']['format'] == "L":  # greyscale
+    if CFG["R-CNN"]["INPUT"]["format"] == "L":  # greyscale
         img = cv2.imread(img_name, cv2.IMREAD_GRAYSCALE)
     else:
         img = cv2.imread(img_name)
@@ -138,15 +149,19 @@ def read_img(img_name: str):
 
 def save_json(data: dict, output_json: str):
     os.makedirs(os.path.dirname(output_json), exist_ok=True)
-    with open(output_json, 'w') as output_file:
+    with open(output_json, "w") as output_file:
         json.dump(data, output_file)
 
 
-def tracking_sort(predictor: CustomPredictor, tracker: sort.Sort, imgs_path: str, output_dir: str):
+def tracking_sort(
+    predictor: CustomPredictor, tracker: sort.Sort, imgs_path: str, output_dir: str
+):
     track_id_last = 1
     final_tracks = list()
 
-    for img_id, img_name in enumerate([os.path.join(imgs_path, i) for i in os.listdir(imgs_path)], start=1):
+    for img_id, img_name in enumerate(
+        [os.path.join(imgs_path, i) for i in os.listdir(imgs_path)], start=1
+    ):
         # read an image and predict
         img = read_img(img_name)
         outputs = predictor(img)
@@ -161,11 +176,13 @@ def tracking_sort(predictor: CustomPredictor, tracker: sort.Sort, imgs_path: str
         # init
         if img_id == 1:
             # codec selection
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
             fps = 30
 
             height, width, channels = img.shape
-            video = cv2.VideoWriter(os.path.join(output_dir, 'video.avi'), fourcc, fps, (width, height))
+            video = cv2.VideoWriter(
+                os.path.join(output_dir, "video.avi"), fourcc, fps, (width, height)
+            )
 
         # check if the last track id is in the list of all tracks for current image
         skip_wrong_tracks = True if track_id_last in [i[4] for i in tracks] else False
@@ -188,13 +205,22 @@ def tracking_sort(predictor: CustomPredictor, tracker: sort.Sort, imgs_path: str
 
             # draw detection
             cv2.rectangle(
-                img, (int(track[0]) - 1, int(track[1]) - 1), (int(track[2]) - 1, int(track[3]) - 1), color, thickness=2
+                img,
+                (int(track[0]) - 1, int(track[1]) - 1),
+                (int(track[2]) - 1, int(track[3]) - 1),
+                color,
+                thickness=2,
             )
 
             # draw track ID, coordinates: bottom-left
             cv2.putText(
-                img, str(track[4]), (int(track[0]) - 2, int(track[3]) - 2), cv2.FONT_HERSHEY_SIMPLEX, fontScale=1,
-                color=color, thickness=2
+                img,
+                str(track[4]),
+                (int(track[0]) - 2, int(track[3]) - 2),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=1,
+                color=color,
+                thickness=2,
             )
 
         # save image to the video
@@ -204,25 +230,35 @@ def tracking_sort(predictor: CustomPredictor, tracker: sort.Sort, imgs_path: str
         final_tracks.append(filtered_tracks)
 
     # destroy all windows and release the video
-    #cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
     video.release()
 
     # save the final tracks to the json file
-    save_json({"tracks": final_tracks}, os.path.join(output_dir, 'tracks.json'))
+    save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
 
 
 if __name__ == "__main__":
     # Parse commandline
-    parser = argparse.ArgumentParser(description='Tracking the objects using MOT methods.')
+    parser = argparse.ArgumentParser(
+        description="Tracking the objects using MOT methods."
+    )
 
     # Optional arguments
-    parser.add_argument('-pre', '--prefix', type=str, default='', help='Prefix for the output.')
-    parser.add_argument('-suf', '--suffix', type=str, default='', help='Suffix for the output.')
-    parser.add_argument('-out', '--output_dir', type=str, default='', help='Output directory.')
+    parser.add_argument(
+        "-pre", "--prefix", type=str, default="", help="Prefix for the output."
+    )
+    parser.add_argument(
+        "-suf", "--suffix", type=str, default="", help="Suffix for the output."
+    )
+    parser.add_argument(
+        "-out", "--output_dir", type=str, default="", help="Output directory."
+    )
 
     # Positional arguments
-    parser.add_argument('model_dir', type=str, help='Path to the directory with a model.')
-    parser.add_argument('imgs_dir', type=str, help='Path to the images to be tracked.')
+    parser.add_argument(
+        "model_dir", type=str, help="Path to the directory with a model."
+    )
+    parser.add_argument("imgs_dir", type=str, help="Path to the images to be tracked.")
 
     # Parsing arguments
     args = parser.parse_args()
@@ -234,18 +270,22 @@ if __name__ == "__main__":
         CFG.update(json.load(json_file))
 
     if os.path.exists(os.path.join(args.model_dir, "last_checkpoint")):
-        with open(os.path.join(args.model_dir, "last_checkpoint"), "r") as checkpoint_file:
-            CFG['R-CNN']['weights'] = os.path.join(args.model_dir, checkpoint_file.readline())
+        with open(
+            os.path.join(args.model_dir, "last_checkpoint"), "r"
+        ) as checkpoint_file:
+            CFG["R-CNN"]["weights"] = os.path.join(
+                args.model_dir, checkpoint_file.readline()
+            )
 
     # update the optional arguments
-    if args.prefix is not '':
-        CFG['OUTPUT']['prefix'] = args.prefix
+    if args.prefix is not "":
+        CFG["OUTPUT"]["prefix"] = args.prefix
 
-    if args.suffix is not '':
-        CFG['OUTPUT']['suffix'] = args.suffix
+    if args.suffix is not "":
+        CFG["OUTPUT"]["suffix"] = args.suffix
 
-    if args.output_dir is not '':
-        CFG['output_dir'] = args.output_dir
+    if args.output_dir is not "":
+        CFG["output_dir"] = args.output_dir
 
     # get the detectron2 configuration and create an output directory
     cfg = get_detectron_cfg()
@@ -259,7 +299,9 @@ if __name__ == "__main__":
 
     # use the SORT method for tracking the objects
     mot_tracker = sort.Sort(
-        max_age=CFG['SORT']['max_age'], min_hits=CFG['SORT']['min_hits'], iou_threshold=CFG['SORT']['iou_threshold']
+        max_age=CFG["SORT"]["max_age"],
+        min_hits=CFG["SORT"]["min_hits"],
+        iou_threshold=CFG["SORT"]["iou_threshold"],
     )
 
     # get tracks
