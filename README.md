@@ -22,8 +22,7 @@ docker run --gpus all -it --rm \
   --shm-size=8gb --env="DISPLAY" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
   -v $DATADIR:/home/appuser/data \
   -p 5000:5000 \
-  --name=piglegcv piglegcv \
-  $1
+  --name=piglegcv piglegcv
 ```
 
 
