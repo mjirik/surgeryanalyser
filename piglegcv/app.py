@@ -10,13 +10,14 @@ import time
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
 
+
 def do_computer_vision(filename, outputdir):
     logger.debug(f"working on {filename}, outputdir={outputdir}")
     time.sleep(30)
     logger.debug("work finished")
 
 
-@app.route('/run', methods=['GET', 'POST'])
+@app.route("/run", methods=["GET", "POST"])
 def index():
     logger.debug("index in progress")
     results = {}
@@ -28,9 +29,9 @@ def index():
         # url = request.form['filename']
         logger.debug(request.form)
         logger.debug(request.args)
-        filename = request.args.get('filename')
+        filename = request.args.get("filename")
 
-        outputdir = request.args.get('outputdir')
+        outputdir = request.args.get("outputdir")
         # if not url[:8].startswith(('https://', 'http://')):
         #     url = 'http://' + url
 
@@ -42,16 +43,14 @@ def index():
         logger.debug(job_id)
         return jsonify(job_id)
         # return jsonify("Ok")
-    return jsonify({}) # "Ok", 100
-
-
+    return jsonify({})  # "Ok", 100
 
     # return render_template('index.html', results=results)
     # return
     # yield promise
 
 
-@app.route("/is_finished/<job_key>", methods=['GET'])
+@app.route("/is_finished/<job_key>", methods=["GET"])
 def get_results(job_key):
     logger.debug(job_key)
 
