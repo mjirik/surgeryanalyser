@@ -2,7 +2,7 @@
 
 # Pig Leg Surgery - Computer Vision REST API
 
-## With Docker
+## REST API With Docker
 
 Build docker
 ```bash
@@ -27,19 +27,20 @@ docker run --gpus all -it --rm \
 ```
 
 
-### check Function
+### Check function
 
 Start new processing
 ```bash
-curl -X POST 127.0.0.1:5000/run?filename=myfile.avi?outputdir=neco
+curl -X POST 127.0.0.1:5000/run?filename=myfile.avi?outputdir=myoutpudir
 ```
+It will return the hash id of process like `8caa5441-4983-447f-9edc-28fbf4cdf2`
 
-Check it is finised
+Check if processing is finised
 ```bash
 curl -X GET 127.0.0.1:5000/is_finished/8caa5441-4983-447f-9edc-28fbf4cdf2
 ```
 
-## Run on Linux (without Docker)
+## Run REST API on Linux (without Docker)
 ```commandline
 sudo apt-get install redis
 conda install -c conda-forge rq flask loguru
@@ -62,17 +63,14 @@ python piglegcv/app.py
 ```
 
 
-## Test
+## Just run the computer vision algorithm
 
-Start new image processing
-```commandline
-curl -X POST 127.0.0.1:5000/run?filename=myfile.avi
+All computer vision processing is done in `piglegcv/pigleg_cv.py`.
+
+It can be tested from command line:
+```bash
+python piglegcv/pigleg_cv.py "H:\biomedical\orig\pigleg_surgery\first_dataset\b6c6fb92-d8ad-4ccf-994c-5241a89a9274.mp4" "test_outpudir"
 ```
-
-
-
-
-
 
 
 # Pig Leg Surgery - Web App
@@ -81,9 +79,6 @@ curl -X POST 127.0.0.1:5000/run?filename=myfile.avi
 docker build -t piglegsurgery .
 docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 8000:8000 -p 8080:80 --name piglegsurgery piglegsurgery
 ```
-
-
-# In docker
 
 
 ## Install
@@ -152,11 +147,4 @@ http://127.0.0.1:8000/uploader/
 
 
 
-# Contribute CV
-
-All computer vision processing is done in `piglegsurgeryweb/uploader/pigleg_cv.py`.
-
-It can be tested from command line:
-```commandline
-python piglegsurgeryweb\uploader\pigleg_cv.py "H:\biomedical\orig\pigleg_surgery\first_dataset\b6c6fb92-d8ad-4ccf-994c-5241a89a9274.mp4" "test_outpudir"
 ```
