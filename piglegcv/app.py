@@ -41,7 +41,8 @@ def index():
 
         # time.sleep(10)
         job = q.enqueue_call(
-            func=do_computer_vision, args=(filename, outputdir), result_ttl=5000
+            func=do_computer_vision, args=(filename, outputdir), result_ttl=5000,
+            job_timeout=3600,
         )
         job_id = job.get_id()
         logger.debug(job_id)
