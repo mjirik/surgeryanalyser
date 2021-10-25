@@ -30,7 +30,7 @@ docker run --gpus all -it --rm \
 
 Start new processing
 ```bash
-curl -X POST 127.0.0.1:5000/run?filename=myfile.avi?outputdir=myoutpudir
+curl -X POST 127.0.0.1:5000/run?filename=myfile.avi&outputdir=myoutpudir
 ```
 It will return the hash id of process like `8caa5441-4983-447f-9edc-28fbf4cdf2`
 
