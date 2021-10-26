@@ -8,7 +8,7 @@ import flask
 from flask import request, jsonify, render_template
 import time
 from pigleg_cv import run_media_processing
-
+from run_tracker_lite import main_tracker
 
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
@@ -16,7 +16,9 @@ q = Queue(connection=conn)
 
 def do_computer_vision(filename, outputdir):
     logger.debug(f"working on {filename}, outputdir={outputdir}")
-    run_media_processing(Path(filename), Path(outputdir))
+
+    main_tracker("./tracker_model {} --output_dir {}".format(filename, outputdir))
+    #run_media_processing(Path(filename), Path(outputdir))
     # time.sleep(10)
     logger.debug("work finished")
 

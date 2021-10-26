@@ -5,6 +5,9 @@ import torch
 import argparse
 import numpy as np
 
+#from matplotlib.backends.backend_pdf import PdfPages
+#import matplotlib.pyplot as plt
+
 from detectron2.data import transforms as T
 
 from detectron2 import model_zoo
@@ -152,18 +155,115 @@ def save_json(data: dict, output_json: str):
     with open(output_json, "w") as output_file:
         json.dump(data, output_file)
 
+def create_pdf_report(track, output_file_name):
+
+    N = len(track)
+    #data = []
+    t = []
+    x = []
+    y = []
+    for i, frame in enumerate(track):
+        if frame != []:
+            box = np.array(frame[0])
+            #data.append([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+            t.append(i)
+            x.append(np.mean([box[0],box[2]]))
+            y.append(np.mean([box[1],box[3]]))
+
+
+    #plt.imshow(image[:,:,::-1])
+    #plt.plot(x, y,'b')
+    #plt.plot(x[0], y[0],'go')
+    #plt.plot(x[-1], y[-1],'ro')
+    #plt.show()
+
+    #plt.plot(t_gt, x_gt, 'r')
+    #plt.plot(t_gt, y_gt, 'b')
+    #plt.plot(t, x, 'r:')
+    #plt.plot(t, y, 'b:')
+
+    #plt.show()
+
+
+    # Create the PdfPages object to which we will save the pages:
+    # The with statement makes sure that the PdfPages object is closed properly at
+    # the end of the block, even if an Exception occurs.
+    with PdfPages(output_file_name) as pdf:
+        plt.figure(figsize=(3, 3))
+        plt.plot(range(7), [3, 1, 4, 1, 5, 9, 2], 'r-o')
+        plt.title('Page One')
+        pdf.savefig()  # saves the current figure into a pdf page
+        plt.close()
+
+        plt.rc('text', usetex=True)
+        plt.figure(figsize=(8, 6))
+        x = np.arange(0, 5, 0.1)
+        plt.plot(x, np.sin(x), 'b-')
+        plt.title('Page Two')
+        pdf.savefig()
+        plt.close()
+
+        plt.rc('text', usetex=False)
+        fig = plt.figure(figsize=(4, 5))
+        plt.plot(x, x*x, 'ko')
+        plt.title('Page Three')
+        pdf.savefig(fig)  # or you can pass a Figure object to pdf.savefig
+        plt.close()
+
+        # We can also set the file's metadata via the PdfPages object:
+        d = pdf.infodict()
+        d['Title'] = 'Multipage PDF Example'
+        d['Author'] = u'Jouni K. Sepp\xe4nen'
+        d['Subject'] = 'How to create a multipage pdf file and set its metadata'
+        d['Keywords'] = 'PdfPages multipage keywords author title subject'
+        d['CreationDate'] = datetime.datetime(2009, 11, 13)
+        d['ModDate'] = datetime.datetime.today()
+
 
 def tracking_sort(
-    predictor: CustomPredictor, tracker: sort.Sort, imgs_path: str, output_dir: str
+    predictor: CustomPredictor, tracker: sort.Sort, filename: str, output_dir: str
 ):
     track_id_last = 1
     final_tracks = list()
 
-    for img_id, img_name in enumerate(
-        [os.path.join(imgs_path, i) for i in os.listdir(imgs_path)], start=1
-    ):
-        # read an image and predict
-        img = read_img(img_name)
+    cap = cv2.VideoCapture(str(filename))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+
+
+    init = True
+    j = 0
+    while cap.isOpened():
+        ret, img = cap.read()
+        j += 1
+        if not ret:
+            break
+
+        if j > 150:
+            break
+
+        # init
+        if init:
+            init = False
+
+            #QR code
+            det = cv2.QRCodeDetector()
+            #OpenCV encodes the frames in the BGR order by default.
+            retval, points, _ = det.detectAndDecode(img[:,:,::-1])
+            print(retval, points)
+            #return()
+            pix_size = 27.0 / np.linalg.norm(points[0,0:1,:]-points[0,1:2,:])
+            print('pix_size', pix_size)
+
+
+            # codec selection
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            fps = 30
+
+            height, width, channels = img.shape
+            video = cv2.VideoWriter(
+                os.path.join(output_dir, "video.avi"), fourcc, fps, (width, height)
+            )
+
         outputs = predictor(img)
         outputs = outputs["instances"].to("cpu")
 
@@ -173,16 +273,7 @@ def tracking_sort(
         # update SORT
         tracks = tracker.update(dets)
 
-        # init
-        if img_id == 1:
-            # codec selection
-            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-            fps = 30
 
-            height, width, channels = img.shape
-            video = cv2.VideoWriter(
-                os.path.join(output_dir, "video.avi"), fourcc, fps, (width, height)
-            )
 
         # check if the last track id is in the list of all tracks for current image
         skip_wrong_tracks = True if track_id_last in [i[4] for i in tracks] else False
@@ -231,13 +322,19 @@ def tracking_sort(
 
     # destroy all windows and release the video
     # cv2.destroyAllWindows()
-    video.release()
+    if not init:
+        video.release()
 
     # save the final tracks to the json file
     save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
 
+    #process data
+    #create_pdf_report(final_tracks, os.path.join(output_dir, "report.pdf"))
 
-if __name__ == "__main__":
+
+
+#if __name__ == "__main__":
+def main_tracker(commandline):
     # Parse commandline
     parser = argparse.ArgumentParser(
         description="Tracking the objects using MOT methods."
@@ -258,10 +355,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "model_dir", type=str, help="Path to the directory with a model."
     )
-    parser.add_argument("imgs_dir", type=str, help="Path to the images to be tracked.")
+    parser.add_argument("filename", type=str, help="video file.")
 
     # Parsing arguments
-    args = parser.parse_args()
+    args = parser.parse_args(commandline.split(" "))
 
     # ==================================================================================================================
 
@@ -284,11 +381,15 @@ if __name__ == "__main__":
     if args.suffix is not "":
         CFG["OUTPUT"]["suffix"] = args.suffix
 
-    if args.output_dir is not "":
-        CFG["output_dir"] = args.output_dir
+    #if args.output_dir is not "":
+        #CFG["output_dir"] = args.output_dir
 
     # get the detectron2 configuration and create an output directory
     cfg = get_detectron_cfg()
+
+    if args.output_dir is not "":
+        cfg["output_dir"] = args.output_dir
+
     os.makedirs(cfg.OUTPUT_DIR)
 
     # save the used configuration (for training, testing...)
@@ -305,4 +406,4 @@ if __name__ == "__main__":
     )
 
     # get tracks
-    tracking_sort(predictor, mot_tracker, args.imgs_dir, cfg.OUTPUT_DIR)
+    tracking_sort(predictor, mot_tracker, args.filename, cfg.OUTPUT_DIR)
