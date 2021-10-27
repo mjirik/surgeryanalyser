@@ -20,7 +20,6 @@ def do_computer_vision(filename, outputdir):
 
     main_tracker("./tracker_model {} --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
-    requests.g
     time.sleep(10)
     logger.debug("work finished")
 
