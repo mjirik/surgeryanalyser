@@ -44,6 +44,7 @@ def index():
 
         # time.sleep(10)
         if not Path(filename).exists():
+            logger.debug(f"File does not exist. filename={filename}")
             return jsonify({"error": "File does not exists."})
 
         job = q.enqueue_call(
@@ -51,7 +52,7 @@ def index():
             timeout=3600,
         )
         job_id = job.get_id()
-        logger.debug(job_id)
+        logger.debug(f"Job enqueued, job_id={job_id}")
         return jsonify(job_id)
         # return jsonify("Ok")
     return jsonify({})  # "Ok", 100
