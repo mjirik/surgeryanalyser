@@ -51,7 +51,7 @@ ENV FVCORE_CACHE="/tmp"
 
 #ENTRYPOINT ["/home/appuser/run_tracker_lite.sh"]
 USER root
-RUN apt-get install -y redis ffmpeg vim
+RUN apt-get update && apt-get install -y redis ffmpeg vim
 
 USER appuser
 
