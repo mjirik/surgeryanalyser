@@ -335,6 +335,7 @@ def tracking_sort(
 
 #if __name__ == "__main__":
 def main_tracker(commandline):
+    print("main_tracker: initiated")
     # Parse commandline
     parser = argparse.ArgumentParser(
         description="Tracking the objects using MOT methods."

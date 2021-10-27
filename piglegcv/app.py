@@ -21,7 +21,7 @@ def do_computer_vision(filename, outputdir):
     main_tracker("./tracker_model {} --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
     time.sleep(10)
-    logger.debug("work finished")
+    logger.debug("Work finished")
 
 
 @app.route("/run", methods=["GET", "POST"])
@@ -81,7 +81,7 @@ def get_results(job_key):
     except rq.exceptions.NoSuchJobError as e:
         logger.debug(f"Job not found. Job ID={job_key}")
         return jsonify(False)
-    logger.debug(f"job finished={job.is_finished}")
+    logger.debug(f"Job finished. job_id={job.is_finished}")
 
     return jsonify(job.is_finished)
     # if job.is_finished:
