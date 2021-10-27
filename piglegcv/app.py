@@ -9,6 +9,7 @@ from flask import request, jsonify, render_template
 import time
 from pigleg_cv import run_media_processing
 from run_tracker_lite import main_tracker
+import requests
 
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
@@ -19,7 +20,8 @@ def do_computer_vision(filename, outputdir):
 
     main_tracker("./tracker_model {} --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
-    # time.sleep(10)
+    requests.g
+    time.sleep(10)
     logger.debug("work finished")
 
 
@@ -42,6 +44,9 @@ def index():
         #     url = 'http://' + url
 
         # time.sleep(10)
+        if not Path(filename).exists():
+            return jsonify({"error": "File does not exists."})
+
         job = q.enqueue_call(
             func=do_computer_vision, args=(filename, outputdir), result_ttl=5000,
             job_timeout=3600,
@@ -55,6 +60,13 @@ def index():
     # return render_template('index.html', results=results)
     # return
     # yield promise
+
+@app.route("/exists", methods=["GET", "POST"])
+def exists():
+    if request.method == "POST":
+        filename = request.args.get("filename")
+        return jsonify(Path(filename).exists())
+    return jsonify({})
 
 
 @app.route("/is_finished/<job_key>", methods=["GET"])

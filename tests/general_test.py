@@ -15,7 +15,7 @@ local_dir = Path(__file__).parent
 def test_pigleg_cv():
     logger.debug("test init")
     import piglegsurgeryweb
-    from piglegsurgeryweb.uploader import pigleg_cv
+    from piglegcv import pigleg_cv
 
     # media_pth = Path(
     #     r"H:\biomedical\orig\pigleg_surgery\first_dataset\b6c6fb92-d8ad-4ccf-994c-5241a89a9274.mp4"
