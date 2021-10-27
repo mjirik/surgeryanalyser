@@ -5,11 +5,13 @@ from django.conf import settings
 from loguru import logger
 from pathlib import Path
 import os.path as op
+import requests
+import time
 from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
 from django.utils.html import strip_tags
-from .pigleg_cv import run_media_processing
+# from .pigleg_cv import run_media_processing
 
 
 def email_media_recived(serverfile: UploadedFile):
@@ -30,6 +32,24 @@ def email_media_recived(serverfile: UploadedFile):
         fail_silently=False,
     )
 
+def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
+
+    # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
+    query = {
+        "filename": str(input_file),
+        "outputdir": str(outputdir),
+    }
+    response = requests.post('http://127.0.0.1:5000/run', params=query)
+    hash = response.json()
+    finished = False
+    while not finished:
+        response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
+                                # params=query
+                                )
+        finished = response.json()
+        time.sleep(10)
+
+    logger.debug("Finished")
 
 def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir = Path(serverfile.outputdir)
@@ -50,7 +70,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     logger.debug(input_file)
     outputdir = Path(serverfile.outputdir)
     logger.debug(outputdir)
-    run_media_processing(input_file, outputdir)
+    _run_media_processing_rest_api(input_file, outputdir)
     (outputdir / "empty.txt").touch(exist_ok=True)
 
     make_zip(serverfile)

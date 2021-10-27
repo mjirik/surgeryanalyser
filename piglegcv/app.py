@@ -48,7 +48,7 @@ def index():
 
         job = q.enqueue_call(
             func=do_computer_vision, args=(filename, outputdir), result_ttl=5000,
-            job_timeout=3600,
+            timeout=3600,
         )
         job_id = job.get_id()
         logger.debug(job_id)
@@ -64,7 +64,10 @@ def index():
 def exists():
     if request.method == "POST":
         filename = request.args.get("filename")
-        return jsonify(Path(filename).exists())
+        exists = Path(filename).exists()
+        logger.debug(f"exists={exists}")
+        return jsonify(exists)
+        # return jsonify({"exists": exists})
     return jsonify({})
 
 
