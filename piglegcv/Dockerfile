@@ -51,7 +51,7 @@ ENV FVCORE_CACHE="/tmp"
 
 #ENTRYPOINT ["/home/appuser/run_tracker_lite.sh"]
 USER root
-RUN apt-get install -y redis ffmpeg
+RUN apt-get install -y redis ffmpeg vim
 
 USER appuser
 
@@ -65,7 +65,7 @@ COPY ./run_services.sh .
 
 #CMD ["./data/images"]
 CMD cd /home/appuser/ && \
-    ./run_services.sh && \
+#    ./run_services.sh && \
     tail -f /dev/null
 
 #    sudo service redis-server start && \
