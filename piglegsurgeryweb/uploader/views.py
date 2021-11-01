@@ -14,9 +14,29 @@ def index(request):
 
 
 def thanks(request):
-    context = {}
+    context = {
+        'headline': "Thank You",
+        'text': "Thank you for uploading media file. We will let you know when the processing will be finished."
+    }
     return render(request, "uploader/thanks.html", context)
 
+def run(request, filename_id):
+    serverfile = get_object_or_404(UploadedFile, pk=filename_id)
+
+    from django_q.tasks import async_task
+    async_task(
+        "uploader.tasks.run_processing",
+        serverfile,
+        request.build_absolute_uri("/"),
+        hook="uploader.tasks.email_report",
+    )
+    context = {}
+    context = {
+        'headline': "Processing started",
+        'text': f"Processing file {serverfile.mediafile}. The output will be stored in {serverfile.outputdir}."
+    }
+    return render(request, "uploader/thanks.html", context)
+    # return redirect("/uploader/upload/")
 
 class DetailView(generic.DetailView):
     model = UploadedFile

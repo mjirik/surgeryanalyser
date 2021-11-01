@@ -95,7 +95,14 @@ def email_report(task):
         "</head>"
         f"<body>"
         f"Finished. Email: {serverfile.email}, filename: {serverfile.mediafile} "
-        f'<p> <a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a> </p>'
+        f'<p> <a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a> .</p>\n'
+        f'<p>Best regards</p>\n'
+        f'<p>Miroslav Jirik</p>\n'
+        f'<p></p>'
+        "<p>Faculty of Applied Sciences</p\n"
+        "<p>University of West Bohemia</p>\n"
+        "<p>Pilsen, Czech Republic</p>\n"
+        "<p>mjirik@kky.zcu.cz</p>\n"
         f"</body></html>"
     )
 

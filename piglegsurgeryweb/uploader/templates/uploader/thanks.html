@@ -2,9 +2,9 @@
 
 {% block body%}
 <div class="container">
-    <H2>Thank you</H2>
+    <H2>{{ headline }} </H2>
     <p>
-        Thank you for uploading media file. We will let you know when the processing will be finished.
+        {{ text }}
     </p>
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
 </div>
