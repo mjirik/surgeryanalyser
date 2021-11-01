@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 
 #from matplotlib.backends.backend_pdf import PdfPages
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from detectron2.data import transforms as T
 
@@ -124,19 +124,20 @@ def get_detectron_cfg() -> CfgNode:
     # batch size
     cfg.SOLVER.IMS_PER_BATCH = CFG["SOLVER"]["batch_size"]
 
-    # output path
-    prefix = "" if (CFG["OUTPUT"]["prefix"] == "") else f"{CFG['OUTPUT']['prefix']}_"
-    suffix = "" if (CFG["OUTPUT"]["suffix"] == "") else f"_{CFG['OUTPUT']['suffix']}"
-    cfg.OUTPUT_DIR = os.path.join(
-        CFG["output_dir"], "tracker", f"{prefix}{CFG['R-CNN']['model']}{suffix}"
-    )
+    ## output path
+    cfg.OUTPUT_DIR = CFG["output_dir"]
+    #prefix = "" if (CFG["OUTPUT"]["prefix"] == "") else f"{CFG['OUTPUT']['prefix']}_"
+    #suffix = "" if (CFG["OUTPUT"]["suffix"] == "") else f"_{CFG['OUTPUT']['suffix']}"
+    #cfg.OUTPUT_DIR = os.path.join(
+        #CFG["output_dir"], "tracker", f"{prefix}{CFG['R-CNN']['model']}{suffix}"
+    #)
 
-    # check if output path exists
-    output_orig = cfg.OUTPUT_DIR
-    idx = 1
-    while os.path.exists(cfg.OUTPUT_DIR):
-        cfg.OUTPUT_DIR = f"{output_orig}__{idx}"
-        idx += 1
+    ## check if output path exists
+    #output_orig = cfg.OUTPUT_DIR
+    #idx = 1
+    #while os.path.exists(cfg.OUTPUT_DIR):
+        #cfg.OUTPUT_DIR = f"{output_orig}__{idx}"
+        #idx += 1
 
     return cfg
 
@@ -155,27 +156,39 @@ def save_json(data: dict, output_json: str):
     with open(output_json, "w") as output_file:
         json.dump(data, output_file)
 
-def create_pdf_report(track, output_file_name):
+def create_pdf_report(track, image, output_file_name, output_file_name2):
 
     N = len(track)
     #data = []
     t = []
-    x = []
-    y = []
+    data = []
+    dist = []
     for i, frame in enumerate(track):
         if frame != []:
             box = np.array(frame[0])
             #data.append([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
             t.append(i)
-            x.append(np.mean([box[0],box[2]]))
-            y.append(np.mean([box[1],box[3]]))
+            position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+            data.append(position)
+            
+            if i == 0:
+                dist.append(0.0)
+            else:
+                dist.append(np.linalg.norm(position_last - position))
+                
+            position_last = position
+            
 
-
+    
+    
     #plt.imshow(image[:,:,::-1])
     #plt.plot(x, y,'b')
     #plt.plot(x[0], y[0],'go')
     #plt.plot(x[-1], y[-1],'ro')
+    plt.plot(t, dist,'-')
+    
     #plt.show()
+    plt.savefig(output_file_name)
 
     #plt.plot(t_gt, x_gt, 'r')
     #plt.plot(t_gt, y_gt, 'b')
@@ -189,35 +202,37 @@ def create_pdf_report(track, output_file_name):
     # The with statement makes sure that the PdfPages object is closed properly at
     # the end of the block, even if an Exception occurs.
     #with PdfPages(output_file_name) as pdf:
-    #    plt.figure(figsize=(3, 3))
-    #    plt.plot(range(7), [3, 1, 4, 1, 5, 9, 2], 'r-o')
-    #    plt.title('Page One')
-    #    pdf.savefig()  # saves the current figure into a pdf page
-    #    plt.close()
+    #fig =   plt.figure(figsize=(3, 3))
+    #plt.plot(range(7), [3, 1, 4, 1, 5, 9, 2], 'r-o')
+    #plt.title('Page One')
+    #pdf.savefig()  # saves the current figure into a pdf page
+    #fig.savefig('myplot.pdf', transparent=True)
+    #plt.savefig(output_file_name)
+    #plt.close()
 
-    #    plt.rc('text', usetex=True)
-    #    plt.figure(figsize=(8, 6))
-    #    x = np.arange(0, 5, 0.1)
-    #    plt.plot(x, np.sin(x), 'b-')
-    #    plt.title('Page Two')
-    #    pdf.savefig()
-    #    plt.close()
+       #plt.rc('text', usetex=True)
+       #plt.figure(figsize=(8, 6))
+       #x = np.arange(0, 5, 0.1)
+       #plt.plot(x, np.sin(x), 'b-')
+       #plt.title('Page Two')
+       #pdf.savefig()
+       #plt.close()
 
-    #    plt.rc('text', usetex=False)
-    #    fig = plt.figure(figsize=(4, 5))
-    #    plt.plot(x, x*x, 'ko')
-    #    plt.title('Page Three')
-    #    pdf.savefig(fig)  # or you can pass a Figure object to pdf.savefig
-    #    plt.close()
+       #plt.rc('text', usetex=False)
+       #fig = plt.figure(figsize=(4, 5))
+       #plt.plot(x, x*x, 'ko')
+       #plt.title('Page Three')
+       #pdf.savefig(fig)  # or you can pass a Figure object to pdf.savefig
+       #plt.close()
 
-        # We can also set the file's metadata via the PdfPages object:
-    #    d = pdf.infodict()
-    #    d['Title'] = 'Multipage PDF Example'
-    #    d['Author'] = u'Jouni K. Sepp\xe4nen'
-    #    d['Subject'] = 'How to create a multipage pdf file and set its metadata'
-    #    d['Keywords'] = 'PdfPages multipage keywords author title subject'
-    #    d['CreationDate'] = datetime.datetime(2009, 11, 13)
-    #    d['ModDate'] = datetime.datetime.today()
+       # We can also set the file's metadata via the PdfPages object:
+       #d = pdf.infodict()
+       #d['Title'] = 'Multipage PDF Example'
+       #d['Author'] = u'Jouni K. Sepp\xe4nen'
+       #d['Subject'] = 'How to create a multipage pdf file and set its metadata'
+       #d['Keywords'] = 'PdfPages multipage keywords author title subject'
+       #d['CreationDate'] = datetime.datetime(2009, 11, 13)
+       #d['ModDate'] = datetime.datetime.today()
 
 
 def tracking_sort(
@@ -238,8 +253,8 @@ def tracking_sort(
         if not ret:
             break
 
-        if j > 150:
-            break
+        #if j > 150:
+            #break
 
         # init
         if init:
@@ -249,11 +264,14 @@ def tracking_sort(
             det = cv2.QRCodeDetector()
             #OpenCV encodes the frames in the BGR order by default.
             retval, points, _ = det.detectAndDecode(img[:,:,::-1])
-            print(retval, points)
+            #print(retval, points)
             #return()
-            pix_size = 27.0 / np.linalg.norm(points[0,0:1,:]-points[0,1:2,:])
+            if points is None:
+                pix_size = 1.0
+            else:
+                pix_size = 27.0 / np.linalg.norm(points[0,0:1,:]-points[0,1:2,:])
             print('pix_size', pix_size)
-
+            img_first = img
 
             # codec selection
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -316,7 +334,7 @@ def tracking_sort(
 
         # save image to the video
         video.write(img)
-
+        
         # store the final tracks to the list
         final_tracks.append(filtered_tracks)
 
@@ -329,7 +347,7 @@ def tracking_sort(
     save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
 
     #process data
-    #create_pdf_report(final_tracks, os.path.join(output_dir, "report.pdf"))
+    create_pdf_report(final_tracks, img_first, os.path.join(output_dir, "report.pdf"), os.path.join(output_dir, "report_2.pdf"))
 
 
 
@@ -382,16 +400,14 @@ def main_tracker(commandline):
     if args.suffix is not "":
         CFG["OUTPUT"]["suffix"] = args.suffix
 
-    #if args.output_dir is not "":
-        #CFG["output_dir"] = args.output_dir
+    if args.output_dir is not "":
+        CFG["output_dir"] = args.output_dir
 
     # get the detectron2 configuration and create an output directory
     cfg = get_detectron_cfg()
 
-    if args.output_dir is not "":
-        cfg["output_dir"] = args.output_dir
-
-    os.makedirs(cfg.OUTPUT_DIR)
+    
+    #os.makedirs(cfg.OUTPUT_DIR)
 
     # save the used configuration (for training, testing...)
     save_json(CFG, os.path.join(cfg.OUTPUT_DIR, "config.json"))
