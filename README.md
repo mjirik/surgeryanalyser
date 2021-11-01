@@ -118,17 +118,17 @@ service redis-server start
 
 Run qcluster for comunicating between webapp and `redis`
 ```bash
-python manage.py qcluster
+python manage.py qcluster |& tee -a ~/piglegcv/logs/qcluster_log.txt
 
 ```
 
 Run server for development
-```commandline
-python manage.py runserver 0:8000
+```bash
+python manage.py runserver 0:8000 |& tee -a ~/piglegcv/logs/runserver_log.txt
 ```
 or run server for production (multithreaded)
-```commandline
-gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 150 --workers 6
+```bash
+gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 150 --workers 5 |& tee -a ~/piglegcv/logs/gunicorn_log.txt
 ```
 
 
