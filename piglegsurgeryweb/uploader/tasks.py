@@ -35,6 +35,7 @@ def email_media_recived(serverfile: UploadedFile):
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
+    logger.debug("Creating request for processing")
     query = {
         "filename": str(input_file),
         "outputdir": str(outputdir),
@@ -43,13 +44,15 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
     hash = response.json()
     finished = False
     while not finished:
+        time.sleep(30)
         response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
                                 # params=query
                                 )
         finished = response.json()
-        time.sleep(10)
+        logger.debug(f".    finished={finished}")
 
-    logger.debug("Finished")
+
+    logger.debug(f"Finished. finished={finished}")
 
 def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir = Path(serverfile.outputdir)
@@ -67,10 +70,11 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
         serverfile.zip_file.delete()
     input_file = Path(serverfile.mediafile.path)
-    logger.debug(input_file)
+    logger.debug(f"input_file={input_file}")
     outputdir = Path(serverfile.outputdir)
-    logger.debug(outputdir)
+    logger.debug(f"outputdir={outputdir}")
     _run_media_processing_rest_api(input_file, outputdir)
+    logger.debug(f"")
     (outputdir / "empty.txt").touch(exist_ok=True)
 
     make_zip(serverfile)
