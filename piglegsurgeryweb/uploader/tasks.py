@@ -80,6 +80,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
 
     make_zip(serverfile)
     serverfile.save()
+    add_generated_images(serverfile)
     logger.remove(logger_id)
 
 
