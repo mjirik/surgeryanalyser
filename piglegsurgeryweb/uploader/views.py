@@ -1,13 +1,15 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
+from pathlib import Path
 
 # Create your views here.
 
 from django.http import HttpResponse
 from .models import UploadedFile
 from .forms import UploadedFileForm
+from .models_tools import randomString
 from .tasks import email_media_recived
-
+# from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index. HAHA")
@@ -19,6 +21,23 @@ def thanks(request):
         'text': "Thank you for uploading media file. We will let you know when the processing will be finished."
     }
     return render(request, "uploader/thanks.html", context)
+
+def reset_hashes(request):
+    files = UploadedFile.objects.all()
+    for file in files:
+        file.hash = randomString(12)
+        file.save()
+    return redirect("/uploader/thanks/")
+
+
+def web_report(request, filename_hash:str):
+    # fn = get_outputdir_from_hash(hash)
+    serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    context = {
+        'serverfile': serverfile,
+        'mediafile': Path(serverfile.mediafile.name).name
+    }
+    return render(request,'uploader/web_report.html', context)
 
 def run(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)

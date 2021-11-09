@@ -53,6 +53,24 @@ def randomString(stringLength=8):
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for i in range(stringLength))
 
+# def get_outputdir_from_hash(hash:str):
+#     OUTPUT_DIRECTORY_PATH = settings.MEDIA_ROOT
+#
+#     fnid = hash.split('_')
+#     datetimestr = fnid[-2]
+#     randomstring = fnid[-1]
+#
+#     filename = op.join(
+#         op.expanduser(OUTPUT_DIRECTORY_PATH),
+#         "SA_" + datetimestr + "_" + models_tools.randomString(12),
+#         "SA_" + datetimestr,
+#         )
+#     return filename
+#
+# def get_hash_from_output_dir(filename):
+#     hash = Path(filename).parent.name
+#     return hash
+
 
 def get_output_dir():
     #

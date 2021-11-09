@@ -1,5 +1,5 @@
 from django.core.mail import send_mail
-from .models import UploadedFile
+from .models import UploadedFile, BitmapImage
 import loguru
 from django.conf import settings
 from loguru import logger
@@ -7,6 +7,7 @@ from pathlib import Path
 import os.path as op
 import requests
 import time
+import glob
 from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
@@ -195,6 +196,24 @@ def get_zip_fn(serverfile: UploadedFile):
     pth_zip = serverfile.outputdir + nm + ".zip"
     return pth_zip
 
+def add_generated_images(serverfile:UploadedFile):
+    # serverfile.bitmap_image_set.all().delete()
+    od = Path(serverfile.outputdir)
+    logger.debug(od)
+    lst = glob.glob(str(od / "*.png"))
+    # lst.extend(glob.glob(str(od / "slice_label.png")))
+    # lst.extend(sorted(glob.glob(str(od / "*.png"))))
+    lst.extend(sorted(glob.glob(str(od / "*.PNG"))))
+    # lst.extend(glob.glob(str(od / "sinusoidal_tissue_local_centers.png")))
+    # lst.extend(sorted(glob.glob(str(od / "lobulus_[0-9]*.png"))))
+    lst.extend(sorted(glob.glob(str(od / "*.jpg"))))
+    lst.extend(sorted(glob.glob(str(od / "*.JPG"))))
+    logger.debug(lst)
+
+    for fn in lst:
+        pth_rel = op.relpath(fn, settings.MEDIA_ROOT)
+        bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)
+        bi.save()
 
 def make_zip(serverfile: UploadedFile):
     pth_zip = get_zip_fn(serverfile)
