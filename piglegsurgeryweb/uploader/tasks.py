@@ -99,8 +99,10 @@ def email_report(task):
         '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
         "</head>"
         f"<body>"
-        f"Finished. Email: {serverfile.email}, filename: {serverfile.mediafile} "
-        f'<p> <a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a> .</p>\n'
+        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {serverfile.mediafile}</p>"
+        f'<p></p>'
+        f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Download report here</a> .</p>\n'
+        f'<p></p>'
         f'<p>Best regards</p>\n'
         f'<p>Miroslav Jirik</p>\n'
         f'<p></p>'
@@ -110,6 +112,8 @@ def email_report(task):
         "<p>mjirik@kky.zcu.cz</p>\n"
         f"</body></html>"
     )
+
+    # f'<p> <a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a> .</p>\n'
 
     # f'http://127.0.0.1:8000/{request.buld_absolute_uri(serverfile.zip_file.url)}' \
     # logger.debug(f"email_text={html_message}")
