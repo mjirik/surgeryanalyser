@@ -13,7 +13,7 @@
 {% block body%}
 <div class="container">
     <H2> Report: {{mediafile}} </H2>
-    <H3> </H3>
+
 <!--    <p>-->
 <!--        {{ serverfile.mediafile.name }}-->
 <!--    </p>-->
@@ -44,6 +44,6 @@
     </div>
 
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
-    <a class="btn btn-primary" href='{{serverfile.zipfile.url}}'> Download </a>
+    <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report</a>
 </div>
 {% endblock %}

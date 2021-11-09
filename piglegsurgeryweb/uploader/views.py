@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from pathlib import Path
 
+from loguru import logger
 # Create your views here.
 
 from django.http import HttpResponse
@@ -33,9 +34,12 @@ def reset_hashes(request):
 def web_report(request, filename_hash:str):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    logger.debug(serverfile.zip_file.url)
+    image_list = serverfile.bitmapimage_set.all()
     context = {
         'serverfile': serverfile,
-        'mediafile': Path(serverfile.mediafile.name).name
+        'mediafile': Path(serverfile.mediafile.name).name,
+        'image_list': image_list
     }
     return render(request,'uploader/web_report.html', context)
 
@@ -49,7 +53,6 @@ def run(request, filename_id):
         request.build_absolute_uri("/"),
         hook="uploader.tasks.email_report",
     )
-    context = {}
     context = {
         'headline': "Processing started",
         'text': f"Processing file {serverfile.mediafile}. The output will be stored in {serverfile.outputdir}."

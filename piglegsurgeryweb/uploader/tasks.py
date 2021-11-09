@@ -8,6 +8,8 @@ import os.path as op
 import requests
 import time
 import glob
+import json
+import traceback
 from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
@@ -41,7 +43,14 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
         "filename": str(input_file),
         "outputdir": str(outputdir),
     }
-    response = requests.post('http://127.0.0.1:5000/run', params=query)
+    try:
+        response = requests.post('http://127.0.0.1:5000/run', params=query)
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        logger.debug("REST API processing not finished. Connection refused.")
+        return
+    logger.debug("Checking if processing is finished...")
+
     hash = response.json()
     finished = False
     while not finished:
@@ -53,7 +62,8 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
         logger.debug(f".    finished={finished}")
 
 
-    logger.debug(f"Finished. finished={finished}")
+    logger.debug(f"REST API processing finished.")
+
 
 def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir = Path(serverfile.outputdir)
@@ -78,14 +88,45 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     logger.debug(f"")
     (outputdir / "empty.txt").touch(exist_ok=True)
 
+    if input_file.suffix in (".mp4", ".avi"):
+        _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
+    add_generated_images(serverfile)
+
     make_zip(serverfile)
     serverfile.save()
-    add_generated_images(serverfile)
+    logger.debug("Processing finished")
     logger.remove(logger_id)
 
 
+
+def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> Path:
+    import cv2
+    outputdir.mkdir(parents=True, exist_ok=True)
+
+    cap = cv2.VideoCapture(str(filename))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+
+    frame_id = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        frame_id += 1
+        if frame_id > n_frames:
+            break
+        if not ret:
+            break
+        else:
+            file_name = "{}/frame_{:0>6}.png".format(outputdir, frame_id)
+            cv2.imwrite(file_name, frame)
+            logger.trace(file_name)
+    cap.release()
+
+    metadata = {"filename": str(filename), "fps": fps}
+    json_file = outputdir / "meta.json"
+    with open(json_file, "w") as f:
+        json.dump(metadata, f)
+
 def email_report(task):
-    logger.debug("Sending email report")
+    logger.debug("Sending email report...")
 
     serverfile: UploadedFile = task.args[0]
     # absolute uri is http://127.0.0.1:8000/. We have to remove last '/' because the url already contains it.
@@ -134,6 +175,7 @@ def email_report(task):
         fail_silently=False,
         html_message=html_message,
     )
+    logger.debug("Email sent.")
     # send_mail(
     #     "[Pig Leg Surgery]",
     #     html_message,
