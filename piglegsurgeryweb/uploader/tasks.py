@@ -1,5 +1,5 @@
 from django.core.mail import send_mail
-from .models import UploadedFile
+from .models import UploadedFile, BitmapImage
 import loguru
 from django.conf import settings
 from loguru import logger
@@ -7,6 +7,9 @@ from pathlib import Path
 import os.path as op
 import requests
 import time
+import glob
+import json
+import traceback
 from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
@@ -40,7 +43,14 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
         "filename": str(input_file),
         "outputdir": str(outputdir),
     }
-    response = requests.post('http://127.0.0.1:5000/run', params=query)
+    try:
+        response = requests.post('http://127.0.0.1:5000/run', params=query)
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        logger.debug("REST API processing not finished. Connection refused.")
+        return
+    logger.debug("Checking if processing is finished...")
+
     hash = response.json()
     finished = False
     while not finished:
@@ -52,7 +62,8 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
         logger.debug(f".    finished={finished}")
 
 
-    logger.debug(f"Finished. finished={finished}")
+    logger.debug(f"REST API processing finished.")
+
 
 def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir = Path(serverfile.outputdir)
@@ -77,13 +88,45 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     logger.debug(f"")
     (outputdir / "empty.txt").touch(exist_ok=True)
 
+    if input_file.suffix in (".mp4", ".avi"):
+        _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
+    add_generated_images(serverfile)
+
     make_zip(serverfile)
     serverfile.save()
+    logger.debug("Processing finished")
     logger.remove(logger_id)
 
 
+
+def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> Path:
+    import cv2
+    outputdir.mkdir(parents=True, exist_ok=True)
+
+    cap = cv2.VideoCapture(str(filename))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+
+    frame_id = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        frame_id += 1
+        if frame_id > n_frames:
+            break
+        if not ret:
+            break
+        else:
+            file_name = "{}/frame_{:0>6}.png".format(outputdir, frame_id)
+            cv2.imwrite(file_name, frame)
+            logger.trace(file_name)
+    cap.release()
+
+    metadata = {"filename": str(filename), "fps": fps}
+    json_file = outputdir / "meta.json"
+    with open(json_file, "w") as f:
+        json.dump(metadata, f)
+
 def email_report(task):
-    logger.debug("Sending email report")
+    logger.debug("Sending email report...")
 
     serverfile: UploadedFile = task.args[0]
     # absolute uri is http://127.0.0.1:8000/. We have to remove last '/' because the url already contains it.
@@ -98,8 +141,10 @@ def email_report(task):
         '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
         "</head>"
         f"<body>"
-        f"Finished. Email: {serverfile.email}, filename: {serverfile.mediafile} "
-        f'<p> <a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a> .</p>\n'
+        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {serverfile.mediafile}</p>"
+        f'<p></p>'
+        f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Download report here</a> .</p>\n'
+        f'<p></p>'
         f'<p>Best regards</p>\n'
         f'<p>Miroslav Jirik</p>\n'
         f'<p></p>'
@@ -109,6 +154,8 @@ def email_report(task):
         "<p>mjirik@kky.zcu.cz</p>\n"
         f"</body></html>"
     )
+
+    # f'<p> <a href="{absolute_uri}{serverfile.zip_file.url}">Download report here</a> .</p>\n'
 
     # f'http://127.0.0.1:8000/{request.buld_absolute_uri(serverfile.zip_file.url)}' \
     # logger.debug(f"email_text={html_message}")
@@ -128,6 +175,7 @@ def email_report(task):
         fail_silently=False,
         html_message=html_message,
     )
+    logger.debug("Email sent.")
     # send_mail(
     #     "[Pig Leg Surgery]",
     #     html_message,
@@ -195,6 +243,24 @@ def get_zip_fn(serverfile: UploadedFile):
     pth_zip = serverfile.outputdir + nm + ".zip"
     return pth_zip
 
+def add_generated_images(serverfile:UploadedFile):
+    # serverfile.bitmap_image_set.all().delete()
+    od = Path(serverfile.outputdir)
+    logger.debug(od)
+    lst = glob.glob(str(od / "*.png"))
+    # lst.extend(glob.glob(str(od / "slice_label.png")))
+    # lst.extend(sorted(glob.glob(str(od / "*.png"))))
+    lst.extend(sorted(glob.glob(str(od / "*.PNG"))))
+    # lst.extend(glob.glob(str(od / "sinusoidal_tissue_local_centers.png")))
+    # lst.extend(sorted(glob.glob(str(od / "lobulus_[0-9]*.png"))))
+    lst.extend(sorted(glob.glob(str(od / "*.jpg"))))
+    lst.extend(sorted(glob.glob(str(od / "*.JPG"))))
+    logger.debug(lst)
+
+    for fn in lst:
+        pth_rel = op.relpath(fn, settings.MEDIA_ROOT)
+        bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)
+        bi.save()
 
 def make_zip(serverfile: UploadedFile):
     pth_zip = get_zip_fn(serverfile)

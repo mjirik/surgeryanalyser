@@ -10,4 +10,6 @@ urlpatterns = [
     path("upload/", views.model_form_upload, name="model_form_upload"),
     path("thanks/", views.thanks, name="thanks"),
     path('<int:filename_id>/run/', views.run, name='run'), # used for debugging purposes
+    path('web_report/<str:filename_hash>/', views.web_report, name='web_report'),  # used for debugging purposes
+    path("reset_hashes/", views.reset_hashes, name="reset_hashes"),
 ]

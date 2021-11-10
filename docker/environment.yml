@@ -23,6 +23,7 @@ dependencies:
     - gunicorn
     - opencv
     - ffmpeg
+    - pillow
 #    - scikit-image
 #    - scipy
 #    - io3d
