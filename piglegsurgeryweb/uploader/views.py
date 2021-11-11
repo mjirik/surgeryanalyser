@@ -55,6 +55,11 @@ def show_report_list(request):
 def web_report(request, filename_hash:str):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    fn = Path(serverfile.zip_file.path)
+    logger.debug(fn)
+    logger.debug(fn.exists())
+    if not fn.exists():
+        return render(request, 'uploader/thanks.html', {"headline": "File not exists", "text": "Requested file is probably under processing now."})
     logger.debug(serverfile.zip_file.url)
     image_list = serverfile.bitmapimage_set.all()
     context = {
