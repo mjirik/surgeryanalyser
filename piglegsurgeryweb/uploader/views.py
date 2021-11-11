@@ -6,7 +6,7 @@ from loguru import logger
 # Create your views here.
 
 from django.http import HttpResponse
-from .models import UploadedFile
+from .models import UploadedFile, _hash
 from .forms import UploadedFileForm
 from .models_tools import randomString
 from .tasks import email_media_recived
@@ -26,10 +26,19 @@ def thanks(request):
 def reset_hashes(request):
     files = UploadedFile.objects.all()
     for file in files:
-        file.hash = randomString(12)
+        file.hash = _hash()
         file.save()
     return redirect("/uploader/thanks/")
 
+def resend_report_email(request, filename_id):
+    serverfile = get_object_or_404(UploadedFile, pk=filename_id)
+    from django_q.tasks import async_task
+    async_task(
+        "uploader.tasks.email_report",
+        serverfile,
+        request.build_absolute_uri("/"),
+    )
+    return redirect("/uploader/thanks/")
 
 def web_report(request, filename_hash:str):
     # fn = get_outputdir_from_hash(hash)

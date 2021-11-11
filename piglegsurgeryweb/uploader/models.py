@@ -1,9 +1,14 @@
 from django.db import models
-from .models_tools import upload_to_unqiue_folder, get_output_dir, randomString
+from .models_tools import upload_to_unqiue_folder, get_output_dir, randomString, generate_sha1
 from datetime import datetime
 import os.path as op
 
 # Create your models here.
+
+def _hash():
+    dt = datetime.now.strftime("%Y-%m-%d %H:%M:%S.%f")
+    hash = generate_sha1(dt, salt=randomString())
+    return hash
 
 
 class UploadedFile(models.Model):
@@ -19,7 +24,7 @@ class UploadedFile(models.Model):
     )
     outputdir = models.CharField(max_length=255, blank=True, default=get_output_dir)
     zip_file = models.FileField(upload_to="cellimage/", blank=True, null=True)
-    hash = models.CharField(max_length=255, blank=True,default=randomString)
+    hash = models.CharField(max_length=255, blank=True, default=_hash)
 
 class BitmapImage(models.Model):
     server_datafile = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
@@ -28,3 +33,4 @@ class BitmapImage(models.Model):
     @property
     def filename(self):
         return op.basename(self.bitmap_image.name)
+

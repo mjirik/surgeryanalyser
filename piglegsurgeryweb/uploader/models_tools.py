@@ -5,6 +5,7 @@ import os
 import zipfile
 from pathlib import Path
 import random
+import secrets
 import string
 from . import models_tools
 
@@ -38,7 +39,7 @@ def generate_sha1(string, salt=None):
     """
     string = str(string)
     if not salt:
-        salt = str(sha_constructor(str(random.random())).hexdigest()[:5])
+        salt = str(sha_constructor(str(secrets.random())).hexdigest()[:5])
     import hashlib
 
     # >> > sha = hashlib.sha256()
@@ -49,9 +50,10 @@ def generate_sha1(string, salt=None):
     return hash
 
 
-def randomString(stringLength=8):
-    letters = string.ascii_lowercase
-    return "".join(random.choice(letters) for i in range(stringLength))
+def randomString(stringLength=16):
+    alphabet = string.ascii_lowercase + string.digits
+    # alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for i in range(stringLength))
 
 # def get_outputdir_from_hash(hash:str):
 #     OUTPUT_DIRECTORY_PATH = settings.MEDIA_ROOT
