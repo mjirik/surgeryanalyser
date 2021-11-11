@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block body%}
+<div class="container">
+    <H2> List of reports </H2>
+    {% for uploadedfile in uploadedfiles %}
+    <p>
+        <a href="{{ uploadedfile.hash}}">{{ uploadedfile.mediafile.name }} {{ uploadedfile.email }}</a>
+    </p>
+    {% endfor %}
+
+    <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+</div>
+{% endblock %}

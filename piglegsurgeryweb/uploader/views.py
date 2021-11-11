@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
+from django.contrib.auth.decorators import login_required
 from pathlib import Path
 
 from loguru import logger
@@ -39,6 +40,17 @@ def resend_report_email(request, filename_id):
         request.build_absolute_uri("/"),
     )
     return redirect("/uploader/thanks/")
+
+
+@login_required(login_url='/admin/')
+def show_report_list(request):
+    files = UploadedFile.objects.all().order_by('-uploaded_at')
+    context = {
+        "uploadedfiles": files
+    }
+    return render(request, "uploader/report_list.html", context)
+
+
 
 def web_report(request, filename_hash:str):
     # fn = get_outputdir_from_hash(hash)

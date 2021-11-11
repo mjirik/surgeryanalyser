@@ -12,5 +12,6 @@ urlpatterns = [
     path('<int:filename_id>/run/', views.run, name='run'), # used for debugging purposes
     path('<int:filename_id>/resend_report_email/', views.run, name='resend_report_email'), # used for debugging purposes
     path('web_report/<str:filename_hash>/', views.web_report, name='web_report'),  # used for debugging purposes
+    path('web_report/', views.show_report_list, name='web_reports'),  # used for debugging purposes
     path("reset_hashes/", views.reset_hashes, name="reset_hashes"),
 ]
