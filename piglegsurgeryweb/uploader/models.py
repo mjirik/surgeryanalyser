@@ -6,7 +6,7 @@ import os.path as op
 # Create your models here.
 
 def _hash():
-    dt = datetime.now.strftime("%Y-%m-%d %H:%M:%S.%f")
+    dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
     hash = generate_sha1(dt, salt=randomString())
     return hash
 
