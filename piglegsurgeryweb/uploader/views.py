@@ -42,7 +42,7 @@ def resend_report_email(request, filename_id):
     return redirect("/uploader/thanks/")
 
 
-@login_required(login_url='/admin/')
+# @login_required(login_url='/admin/')
 def show_report_list(request):
     files = UploadedFile.objects.all().order_by('-uploaded_at')
     context = {
