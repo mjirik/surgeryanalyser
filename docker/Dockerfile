@@ -93,11 +93,18 @@ ENV FVCORE_CACHE="/tmp"
 WORKDIR /webapps
 
 RUN conda run -n piglegsurgery --no-capture-output pip install django-q
+
+RUN apt-get install multitail
+RUN mkdir -p ~/piglegcv/logs/
+
+RUN conda install -n piglegsurgery -c conda-forge django-environ
+#COPY start.sh
 #CMD cd /webapps/piglegsurgery/piglegsurgeryweb && conda run -n piglegsurgery --no-capture-output python manage.py qcluster
 #CMD service redis-server start && tail -F /var/log/redis/error.log
 #CMD tail -f /dev/null
-CMD cd /webapps/piglegsurgery/piglegsurgeryweb && \
-    service redis-server start && \
+CMD cd /webapps/piglegsurgery/docker && \
+    ./start.sh && \
+#    service redis-server start && \
 #    /webapps/piglegsurgery/docker/bin/qcluster_start  & && \
 #    /webapps/piglegsurgery/docker/bin/gunicorn_start & && \
     tail -f /dev/null

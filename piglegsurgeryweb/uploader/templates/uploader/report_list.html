@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block body%}
+<div class="container">
+    <H2> List of reports </H2>
+    <table class="table">
+        {% for uploadedfile in uploadedfiles %}
+        <tr>
+            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}">{{ uploadedfile.email }} </a> </th>
+            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}">{{ uploadedfile.mediafile.name }}</a> </th>
+            {% if user.is_authenticated %}
+            <th><a class="btn btn-light" href="{% url 'uploader:run' uploadedfile.id %}">Run</a></th>
+            <th><a class="btn btn-light" href="{% url 'uploader:resend_report_email' uploadedfile.id %}">Send Email</a></th>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+    <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+</div>
+{% endblock %}
