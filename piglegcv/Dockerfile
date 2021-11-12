@@ -53,7 +53,11 @@ ENV FVCORE_CACHE="/tmp"
 USER root
 RUN apt-get update && apt-get install -y redis ffmpeg vim
 
+#PyZbar
+RUN apt-get install libzbar0 -y
+
 USER appuser
+RUN pip install pyzbar
 
 RUN mkdir logs
 
