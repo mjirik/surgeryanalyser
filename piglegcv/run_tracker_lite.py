@@ -177,7 +177,7 @@ def create_pdf_report(track, image, source_fps, pix_size, output_file_name, outp
 
     
     data_pixel = np.array(data_pixel)
-    data = pix_size * data_pixel
+    data = pix_size * data_pixel / 1000.0  #v metrech
     t = 1.0/source_fps * np.array(frame_id)
     
     dxy = data[1:] - data[:-1]
@@ -195,8 +195,8 @@ def create_pdf_report(track, image, source_fps, pix_size, output_file_name, outp
     ax.set_title('Plot on the scene image')
     
     ax.imshow(image[:,:,::-1])
-    box_text = 'Total in-plain track {:.1f} meters over {:.1f} seconds with pixel size {:.3f}'.format(L, T, pix_size)
-    ax.text(100, 150, box_text, style='italic', bbox={'facecolor': 'red', 'alpha': 1.0, 'pad': 10})
+    box_text = 'Total in-plain track {:.1f} meters over {:.1f} seconds with pixel size {:.3f} mm'.format(L, T, pix_size)
+    ax.text(50, 100, box_text, style='italic', bbox={'facecolor': 'red', 'alpha': 1.0, 'pad': 10})
     
     ax.plot(data_pixel[:,0], data_pixel[:,1],'b')
     x = data_pixel[0, 0]
@@ -264,10 +264,10 @@ def tracking_sort(
             grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             res = decode(grey)
             if len(res) > 0:
-                a = numpy.array(res[0].polygon[0])
-                b = numpy.array(res[0].polygon[1])
+                a = np.array(res[0].polygon[0])
+                b = np.array(res[0].polygon[1])
                 #print(a,b)
-                pix_size = 27.0 / numpy.linalg.norm(a-b)
+                pix_size = 27.0 / np.linalg.norm(a-b)
                 #print(pix_size)
                 QRinit = False
                 img_first = img
