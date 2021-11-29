@@ -6,10 +6,6 @@
     <p>
         {{ text }}
     </p>
-    {% if next == None %}
-    <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
-    {% else %}
     <a class="btn btn-secondary" href="{{ next }}">{{next_text}}</a>
-    {% endif %}
 </div>
 {% endblock %}

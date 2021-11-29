@@ -42,8 +42,11 @@
             </div>
         </div>
     </div>
-
+    {% if next == None %}
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+    {% else %}
+    <a class="btn btn-secondary" href="{{ next }}">Back</a>
+    {% endif %}
     <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report</a>
 </div>
 {% endblock %}

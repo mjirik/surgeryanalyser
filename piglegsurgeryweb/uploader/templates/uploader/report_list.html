@@ -6,8 +6,8 @@
     <table class="table">
         {% for uploadedfile in uploadedfiles %}
         <tr>
-            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}">{{ uploadedfile.email }} </a> </th>
-            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}">{{ uploadedfile.mediafile.name }}</a> </th>
+            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.email }} </a> </th>
+            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.mediafile.name }}</a> </th>
             {% if user.is_authenticated %}
             <th><a class="btn btn-light" href="{% url 'uploader:run' uploadedfile.id %}">Run</a></th>
             <th><a class="btn btn-light" href="{% url 'uploader:resend_report_email' uploadedfile.id %}">Send Email</a></th>
