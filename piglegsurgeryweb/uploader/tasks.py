@@ -11,6 +11,7 @@ import time
 import glob
 import json
 import traceback
+import subprocess
 from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
@@ -131,7 +132,8 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
 
 
 def _convert_avi_to_mp4(avi_file_path, output_name):
-    os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = avi_file_path, output = output_name))
+    s = "ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}'".format(input = avi_file_path, output = output_name)
+    subprocess.call(s.split(" "))
     return True
 
 def email_report(task):
