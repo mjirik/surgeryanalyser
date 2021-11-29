@@ -70,14 +70,12 @@ def show_report_list(request):
 def web_report(request, filename_hash:str):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
-    if bool(serverfile.zip_file.name):
-        pass
-    else:
+    if not bool(serverfile.zip_file.name) or not Path(serverfile.zip_file.path).exists():
         logger.debug("Zip file name does not exist")
         # zip_file does not exists
         context = {
             "headline": "File not exists", "text": "Requested file is probably under processing now.",
-            "next": request.GET['next'] if "next" in request.GET else "",
+            "next": request.GET['next'] if "next" in request.GET else "/uploader/upload/",
             "next_text": "Back"
         }
         logger.debug(context)
@@ -88,12 +86,12 @@ def web_report(request, filename_hash:str):
     fn = Path(serverfile.zip_file.path)
     logger.debug(fn)
     logger.debug(fn.exists())
-    if not fn.exists():
-        return render(request, 'uploader/thanks.html', {
-            "headline": "File not exists", "text": "Requested file is probably under processing now.",
-            "next": request.GET['next'] if "next" in request.GET else None,
-            "next_text": "Back"
-        })
+    # if not fn.exists():
+    #     return render(request, 'uploader/thanks.html', {
+    #         "headline": "File not exists", "text": "Requested file is probably under processing now.",
+    #         "next": request.GET['next'] if "next" in request.GET else None,
+    #         "next_text": "Back"
+    #     })
     logger.debug(serverfile.zip_file.url)
 
     image_list = serverfile.bitmapimage_set.all()
