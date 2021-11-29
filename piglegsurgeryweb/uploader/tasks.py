@@ -94,7 +94,11 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
         _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
 
     for video_pth in outputdir.glob("*.avi"):
-        _convert_avi_to_mp4(str(video_pth), video_pth.with_suffix(".mp4"))
+        input_video_file = str(video_pth)
+        output_video_file = str(video_pth.with_suffix(".mp4"))
+        logger.debug(f"input_video_file={input_video_file}")
+        logger.debug(f"outout_video_file={output_video_file}")
+        _convert_avi_to_mp4(input_video_file, output_video_file)
     add_generated_images(serverfile)
 
     make_zip(serverfile)
@@ -132,8 +136,9 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
 
 
 def _convert_avi_to_mp4(avi_file_path, output_name):
-    s = "ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}'".format(input = avi_file_path, output = output_name)
-    subprocess.call(s.split(" "))
+    s = ["ffmpeg", '-i', avi_file_path, '-ac', '2', "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
+         "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", output_name]
+    subprocess.call(s)
     return True
 
 def email_report(task):
