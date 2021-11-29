@@ -5,6 +5,7 @@ from django.conf import settings
 from loguru import logger
 from pathlib import Path
 import os.path as op
+import os
 import requests
 import time
 import glob
@@ -90,6 +91,9 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
 
     if input_file.suffix in (".mp4", ".avi"):
         _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
+
+    for video_pth in outputdir.glob("*.avi"):
+        _convert_avi_to_mp4(str(video_pth), video_pth.with_suffix(".mp4"))
     add_generated_images(serverfile)
 
     make_zip(serverfile)
@@ -124,6 +128,11 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
     json_file = outputdir / "meta.json"
     with open(json_file, "w") as f:
         json.dump(metadata, f)
+
+
+def _convert_avi_to_mp4(avi_file_path, output_name):
+    os.popen("ffmpeg -i '{input}' -ac 2 -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 '{output}.mp4'".format(input = avi_file_path, output = output_name))
+    return True
 
 def email_report(task):
     logger.debug("Sending email report...")
@@ -256,7 +265,8 @@ def add_generated_images(serverfile:UploadedFile):
     lst.extend(sorted(glob.glob(str(od / "*.jpg"))))
     lst.extend(sorted(glob.glob(str(od / "*.JPG"))))
     logger.debug(lst)
-
+    # remove all older references
+    serverfile.bitmapimage_set.clear()
     for fn in lst:
         pth_rel = op.relpath(fn, settings.MEDIA_ROOT)
         bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)
