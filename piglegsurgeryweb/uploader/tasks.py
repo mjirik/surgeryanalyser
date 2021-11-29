@@ -265,8 +265,8 @@ def add_generated_images(serverfile:UploadedFile):
     lst.extend(sorted(glob.glob(str(od / "*.jpg"))))
     lst.extend(sorted(glob.glob(str(od / "*.JPG"))))
     logger.debug(lst)
-    # remove all older references
-    serverfile.bitmapimage_set.clear()
+    # remove all older references and objects
+    serverfile.bitmapimage_set.all().delete()
     for fn in lst:
         pth_rel = op.relpath(fn, settings.MEDIA_ROOT)
         bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)

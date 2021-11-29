@@ -96,11 +96,20 @@ def web_report(request, filename_hash:str):
 
     image_list = serverfile.bitmapimage_set.all()
 
+    videofile = Path(serverfile.outputdir) / "video.mp4"
+    logger.debug(videofile)
+    videofile_url = None
+    if videofile.exists():
+        s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
+        videofile_url = s[:s.rfind("/")] + "/video.mp4"
+
+
     context = {
         'serverfile': serverfile,
         'mediafile': Path(serverfile.mediafile.name).name,
         'image_list': image_list,
-        "next": request.GET['next'] if "next" in request.GET else None
+        "next": request.GET['next'] if "next" in request.GET else None,
+        'videofile_url': videofile_url
     }
     return render(request,'uploader/web_report.html', context)
 
