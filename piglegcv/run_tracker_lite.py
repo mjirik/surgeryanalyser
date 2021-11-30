@@ -4,9 +4,11 @@ import json
 import torch
 import argparse
 import numpy as np
+import shlex
+from pyzbar.pyzbar import decode
 
 #from matplotlib.backends.backend_pdf import PdfPages
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from detectron2.data import transforms as T
 
@@ -124,19 +126,20 @@ def get_detectron_cfg() -> CfgNode:
     # batch size
     cfg.SOLVER.IMS_PER_BATCH = CFG["SOLVER"]["batch_size"]
 
-    # output path
-    prefix = "" if (CFG["OUTPUT"]["prefix"] == "") else f"{CFG['OUTPUT']['prefix']}_"
-    suffix = "" if (CFG["OUTPUT"]["suffix"] == "") else f"_{CFG['OUTPUT']['suffix']}"
-    cfg.OUTPUT_DIR = os.path.join(
-        CFG["output_dir"], "tracker", f"{prefix}{CFG['R-CNN']['model']}{suffix}"
-    )
+    ## output path
+    cfg.OUTPUT_DIR = CFG["output_dir"]
+    #prefix = "" if (CFG["OUTPUT"]["prefix"] == "") else f"{CFG['OUTPUT']['prefix']}_"
+    #suffix = "" if (CFG["OUTPUT"]["suffix"] == "") else f"_{CFG['OUTPUT']['suffix']}"
+    #cfg.OUTPUT_DIR = os.path.join(
+        #CFG["output_dir"], "tracker", f"{prefix}{CFG['R-CNN']['model']}{suffix}"
+    #)
 
-    # check if output path exists
-    output_orig = cfg.OUTPUT_DIR
-    idx = 1
-    while os.path.exists(cfg.OUTPUT_DIR):
-        cfg.OUTPUT_DIR = f"{output_orig}__{idx}"
-        idx += 1
+    ## check if output path exists
+    #output_orig = cfg.OUTPUT_DIR
+    #idx = 1
+    #while os.path.exists(cfg.OUTPUT_DIR):
+        #cfg.OUTPUT_DIR = f"{output_orig}__{idx}"
+        #idx += 1
 
     return cfg
 
@@ -155,69 +158,80 @@ def save_json(data: dict, output_json: str):
     with open(output_json, "w") as output_file:
         json.dump(data, output_file)
 
-def create_pdf_report(track, output_file_name):
+def create_pdf_report(track, image, source_fps, pix_size, output_file_name, output_file_name2):
 
     N = len(track)
-    #data = []
-    t = []
-    x = []
-    y = []
+    data_pixel = []
+    frame_id = []
     for i, frame in enumerate(track):
         if frame != []:
+            #print(frame)
+            #exit()
             box = np.array(frame[0])
+            #print(i)
             #data.append([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-            t.append(i)
-            x.append(np.mean([box[0],box[2]]))
-            y.append(np.mean([box[1],box[3]]))
+            frame_id.append(i)
+            position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+            data_pixel.append(position)
+            
 
-
-    #plt.imshow(image[:,:,::-1])
-    #plt.plot(x, y,'b')
-    #plt.plot(x[0], y[0],'go')
-    #plt.plot(x[-1], y[-1],'ro')
+    
+    data_pixel = np.array(data_pixel)
+    data = pix_size * data_pixel / 1000.0  #v metrech
+    t = 1.0/source_fps * np.array(frame_id)
+    
+    dxy = data[1:] - data[:-1]
+    ds = np.sqrt(np.sum(dxy*dxy, axis=1))
+    dt = t[1:] - t[:-1]
+    #print(dt)
+    #exit()
+    L = np.sum(ds)
+    T = np.sum(dt)
+    
+    fig = plt.figure()
+    fig.suptitle('Space trajectory analysis of the needle holder', fontsize=14, fontweight='bold')
+    ax = fig.add_subplot()
+    fig.subplots_adjust(top=0.85)
+    ax.set_title('Plot on the scene image')
+    
+    ax.imshow(image[:,:,::-1])
+    box_text = 'Total in-plain track {:.1f} meters over {:.1f} seconds with pixel size {:.3f} mm'.format(L, T, pix_size)
+    ax.text(50, 100, box_text, style='italic', bbox={'facecolor': 'red', 'alpha': 1.0, 'pad': 10})
+    
+    ax.plot(data_pixel[:,0], data_pixel[:,1],'b')
+    x = data_pixel[0, 0]
+    y = data_pixel[0, 1]
+    ax.plot(x, y,'go')
+    ax.annotate('Start', xy=(x, y), xytext=(x+200, y-200), arrowprops=dict(facecolor='black', shrink=0.001))
+    x = data_pixel[-1, 0]
+    y = data_pixel[-1, 1]
+    ax.plot(x, y,'ro')
+    ax.annotate('Stop', xy=(x, y), xytext=(x+200, y+200), arrowprops=dict(facecolor='black', shrink=0.001))
+    
+    #ax.plot(x[-1], y[-1],'ro')
+    #plt.plot(t, dist,'-')
+    
     #plt.show()
-
-    #plt.plot(t_gt, x_gt, 'r')
+    plt.savefig(output_file_name)
+    
+    fig = plt.figure()
+    fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
+    ax = fig.add_subplot()
+    fig.subplots_adjust(top=0.85)
+    ax.set_title('Actual velocity and in-plain position of the Needle holder')
+    ax.set_xlabel('Time [sec]')
+    ax.set_ylabel('Data')
+       
+    ax.plot(t, data[:, 1], "-r", label="X coordinate [m]"  )
+    ax.plot(t, data[:, 0], "-b", label="Y coordinate [m]"  )
+    ax.plot(t[0:-1], ds/dt, ":g", label="Velocity [m/sec]"  )
+    ax.legend(loc="upper left")
     #plt.plot(t_gt, y_gt, 'b')
     #plt.plot(t, x, 'r:')
     #plt.plot(t, y, 'b:')
 
     #plt.show()
-
-
-    # Create the PdfPages object to which we will save the pages:
-    # The with statement makes sure that the PdfPages object is closed properly at
-    # the end of the block, even if an Exception occurs.
-    with PdfPages(output_file_name) as pdf:
-        plt.figure(figsize=(3, 3))
-        plt.plot(range(7), [3, 1, 4, 1, 5, 9, 2], 'r-o')
-        plt.title('Page One')
-        pdf.savefig()  # saves the current figure into a pdf page
-        plt.close()
-
-        plt.rc('text', usetex=True)
-        plt.figure(figsize=(8, 6))
-        x = np.arange(0, 5, 0.1)
-        plt.plot(x, np.sin(x), 'b-')
-        plt.title('Page Two')
-        pdf.savefig()
-        plt.close()
-
-        plt.rc('text', usetex=False)
-        fig = plt.figure(figsize=(4, 5))
-        plt.plot(x, x*x, 'ko')
-        plt.title('Page Three')
-        pdf.savefig(fig)  # or you can pass a Figure object to pdf.savefig
-        plt.close()
-
-        # We can also set the file's metadata via the PdfPages object:
-        d = pdf.infodict()
-        d['Title'] = 'Multipage PDF Example'
-        d['Author'] = u'Jouni K. Sepp\xe4nen'
-        d['Subject'] = 'How to create a multipage pdf file and set its metadata'
-        d['Keywords'] = 'PdfPages multipage keywords author title subject'
-        d['CreationDate'] = datetime.datetime(2009, 11, 13)
-        d['ModDate'] = datetime.datetime.today()
+    plt.savefig(output_file_name2)
 
 
 def tracking_sort(
@@ -227,10 +241,12 @@ def tracking_sort(
     final_tracks = list()
 
     cap = cv2.VideoCapture(str(filename))
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    source_fps = int(cap.get(cv2.CAP_PROP_FPS))
 
-
-    init = True
+    QRinit = False
+    DbgVidInit = False
+    QRdet = cv2.QRCodeDetector()
+    pix_size = 1.0
     j = 0
     while cap.isOpened():
         ret, img = cap.read()
@@ -238,42 +254,70 @@ def tracking_sort(
         if not ret:
             break
 
-        if j > 150:
-            break
+        #if j > 150:
+            #break
 
         # init
-        if init:
-            init = False
-
-            #QR code
-            det = cv2.QRCodeDetector()
+        if not QRinit:
+            #try read QR code
+            
+            grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            res = decode(grey)
+            if len(res) > 0:
+                a = np.array(res[0].polygon[0])
+                b = np.array(res[0].polygon[1])
+                #print(a,b)
+                pix_size = 27.0 / np.linalg.norm(a-b)
+                #print(pix_size)
+                QRinit = False
+                img_first = img
+            
+            ###############################
             #OpenCV encodes the frames in the BGR order by default.
-            retval, points, _ = det.detectAndDecode(img[:,:,::-1])
-            print(retval, points)
+            #retval, points, _ = QRdet.detectAndDecode(img[:,:,::-1])
+            #print(retval, points)
             #return()
-            pix_size = 27.0 / np.linalg.norm(points[0,0:1,:]-points[0,1:2,:])
-            print('pix_size', pix_size)
-
-
+            #if points is not None:
+                #pix_size = 27.0 / np.linalg.norm(points[0,0:1,:]-points[0,1:2,:])
+                #print('pix_size', pix_size)
+                #QRinit = False
+                #img_first = img
+        
+        if not DbgVidInit:
+            img_first = img
             # codec selection
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-            fps = 30
-
             height, width, channels = img.shape
             video = cv2.VideoWriter(
-                os.path.join(output_dir, "video.avi"), fourcc, fps, (width, height)
+                os.path.join(output_dir, "video.avi"), fourcc, source_fps, (width, height)
             )
+            DbgVidInit = True
 
+        #predict
         outputs = predictor(img)
         outputs = outputs["instances"].to("cpu")
 
         # filter unwanted detections (only when any detection exists)
         dets = outputs.pred_boxes.tensor.numpy()
 
+        # filter the detections
+        if len(dets) > 0:
+           scores = outputs.scores.numpy()
+           det = []
+           for s, d in zip(scores, dets):
+              if (max(scores) >= 0.95) and (s < 0.95):
+                 break
+              elif (max(scores) >= 0.80) and (s < 0.80):
+                 break
+              elif (max(scores) >= 0.50) and (s < 0.50):
+                 break
+              elif (max(scores) >= 0.20) and (s < 0.20):
+                 break
+              det.append(d)
+           dets = np.array(det)
+
         # update SORT
         tracks = tracker.update(dets)
-
-
 
         # check if the last track id is in the list of all tracks for current image
         skip_wrong_tracks = True if track_id_last in [i[4] for i in tracks] else False
@@ -316,20 +360,20 @@ def tracking_sort(
 
         # save image to the video
         video.write(img)
-
+        
         # store the final tracks to the list
         final_tracks.append(filtered_tracks)
 
     # destroy all windows and release the video
     # cv2.destroyAllWindows()
-    if not init:
+    if DbgVidInit:
         video.release()
 
     # save the final tracks to the json file
     save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
 
     #process data
-    #create_pdf_report(final_tracks, os.path.join(output_dir, "report.pdf"))
+    create_pdf_report(final_tracks, img_first, source_fps, pix_size, os.path.join(output_dir, "report_1.jpg"), os.path.join(output_dir, "report_2.jpg"))
 
 
 
@@ -359,7 +403,7 @@ def main_tracker(commandline):
     parser.add_argument("filename", type=str, help="video file.")
 
     # Parsing arguments
-    args = parser.parse_args(commandline.split(" "))
+    args = parser.parse_args(shlex.split(commandline))
 
     # ==================================================================================================================
 
@@ -382,16 +426,14 @@ def main_tracker(commandline):
     if args.suffix is not "":
         CFG["OUTPUT"]["suffix"] = args.suffix
 
-    #if args.output_dir is not "":
-        #CFG["output_dir"] = args.output_dir
+    if args.output_dir is not "":
+        CFG["output_dir"] = args.output_dir
 
     # get the detectron2 configuration and create an output directory
     cfg = get_detectron_cfg()
 
-    if args.output_dir is not "":
-        cfg["output_dir"] = args.output_dir
-
-    os.makedirs(cfg.OUTPUT_DIR)
+    
+    #os.makedirs(cfg.OUTPUT_DIR)
 
     # save the used configuration (for training, testing...)
     save_json(CFG, os.path.join(cfg.OUTPUT_DIR, "config.json"))

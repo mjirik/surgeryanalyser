@@ -18,9 +18,9 @@ q = Queue(connection=conn)
 def do_computer_vision(filename, outputdir):
     logger.debug(f"working on {filename}, outputdir={outputdir}")
 
-    main_tracker("./tracker_model {} --output_dir {}".format(filename, outputdir))
+    main_tracker("./tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
-    time.sleep(10)
+    #time.sleep(10)
     logger.debug("Work finished")
 
 
