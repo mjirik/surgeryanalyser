@@ -56,12 +56,12 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
     hash = response.json()
     finished = False
     while not finished:
-        time.sleep(30)
+        time.sleep(60)
         response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
                                 # params=query
                                 )
         finished = response.json()
-        logger.debug(f".    finished={finished}")
+        logger.debug(f".    finished={finished}   hash={hash}")
 
 
     logger.debug(f"REST API processing finished.")
