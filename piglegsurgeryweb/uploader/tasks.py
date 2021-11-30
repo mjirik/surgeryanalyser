@@ -138,7 +138,7 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
 
 
 def _convert_avi_to_mp4(avi_file_path, output_name):
-    s = ["ffmpeg", '-i', avi_file_path, '-ac', '2', "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
+    s = ["ffmpeg", '-i', avi_file_path, '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
          "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", output_name]
     subprocess.call(s)
     return True
