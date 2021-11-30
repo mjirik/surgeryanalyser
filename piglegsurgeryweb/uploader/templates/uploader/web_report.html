@@ -12,7 +12,21 @@
 {%  endblock %}
 {% block body%}
 <div class="container">
+
     <H2> Report: {{mediafile}} </H2>
+    <div class="pt-3">
+        {% if videofile_url == None %}
+        {% else %}
+<!--        <video width="320" height="240" controls>-->
+
+        <div class="embed-responsive embed-responsive-16by9">
+        <video controls autoplay muted>
+            <source src="{{ videofile_url }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        </div>
+        {% endif %}
+    </div>
 
 <!--    <p>-->
 <!--        {{ serverfile.mediafile.name }}-->
@@ -20,7 +34,7 @@
 <!--    <p>-->
 <!--        {{ serverfile.zipfile.url }}-->
 <!--    </p>-->
-    <div class="container-fluid">
+    <div class="pt-3">
         {% for im in image_list %}
         <a href="#" class="pop">
 
@@ -42,8 +56,12 @@
             </div>
         </div>
     </div>
-
+    {% if next == None %}
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+    {% else %}
+    <a class="btn btn-secondary" href="{{ next }}">Back</a>
+    {% endif %}
     <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report</a>
 </div>
+
 {% endblock %}

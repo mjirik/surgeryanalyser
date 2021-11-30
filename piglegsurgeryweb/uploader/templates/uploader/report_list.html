@@ -4,16 +4,31 @@
 <div class="container">
     <H2> List of reports </H2>
     <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Email</th>
+                <th scope="col">File name</th>
+                <th scope="col">Uploaded At</th>
+                {% if user.is_authenticated %}
+                <th scope="col"></th>
+                <th scope="col"></th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
         {% for uploadedfile in uploadedfiles %}
         <tr>
-            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}">{{ uploadedfile.email }} </a> </th>
-            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}">{{ uploadedfile.mediafile.name }}</a> </th>
+
+            <th scope="row"> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.email }} </a> </th>
+            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile }}</a> </th>
+            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.uploaded_at |date:'Y-m-d H:i'}}</a> </th>
             {% if user.is_authenticated %}
             <th><a class="btn btn-light" href="{% url 'uploader:run' uploadedfile.id %}">Run</a></th>
             <th><a class="btn btn-light" href="{% url 'uploader:resend_report_email' uploadedfile.id %}">Send Email</a></th>
             {% endif %}
         </tr>
         {% endfor %}
+        </tbody>
     </table>
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
 </div>

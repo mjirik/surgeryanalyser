@@ -16,14 +16,29 @@ from .tasks import email_media_recived
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index. HAHA")
 
+def message(request, headline=None, text=None, next_text=None, next=None):
+    context = {
+        'headline': "Thank You" if headline is None else headline,
+        'text': "Thank you for uploading media file. We will let you know when the processing will be finished." if text is None else text,
+        'next_text': 'Forward' if next_text is None else next_text,
+        'next': "uploader/upload" if next is None else next
+        # 'next': "uploader:model_form_upload"
+        # 'next': "uploader:model_form_upload"
+    }
+    return render(request, "uploader/message.html", context)
 
 def thanks(request):
     context = {
         'headline': "Thank You",
-        'text': "Thank you for uploading media file. We will let you know when the processing will be finished."
+        'text': "Thank you for uploading media file. We will let you know when the processing will be finished.",
+        'next_text': 'Upload next',
+        'next': None
+        # 'next': "uploader:model_form_upload"
+        # 'next': "uploader:model_form_upload"
     }
     return render(request, "uploader/thanks.html", context)
 
+@login_required(login_url='/admin/')
 def reset_hashes(request):
     files = UploadedFile.objects.all()
     for file in files:
@@ -55,17 +70,46 @@ def show_report_list(request):
 def web_report(request, filename_hash:str):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    if not bool(serverfile.zip_file.name) or not Path(serverfile.zip_file.path).exists():
+        logger.debug("Zip file name does not exist")
+        # zip_file does not exists
+        context = {
+            "headline": "File not exists", "text": "Requested file is probably under processing now.",
+            "next": request.GET['next'] if "next" in request.GET else "/uploader/upload/",
+            "next_text": "Back"
+        }
+        logger.debug(context)
+        logger.debug(request)
+        logger.debug(request.path)
+        return render(request, "uploader/message.html", context)
+        # return redirect("uploader:message", next=request.path)
     fn = Path(serverfile.zip_file.path)
     logger.debug(fn)
     logger.debug(fn.exists())
-    if not fn.exists():
-        return render(request, 'uploader/thanks.html', {"headline": "File not exists", "text": "Requested file is probably under processing now."})
+    # if not fn.exists():
+    #     return render(request, 'uploader/thanks.html', {
+    #         "headline": "File not exists", "text": "Requested file is probably under processing now.",
+    #         "next": request.GET['next'] if "next" in request.GET else None,
+    #         "next_text": "Back"
+    #     })
     logger.debug(serverfile.zip_file.url)
+
     image_list = serverfile.bitmapimage_set.all()
+
+    videofile = Path(serverfile.outputdir) / "video.mp4"
+    logger.debug(videofile)
+    videofile_url = None
+    if videofile.exists():
+        s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
+        videofile_url = s[:s.rfind("/")] + "/video.mp4"
+
+
     context = {
         'serverfile': serverfile,
         'mediafile': Path(serverfile.mediafile.name).name,
-        'image_list': image_list
+        'image_list': image_list,
+        "next": request.GET['next'] if "next" in request.GET else None,
+        'videofile_url': videofile_url
     }
     return render(request,'uploader/web_report.html', context)
 
@@ -77,7 +121,7 @@ def run(request, filename_id):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
-        hook="uploader.tasks.email_report",
+        hook="uploader.tasks.email_report_from_task",
     )
     context = {
         'headline': "Processing started",

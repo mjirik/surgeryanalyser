@@ -2,6 +2,7 @@ from django.db import models
 from .models_tools import upload_to_unqiue_folder, get_output_dir, randomString, generate_sha1
 from datetime import datetime
 import os.path as op
+from pathlib import Path
 
 # Create your models here.
 
@@ -25,6 +26,9 @@ class UploadedFile(models.Model):
     outputdir = models.CharField(max_length=255, blank=True, default=get_output_dir)
     zip_file = models.FileField(upload_to="cellimage/", blank=True, null=True)
     hash = models.CharField(max_length=255, blank=True, default=_hash)
+
+    def __str__(self):
+        return str(Path(self.mediafile.name).name)
 
 class BitmapImage(models.Model):
     server_datafile = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)

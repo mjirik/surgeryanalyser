@@ -5,11 +5,13 @@ from django.conf import settings
 from loguru import logger
 from pathlib import Path
 import os.path as op
+import os
 import requests
 import time
 import glob
 import json
 import traceback
+import subprocess
 from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule
 from django_q.models import Schedule
@@ -90,6 +92,13 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
 
     if input_file.suffix in (".mp4", ".avi"):
         _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
+
+    for video_pth in outputdir.glob("*.avi"):
+        input_video_file = str(video_pth)
+        output_video_file = str(video_pth.with_suffix(".mp4"))
+        logger.debug(f"input_video_file={input_video_file}")
+        logger.debug(f"outout_video_file={output_video_file}")
+        _convert_avi_to_mp4(input_video_file, output_video_file)
     add_generated_images(serverfile)
 
     make_zip(serverfile)
@@ -125,13 +134,24 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
     with open(json_file, "w") as f:
         json.dump(metadata, f)
 
-def email_report(task):
-    logger.debug("Sending email report...")
 
+def _convert_avi_to_mp4(avi_file_path, output_name):
+    s = ["ffmpeg", '-i', avi_file_path, '-ac', '2', "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
+         "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", output_name]
+    subprocess.call(s)
+    return True
+
+def email_report_from_task(task):
+
+    logger.debug("getting parameters from task for email")
     serverfile: UploadedFile = task.args[0]
     # absolute uri is http://127.0.0.1:8000/. We have to remove last '/' because the url already contains it.
     absolute_uri = task.args[1][:-1]
     # logger.debug(dir(task))
+    email_report(serverfile, absolute_uri)
+
+def email_report(serverfile: UploadedFile, absolute_uri: str):
+    logger.debug("Sending email report...")
     html_message = (
         '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
         '<html xmlns="http://www.w3.org/1999/xhtml">\n'
@@ -256,7 +276,8 @@ def add_generated_images(serverfile:UploadedFile):
     lst.extend(sorted(glob.glob(str(od / "*.jpg"))))
     lst.extend(sorted(glob.glob(str(od / "*.JPG"))))
     logger.debug(lst)
-
+    # remove all older references and objects
+    serverfile.bitmapimage_set.all().delete()
     for fn in lst:
         pth_rel = op.relpath(fn, settings.MEDIA_ROOT)
         bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)
