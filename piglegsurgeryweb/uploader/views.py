@@ -121,7 +121,7 @@ def run(request, filename_id):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
-        hook="uploader.tasks.email_report",
+        hook="uploader.tasks.email_report_from_task",
     )
     context = {
         'headline': "Processing started",

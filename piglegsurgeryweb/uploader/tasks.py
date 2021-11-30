@@ -141,13 +141,17 @@ def _convert_avi_to_mp4(avi_file_path, output_name):
     subprocess.call(s)
     return True
 
-def email_report(task):
-    logger.debug("Sending email report...")
+def email_report_from_task(task):
 
+    logger.debug("getting parameters from task for email")
     serverfile: UploadedFile = task.args[0]
     # absolute uri is http://127.0.0.1:8000/. We have to remove last '/' because the url already contains it.
     absolute_uri = task.args[1][:-1]
     # logger.debug(dir(task))
+    email_report(serverfile, absolute_uri)
+
+def email_report(serverfile: UploadedFile, absolute_uri: str):
+    logger.debug("Sending email report...")
     html_message = (
         '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
         '<html xmlns="http://www.w3.org/1999/xhtml">\n'
