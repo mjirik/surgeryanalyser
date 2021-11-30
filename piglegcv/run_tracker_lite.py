@@ -300,10 +300,24 @@ def tracking_sort(
         # filter unwanted detections (only when any detection exists)
         dets = outputs.pred_boxes.tensor.numpy()
 
+        # filter the detections
+        if len(dets) > 0:
+           scores = outputs.scores.numpy()
+           det = []
+           for s, d in zip(scores, dets):
+              if (max(scores) >= 0.95) and (s < 0.95):
+                 break
+              elif (max(scores) >= 0.80) and (s < 0.80):
+                 break
+              elif (max(scores) >= 0.50) and (s < 0.50):
+                 break
+              elif (max(scores) >= 0.20) and (s < 0.20):
+                 break
+              det.append(d)
+           dets = np.array(det)
+
         # update SORT
         tracks = tracker.update(dets)
-
-
 
         # check if the last track id is in the list of all tracks for current image
         skip_wrong_tracks = True if track_id_last in [i[4] for i in tracks] else False
