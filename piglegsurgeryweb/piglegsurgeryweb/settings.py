@@ -165,7 +165,7 @@ UPLOAD_RELATIVE_PATH = "upload"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 Q_CLUSTER = {
-    "workers": 2,
+    "workers": 1,
     "redis": {
         "host": "localhost",
         "port": 6379,
