@@ -56,12 +56,12 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
     hash = response.json()
     finished = False
     while not finished:
-        time.sleep(30)
+        time.sleep(60)
         response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
                                 # params=query
                                 )
         finished = response.json()
-        logger.debug(f".    finished={finished}")
+        logger.debug(f".    finished={finished}   hash={hash}")
 
 
     logger.debug(f"REST API processing finished.")
@@ -72,7 +72,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
-        str(Path(serverfile.outputdir) / "log.txt"),
+        str(Path(serverfile.outputdir) / "webapp_log.txt"),
         format=log_format,
         level="DEBUG",
         rotation="1 week",
@@ -94,11 +94,13 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
         _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
 
     for video_pth in outputdir.glob("*.avi"):
-        input_video_file = str(video_pth)
-        output_video_file = str(video_pth.with_suffix(".mp4"))
+        input_video_file = video_pth
+        output_video_file = video_pth.with_suffix(".mp4")
         logger.debug(f"input_video_file={input_video_file}")
         logger.debug(f"outout_video_file={output_video_file}")
-        _convert_avi_to_mp4(input_video_file, output_video_file)
+        if output_video_file.exists():
+            output_video_file.unlink()
+        _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
     add_generated_images(serverfile)
 
     make_zip(serverfile)
@@ -136,7 +138,7 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
 
 
 def _convert_avi_to_mp4(avi_file_path, output_name):
-    s = ["ffmpeg", '-i', avi_file_path, '-ac', '2', "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
+    s = ["ffmpeg", '-i', avi_file_path, '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
          "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", output_name]
     subprocess.call(s)
     return True

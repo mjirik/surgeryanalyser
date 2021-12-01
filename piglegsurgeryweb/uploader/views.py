@@ -166,7 +166,7 @@ def model_form_upload(request):
                 "uploader.tasks.run_processing",
                 serverfile,
                 request.build_absolute_uri("/"),
-                hook="uploader.tasks.email_report",
+                hook="uploader.tasks.email_report_from_task",
             )
             return redirect("/uploader/thanks/")
     else:
