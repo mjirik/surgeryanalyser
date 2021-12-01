@@ -81,7 +81,7 @@ def get_results(job_key):
     except rq.exceptions.NoSuchJobError as e:
         logger.debug(f"Job not found. Job ID={job_key}")
         return jsonify(False)
-    logger.debug(f"Job finished. job_id={job.is_finished}")
+    logger.debug(f"   job.is_finished={job.is_finished}, queue length = {len(q)}")
 
     return jsonify(job.is_finished)
     # if job.is_finished:

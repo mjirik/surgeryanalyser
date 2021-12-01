@@ -54,14 +54,17 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
     logger.debug("Checking if processing is finished...")
 
     hash = response.json()
-    finished = False
-    while not finished:
-        time.sleep(60)
+    is_finished = False
+    while not is_finished:
+        time_to_sleep = 60
+        time_step = 10
+        for i in range(int(time_to_sleep/time_step)):
+            time.sleep(time_step)
         response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
                                 # params=query
                                 )
-        finished = response.json()
-        logger.debug(f".    finished={finished}   hash={hash}")
+        is_finished = response.json()
+        logger.debug(f".    is_finished={is_finished}   input_file={input_file.name}")
 
 
     logger.debug(f"REST API processing finished.")
@@ -86,8 +89,9 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     logger.debug(f"input_file={input_file}")
     outputdir = Path(serverfile.outputdir)
     logger.debug(f"outputdir={outputdir}")
+
     _run_media_processing_rest_api(input_file, outputdir)
-    logger.debug(f"")
+
     (outputdir / "empty.txt").touch(exist_ok=True)
 
     if input_file.suffix in (".mp4", ".avi"):

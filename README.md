@@ -10,7 +10,13 @@ cd piglegcv
 docker build -t piglegcv .
 ```
 
-Run from Windows
+Run from linux (for deployment dnn)
+```bash
+cd piglegcv
+./run_detectron2.sh
+```
+
+Run from Windows (for testing)
 ```bash
 docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 5000:5000 --name piglegcv piglegcv 
 ```
