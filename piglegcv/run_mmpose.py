@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from argparse import ArgumentParser
 
 import cv2
@@ -45,7 +46,17 @@ def printKeypoints(pose_results, _file):
     else:
         _file.write('None\n')
 
+def save_json(data: dict, output_json: str):
+    os.makedirs(os.path.dirname(output_json), exist_ok=True)
+    with open(output_json, "w") as output_file:
+        json.dump(data, output_file)
+
+
+
+
+###############################
 def main_mmpose(filename, outputdir):
+    
     det_config = 'cascade_rcnn_x101_64x4d_fpn_1class.py'
     det_checkpoint = 'https://download.openmmlab.com/mmpose/mmdet_pretrained/cascade_rcnn_x101_64x4d_fpn_20e_onehand10k-dac19597_20201030.pth'
     device = 'cuda:0'
@@ -86,7 +97,9 @@ def main_mmpose(filename, outputdir):
     radius = 5
     thickness = 3
     cv2.setNumThreads(2)
-    out_file = open('{}/hand_poses.txt'.format(outputdir), 'w')
+    #out_file = open('{}/hand_poses.txt'.format(outputdir), 'w')
+    hand_poses = []
+    
     while (cap.isOpened()):
         flag, img = cap.read()
         if not flag:
@@ -111,8 +124,10 @@ def main_mmpose(filename, outputdir):
                 return_heatmap=return_heatmap,
                 outputs=output_layer_names)
             
-            printKeypoints(pose_results, out_file)
+            #printKeypoints(pose_results, out_file)
+            hand_poses.append(pose_results[0]['keypoints'])
 
+        if save_out_video:
             vis_img = vis_pose_result(
                 pose_model,
                 img,
@@ -123,12 +138,13 @@ def main_mmpose(filename, outputdir):
                 thickness=thickness,
                 show=False)
 
-        if save_out_video:
             videoWriter.write(vis_img)
 
     cap.release()
     if save_out_video:
         videoWriter.release()
 
+    save_json({"hand_poses": hand_poses}, os.path.join(outputdir, "hand_poses.json"))
+    
 if __name__ == '__main__':
     main()
