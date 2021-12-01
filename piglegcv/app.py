@@ -9,6 +9,7 @@ from flask import request, jsonify, render_template
 import time
 from pigleg_cv import run_media_processing
 from run_tracker_lite import main_tracker
+from run_mmpose import main_mmpose
 import requests
 
 app = flask.Flask(__name__)
@@ -21,8 +22,8 @@ def do_computer_vision(filename, outputdir):
     main_tracker("./tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
     #time.sleep(10)
+    main_mmpose(filename, outputdir)
     logger.debug("Work finished")
-
 
 @app.route("/run", methods=["GET", "POST"])
 def index():
