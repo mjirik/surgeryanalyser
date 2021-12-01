@@ -53,12 +53,36 @@ ENV FVCORE_CACHE="/tmp"
 USER root
 RUN apt-get update && apt-get install -y redis ffmpeg vim
 
+#########
 #PyZbar
 RUN apt-get install libzbar0 -y
-
 USER appuser
 RUN pip install pyzbar
 
+###############
+# mmpose + mmdet
+RUN pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.9.0/index.html
+# Install MMDetection
+# USER root
+RUN git clone https://github.com/open-mmlab/mmdetection.git mmdetection
+# RUN chmod -R 777 /mmdetection/
+# USER appuser
+WORKDIR /home/appuser/mmdetection
+ENV FORCE_CUDA="1"
+RUN pip install -r requirements/build.txt
+RUN pip install --no-cache-dir -e .
+# Install MMPose
+# USER root
+WORKDIR /home/appuser
+RUN git clone https://github.com/open-mmlab/mmpose.git mmpose
+WORKDIR /home/appuser/mmpose
+RUN mkdir -p /home/appuser/mmpose/data
+RUN pip install -r requirements/build.txt
+RUN pip install --no-cache-dir -e .
+WORKDIR /home/appuser
+
+############
+# MAIN
 RUN mkdir logs
 
 COPY ./run_tracker_lite.py .
@@ -82,3 +106,4 @@ CMD cd /home/appuser/ && \
 	#--config-file configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml \
 	#--input input.jpg --output outputs/ \
 	#--opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
+

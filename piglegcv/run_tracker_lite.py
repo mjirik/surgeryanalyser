@@ -4,6 +4,7 @@ import json
 import torch
 import argparse
 import numpy as np
+from scipy.ndimage import gaussian_filter
 import shlex
 from pyzbar.pyzbar import decode
 
@@ -158,8 +159,8 @@ def save_json(data: dict, output_json: str):
     with open(output_json, "w") as output_file:
         json.dump(data, output_file)
 
-#pix_size in m
-def create_pdf_report(track, image, source_fps, pix_size, output_file_name, output_file_name2, ds_threshold = 0.1):
+#ds_threshold [m]
+def create_pdf_report(track, image, source_fps, pix_size, QRinit, output_file_name, output_file_name2, ds_threshold = 0.1):
 
     N = len(track)
     data_pixel = []
@@ -181,8 +182,10 @@ def create_pdf_report(track, image, source_fps, pix_size, output_file_name, outp
     t = 1.0/source_fps * np.array(frame_id)
     dxy = data[1:] - data[:-1]
     ds = np.sqrt(np.sum(dxy*dxy, axis=1))
+    if not QRinit:
+        ds_threshold = 200.0
 
-    ds[ds>ds_threshold] = 0
+    ds[ds>ds_threshold] = 0.0
     dt = t[1:] - t[:-1]
     #print(dt)
     L = np.sum(ds)
@@ -195,7 +198,10 @@ def create_pdf_report(track, image, source_fps, pix_size, output_file_name, outp
     ax.set_title('Plot on the scene image')
 
     ax.imshow(image[:,:,::-1])
-    box_text = 'Total in-plain track {:.2f} m / {:.2f} sec'.format(L, T)
+    if QRinit:
+        box_text = 'Total in-plain track {:.2f} m / {:.2f} sec'.format(L, T)
+    else:
+        box_text = 'Total in-plain track {:.2f} pix / {:.2f} sec'.format(L, T)
     ax.text(100, 150, box_text, style='italic', bbox={'facecolor': 'white', 'alpha': 1.0, 'pad': 10})
 
     ax.plot(data_pixel[:,0], data_pixel[:,1],'+b', markersize=12)
@@ -223,8 +229,15 @@ def create_pdf_report(track, image, source_fps, pix_size, output_file_name, outp
     #ax.set_ylabel('Data')
     #ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
     #ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
-    ax.plot(t[0:-1], np.cumsum(ds), "-k", label="Track [m]"  )
-    ax.plot(t[0:-1],gaussian_filter(ds/dt, sigma=2) , ":g", label="Velocity [m/sec]"  )
+    if QRinit:
+        track_label = "Track [m]"
+        vel_label = "Velocity [m/sec]"
+    else:
+        track_label = "Track [pix]"
+        vel_label = "Velocity [pix/sec]"
+
+    ax.plot(t[0:-1], np.cumsum(ds), "-k", label= track_label)
+    ax.plot(t[0:-1],gaussian_filter(ds/dt, sigma=2) , ":g", label=vel_label)
     ax.legend(loc="upper left")
     #plt.plot(t_gt, y_gt, 'b')
     #plt.plot(t, x, 'r:')
@@ -373,7 +386,7 @@ def tracking_sort(
     save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
 
     #process data
-    create_pdf_report(final_tracks, img_first, source_fps, pix_size, os.path.join(output_dir, "report_1.jpg"), os.path.join(output_dir, "report_2.jpg"))
+    create_pdf_report(final_tracks, img_first, source_fps, pix_size, QRinit, os.path.join(output_dir, "report_1.jpg"), os.path.join(output_dir, "report_2.jpg"))
 
 
 
