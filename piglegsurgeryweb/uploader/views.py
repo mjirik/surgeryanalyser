@@ -121,6 +121,7 @@ def run(request, filename_id):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
+        timeout=3600*2,
         hook="uploader.tasks.email_report_from_task",
     )
     context = {
