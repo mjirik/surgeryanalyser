@@ -72,7 +72,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
-        str(Path(serverfile.outputdir) / "log.txt"),
+        str(Path(serverfile.outputdir) / "webapp_log.txt"),
         format=log_format,
         level="DEBUG",
         rotation="1 week",
