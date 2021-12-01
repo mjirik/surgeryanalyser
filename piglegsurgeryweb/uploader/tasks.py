@@ -55,16 +55,19 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
 
     hash = response.json()
     is_finished = False
+    tm = 0
+    time_to_sleep = 8
     while not is_finished:
-        time_to_sleep = 60
-        time_step = 10
+        time_to_sleep = time_to_sleep*2 if time_to_sleep < 256 else 256
+        time_step = 8
+        tm += time_to_sleep
         for i in range(int(time_to_sleep/time_step)):
             time.sleep(time_step)
         response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
                                 # params=query
                                 )
         is_finished = response.json()
-        logger.debug(f".    is_finished={is_finished}   input_file={input_file.name}")
+        logger.debug(f".    is_finished={is_finished}   input_file={input_file.name} time[s]={tm}")
 
 
     logger.debug(f"REST API processing finished.")
