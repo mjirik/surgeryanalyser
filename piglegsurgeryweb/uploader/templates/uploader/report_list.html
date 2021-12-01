@@ -10,7 +10,7 @@
                 <th scope="col">File name</th>
                 <th scope="col">Uploaded At</th>
                 {% if user.is_authenticated %}
-                <th scope="col"></th>
+                <th scope="col">{{ queue_size }}</th>
                 <th scope="col"></th>
                 {% endif %}
             </tr>
