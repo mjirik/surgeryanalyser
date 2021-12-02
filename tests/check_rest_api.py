@@ -7,7 +7,7 @@ import subprocess
 from loguru import logger
 
 
-def check_rest_api():
+def check_rest_api(port=5001):
     input_file = '/webapps/piglegsurgery/piglegsurgeryweb/media/upload/20211112-211708_output_b2541fbdd906842b4774db61b095720180813cb1/output.mp4'
     outputdir = '/webapps/piglegsurgery/piglegsurgeryweb/media/test_20211112-211708_output_b2541fbdd906842b4774db61b095720180813cb1'
     query = {
@@ -15,7 +15,7 @@ def check_rest_api():
         "outputdir": str(outputdir),
     }
     try:
-        response = requests.post('http://127.0.0.1:5000/run', params=query)
+        response = requests.post(f'http://127.0.0.1:{5001}/run', params=query)
     except Exception as e:
         logger.error(traceback.format_exc())
         logger.debug("REST API processing not finished. Connection refused.")
@@ -27,7 +27,7 @@ def check_rest_api():
     finished = False
     while not finished:
         time.sleep(20)
-        response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
+        response = requests.get(f'http://127.0.0.1:{port}/is_finished/{hash}',
                                 # params=query
                                 )
         finished = response.json()
