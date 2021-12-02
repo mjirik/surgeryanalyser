@@ -13,7 +13,7 @@ import json
 import traceback
 import subprocess
 from django.core.mail import EmailMessage
-from django_q.tasks import async_task, schedule
+from django_q.tasks import async_task, schedule, queue_size
 from django_q.models import Schedule
 from django.utils.html import strip_tags
 # from .pigleg_cv import run_media_processing
@@ -67,7 +67,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
                                 # params=query
                                 )
         is_finished = response.json()
-        logger.debug(f".    is_finished={is_finished}   input_file={input_file.name} time[s]={tm}")
+        logger.debug(f".    is_finished={is_finished}  input_file={input_file.name}  time[s]={tm} queue_size={queue_size()}")
 
 
     logger.debug(f"REST API processing finished.")
