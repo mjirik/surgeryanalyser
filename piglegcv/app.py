@@ -21,14 +21,19 @@ q = Queue(connection=conn)
 def do_computer_vision(filename, outputdir):
     logger.debug(f"working on {filename}, outputdir={outputdir}")
 
+    logger.debug("CV processing start ...")
+
     main_tracker("./tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
-    
+    logger.debug("Detectron finished.")
+
     main_mmpose(filename, outputdir)
+    logger.debug("MMpose finished.")
     
     main_qr(filename, outputdir)
+    logger.debug("QR finished.")
     
-    main_report(filename, outputdir)
+    #main_report(filename, outputdir)
     
     logger.debug("Work finished")
 
