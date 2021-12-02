@@ -15,7 +15,7 @@ def check_rest_api(port=5001):
         "outputdir": str(outputdir),
     }
     try:
-        response = requests.post(f'http://127.0.0.1:{5001}/run', params=query)
+        response = requests.post(f'http://127.0.0.1:{port}/run', params=query)
     except Exception as e:
         logger.error(traceback.format_exc())
         logger.debug("REST API processing not finished. Connection refused.")
