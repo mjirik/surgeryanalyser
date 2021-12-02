@@ -126,7 +126,7 @@ def run(request, filename_id):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
-        timeout=3600*2,
+        timeout=3600*3,
         # hook="uploader.tasks.email_report_from_task",
     )
     context = {
@@ -175,7 +175,7 @@ def model_form_upload(request):
                 "uploader.tasks.run_processing",
                 serverfile,
                 request.build_absolute_uri("/"),
-                timeout=2*3600,
+                timeout=3600*3,
                 hook="uploader.tasks.email_report_from_task",
             )
             return redirect("/uploader/thanks/")
