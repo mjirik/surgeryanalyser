@@ -10,6 +10,8 @@ import time
 from pigleg_cv import run_media_processing
 from run_tracker_lite import main_tracker
 from run_mmpose import main_mmpose
+from run_qr import main_qr
+from run_report import main_report
 import requests
 
 app = flask.Flask(__name__)
@@ -19,10 +21,20 @@ q = Queue(connection=conn)
 def do_computer_vision(filename, outputdir):
     logger.debug(f"working on {filename}, outputdir={outputdir}")
 
+    logger.debug("CV processing start ...")
+
     main_tracker("./tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
-    #time.sleep(10)
+    logger.debug("Detectron finished.")
+
     main_mmpose(filename, outputdir)
+    logger.debug("MMpose finished.")
+    
+    main_qr(filename, outputdir)
+    logger.debug("QR finished.")
+    
+    #main_report(filename, outputdir)
+    
     logger.debug("Work finished")
 
 @app.route("/run", methods=["GET", "POST"])
