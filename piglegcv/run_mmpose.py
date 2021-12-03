@@ -74,7 +74,7 @@ def main_mmpose(filename, outputdir):
     #assert cap.isOpened(), f'Faild to load video file {args.video_path}'
 
 
-    save_out_video = True
+    save_out_video = False
     video_name = '{}/hand_poses.mp4'.format(outputdir)
     if save_out_video:
         fps = cap.get(cv2.CAP_PROP_FPS)
@@ -111,6 +111,7 @@ def main_mmpose(filename, outputdir):
         person_results = process_mmdet_results(mmdet_results, det_cat_id)
 
         vis_img = img
+        pose_data = []
         if (len(person_results) > 0) and (person_results[0]['bbox'][4] > 0.9):
             print(person_results)
             # test a single image, with a list of bboxes.
@@ -125,7 +126,8 @@ def main_mmpose(filename, outputdir):
                 outputs=output_layer_names)
             
             #printKeypoints(pose_results, out_file)
-            hand_poses.append(pose_results[0]['keypoints'])
+            pose_data = pose_results[0]['keypoints'].tolist()
+        hand_poses.append(pose_data)
 
         if save_out_video:
             vis_img = vis_pose_result(

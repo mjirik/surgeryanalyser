@@ -3,7 +3,7 @@ import sys
 from argparse import ArgumentParser
 import cv2
 import json
-
+import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
@@ -88,6 +88,7 @@ def main_report(filename, outputdir):
     cap = cv2.VideoCapture(filename)
     #assert cap.isOpened(), f'Faild to load video file {args.video_path}'
 
+    #output video
     video_name = '{}/pigleg_results.mp4'.format(outputdir)
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
@@ -95,31 +96,36 @@ def main_report(filename, outputdir):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size)
 
-    #object tracking data
+    #input object tracking data
+    sort_data = []
     with open('{}/tracks.json'.format(outputdir), "r") as fr:
-        json = json.load(fr)
-    sort_data = json['tracks']
+        data = json.load(fr)
+        sort_data = data['tracks']
    
     ##hand pose data
     #with open('{}/hand_poses.txt'.format(outputdir), 'r') as fr:
         #hand_pose_file = fr.readlines()
     
+    #input hand poses data
+    hand_poses = []
     with open('{}/hand_poses.json'.format(outputdir), "r") as fr:
-        json = json.load(fr)
-    hand_poses = json['hand_poses']
+        data = json.load(fr)
+        hand_poses = data['hand_poses']
     
+    #input QR data
+    qr_data = {}
     with open('{}/qr_data.json'.format(outputdir), "r") as fr:
-        json = json.load(fr)
-    qr_data = json['qr_data']
+        data = json.load(fr)
+        qr_data = data['qr_data']
     
     
-    #video vizualization
-    det_cat_id = 1
-    bbox_thr = 0.3
-    kpt_thr = 0.5
-    radius = 5
-    thickness = 3
-    cv2.setNumThreads(2)
+    ##video vizualization
+    #det_cat_id = 1
+    #bbox_thr = 0.3
+    #kpt_thr = 0.5
+    #radius = 5
+    #thickness = 3
+    #cv2.setNumThreads(2)
     
     i = 0
     data_pixel = []
@@ -127,7 +133,6 @@ def main_report(filename, outputdir):
     N = len(sort_data)
     M = len(hand_poses)
     print('Sort data N=', N,' MMpose data M=', M)
-    
     while (cap.isOpened()):
         flag, img = cap.read()
         if not flag:
@@ -173,6 +178,9 @@ def main_report(filename, outputdir):
             frame = hand_poses[i]
             if frame != []:
                 print(frame)
+                hand_joints = np.asarray([[int(x[0]), int(x[1])] for x in frame])
+                for hj in hand_joints:
+                    cv2.circle(img, (hj[0], hj[1]), 2, (0, 0, 0), thickness=-1)
         
         #orig method
         #vis_img = img
@@ -196,7 +204,7 @@ def main_report(filename, outputdir):
     
     #############
     # graph report
-    create_pdf_report(frame_id, data_pixel, img, fps, qr_data['pix_size'], qr_data['is_detected'], os.path.join(output_dir, "graph_1.jpg"), os.path.join(output_dir, "graph_2.jpg"))
+    create_pdf_report(frame_id, data_pixel, img, fps, qr_data['pix_size'], qr_data['is_detected'], os.path.join(outputdir, "graph_1.jpg"), os.path.join(outputdir, "graph_2.jpg"))
   
 
 if __name__ == '__main__':
