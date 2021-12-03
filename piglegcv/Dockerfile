@@ -93,6 +93,8 @@ COPY ./run_services.sh .
 COPY ./cascade_rcnn_x101_64x4d_fpn_1class.py .
 COPY ./res50_onehand10k_256x256.py .
 COPY ./run_mmpose.py .
+COPY ./run_qr.py .
+COPY ./run_report.py .
 
 #CMD ["./data/images"]
 CMD cd /home/appuser/ && \

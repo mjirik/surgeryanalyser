@@ -126,6 +126,7 @@ def main_report(filename, outputdir):
     frame_id = []
     N = len(sort_data)
     M = len(hand_poses)
+    print('Sort data N=', N,' MMpose data M=', M)
     
     while (cap.isOpened()):
         flag, img = cap.read()
