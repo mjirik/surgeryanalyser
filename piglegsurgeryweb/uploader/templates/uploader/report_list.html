@@ -10,8 +10,8 @@
                 <th scope="col">File name</th>
                 <th scope="col">Uploaded At</th>
                 {% if user.is_authenticated %}
-                <th scope="col">{{ queue_size }}</th>
-                <th scope="col"></th>
+                <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>
+                <th scope="col">Started At</th>
                 {% endif %}
             </tr>
         </thead>
@@ -23,8 +23,9 @@
             <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile }}</a> </th>
             <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.uploaded_at |date:'Y-m-d H:i'}}</a> </th>
             {% if user.is_authenticated %}
-            <th><a class="btn btn-light" href="{% url 'uploader:run' uploadedfile.id %}">Run</a></th>
-            <th><a class="btn btn-light" href="{% url 'uploader:resend_report_email' uploadedfile.id %}">Send Email</a></th>
+            <th><a class="btn btn-light" href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}">Run</a></th>
+            <th><a class="btn btn-light" href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send Email</a></th>
+            <th>{{ uploadedfile.started_at |date:'Y-m-d H:i'}}</th>
             {% endif %}
         </tr>
         {% endfor %}

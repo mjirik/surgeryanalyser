@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.1.1-cudnn8-devel
+ENV TZ="Europe/Berlin"
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y \

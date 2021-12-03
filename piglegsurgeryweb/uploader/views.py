@@ -13,6 +13,7 @@ from .models_tools import randomString
 from .tasks import email_media_recived
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 from django_q.tasks import async_task, schedule, queue_size
+from datetime import datetime
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index. HAHA")
@@ -119,16 +120,20 @@ def run(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
 
     from django_q.tasks import async_task
+    serverfile.started_at = datetime.now()
+    serverfile.save()
     async_task(
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
-        timeout=3600*2,
-        hook="uploader.tasks.email_report_from_task",
+        timeout=3600*3,
+        # hook="uploader.tasks.email_report_from_task",
     )
     context = {
         'headline': "Processing started",
-        'text': f"Processing file {serverfile.mediafile}. The output will be stored in {serverfile.outputdir}."
+        'text': f"Processing file {serverfile.mediafile}. The output will be stored in {serverfile.outputdir}.",
+        "next": request.GET['next'] if "next" in request.GET else None,
+        "next_text": "Back"
     }
     return render(request, "uploader/thanks.html", context)
     # return redirect("/uploader/upload/")
@@ -164,12 +169,13 @@ def model_form_upload(request):
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
             # serverfile.owner = request.user
-            # serverfile.save()
+            serverfile.started_at = datetime.now()
+            serverfile.save()
             async_task(
                 "uploader.tasks.run_processing",
                 serverfile,
                 request.build_absolute_uri("/"),
-                timeout=2*3600,
+                timeout=3600*3,
                 hook="uploader.tasks.email_report_from_task",
             )
             return redirect("/uploader/thanks/")
