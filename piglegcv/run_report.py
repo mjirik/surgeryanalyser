@@ -7,6 +7,29 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
+def plot_finger(img, joints, thickness):
+    for i in range(1, len(joints)):
+        if (joints[i-1][2] > 0.7) and (joints[i][2] > 0.7):
+            cv2.line(img, (int(joints[i-1][0]), int(joints[i-1][1])), (int(joints[i][0]), int(joints[i][1])), (0, 0, 0), thickness=thickness)
+    
+    return img
+    
+def plot_skeleton(img, joints, thickness):
+    line_thickness = thickness
+    # right hand
+    img = plot_finger(img, joints[0][[0, 1, 2, 3, 4]], line_thickness)
+    img = plot_finger(img, joints[0][[0, 5, 6, 7, 8]], line_thickness)
+    img = plot_finger(img, joints[0][[0, 9, 10, 11, 12]], line_thickness)
+    img = plot_finger(img, joints[0][[0, 13, 14, 15, 16]], line_thickness)
+    img = plot_finger(img, joints[0][[0, 17, 18, 19, 20]], line_thickness)
+    # left hand
+    img = plot_finger(img, joints[1][[0, 1, 2, 3, 4]], line_thickness)
+    img = plot_finger(img, joints[1][[0, 5, 6, 7, 8]], line_thickness)
+    img = plot_finger(img, joints[1][[0, 9, 10, 11, 12]], line_thickness)
+    img = plot_finger(img, joints[1][[0, 13, 14, 15, 16]], line_thickness)
+    img = plot_finger(img, joints[1][[0, 17, 18, 19, 20]], line_thickness)
+    #plt.imshow(img)
+    #plt.show()
 
 #ds_threshold [m]
 def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit, output_file_name, output_file_name2, ds_threshold = 0.1):
@@ -178,30 +201,9 @@ def main_report(filename, outputdir):
 
             #hand pose tracking
             if i < M:
-                frame = hand_poses[i]
-                if frame != []:
-                    #print(frame)
-                    hand_joints = np.asarray([[int(x[0]), int(x[1])] for x in frame])
-                    for hj in hand_joints:
-                        cv2.circle(img, (hj[0], hj[1]), 2, (0, 0, 0), thickness=-1)
+                if hand_poses[i] != []:
+                    plot_skeleton(img, np.asarray(hand_poses[i]), 8)
 
-            #plt.imshow(img)
-            #plt.show()
-
-            #orig method
-            #vis_img = img
-            #if True:
-                #vis_img = vis_pose_result(
-                    #pose_model,
-                    #img,
-                    #pose_results,
-                    #dataset=dataset,
-                    #kpt_score_thr=kpt_thr,
-                    #radius=radius,
-                    #thickness=thickness,
-                    #show=False)
-
-            ## save image to the video
             videoWriter.write(img)
             i += 1
 
@@ -222,4 +224,5 @@ def main_report(filename, outputdir):
         print(f'main_report: Video file {filename} is not opended!')
 
 if __name__ == '__main__':
-    main_report('/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/pigleg_test3.mp4', '/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/')
+    #main_report('/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/output.mp4', '/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/')
+    main_report(sys.argv[1], sys.argv[2])

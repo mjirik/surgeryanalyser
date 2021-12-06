@@ -126,7 +126,8 @@ def main_mmpose(filename, outputdir):
                 outputs=output_layer_names)
             
             #printKeypoints(pose_results, out_file)
-            pose_data = pose_results[0]['keypoints'].tolist()
+            if len(pose_results) > 1:
+                pose_data = [pose_results[0]['keypoints'].tolist(), pose_results[1]['keypoints'].tolist()]
         hand_poses.append(pose_data)
 
         if save_out_video:
