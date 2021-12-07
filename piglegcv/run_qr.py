@@ -36,7 +36,7 @@ def main_qr(filename, output_dir):
             pix_size = qr_size / np.linalg.norm(a-b)
             #print(pix_size)
             img_first = img
-            box = res[0]
+            box = [[point.x, point.y] for point in res[0].polygon]
             break
             
     qr_data = {}
