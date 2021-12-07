@@ -14,6 +14,7 @@ try:
 except (ImportError, ModuleNotFoundError):
     has_mmdet = False
 
+from loguru import logger
 
 def process_mmdet_results(mmdet_results, cat_id=1):
     """Process mmdet results, and return a list of bboxes.
@@ -100,10 +101,12 @@ def main_mmpose(filename, outputdir):
     #out_file = open('{}/hand_poses.txt'.format(outputdir), 'w')
     hand_poses = []
     
+    frame_id = -1
     while (cap.isOpened()):
         flag, img = cap.read()
         if not flag:
             break
+        frame_id += 1
         # test a single image, the resulting box is (x1, y1, x2, y2)
         mmdet_results = inference_detector(det_model, img)
 
@@ -112,8 +115,9 @@ def main_mmpose(filename, outputdir):
 
         vis_img = img
         pose_data = []
+        pose_results = None
         if (len(person_results) > 0) and (person_results[0]['bbox'][4] > 0.9):
-            print(person_results)
+            #print(person_results)
             # test a single image, with a list of bboxes.
             pose_results, returned_outputs = inference_top_down_pose_model(
                 pose_model,
@@ -129,8 +133,11 @@ def main_mmpose(filename, outputdir):
             if len(pose_results) > 1:
                 pose_data = [pose_results[0]['keypoints'].tolist(), pose_results[1]['keypoints'].tolist()]
         hand_poses.append(pose_data)
+        
+        if not(frame_id % 10):
+            logger.debug(f'Frame {frame_id} processed!')
 
-        if save_out_video:
+        if save_out_video and pose_results:
             vis_img = vis_pose_result(
                 pose_model,
                 img,
