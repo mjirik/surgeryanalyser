@@ -116,6 +116,7 @@ def main_mmpose(filename, outputdir):
         vis_img = img
         pose_data = []
         pose_results = None
+
         if (len(person_results) > 0) and (person_results[0]['bbox'][4] > 0.9):
             #print(person_results)
             # test a single image, with a list of bboxes.
