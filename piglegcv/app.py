@@ -23,7 +23,7 @@ def do_computer_vision(filename, outputdir):
 
     logger.debug("CV processing start ...")
 
-    main_tracker("./tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
+    main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
     #run_media_processing(Path(filename), Path(outputdir))
     logger.debug("Detectron finished.")
 
