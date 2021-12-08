@@ -7,34 +7,32 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
-def plot_finger(img, joints, thickness):
+def plot_finger(img, joints, threshold, thickness):
     for i in range(1, len(joints)):
-        if (joints[i-1][2] > 0.7) and (joints[i][2] > 0.7):
+        if (joints[i-1][2] > threshold) and (joints[i][2] > threshold):
             cv2.line(img, (int(joints[i-1][0]), int(joints[i-1][1])), (int(joints[i][0]), int(joints[i][1])), (0, 0, 0), thickness=thickness)
     
     return img
     
-def plot_skeleton(img, joints, thickness):
-    line_thickness = thickness
+def plot_skeleton(img, joints, threshold, thickness):
     # right hand
-    img = plot_finger(img, joints[0][[0, 1, 2, 3, 4]], line_thickness)
-    img = plot_finger(img, joints[0][[0, 5, 6, 7, 8]], line_thickness)
-    img = plot_finger(img, joints[0][[0, 9, 10, 11, 12]], line_thickness)
-    img = plot_finger(img, joints[0][[0, 13, 14, 15, 16]], line_thickness)
-    img = plot_finger(img, joints[0][[0, 17, 18, 19, 20]], line_thickness)
+    img = plot_finger(img, joints[0][[0, 1, 2, 3, 4]], threshold, thickness)
+    img = plot_finger(img, joints[0][[0, 5, 6, 7, 8]], threshold, thickness)
+    img = plot_finger(img, joints[0][[0, 9, 10, 11, 12]], threshold, thickness)
+    img = plot_finger(img, joints[0][[0, 13, 14, 15, 16]], threshold, thickness)
+    img = plot_finger(img, joints[0][[0, 17, 18, 19, 20]], threshold, thickness)
     # left hand
-    img = plot_finger(img, joints[1][[0, 1, 2, 3, 4]], line_thickness)
-    img = plot_finger(img, joints[1][[0, 5, 6, 7, 8]], line_thickness)
-    img = plot_finger(img, joints[1][[0, 9, 10, 11, 12]], line_thickness)
-    img = plot_finger(img, joints[1][[0, 13, 14, 15, 16]], line_thickness)
-    img = plot_finger(img, joints[1][[0, 17, 18, 19, 20]], line_thickness)
+    img = plot_finger(img, joints[1][[0, 1, 2, 3, 4]], threshold, thickness)
+    img = plot_finger(img, joints[1][[0, 5, 6, 7, 8]], threshold, thickness)
+    img = plot_finger(img, joints[1][[0, 9, 10, 11, 12]], threshold, thickness)
+    img = plot_finger(img, joints[1][[0, 13, 14, 15, 16]], threshold, thickness)
+    img = plot_finger(img, joints[1][[0, 17, 18, 19, 20]], threshold, thickness)
     #plt.imshow(img)
     #plt.show()
 
 #ds_threshold [m]
-def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit, output_file_name, output_file_name2, ds_threshold = 0.1):
+def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit, output_file_name, output_file_name2, ds_threshold=0.1, dpi=300):
 
-   
     if frame_id != []:
         data_pixel = np.array(data_pixel)
         data = pix_size * data_pixel
@@ -78,11 +76,13 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         #plt.plot(t, dist,'-')
 
         #plt.show()
-        plt.savefig(output_file_name)
+        plt.savefig(output_file_name, dpi=dpi)
         print(f'main_report: figures {output_file_name} is saved')
 
+        ##################
+        ## second graph
         fig = plt.figure()
-        fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
+        #fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
         ax = fig.add_subplot()
         fig.subplots_adjust(top=0.85)
         ax.set_title('Actual in-plain position of needle holder')
@@ -97,15 +97,18 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
             track_label = "Track [pix]"
             vel_label = "Velocity [pix/sec]"
 
-        ax.plot(t[0:-1], np.cumsum(ds), "-k", label= track_label)
-        ax.plot(t[0:-1],gaussian_filter(ds/dt, sigma=2) , ":g", label=vel_label)
-        ax.legend(loc="upper left")
-        #plt.plot(t_gt, y_gt, 'b')
-        #plt.plot(t, x, 'r:')
-        #plt.plot(t, y, 'b:')
+        ax.plot(t[0:-1], np.cumsum(ds), "-k", label= 'Track', linewidth=3)
+        ax.set_ylabel(track_label)
+        
+        ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
+        ax2.plot(t[0:-1],gaussian_filter(ds/dt, sigma=2) , ":g", label='Velocity', linewidth=3)
+        ax2.set_ylabel(vel_label)
+        
+        fig.tight_layout()  # otherwise the right y-label is slightly clipped
+        ax2.legend(loc="upper left")
 
         #plt.show()
-        plt.savefig(output_file_name2)
+        plt.savefig(output_file_name2, dpi=dpi)
         print(f'main_report: figures {output_file_name2} is saved')
     else:
         print('main_report: No data to report')
@@ -115,7 +118,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
 def main_report(filename, outputdir):
     
     cap = cv2.VideoCapture(filename)
-    #assert cap.isOpened(), f'Faild to load video file {args.video_path}'
+    assert cap.isOpened(), f'Faild to load video file {filename}'
 
     if cap.isOpened():
         #output video
@@ -125,29 +128,18 @@ def main_report(filename, outputdir):
                 int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size)
+
         #input object tracking data
         sort_data = []
         with open('{}/tracks.json'.format(outputdir), "r") as fr:
             data = json.load(fr)
             sort_data = data['tracks']
 
-        ##hand pose data
-        #with open('{}/hand_poses.txt'.format(outputdir), 'r') as fr:
-            #hand_pose_file = fr.readlines()
-
         #input hand poses data
         hand_poses = []
         with open('{}/hand_poses.json'.format(outputdir), "r") as fr:
             data = json.load(fr)
             hand_poses = data['hand_poses']
-
-        ##video vizualization
-        #det_cat_id = 1
-        #bbox_thr = 0.3
-        #kpt_thr = 0.5
-        #radius = 5
-        #thickness = 3
-        #cv2.setNumThreads(2)
 
         i = 0
         data_pixel = []
@@ -198,11 +190,13 @@ def main_report(filename, outputdir):
                         color=color,
                         thickness=2,
                     )
+            #else:
+                #break
 
             #hand pose tracking
             if i < M:
                 if hand_poses[i] != []:
-                    plot_skeleton(img, np.asarray(hand_poses[i]), 8)
+                    plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
 
             videoWriter.write(img)
             i += 1
