@@ -101,14 +101,18 @@ def web_report(request, filename_hash:str):
 
     image_list = serverfile.bitmapimage_set.all()
 
-    videofile = Path(serverfile.outputdir) / "pigleg_results.mp4"
-    if not videofile.exists():
-        videofile = Path(serverfile.outputdir) / "video.mp4"
-    logger.debug(videofile)
-    videofile_url = None
-    if videofile.exists():
-        s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
-        videofile_url = s[:s.rfind("/")] + "/" + videofile.name
+    videofiles = Path(serverfile.outputdir).glob("*.mp4")
+    # videofile = Path(serverfile.outputdir) / "pigleg_results.mp4"
+    # if not videofile.exists():
+    #     videofile = Path(serverfile.outputdir) / "video.mp4"
+    videofiles_url = []
+    for videofile in videofiles:
+        logger.debug(videofile.name)
+        if videofile.exists():
+            s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
+            videofile_url = s[:s.rfind("/")] + "/" + videofile.name
+            videofiles_url.append(videofile_url)
+
 
 
     context = {
@@ -116,7 +120,7 @@ def web_report(request, filename_hash:str):
         'mediafile': Path(serverfile.mediafile.name).name,
         'image_list': image_list,
         "next": request.GET['next'] if "next" in request.GET else None,
-        'videofile_url': videofile_url
+        'videofiles_url': videofiles_url
     }
     return render(request,'uploader/web_report.html', context)
 

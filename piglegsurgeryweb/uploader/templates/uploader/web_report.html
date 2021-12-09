@@ -14,19 +14,18 @@
 <div class="container">
 
     <H2> Report: {{mediafile}} </H2>
-    <div class="pt-3">
-        {% if videofile_url == None %}
-        {% else %}
-<!--        <video width="320" height="240" controls>-->
+        {% for videofile_url in videofiles_url %}
+            <div class="pt-3">
+        <!--        <video width="320" height="240" controls>-->
 
-        <div class="embed-responsive embed-responsive-16by9">
-        <video controls autoplay muted>
-            <source src="{{ videofile_url }}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-        </div>
-        {% endif %}
-    </div>
+                <div class="embed-responsive embed-responsive-16by9">
+                <video controls autoplay muted>
+                    <source src="{{ videofile_url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                </div>
+            </div>
+        {% endfor %}
 
 <!--    <p>-->
 <!--        {{ serverfile.mediafile.name }}-->
