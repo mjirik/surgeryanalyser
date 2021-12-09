@@ -122,7 +122,7 @@ def main_report(filename, outputdir):
 
     if cap.isOpened():
         #output video
-        video_name = '{}/pigleg_results.mp4'.format(outputdir)
+        video_name = '{}/pigleg_results.avi'.format(outputdir)
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
                 int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
@@ -181,15 +181,15 @@ def main_report(filename, outputdir):
                     )
 
                     # draw track ID, coordinates: bottom-left
-                    cv2.putText(
-                        img,
-                        str(box[4]),
-                        (int(box[0]) - 2, int(box[3]) - 2),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        fontScale=1,
-                        color=color,
-                        thickness=2,
-                    )
+                    #cv2.putText(
+                        #img,
+                        #str(box[4]),
+                        #(int(box[0]) - 2, int(box[3]) - 2),
+                        #cv2.FONT_HERSHEY_SIMPLEX,
+                        #fontScale=1,
+                        #color=color,
+                        #thickness=2,
+                    #)
             #else:
                 #break
 
@@ -203,6 +203,8 @@ def main_report(filename, outputdir):
 
         cap.release()
         videoWriter.release()
+        cmd = f"ffmpeg -i {video_name} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {outputdir+'/pigleg_results.mp4'}"
+        os.system(cmd)
 
         #############
         # graph report

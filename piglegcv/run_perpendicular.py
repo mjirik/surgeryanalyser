@@ -11,6 +11,9 @@ from skimage.transform import hough_line, hough_line_peaks
 from skimage.feature import canny
 from skimage.draw import line
 from skimage import data
+from skimage.filters import threshold_otsu
+from skimage.morphology import skeletonize
+
 import skimage.color
 from skimage.transform import probabilistic_hough_line
 import matplotlib.pyplot as plt
@@ -49,31 +52,105 @@ def main_perpendicular(filename, outputdir):
     #plt.show()
     
     image = skimage.color.rgb2gray(img)
+    print(np.max(image), np.min(image))
+    
+    #edges = canny(image,  sigma=1)
+    thresh = threshold_otsu(image)
+    #print('thresh', thresh)
+    #edges = (image < thresh)
+    edges = skeletonize(image < thresh)
+    
+    #theta = np.array([-np.pi/10.,np.pi/10.])
+    tested_angles = np.linspace(-np.pi / 10., np.pi / 10., 20, endpoint=False)
+    lines = probabilistic_hough_line(edges, threshold=5, line_length=15,
+                                 line_gap=5, theta=tested_angles)
+
+    # Generating figure 2
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True, sharey=True)
+    ax = axes.ravel()
+
+    ax[0].imshow(image, cmap=cm.gray)
+    ax[0].set_title('Input image')
+
+    ax[1].imshow(edges, cmap=cm.gray)
+    ax[1].set_title('Canny edges')
+
+    ax[2].imshow(edges * 0)
+    for line in lines:
+        p0, p1 = line
+        ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
+    ax[2].set_xlim((0, image.shape[1]))
+    ax[2].set_ylim((image.shape[0], 0))
+    ax[2].set_title('Probabilistic Hough')
+
+    for a in ax:
+        a.set_axis_off()
+
+    plt.tight_layout()
+    plt.show()
+    
+    tested_angles = np.linspace(np.pi/2.-np.pi/10. , np.pi/2.+np.pi/10., 10, endpoint=False)
+    lines = probabilistic_hough_line(edges, threshold=20, line_length=45,
+                                 line_gap=3, theta=tested_angles)
+
+    # Generating figure 2
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True, sharey=True)
+    ax = axes.ravel()
+
+    ax[0].imshow(image, cmap=cm.gray)
+    ax[0].set_title('Input image')
+
+    ax[1].imshow(edges, cmap=cm.gray)
+    ax[1].set_title('Canny edges')
+
+    ax[2].imshow(edges * 0)
+    for line in lines:
+        p0, p1 = line
+        ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
+    ax[2].set_xlim((0, image.shape[1]))
+    ax[2].set_ylim((image.shape[0], 0))
+    ax[2].set_title('Probabilistic Hough')
+
+    for a in ax:
+        a.set_axis_off()
+
+    plt.tight_layout()
+    plt.show()
+    
+    exit()
+    
+    
+    
+    
     edges = canny(image,  sigma=1)
     #edges = image < 0.25
     #edges = filters.sobel(image)
     #edges = 1.0 - image
     #print(edges)
     #exit()
+    plt.imshow(image)
+    plt.figure()
 
     tested_angles = np.linspace(-np.pi / 2 - np.pi/8, -np.pi / 2 + np.pi/8, 250, endpoint=False)
 
     h, theta, d = hough_line(edges, theta=tested_angles)
 
-    # Generating figure 1
+    #Generating figure 1
     #fig, (ax1,ax2,ax3) = plt.subplots(1, 3, figsize=(15, 6))
-    ##ax = axes.ravel()
+    #ax = axes.ravel()
 
-    #ax1.imshow(edges, cmap=cm.gray)
-    #ax1.set_title('Input image')
+    plt.imshow(edges, cmap=cm.gray)
+    #a.set_title('Input image')
     #ax1.set_axis_off()
 
-    #angle_step = 0.5 * np.diff(theta).mean()
-    #d_step = 0.5 * np.diff(d).mean()
-    #bounds = [np.rad2deg(theta[0] - angle_step),
-                #np.rad2deg(theta[-1] + angle_step),
-                #d[-1] + d_step, d[0] - d_step]
-    #ax2.imshow(np.log(1 + h), extent=bounds, cmap=cm.gray, aspect=1 / 1.5)
+    angle_step = 0.5 * np.diff(theta).mean()
+    d_step = 0.5 * np.diff(d).mean()
+    bounds = [np.rad2deg(theta[0] - angle_step),
+                np.rad2deg(theta[-1] + angle_step),
+                d[-1] + d_step, d[0] - d_step]
+    plt.imshow(np.log(1 + h), extent=bounds, cmap=cm.gray, aspect=1 / 5.5)
+    plt.show()
+    exit()
     #ax2.set_title('Hough transform')
     #ax2.set_xlabel('Angles (degrees)')
     #ax2.set_ylabel('Distance (pixels)')
