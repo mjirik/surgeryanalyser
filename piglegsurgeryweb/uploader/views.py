@@ -14,6 +14,7 @@ from .tasks import email_media_recived
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 from django_q.tasks import async_task, schedule, queue_size
 from datetime import datetime
+from django.conf import settings
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index. HAHA")
@@ -128,7 +129,7 @@ def run(request, filename_id):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
-        timeout=3600*3,
+        timeout=settings.PIGLEGCV_TIMEOUT,
         # hook="uploader.tasks.email_report_from_task",
     )
     context = {
@@ -177,7 +178,7 @@ def model_form_upload(request):
                 "uploader.tasks.run_processing",
                 serverfile,
                 request.build_absolute_uri("/"),
-                timeout=3600*3,
+                timeout=settings.PIGLEGCV_TIMEOUT,
                 hook="uploader.tasks.email_report_from_task",
             )
             return redirect("/uploader/thanks/")
