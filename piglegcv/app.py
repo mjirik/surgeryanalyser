@@ -2,7 +2,6 @@ import rq.exceptions
 from rq import Queue
 from rq.job import Job
 
-from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 from worker import conn
 from pathlib import Path
 from loguru import logger

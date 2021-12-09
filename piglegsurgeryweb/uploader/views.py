@@ -15,6 +15,7 @@ from .tasks import email_media_recived
 from django_q.tasks import async_task, schedule, queue_size
 from datetime import datetime
 from django.conf import settings
+# from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index. HAHA")
