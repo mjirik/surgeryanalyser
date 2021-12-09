@@ -99,7 +99,9 @@ def web_report(request, filename_hash:str):
 
     image_list = serverfile.bitmapimage_set.all()
 
-    videofile = Path(serverfile.outputdir) / "video.mp4"
+    videofile = Path(serverfile.outputdir) / "pigleg_results.mp4"
+    if not videofile.exists():
+        videofile = Path(serverfile.outputdir) / "video.mp4"
     logger.debug(videofile)
     videofile_url = None
     if videofile.exists():
