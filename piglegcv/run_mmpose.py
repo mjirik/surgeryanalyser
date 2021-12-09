@@ -117,7 +117,7 @@ def main_mmpose(filename, outputdir):
         pose_data = []
         pose_results = None
 
-        if (len(person_results) > 0) and (person_results[0]['bbox'][4] > 0.9):
+        if (len(person_results) > 0) and (person_results[0]['bbox'][4] > 0.5):
             #print(person_results)
             # test a single image, with a list of bboxes.
             pose_results, returned_outputs = inference_top_down_pose_model(
