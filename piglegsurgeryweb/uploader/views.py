@@ -14,6 +14,8 @@ from .tasks import email_media_recived
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 from django_q.tasks import async_task, schedule, queue_size
 from datetime import datetime
+from django.conf import settings
+# from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index. HAHA")
@@ -99,12 +101,18 @@ def web_report(request, filename_hash:str):
 
     image_list = serverfile.bitmapimage_set.all()
 
-    videofile = Path(serverfile.outputdir) / "video.mp4"
-    logger.debug(videofile)
-    videofile_url = None
-    if videofile.exists():
-        s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
-        videofile_url = s[:s.rfind("/")] + "/video.mp4"
+    videofiles = Path(serverfile.outputdir).glob("*.mp4")
+    # videofile = Path(serverfile.outputdir) / "pigleg_results.mp4"
+    # if not videofile.exists():
+    #     videofile = Path(serverfile.outputdir) / "video.mp4"
+    videofiles_url = []
+    for videofile in videofiles:
+        logger.debug(videofile.name)
+        if videofile.exists():
+            s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
+            videofile_url = s[:s.rfind("/")] + "/" + videofile.name
+            videofiles_url.append(videofile_url)
+
 
 
     context = {
@@ -112,7 +120,7 @@ def web_report(request, filename_hash:str):
         'mediafile': Path(serverfile.mediafile.name).name,
         'image_list': image_list,
         "next": request.GET['next'] if "next" in request.GET else None,
-        'videofile_url': videofile_url
+        'videofiles_url': videofiles_url
     }
     return render(request,'uploader/web_report.html', context)
 
@@ -126,7 +134,7 @@ def run(request, filename_id):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
-        timeout=3600*3,
+        timeout=settings.PIGLEGCV_TIMEOUT,
         # hook="uploader.tasks.email_report_from_task",
     )
     context = {
@@ -175,7 +183,7 @@ def model_form_upload(request):
                 "uploader.tasks.run_processing",
                 serverfile,
                 request.build_absolute_uri("/"),
-                timeout=3600*3,
+                timeout=settings.PIGLEGCV_TIMEOUT,
                 hook="uploader.tasks.email_report_from_task",
             )
             return redirect("/uploader/thanks/")

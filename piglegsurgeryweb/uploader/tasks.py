@@ -95,19 +95,19 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
 
     _run_media_processing_rest_api(input_file, outputdir)
 
-    (outputdir / "empty.txt").touch(exist_ok=True)
+    # (outputdir / "empty.txt").touch(exist_ok=True)
 
     if input_file.suffix in (".mp4", ".avi"):
         _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
 
-    for video_pth in outputdir.glob("*.avi"):
-        input_video_file = video_pth
-        output_video_file = video_pth.with_suffix(".mp4")
-        logger.debug(f"input_video_file={input_video_file}")
-        logger.debug(f"outout_video_file={output_video_file}")
-        if output_video_file.exists():
-            output_video_file.unlink()
-        _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
+    # for video_pth in outputdir.glob("*.avi"):
+    #     input_video_file = video_pth
+    #     output_video_file = video_pth.with_suffix(".mp4")
+    #     logger.debug(f"input_video_file={input_video_file}")
+    #     logger.debug(f"outout_video_file={output_video_file}")
+    #     if output_video_file.exists():
+    #         output_video_file.unlink()
+    #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
     add_generated_images(serverfile)
 
     make_zip(serverfile)
@@ -190,7 +190,8 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
     # logger.debug(f"email_text={html_message}")
     subject = "Pig Leg Surgery Analyser: Report"
     from_email = "mjirik@kky.zcu.cz"
-    to_email = "mjirik@gapps.zcu.cz"
+    # to_email = "mjirik@gapps.zcu.cz"
+    to_email = serverfile.email
 
     # async_task('django.core.mail.send_mail',
     # message = EmailMessage(subject, html_message, from_email, [to_email])

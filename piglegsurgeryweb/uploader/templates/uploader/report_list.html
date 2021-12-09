@@ -6,6 +6,7 @@
     <table class="table">
         <thead>
             <tr>
+                <th scope="col"></th>
                 <th scope="col">Email</th>
                 <th scope="col">File name</th>
                 <th scope="col">Uploaded At</th>
@@ -18,7 +19,11 @@
         <tbody>
         {% for uploadedfile in uploadedfiles %}
         <tr>
-
+            <th scope="col">
+                {% if uploadedfile.bitmapimage_set.all %}
+                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="img-thumbnail"></image>
+                {% endif %}
+            </th>
             <th scope="row"> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.email }} </a> </th>
             <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile }}</a> </th>
             <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.uploaded_at |date:'Y-m-d H:i'}}</a> </th>

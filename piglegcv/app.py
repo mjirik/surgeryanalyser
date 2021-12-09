@@ -1,6 +1,7 @@
 import rq.exceptions
 from rq import Queue
 from rq.job import Job
+
 from worker import conn
 from pathlib import Path
 from loguru import logger
@@ -14,6 +15,7 @@ from run_qr import main_qr
 from run_report import main_report
 import requests
 
+PIGLEGCV_TIMEOUT = 5*3600
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
 
@@ -62,7 +64,7 @@ def index():
 
         job = q.enqueue_call(
             func=do_computer_vision, args=(filename, outputdir), result_ttl=5000,
-            timeout=3600*2,
+            timeout=PIGLEGCV_TIMEOUT,
         )
         job_id = job.get_id()
         logger.debug(f"Job enqueued, job_id={job_id}")

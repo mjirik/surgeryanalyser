@@ -164,6 +164,8 @@ UPLOAD_RELATIVE_PATH = "upload"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+PIGLEGCV_TIMEOUT = 5*3600
+
 Q_CLUSTER = {
     "workers": 1,
     "redis": {
