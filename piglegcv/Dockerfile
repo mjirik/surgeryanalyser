@@ -96,6 +96,9 @@ COPY ./res50_onehand10k_256x256.py .
 COPY ./run_mmpose.py .
 COPY ./run_qr.py .
 COPY ./run_report.py .
+# TODO copy data for mmpose to make run faster
+#RUN mkdir -p ./.root/.cache/torch/hub/checkpoints
+#COPY ./cascade_rcnn_x101_64x4d_fpn_ .root/.cache/torch/hub/checkpoints
 
 #CMD ["./data/images"]
 CMD cd /home/appuser/ && \

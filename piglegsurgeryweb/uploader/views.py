@@ -104,7 +104,7 @@ def web_report(request, filename_hash:str):
     videofile_url = None
     if videofile.exists():
         s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
-        videofile_url = s[:s.rfind("/")] + "/video.mp4"
+        videofile_url = s[:s.rfind("/")] + "/" + videofile.name
 
 
     context = {
