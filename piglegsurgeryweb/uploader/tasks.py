@@ -19,24 +19,6 @@ from django.utils.html import strip_tags
 # from .pigleg_cv import run_media_processing
 
 
-def email_media_recived(serverfile: UploadedFile):
-    # async_task('django.core.mail.send_mail',
-    send_mail(
-        "Pig Leg Surgery Analyser: Media file recived",
-        "Thank you for uploading a file. \n"
-        + "Now we are in an early stage of the project when we plan to collect the data."
-        + " The outputs of the analysis will be introduced in few weeks. "
-        + "We will let you know when the processing will be finished. \n\n"
-        + "Best regards,\n"
-        "Miroslav Jirik, Ph.D.\n\n"
-        "Faculty of Applied Sciences\n"
-        "University of West Bohemia\n"
-        "Pilsen, Czech Republic",
-        "mjirik@kky.zcu.cz",
-        [serverfile.email],
-        fail_silently=False,
-    )
-
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
@@ -213,6 +195,25 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
     #     ["miroslav.jirik@gmail.com"],
     #     fail_silently=False,
     # )
+
+def email_media_recived(serverfile: UploadedFile):
+    # async_task('django.core.mail.send_mail',
+    send_mail(
+        "Pig Leg Surgery Analyser: Media file recived",
+        "Thank you for uploading a file. \n"
+        + "Now we are in an early stage of the project when we plan to collect the data."
+        + " The outputs of the analysis will be introduced in few weeks. "
+        + "We will let you know when the processing will be finished. \n\n"
+        + "Best regards,\n"
+          "Miroslav Jirik, Ph.D.\n\n"
+          "Faculty of Applied Sciences\n"
+          "University of West Bohemia\n"
+          "Pilsen, Czech Republic",
+        "mjirik@kky.zcu.cz",
+        [serverfile.email],
+        fail_silently=False,
+        )
+
 
 
 def run_processing2(serverfile: UploadedFile):
