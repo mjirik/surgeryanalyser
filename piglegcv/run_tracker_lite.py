@@ -4,6 +4,7 @@ import json
 import torch
 import argparse
 import numpy as np
+import albumentations as A
 
 import shlex
 from pyzbar.pyzbar import decode
@@ -23,6 +24,111 @@ CFG = {
     "output_dir": "./__OUTPUT__/",
     "SORT": {"max_age": 4, "min_hits": 6, "iou_threshold": 0.0},  # int  # int  # float
 }
+FLOAT_EPSILON = 1e-5
+
+
+def custom_img_preprocessing_test(image):
+    # init the local variables
+    domain_adapt = CFG['R-CNN']['INPUT']['AUGMENTATIONS']['DOMAIN_ADAPT']
+    augm_type = str(domain_adapt['type']).upper()
+    transforms_alb = list()
+
+    # domain augmentations
+    if (augm_type not in ["NONE", ""]) and (domain_adapt[augm_type]['prob'] >= 1.0 - FLOAT_EPSILON):
+        if domain_adapt['type'] == "FDA":
+            transforms_alb.append(
+                A.FDA(
+                    domain_adapt['ref_img'],
+                    beta_limit=domain_adapt['FDA']['beta_limit'],
+                    p=1.0
+                )
+            )
+        elif domain_adapt['type'] == "histogram_matching":
+            blend_ratio = sum(domain_adapt['HISTOGRAM_MATCHING']['blend_ratio']) / 2
+
+            transforms_alb.append(
+                A.HistogramMatching(
+                    domain_adapt['ref_img'],
+                    blend_ratio=(blend_ratio, blend_ratio),
+                    p=1.0
+                )
+            )
+        elif domain_adapt['type'] == "pixel_distribution_adapt":
+            blend_ratio = sum(domain_adapt['PIXEL_DISTRIBUTION_ADAPT']['blend_ratio']) / 2
+
+            transforms_alb.append(
+                A.PixelDistributionAdaptation(
+                    domain_adapt['ref_img'],
+                    blend_ratio=(blend_ratio, blend_ratio),
+                    transform_type=domain_adapt['PIXEL_DISTRIBUTION_ADAPT']['transform_type'],
+                    p=1.0
+                )
+            )
+
+    # resize an image and apply the transforms
+    new_width, new_height = 0, 0
+    if CFG['R-CNN']['INPUT']['RESIZE']['type'].lower() == "relative":
+        new_height = int(image.shape[0] * CFG['R-CNN']['INPUT']['RESIZE']['RELATIVE']['ratio'])
+        new_width = int(image.shape[1] * CFG['R-CNN']['INPUT']['RESIZE']['RELATIVE']['ratio'])
+    elif CFG['R-CNN']['INPUT']['RESIZE']['type'].lower() == "img_edge":
+        resize_base = CFG['R-CNN']['INPUT']['RESIZE']['IMG_EDGE']
+
+        # check shortest edge of the input image and resize it if it is higher than maximum of sizes, or lower than
+        # minimum of sizes
+        if resize_base['type'] == "shortest":
+            if image.shape[0] < image.shape[1]:
+                if image.shape[0] > max(resize_base['sizes']):
+                    new_height = max(resize_base['sizes'])
+                elif image.shape[0] < min(resize_base['sizes']):
+                    new_height = min(resize_base['sizes'])
+                else:
+                    new_height = 0
+                new_width = new_height * image.shape[1] / image.shape[0]
+            else:
+                if image.shape[1] > max(resize_base['sizes']):
+                    new_width = max(resize_base['sizes'])
+                elif image.shape[1] < min(resize_base['sizes']):
+                    new_width = min(resize_base['sizes'])
+                else:
+                    new_width = 0
+                new_height = new_width * image.shape[0] / image.shape[1]
+        elif resize_base['type'] == "height":
+            if image.shape[0] > max(resize_base['sizes']):
+                new_height = max(resize_base['sizes'])
+            elif image.shape[0] < min(resize_base['sizes']):
+                new_height = min(resize_base['sizes'])
+            else:
+                new_height = 0
+            new_width = new_height * image.shape[1] / image.shape[0]
+        elif resize_base['type'] == "width":
+            if image.shape[1] > max(resize_base['sizes']):
+                new_width = max(resize_base['sizes'])
+            elif image.shape[1] < min(resize_base['sizes']):
+                new_width = min(resize_base['sizes'])
+            else:
+                new_width = 0
+            new_height = new_width * image.shape[0] / image.shape[1]
+        else:
+            raise Exception(f"Wrong type of resizing image for IMG_EDGE. You have {resize_base['type']}")
+    else:
+        raise Exception(f"Wrong type of resizing image. You have {CFG['R-CNN']['INPUT']['RESIZE']['type']}")
+
+    # resize an image
+    transforms = []
+    if int(new_height) != 0:
+        # the image needs to be resized
+        image, transforms = T.apply_transform_gens([
+            T.Resize((
+                int(new_height),
+                int(new_width)
+            ))
+        ], image)
+
+    if len(transforms_alb) != 0:
+        # albumentation transforms
+        image = A.Compose(transforms_alb)(image=image)["image"]
+
+    return image, transforms
 
 
 class CustomPredictor(DefaultPredictor):
@@ -52,23 +158,10 @@ class CustomPredictor(DefaultPredictor):
             if self.input_format == "RGB":
                 # whether the model expects BGR inputs or RGB
                 original_image = original_image[:, :, ::-1]
-            height, width = original_image.shape[:2]
+            height, width = original_image.shape[:2]  # needed for recomputing the boxes positions
 
-            image = (
-                T.Resize(
-                    (
-                        int(
-                            height
-                            * CFG["R-CNN"]["INPUT"]["RESIZE"]["RELATIVE"]["ratio"]
-                        ),
-                        int(
-                            width * CFG["R-CNN"]["INPUT"]["RESIZE"]["RELATIVE"]["ratio"]
-                        ),
-                    )
-                )
-                .get_transform(original_image)
-                .apply_image(original_image)
-            )
+            # preprocess an image
+            image, _ = custom_img_preprocessing_test(original_image)
 
             if self.input_format == "L":
                 image = torch.as_tensor(np.ascontiguousarray(image))
@@ -103,6 +196,7 @@ def get_detectron_cfg() -> CfgNode:
     )
     cfg.MODEL.WEIGHTS = CFG["R-CNN"]["weights"]
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = CFG["DATA"]["num_classes"]
+    cfg.MODEL.ROI_HEADS.NMS_THRESH_TEST = 0.25
 
     # proposals of bounding boxes
     cfg.MODEL.ANCHOR_GENERATOR.ASPECT_RATIOS = CFG["R-CNN"]["ANCHOR"]["aspect_ratios"]
@@ -148,6 +242,9 @@ def read_img(img_name: str):
     else:
         img = cv2.imread(img_name)
 
+    # preprocess an image - �t is done by predictor
+    # img, _ = custom_img_preprocessing_test(img)
+
     return img
 
 
@@ -184,7 +281,7 @@ def tracking_sort(
         ## init
         #if not QRinit:
             ##try read QR code
-            
+
             #grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             #res = decode(grey)
             #if len(res) > 0:
@@ -195,9 +292,9 @@ def tracking_sort(
                 ##print(pix_size)
                 #QRinit = False
                 #img_first = img
-            
 
-        
+
+
 
         #predict
         outputs = predictor(img)
@@ -241,17 +338,17 @@ def tracking_sort(
             # save the tracks after filtering
             filtered_tracks.append(track.tolist())
 
-           
-        
+
+
         # store the final tracks to the list
         final_tracks.append(filtered_tracks)
 
-   
+
 
     # save the final tracks to the json file
     save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
 
-  
+
 
 #if __name__ == "__main__":
 def main_tracker(commandline):
@@ -295,6 +392,9 @@ def main_tracker(commandline):
                 args.model_dir, checkpoint_file.readline()
             )
 
+    CFG['R-CNN']['INPUT']['AUGMENTATIONS']['DOMAIN_ADAPT']['ref_img'] = \
+        [os.path.join(args.model_dir, i) for i in CFG['R-CNN']['INPUT']['AUGMENTATIONS']['DOMAIN_ADAPT']['ref_img']]
+
     # update the optional arguments
     if args.prefix is not "":
         CFG["OUTPUT"]["prefix"] = args.prefix
@@ -308,7 +408,7 @@ def main_tracker(commandline):
     # get the detectron2 configuration and create an output directory
     cfg = get_detectron_cfg()
 
-    
+
     #os.makedirs(cfg.OUTPUT_DIR)
 
     # save the used configuration (for training, testing...)

@@ -1,3 +1,4 @@
+import os
 import rq.exceptions
 from rq import Queue
 from rq.job import Job
@@ -13,6 +14,7 @@ from run_tracker_lite import main_tracker
 from run_mmpose import main_mmpose
 from run_qr import main_qr
 from run_report import main_report
+from run_perpendicular import main_perpendicular
 import requests
 
 PIGLEGCV_TIMEOUT = 5*3600
@@ -25,17 +27,27 @@ def do_computer_vision(filename, outputdir):
 
     logger.debug("CV processing start ...")
 
-    main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
-    #run_media_processing(Path(filename), Path(outputdir))
-    logger.debug("Detectron finished.")
+    images_types = [".jpg", ".png", ".bmp", ".jpeg"]
+    video_types = [".mp4", ".mov"]
+    root, extention = os.path.splitext(sys.argv[1])
+    extention = extention.lower()
+    #print(extention)
 
-    main_mmpose(filename, outputdir)
-    logger.debug("MMpose finished.")
-    
-    main_qr(filename, outputdir)
-    logger.debug("QR finished.")
-    
-    main_report(filename, outputdir)
+    if extention in video_types:
+        main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
+        #run_media_processing(Path(filename), Path(outputdir))
+        logger.debug("Detectron finished.")
+
+        main_mmpose(filename, outputdir)
+        logger.debug("MMpose finished.")
+
+        main_qr(filename, outputdir)
+        logger.debug("QR finished.")
+
+        main_report(filename, outputdir)
+
+    if extention in images_types:
+        main_perpendicular(filename, outputdir)
     
     logger.debug("Work finished")
 
