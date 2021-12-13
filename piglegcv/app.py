@@ -29,7 +29,7 @@ def do_computer_vision(filename, outputdir):
 
     images_types = [".jpg", ".png", ".bmp", ".jpeg"]
     video_types = [".mp4", ".mov"]
-    root, extention = os.path.splitext(sys.argv[1])
+    root, extention = os.path.splitext(filename)
     extention = extention.lower()
     #print(extention)
 
