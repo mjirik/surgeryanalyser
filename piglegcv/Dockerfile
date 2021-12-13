@@ -35,6 +35,7 @@ ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta
 ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
 
 RUN pip install --user -e detectron2_repo
+RUN pip install --user -U git+https://github.com/albumentations-team/albumentations
 
 # SORT
 # RUN git clone https://github.com/abewley/sort.git extern
