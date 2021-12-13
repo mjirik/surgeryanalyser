@@ -107,7 +107,7 @@ def get_results(job_key):
         job = Job.fetch(job_key, connection=conn)
     except rq.exceptions.NoSuchJobError as e:
         logger.debug(f"Job not found. Job ID={job_key}")
-        return jsonify(False)
+        return jsonify(f"Job not found.")
     logger.debug(f"   job.is_finished={job.is_finished}, queue length = {len(q)}")
 
     return jsonify(job.is_finished)
