@@ -51,8 +51,10 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
         is_finished = response.json()
         logger.debug(f".    is_finished={is_finished}  input_file={input_file.name}  time[s]={tm} queue_size={queue_size()}")
 
-
-    logger.debug(f"REST API processing finished.")
+    if type(is_finished) == str:
+        logger.warning(f"REST API processing failed. input_file={input_file.name}  time[s]={tm}")
+    else:
+        logger.debug(f"REST API processing finished.")
 
 
 def run_processing(serverfile: UploadedFile, absolute_uri):
