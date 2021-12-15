@@ -15,21 +15,11 @@ from skimage.exposure import histogram
 import skimage.color
 from skimage.transform import probabilistic_hough_line
 
+from run_report import load_json
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
-
-def load_json(filename):
-    if os.path.isfile(filename): 
-        with open(filename, 'r') as fr:
-            try:
-                data = json.load(fr)
-            except ValueError as e:
-                return {}
-            return data
-    else:
-        return {}
 
 
 def intersectLines( pt1, pt2, ptA, ptB ): 

@@ -7,6 +7,18 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
+def load_json(filename):
+    if os.path.isfile(filename): 
+        with open(filename, 'r') as fr:
+            try:
+                data = json.load(fr)
+            except ValueError as e:
+                return {}
+            return data
+    else:
+        return {}
+
+
 def plot_finger(img, joints, threshold, thickness):
     for i in range(1, len(joints)):
         if (joints[i-1][2] > threshold) and (joints[i][2] > threshold):
@@ -130,17 +142,13 @@ def main_report(filename, outputdir):
         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size)
 
         #input object tracking data
-        sort_data = []
-        with open('{}/tracks.json'.format(outputdir), "r") as fr:
-            data = json.load(fr)
-            sort_data = data['tracks']
-
+        json_data = load_json('{}/tracks.json'.format(outputdir))
+        sort_data = json_data['tracks'] if 'tracks' in json_data else []
+   
         #input hand poses data
-        hand_poses = []
-        with open('{}/hand_poses.json'.format(outputdir), "r") as fr:
-            data = json.load(fr)
-            hand_poses = data['hand_poses']
-
+        json_data = load_json('{}/hand_poses.json'.format(outputdir))
+        hand_poses = json_data['hand_poses'] if 'hand_poses' in json_data else []
+        
         i = 0
         data_pixel = []
         frame_id = []
@@ -208,16 +216,20 @@ def main_report(filename, outputdir):
 
         #############
         # graph report
-        qr_data = {} # input QR data
-        with open('{}/qr_data.json'.format(outputdir), "r") as fr:
-            data = json.load(fr)
-            qr_data = data['qr_data']
+        
+        #input QR data
+        json_data = load_json('{}/qr_data.json'.format(outputdir))
+        qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
         pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
-        is_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
-        create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_detected, os.path.join(outputdir, "graph_1.jpg"), os.path.join(outputdir, "graph_2.jpg"))
+        is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
+        
+        #plot graph
+        create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, os.path.join(outputdir, "graph_1.jpg"), os.path.join(outputdir, "graph_2.jpg"))
+        
         print(f'main_report: Video file {filename} is processed!')
     else:
         print(f'main_report: Video file {filename} is not opended!')
+
 
 if __name__ == '__main__':
     #main_report('/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/output.mp4', '/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/')
