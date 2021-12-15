@@ -43,9 +43,6 @@ ADD ./extern ./extern
 RUN pip install --user filterpy==1.4.5 scikit-image==0.17.2 lap==0.4.0
 RUN pip install --user flask loguru rq
 
-#COPY ./run_tracker_lite.sh .
-# RUN chmod +x ./run_tracker_lite.sh
-# ADD ./01_firstTry_faster_rcnn_R_50_FPN_3x ./model
 
 # Set a fixed model cache directory.
 ENV FVCORE_CACHE="/tmp"
@@ -82,6 +79,11 @@ RUN mkdir -p /home/appuser/mmpose/data
 RUN pip install -r requirements/build.txt
 RUN pip install --no-cache-dir -e .
 WORKDIR /home/appuser
+
+###############
+# For perpendicular
+RUN pip install -U scikit-learn
+
 
 ############
 # MAIN
