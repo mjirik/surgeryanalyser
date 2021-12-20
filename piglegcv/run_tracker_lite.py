@@ -277,10 +277,12 @@ def tracking_sort(
     thr_b = CFG["TRACKING"]["THRESHOLD"]["thr_of_score_1"] - thr_a
 
     cap = cv2.VideoCapture(str(filename))
+    frame_id = -1
     while cap.isOpened():
         ret, img = cap.read()
         if not ret:
             break
+        frame_id += 1
 
         #predict
         outputs = predictor(img)
@@ -338,6 +340,9 @@ def tracking_sort(
         for cat in range(len(filtered_tracks)):
             all_tracks += filtered_tracks[cat]
         final_tracks.append(all_tracks)
+        
+        if not(frame_id % 10):
+            logger.debug(f'Frame {frame_id} processed!')
 
     # save the final tracks to the json file
     save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))

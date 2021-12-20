@@ -133,7 +133,7 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     #get frame to process (the last frame)
     cap = cv2.VideoCapture(str(filename))
     last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-    #print(last_frame)
+    print(last_frame)
     cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
     ret, img = cap.read()
     cap.release()

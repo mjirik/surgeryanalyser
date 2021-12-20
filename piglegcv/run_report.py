@@ -56,11 +56,14 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
 
         ds[ds>ds_threshold] = 0.0
         dt = t[1:] - t[:-1]
+        t = t[0:-1]
         
         #chech double data
         ind = dt != 0.0
         ds = ds[ind]
         dt = dt[ind]
+        t = t[ind]
+        
         
         #print(dt)
         L = np.sum(ds)
@@ -115,11 +118,11 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
             track_label = "Track [pix]"
             vel_label = "Velocity [pix/sec]"
 
-        ax.plot(t[0:-1], np.cumsum(ds), "-"+object_color, label= 'Track', linewidth=3)
+        ax.plot(t, np.cumsum(ds), "-"+object_color, label= 'Track', linewidth=3)
         ax.set_ylabel(track_label)
         
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-        ax2.plot(t[0:-1],gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label='Velocity', linewidth=3)
+        ax2.plot(t, gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label='Velocity', linewidth=3)
         ax2.set_ylabel(vel_label)
         
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
