@@ -13,7 +13,7 @@ from skimage.filters import threshold_otsu, threshold_local
 from skimage.morphology import skeletonize, binary_dilation
 from skimage.exposure import histogram
 import skimage.color
-from skimage.transform import probabilistic_hough_line
+from skimage.transform import probabilistic_hough_line, resize
 
 from run_report import load_json
 
@@ -127,12 +127,13 @@ def intersectLines( pt1, pt2, ptA, ptB ):
 
 
 #####################################
-def main_perpendicular(filename, outputdir, roi=(0.07,0.04)): #(x,y)
+def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
     
     ##################
     #get frame to process (the last frame)
     cap = cv2.VideoCapture(str(filename))
     last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+    #print(last_frame)
     cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
     ret, img = cap.read()
     cap.release()
@@ -146,17 +147,19 @@ def main_perpendicular(filename, outputdir, roi=(0.07,0.04)): #(x,y)
     sort_data = json_data['tracks'] if 'tracks' in json_data else []
     data_pixel = []
     for frame in sort_data:
-        if frame != []:
-            box = np.array(frame[0])
-            position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-            data_pixel.append(position)
+        for track_object in frame:
+            if (len(track_object) == 5) or ((len(track_object) == 6) and (track_object[5] == needle_holder_id)):
+                box = np.array(track_object)
+                position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+                data_pixel.append(position)
+                break #use the first one
     print('Number of data_pixel', len(data_pixel))
     
     #######################
     #input QR data
     json_data = load_json('{}/qr_data.json'.format(outputdir))
     qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
-    pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
+    pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 0.0003 #default 3 desetiny mm na pixel
     is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
     print('pix_size', pix_size)
     
@@ -174,7 +177,7 @@ def main_perpendicular(filename, outputdir, roi=(0.07,0.04)): #(x,y)
     #plt.show()
     
     #################
-    #check and crop image
+    #check and crop image, 1. stage
     column_from = int(center[0] - roi[0]/pix_size/2.)
     if column_from < 0 or column_from >= img.shape[0]:
         column_from = 0
@@ -187,30 +190,56 @@ def main_perpendicular(filename, outputdir, roi=(0.07,0.04)): #(x,y)
     row_to = int(center[1] + roi[1]/pix_size/2.)
     if row_to < 0 or row_to > img.shape[1]:
         row_from = img.shape[1]    
-    img = img[row_from:row_to, column_from:column_to,:]    
-    
-
-    #img = cv2.imread(filename)
-    #plt.plot(data_pixel[:,0], data_pixel[:,1], 'rx')
-    #plt.plot(center[0], center[1], 'o')
-    #plt.imshow(img[:,:,::-1])
-    #plt.show()
-    #img = img[610:870,560:1150,:]
-    #plt.imshow(img[:,:,::-1])
+    image = img[row_from:row_to, column_from:column_to,:]    
+    image = skimage.color.rgb2gray(image)
+    #print(image.shape)
+    #exit()
+    #plt.imshow(image)
     #plt.show()
     
-    image = skimage.color.rgb2gray(img)
-    print(np.max(image), np.min(image))
+    edges = canny(image,  sigma=canny_sigma)
     
-    edges = canny(image,  sigma=1)
+    edges_location = np.where(edges==1)
+    center[0] += np.median(edges_location[1]) - int(image.shape[1]/2.0)
+    center[1] += np.median(edges_location[0]) - int(image.shape[0]/2.0)
+    
+    ###################################
+    #check and crop image, 2. stage
+    column_from = int(center[0] - roi[0]/pix_size/2.)
+    if column_from < 0 or column_from >= img.shape[0]:
+        column_from = 0
+    column_to = int(center[0] + roi[0]/pix_size/2.)
+    if column_to < 0 or column_to > img.shape[0]:
+        column_from = img.shape[0]
+    row_from = int(center[1] - roi[1]/pix_size/2.)
+    if row_from < 0 or row_from >= img.shape[1]:
+        row_from = 0
+    row_to = int(center[1] + roi[1]/pix_size/2.)
+    if row_to < 0 or row_to > img.shape[1]:
+        row_from = img.shape[1]    
+    image = img[row_from:row_to, column_from:column_to,:]    
+    image = skimage.color.rgb2gray(image[:,:,::-1])
+    #plt.imshow(image)
+    #plt.show()
+    
+    #Resize to uniform size
+    image = resize(image, (100,200))
+    
+    edges = canny(image, sigma=canny_sigma)
+    
+    #plt.imshow(edges)
+    #plt.show()
+    #exit()
+  
     #thresh = threshold_otsu(image)
     #thresh = threshold_local(image, 101, offset=0)
     
-    
+    #dilatation of edges defines amount pixels to detrmine binary Otsu treshold
     edges = binary_dilation(edges)
     edges = binary_dilation(edges)
-    #edges = binary_dilation(edges)
-    #edges = binary_dilation(edges)
+    edges = binary_dilation(edges)
+    edges = binary_dilation(edges)
+    edges = binary_dilation(edges)
     
     #his = histogram(image[edges==1], normalize=True)
     #cumhist = np.cumsum(his[0])
@@ -221,15 +250,15 @@ def main_perpendicular(filename, outputdir, roi=(0.07,0.04)): #(x,y)
     #plt.plot(his[1], his[0])
     #plt.show()
     #exit()
+    #thresh = threshold_otsu(image)
     thresh = threshold_otsu(image[edges==1])
     #edges = skeletonize(image < thresh)
-    edges = image < thresh
+    edges *= image < thresh
     
     #print(thresh)
-    #plt.imshow(edges)
+    #plt.imshow(np.array(edges, dtype=np.int32))
     #plt.show()
     #exit()
-    
     
     
     ############################
@@ -310,19 +339,20 @@ def main_perpendicular(filename, outputdir, roi=(0.07,0.04)): #(x,y)
                 intersections.append([xi, yi])
                 intersections_alphas.append(alpha1 - alpha2)
         
-    intersections = np.array(intersections)
-    intersections_alphas = np.array(intersections_alphas)
-    clustering = MeanShift(bandwidth=3).fit(intersections)    
-    print(clustering.labels_)
-    plt.plot(clustering.cluster_centers_[:,0], clustering.cluster_centers_[:,1], 'o')
-    for cluster_id in range(clustering.labels_.max()+1):
-        print(cluster_id)
-        alpha = np.mean(intersections_alphas[clustering.labels_ == cluster_id])
-        plt.text(clustering.cluster_centers_[cluster_id, 0], clustering.cluster_centers_[cluster_id, 1], '{:2.1f}'.format(alpha), c='green', bbox={'facecolor': 'white', 'alpha': 1.0, 'pad': 1}, size='large')
+    if len(intersections) > 0:
+        intersections = np.array(intersections)
+        intersections_alphas = np.array(intersections_alphas)
+        clustering = MeanShift(bandwidth=3).fit(intersections)    
+        #print(clustering.labels_)
+        plt.plot(clustering.cluster_centers_[:,0], clustering.cluster_centers_[:,1], 'o')
+        for cluster_id in range(clustering.labels_.max()+1):
+            #print(cluster_id)
+            alpha = np.mean(intersections_alphas[clustering.labels_ == cluster_id])
+            plt.text(clustering.cluster_centers_[cluster_id, 0], clustering.cluster_centers_[cluster_id, 1], '{:2.1f}'.format(alpha), c='green', bbox={'facecolor': 'white', 'alpha': 1.0, 'pad': 1}, size='large')
         
     plt.axis('off')
 
-    #plt.tight_layout()
+    plt.tight_layout()
     #plt.show()
     plt.savefig(os.path.join(outputdir, "perpendicular.jpg"), dpi=300)
     
