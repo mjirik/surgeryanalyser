@@ -129,6 +129,7 @@ def run(request, filename_id):
 
     from django_q.tasks import async_task
     serverfile.started_at = datetime.now()
+    serverfile.finished_at = None
     serverfile.save()
     async_task(
         "uploader.tasks.run_processing",
