@@ -1,6 +1,8 @@
 import os
 import cv2
 import json
+from loguru import logger
+
 import torch
 import argparse
 import numpy as np

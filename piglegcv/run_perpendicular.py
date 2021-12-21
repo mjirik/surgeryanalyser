@@ -140,7 +140,10 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     if not ret:
         print('Last frame capture error')
         return
-        
+    #print(img.shape)
+    #plt.imshow(img)
+    #plt.show()
+    #exit()
     ###################
     #input object tracking data
     json_data = load_json('{}/tracks.json'.format(outputdir))
@@ -159,9 +162,11 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     #input QR data
     json_data = load_json('{}/qr_data.json'.format(outputdir))
     qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
-    pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 0.0003 #default 3 desetiny mm na pixel
+    pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
+    if pix_size == 1.0:
+        pix_size = 0.0003 #default 3 desetiny mm na pixel
     is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
-    print('pix_size', pix_size)
+    print('use pix_size', pix_size)
     
     
     ##################
@@ -172,7 +177,7 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
         track_center = np.median(data_pixel, axis=0)
         if track_center[0] >= 0.0 and track_center[0] < img.shape[1] and track_center[1] >= 0.0 and track_center[1] < img.shape[0]:
             center = track_center #center is in image
-    print(center)
+    print('center=', center)
     #plt.plot(center[0], center[1],'o')
     #plt.show()
     
@@ -190,9 +195,12 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     row_to = int(center[1] + roi[1]/pix_size/2.)
     if row_to < 0 or row_to > img.shape[1]:
         row_from = img.shape[1]    
-    image = img[row_from:row_to, column_from:column_to,:]    
+    image = img[row_from:row_to, column_from:column_to,:]
+    if image.size == 0:
+        print('Image 1. crop is zero')
+        return
     image = skimage.color.rgb2gray(image)
-    #print(image.shape)
+    #print(image.shape, column_from, )
     #exit()
     #plt.imshow(image)
     #plt.show()
@@ -217,7 +225,10 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     row_to = int(center[1] + roi[1]/pix_size/2.)
     if row_to < 0 or row_to > img.shape[1]:
         row_from = img.shape[1]    
-    image = img[row_from:row_to, column_from:column_to,:]    
+    image = img[row_from:row_to, column_from:column_to,:]
+    if image.size == 0:
+        print('Image 2. crop is zero')
+        return
     image = skimage.color.rgb2gray(image[:,:,::-1])
     #plt.imshow(image)
     #plt.show()
