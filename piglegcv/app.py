@@ -1,4 +1,6 @@
 import os
+import traceback
+
 import rq.exceptions
 from rq import Queue
 from rq.job import Job
@@ -33,25 +35,28 @@ def do_computer_vision(filename, outputdir):
     #extention = extention.lower()
     #print(extention)
 
-    #if extention in video_types:
-    main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
-    #run_media_processing(Path(filename), Path(outputdir))
-    logger.debug("Detectron finished.")
+    try:
+        #if extention in video_types:
+        main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
+        #run_media_processing(Path(filename), Path(outputdir))
+        logger.debug("Detectron finished.")
 
-    main_mmpose(filename, outputdir)
-    logger.debug("MMpose finished.")
+        main_mmpose(filename, outputdir)
+        logger.debug("MMpose finished.")
 
-    main_qr(filename, outputdir)
-    logger.debug("QR finished.")
+        main_qr(filename, outputdir)
+        logger.debug("QR finished.")
 
-    main_report(filename, outputdir)
-    logger.debug("Report finished.")
-    
-    #if extention in images_types:
-    main_perpendicular(filename, outputdir)
-    logger.debug("Perpendicular finished.")
-    
-    logger.debug("Work finished")
+        main_report(filename, outputdir)
+        logger.debug("Report finished.")
+
+        #if extention in images_types:
+        main_perpendicular(filename, outputdir)
+        logger.debug("Perpendicular finished.")
+
+        logger.debug("Work finished")
+    except Exception as e:
+        logger.error(traceback.format_exc())
 
 @app.route("/run", methods=["GET", "POST"])
 def index():
