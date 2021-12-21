@@ -17,6 +17,7 @@ from django_q.tasks import async_task, schedule, queue_size
 from django_q.models import Schedule
 from django.utils.html import strip_tags
 # from .pigleg_cv import run_media_processing
+from datetime import datetime
 
 
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
@@ -95,10 +96,11 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     add_generated_images(serverfile)
 
     make_zip(serverfile)
+
+    serverfile.finished_at = datetime.now()
     serverfile.save()
     logger.debug("Processing finished")
     logger.remove(logger_id)
-
 
 
 def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> Path:

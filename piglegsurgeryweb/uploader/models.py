@@ -27,6 +27,7 @@ class UploadedFile(models.Model):
     zip_file = models.FileField(upload_to="cellimage/", blank=True, null=True)
     hash = models.CharField(max_length=255, blank=True, default=_hash)
     started_at = models.DateTimeField("Started at", blank=True, null=True)
+    finished_at = models.DateTimeField("Finished at", blank=True, null=True)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)

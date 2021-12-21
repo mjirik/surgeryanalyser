@@ -1,6 +1,8 @@
 import os
 import cv2
 import json
+from loguru import logger
+
 import torch
 import argparse
 import numpy as np
@@ -19,10 +21,20 @@ from detectron2.checkpoint import DetectionCheckpointer
 
 from extern.sort import sort
 
-
 CFG = {
     "output_dir": "./__OUTPUT__/",
     "SORT": {"max_age": 4, "min_hits": 6, "iou_threshold": 0.0},  # int  # int  # float
+    "TRACKING": {
+        "THRESHOLD": {
+            "thr_of_score_1": 0.95,  # upper threshold defined as "a minimal score of detection to be used, when the
+                                     # maximal score is equal to 1"
+            "the_of_score_x": 0.20,  # lower threshold defined as "a minimal score of detection to be used, when the
+                                     # maximal score is equal to x" -> all detections with score lower than this value
+                                     # are newer used
+            "x": 0.50   # when maximal score of detection is equal to this value (in current frame), "t_of_score_x"
+                        # defines its minimal score for all others detections that are required to be used for tracking
+        }
+    }
 }
 FLOAT_EPSILON = 1e-5
 
@@ -257,44 +269,22 @@ def save_json(data: dict, output_json: str):
 
 
 def tracking_sort(
-    predictor: CustomPredictor, tracker: sort.Sort, filename: str, output_dir: str
+    predictor: CustomPredictor, tracker: [sort.Sort], filename: str, output_dir: str
 ):
-    track_id_last = 1
+    track_id_last = [1 for _ in range(CFG["DATA"]["num_classes"])]
     final_tracks = list()
 
-    cap = cv2.VideoCapture(str(filename))
-    #source_fps = int(cap.get(cv2.CAP_PROP_FPS))
+    thr_a = (CFG["TRACKING"]["THRESHOLD"]["thr_of_score_1"] - CFG["TRACKING"]["THRESHOLD"]["the_of_score_x"]) / \
+            (1 - CFG["TRACKING"]["THRESHOLD"]["x"])
+    thr_b = CFG["TRACKING"]["THRESHOLD"]["thr_of_score_1"] - thr_a
 
-    #QRinit = False
-    #DbgVidInit = False
-    #pix_size = 1.0
-    #j = 0
+    cap = cv2.VideoCapture(str(filename))
+    frame_id = -1
     while cap.isOpened():
         ret, img = cap.read()
-        #j += 1
         if not ret:
             break
-
-        #if j > 150:
-            #break
-
-        ## init
-        #if not QRinit:
-            ##try read QR code
-
-            #grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            #res = decode(grey)
-            #if len(res) > 0:
-                #a = np.array(res[0].polygon[0])
-                #b = np.array(res[0].polygon[1])
-                ##print(a,b)
-                #pix_size = 0.027 / np.linalg.norm(a-b)
-                ##print(pix_size)
-                #QRinit = False
-                #img_first = img
-
-
-
+        frame_id += 1
 
         #predict
         outputs = predictor(img)
@@ -302,48 +292,59 @@ def tracking_sort(
 
         # filter unwanted detections (only when any detection exists)
         dets = outputs.pred_boxes.tensor.numpy()
+        scores = outputs.scores.numpy()
+        classes = outputs.pred_classes.numpy()
 
-        # filter the detections
-        if len(dets) > 0:
-           scores = outputs.scores.numpy()
-           det = []
-           for s, d in zip(scores, dets):
-              if (max(scores) >= 0.95) and (s < 0.95):
-                 break
-              elif (max(scores) >= 0.80) and (s < 0.80):
-                 break
-              elif (max(scores) >= 0.50) and (s < 0.50):
-                 break
-              elif (max(scores) >= 0.20) and (s < 0.20):
-                 break
-              det.append(d)
-           dets = np.array(det)
+        # divide outputs by its predicted class
+        split_dets = [list() for _ in range(CFG["DATA"]["num_classes"])]     # [[]] * CFG["DATA"]["num_classes"] is not
+        split_scores = [list() for _ in range(CFG["DATA"]["num_classes"])]   # working...
+        for i, cat in enumerate(classes):
+            split_dets[cat].append(dets[i])
+            split_scores[cat].append(scores[i])
 
-        # update SORT
-        tracks = tracker.update(dets)
-
-        # check if the last track id is in the list of all tracks for current image
-        skip_wrong_tracks = True if track_id_last in [i[4] for i in tracks] else False
-
-        # actualize the track id when it was lost with Kalman Filter
-        if (len(tracks) == 1) and skip_wrong_tracks is False:
-            track_id_last = tracks[0][4]
-
-        # tracks are in the format: [x_tl, y_tl, x_br, y_br, track_id], where tl is top-left and br is bottom-right
-        filtered_tracks = list()
-        for track in tracks:
-            if (skip_wrong_tracks is True) and (track[4] != track_id_last):
+        # track each category
+        filtered_tracks = [list() for _ in range(CFG["DATA"]["num_classes"])]
+        for cat in range(CFG["DATA"]["num_classes"]):
+            # check if prediction exists for this category
+            if len(split_scores[cat]) == 0:
                 continue
 
-            # save the tracks after filtering
-            filtered_tracks.append(track.tolist())
+            # filter predictions
+            max_score = max(split_scores[cat])
+            if len(split_dets[cat]) > 0:
+                det = []
+                for s, d in zip(split_scores[cat], split_dets[cat]):
+                    if s >= round(thr_a * max_score + thr_b, 3) and s >= CFG["TRACKING"]["THRESHOLD"]["the_of_score_x"]:
+                        det.append(d)
 
+                dets = np.array(det)
 
+            # update SORT
+            tracks = tracker[cat].update(dets if len(dets) > 0 else np.empty((0, 5)))
+
+            # check if the last track id is in the list of all tracks for current image
+            skip_wrong_tracks = True if track_id_last[cat] in [t[4] for t in tracks] else False
+
+            # actualize the track id when it was lost with Kalman Filter
+            if (len(tracks) == 1) and skip_wrong_tracks is False:
+                track_id_last[cat] = tracks[0][4]
+
+            # tracks are in the format: [x_tl, y_tl, x_br, y_br, track_id], where tl is top-left and br is bottom-right
+            for t, track in enumerate(tracks):
+                if (skip_wrong_tracks is True) and (track[4] != track_id_last[cat]):
+                    continue
+
+                # save the tracks after filtering
+                filtered_tracks[cat].append(track.tolist() + [cat])
 
         # store the final tracks to the list
-        final_tracks.append(filtered_tracks)
-
-
+        all_tracks = list()
+        for cat in range(len(filtered_tracks)):
+            all_tracks += filtered_tracks[cat]
+        final_tracks.append(all_tracks)
+        
+        if not(frame_id % 10):
+            logger.debug(f'Frame {frame_id} processed!')
 
     # save the final tracks to the json file
     save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
@@ -418,11 +419,11 @@ def main_tracker(commandline):
     predictor = CustomPredictor(cfg)
 
     # use the SORT method for tracking the objects
-    mot_tracker = sort.Sort(
+    mot_tracker = [sort.Sort(
         max_age=CFG["SORT"]["max_age"],
         min_hits=CFG["SORT"]["min_hits"],
         iou_threshold=CFG["SORT"]["iou_threshold"],
-    )
+    ) for _ in range(CFG["DATA"]["num_classes"])]
 
     # get tracks
     tracking_sort(predictor, mot_tracker, args.filename, cfg.OUTPUT_DIR)

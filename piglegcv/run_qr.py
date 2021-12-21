@@ -1,3 +1,4 @@
+import sys
 import os
 import cv2
 import json
@@ -49,3 +50,6 @@ def main_qr(filename, output_dir):
     save_json({"qr_data": qr_data}, os.path.join(output_dir, "qr_data.json"))
 
    
+if __name__ == '__main__':
+
+    main_qr(sys.argv[1], sys.argv[2])

@@ -7,6 +7,18 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 
+def load_json(filename):
+    if os.path.isfile(filename): 
+        with open(filename, 'r') as fr:
+            try:
+                data = json.load(fr)
+            except ValueError as e:
+                return {}
+            return data
+    else:
+        return {}
+
+
 def plot_finger(img, joints, threshold, thickness):
     for i in range(1, len(joints)):
         if (joints[i-1][2] > threshold) and (joints[i][2] > threshold):
@@ -31,8 +43,8 @@ def plot_skeleton(img, joints, threshold, thickness):
     #plt.show()
 
 #ds_threshold [m]
-def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit, output_file_name, output_file_name2, ds_threshold=0.1, dpi=300):
-
+def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit, object_color, object_name, output_file_name, output_file_name2, ds_threshold=0.1, dpi=300):
+    
     if frame_id != []:
         data_pixel = np.array(data_pixel)
         data = pix_size * data_pixel
@@ -44,12 +56,21 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
 
         ds[ds>ds_threshold] = 0.0
         dt = t[1:] - t[:-1]
+        t = t[0:-1]
+        
+        #chech double data
+        ind = dt != 0.0
+        ds = ds[ind]
+        dt = dt[ind]
+        t = t[ind]
+        
+        
         #print(dt)
         L = np.sum(ds)
         T = np.sum(dt)
 
         fig = plt.figure()
-        fig.suptitle('Space trajectory analysis of Needle holder', fontsize=14, fontweight='bold')
+        fig.suptitle(f'Space trajectory analysis of {object_name}', fontsize=14, fontweight='bold')
         ax = fig.add_subplot()
         fig.subplots_adjust(top=0.85)
         ax.set_title('Plot on the scene image')
@@ -85,7 +106,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         #fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
         ax = fig.add_subplot()
         fig.subplots_adjust(top=0.85)
-        ax.set_title('Actual in-plain position of needle holder')
+        ax.set_title(f'Actual in-plain position of {object_name}')
         ax.set_xlabel('Time [sec]')
         #ax.set_ylabel('Data')
         #ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
@@ -97,11 +118,11 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
             track_label = "Track [pix]"
             vel_label = "Velocity [pix/sec]"
 
-        ax.plot(t[0:-1], np.cumsum(ds), "-k", label= 'Track', linewidth=3)
+        ax.plot(t, np.cumsum(ds), "-"+object_color, label= 'Track', linewidth=3)
         ax.set_ylabel(track_label)
         
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-        ax2.plot(t[0:-1],gaussian_filter(ds/dt, sigma=2) , ":g", label='Velocity', linewidth=3)
+        ax2.plot(t, gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label='Velocity', linewidth=3)
         ax2.set_ylabel(vel_label)
         
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -115,7 +136,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
     
 
 #####################################
-def main_report(filename, outputdir):
+def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezes","Scissors","None"]):
     
     cap = cv2.VideoCapture(filename)
     assert cap.isOpened(), f'Faild to load video file {filename}'
@@ -130,20 +151,16 @@ def main_report(filename, outputdir):
         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size)
 
         #input object tracking data
-        sort_data = []
-        with open('{}/tracks.json'.format(outputdir), "r") as fr:
-            data = json.load(fr)
-            sort_data = data['tracks']
-
+        json_data = load_json('{}/tracks.json'.format(outputdir))
+        sort_data = json_data['tracks'] if 'tracks' in json_data else []
+   
         #input hand poses data
-        hand_poses = []
-        with open('{}/hand_poses.json'.format(outputdir), "r") as fr:
-            data = json.load(fr)
-            hand_poses = data['hand_poses']
-
+        json_data = load_json('{}/hand_poses.json'.format(outputdir))
+        hand_poses = json_data['hand_poses'] if 'hand_poses' in json_data else []
+        
         i = 0
-        data_pixel = []
-        frame_id = []
+        data_pixels = [[],[],[],[]]
+        frame_ids = [[],[],[],[]]
         N = len(sort_data)
         M = len(hand_poses)
         print('Sort data N=', N,' MMpose data M=', M)
@@ -152,6 +169,10 @@ def main_report(filename, outputdir):
             flag, img = cap.read()
             if not flag:
                 break
+            
+            #print(i)
+            #if i > 500:
+                #break
 
             if img_first is None:
                 img_first = img
@@ -159,18 +180,28 @@ def main_report(filename, outputdir):
             #object tracking
             if i < N:
                 frame = sort_data[i]
-                if frame != []:
-                    #print(frame)
-                    #exit()
-                    box = np.array(frame[0])
-                    #print(i)
-                    frame_id.append(i)
+                for track_object in frame:
+                        
+                    box = np.array(track_object[0:4])
                     position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-                    data_pixel.append(position)
-
+                    
+                    if (len(track_object) == 6):
+                        class_id = track_object[5]
+                    else:
+                        class_id = 0
+                    if class_id < 4:
+                        data_pixels[class_id].append(position)
+                        frame_ids[class_id].append(i)
+                    
                     ## color
                     color = (0, 255, 0)
-
+                    if class_id == 1:
+                        color = (255, 0, 0)
+                    if class_id == 2:
+                        color = (0, 0, 255)
+                    if class_id == 3:
+                        color = (0, 255, 255)
+                
                     # draw detection
                     cv2.rectangle(
                         img,
@@ -181,15 +212,15 @@ def main_report(filename, outputdir):
                     )
 
                     # draw track ID, coordinates: bottom-left
-                    #cv2.putText(
-                        #img,
-                        #str(box[4]),
-                        #(int(box[0]) - 2, int(box[3]) - 2),
-                        #cv2.FONT_HERSHEY_SIMPLEX,
-                        #fontScale=1,
-                        #color=color,
-                        #thickness=2,
-                    #)
+                    cv2.putText(
+                        img,
+                        str(object_names[class_id]),
+                        (int(box[0]) - 2, int(box[3]) - 2),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=1,
+                        color=color,
+                        thickness=2,
+                    )
             #else:
                 #break
 
@@ -208,16 +239,21 @@ def main_report(filename, outputdir):
 
         #############
         # graph report
-        qr_data = {} # input QR data
-        with open('{}/qr_data.json'.format(outputdir), "r") as fr:
-            data = json.load(fr)
-            qr_data = data['qr_data']
+        
+        #input QR data
+        json_data = load_json('{}/qr_data.json'.format(outputdir))
+        qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
         pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
-        is_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
-        create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_detected, os.path.join(outputdir, "graph_1.jpg"), os.path.join(outputdir, "graph_2.jpg"))
+        is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
+        
+        #plot graphs
+        for i, (frame_id, data_pixel,object_color,object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
+            create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
+        
         print(f'main_report: Video file {filename} is processed!')
     else:
         print(f'main_report: Video file {filename} is not opended!')
+
 
 if __name__ == '__main__':
     #main_report('/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/output.mp4', '/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/')

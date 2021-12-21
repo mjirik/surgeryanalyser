@@ -13,6 +13,7 @@
                 {% if user.is_authenticated %}
                 <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>
                 <th scope="col">Started At</th>
+                <th scope="col">Finished At</th>
                 {% endif %}
             </tr>
         </thead>
@@ -31,6 +32,7 @@
             <th><a class="btn btn-light" href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}">Run</a></th>
             <th><a class="btn btn-light" href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send Email</a></th>
             <th>{{ uploadedfile.started_at |date:'Y-m-d H:i'}}</th>
+            <th>{{ uploadedfile.finished_at |date:'Y-m-d H:i'}}</th>
             {% endif %}
         </tr>
         {% endfor %}
