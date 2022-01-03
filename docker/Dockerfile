@@ -98,7 +98,7 @@ RUN conda run -n piglegsurgery --no-capture-output pip install django-q
 RUN apt-get install multitail
 RUN mkdir -p ~/piglegcv/logs/
 
-RUN conda install -n piglegsurgery -c conda-forge django-environ
+#RUN conda install -n piglegsurgery -c conda-forge django-environ
 #COPY start.sh
 #CMD cd /webapps/piglegsurgery/piglegsurgeryweb && conda run -n piglegsurgery --no-capture-output python manage.py qcluster
 #CMD service redis-server start && tail -F /var/log/redis/error.log
