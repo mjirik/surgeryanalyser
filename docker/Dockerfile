@@ -28,9 +28,9 @@ WORKDIR /webapps
 #VOLUME .. /
 USER root
 SHELL ["/bin/bash", "--login", "-c"]
-RUN apt-get update --yes
+RUN #apt-get update --yes
 # PyQt5 => ffmpeg libsm6 libxext6
-RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl supervisor
+RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl supervisor multitail
 # Install our public GPG key to trusted store
 RUN curl https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc | gpg --dearmor > conda.gpg
 RUN install -o root -g root -m 644 conda.gpg /usr/share/keyrings/conda-archive-keyring.gpg
@@ -62,9 +62,8 @@ RUN conda list
 RUN /opt/conda/condabin/conda init bash
 RUN conda run -n piglegsurgery --no-capture-output pip install -r requirements_pip.txt
 
-RUN conda run -n piglegsurgery --no-capture-output pip install gunicorn
-# CMD ["cd", "/webapps/scaffanweb_django"]
-# ENTRYPOINT ["python", "manage.py", 'runserver']
+# gunicorn is in conda env
+#RUN conda run -n piglegsurgery --no-capture-output pip install gunicorn
 
 #CMD conda run -n piglegsurgery --no-capture-output python manage.py qcluster
 #CMD service redis-server start && tail -F /var/log/redis/error.log
@@ -73,29 +72,34 @@ RUN conda run -n piglegsurgery --no-capture-output pip install gunicorn
 #################################
 
 # See https://pytorch.org/ for other options if you use a different version of CUDA
-RUN conda run -n piglegsurgery --no-capture-output pip install tensorboard cmake   # cmake from apt-get is too old
-RUN conda run -n piglegsurgery --no-capture-output pip install torch==1.9 torchvision==0.10 -f https://download.pytorch.org/whl/cu111/torch_stable.html
+#RUN conda run -n piglegsurgery --no-capture-output pip install tensorboard cmake   # cmake from apt-get is too old
+#RUN conda run -n piglegsurgery --no-capture-output pip install torch==1.9 torchvision==0.10 -f https://download.pytorch.org/whl/cu111/torch_stable.html
+#
+#RUN conda run -n piglegsurgery --no-capture-output pip install 'git+https://github.com/facebookresearch/fvcore'
+## install detectron2
+#RUN git clone https://github.com/facebookresearch/detectron2 detectron2_repo
+## set FORCE_CUDA because during `docker build` cuda is not accessible
+#ENV FORCE_CUDA="1"
+## This will by default build detectron2 for all common cuda architectures and take a lot more time,
+## because inside `docker build`, there is no way to tell which architecture will be used.
+#ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
+#ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
+#
+#RUN conda run -n piglegsurgery --no-capture-output pip install -e detectron2_repo
+#
+## Set a fixed model cache directory.
+#ENV FVCORE_CACHE="/tmp"
 
-RUN conda run -n piglegsurgery --no-capture-output pip install 'git+https://github.com/facebookresearch/fvcore'
-# install detectron2
-RUN git clone https://github.com/facebookresearch/detectron2 detectron2_repo
-# set FORCE_CUDA because during `docker build` cuda is not accessible
-ENV FORCE_CUDA="1"
-# This will by default build detectron2 for all common cuda architectures and take a lot more time,
-# because inside `docker build`, there is no way to tell which architecture will be used.
-ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
-ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
-
-RUN conda run -n piglegsurgery --no-capture-output pip install -e detectron2_repo
-
-# Set a fixed model cache directory.
-ENV FVCORE_CACHE="/tmp"
+######### - Detectron 2 install end
 #WORKDIR /home/appuser/detectron2_repo
+
+
+
 WORKDIR /webapps
 
 RUN conda run -n piglegsurgery --no-capture-output pip install django-q
 
-RUN apt-get install multitail
+#RUN apt-get install multitail
 RUN mkdir -p ~/piglegcv/logs/
 
 #RUN conda install -n piglegsurgery -c conda-forge django-environ

@@ -7,22 +7,22 @@ channels:
 #    - pytorch
     - defaults
 dependencies:
-    - python
+    - python=3.9
     - pip
-    - django
+    - django=3
     - django-allauth
     - django-environ
-    - redis
+    - redis=3
 #    - openslide
-    - pandas>=1.1
+    - pandas=1.3
     - google-api-python-client
     - google-auth-httplib2
     - google-auth
     # maybe not necessary
     - google-auth-oauthlib
-    - loguru
-    - gunicorn
-    - opencv
+    - loguru=0.5
+    - gunicorn=20
+    - opencv=4
     - ffmpeg
     - pillow
     - pytest
