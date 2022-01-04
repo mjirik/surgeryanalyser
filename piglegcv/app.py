@@ -19,7 +19,7 @@ from run_report import main_report
 from run_perpendicular import main_perpendicular
 import requests
 
-PIGLEGCV_TIMEOUT = 5*3600
+PIGLEGCV_TIMEOUT = 10*3600
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
 
