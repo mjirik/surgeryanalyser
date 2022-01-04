@@ -2,7 +2,15 @@
 
 # Pig Leg Surgery - Computer Vision REST API
 
-## REST API With Docker
+There are three parts of the application:
+
+* PiglegCV - REST API for computer vision computations
+* Piglegsurgery web app - The user interface which calls internally the Rest API
+* Moodle - 
+
+# PiglegCV REST API 
+
+## Run REST API With Docker
 
 Build docker
 ```bash
@@ -80,15 +88,16 @@ python piglegcv/pigleg_cv.py "H:\biomedical\orig\pigleg_surgery\first_dataset\b6
 
 # Pig Leg Surgery - Web App
 
+## Install with docker
+
 ```commandline
 docker build -t piglegsurgery .
-docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 8000:8000 -p 8080:80 --name piglegsurgery piglegsurgery
+docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 8000:8000 --name piglegsurgery piglegsurgery
 ```
 
 
-## Install
 
-### Ubuntu
+## Install on Ubuntu
 
 Install prerequisites and deploy django
 
@@ -151,5 +160,9 @@ In your web browser:
 http://127.0.0.1:8000/uploader/
 
 
+# Moodle
 
-```
+
+
+
+
