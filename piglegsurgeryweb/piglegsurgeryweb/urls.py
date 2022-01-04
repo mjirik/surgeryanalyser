@@ -14,16 +14,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.generic import TemplateView # <--
 
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
 from django.conf import settings
 from django.conf.urls.static import static
+from uploader import views
+
 
 # from ..uploader import views
 
 urlpatterns = [
+    path("", views.model_form_upload, name="model_form_upload"),
+    # path('', TemplateView.as_view(template_name='uploader/login.html'), name="login"), # <--I
     path(
         "uploader/",
         include(
