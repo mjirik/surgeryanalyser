@@ -179,5 +179,5 @@ Q_CLUSTER = {
         "unix_socket_path": None,
     },
     "timeout": PIGLEGCV_TIMEOUT,
-    "retry": 4000,
+    "retry": PIGLEGCV_TIMEOUT + 1000,
 }
