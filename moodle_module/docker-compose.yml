@@ -28,6 +28,16 @@ services:
       - 'moodledata_data:/bitnami/moodledata'
     depends_on:
       - mariadb
+  piglegsurgery:
+    image: piglegsurgery:latest
+    ports:
+      - '8000:8000'
+    environment:
+      - MOODLE_HOST=moodle
+      - MOODLE_PORT=8080
+      - MOODLE_WSTOKEN='b1d806ecc878dc8221191d64500b1064'
+    volumes:
+      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
 volumes:
   mariadb_data:
     driver: local
