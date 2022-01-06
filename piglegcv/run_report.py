@@ -440,9 +440,9 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                             ## color
                             color = (255, 255, 255)
                             if object_colors[class_id] == "b":
-                                color = (0, 0, 255)
-                            if object_colors[class_id] == "r":
                                 color = (255, 0, 0)
+                            if object_colors[class_id] == "r":
+                                color = (0, 0, 255)
                             if object_colors[class_id] == "g":
                                 color = (0, 255, 0)
                             if object_colors[class_id] == "m":
