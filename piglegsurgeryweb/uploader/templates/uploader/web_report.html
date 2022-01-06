@@ -18,12 +18,40 @@
             <div class="pt-3">
         <!--        <video width="320" height="240" controls>-->
 
-                <div class="embed-responsive embed-responsive-16by9">
-                <video controls autoplay muted>
-                    <source src="{{ videofile_url }}" type="video/mp4">
-                    Your browser does not support the video tag.
+<!--                <div class="embed-responsive embed-responsive-16by9">-->
+<!--                <video controls autoplay muted>-->
+<!--                    <source src="{{ videofile_url }}" type="video/mp4">-->
+<!--                    Your browser does not support the video tag.-->
+<!--                </video>-->
+<!--                </div>-->
+
+                <!--                        width="640"-->
+                <!--                        height="264"-->
+<!--                <div class="embed-responsive embed-responsive-16by9">-->
+<!--                <div class="embed-responsive">-->
+                <!--                        poster="{{ image_list.0.bitmap_image.url }}"-->
+                <video
+                        id="my-video"
+                        class="video-js embed-responsive"
+                        controls
+                        autoplay
+                        muted
+                        preload="auto"
+                        data-setup='{"fluid": true}'
+                >
+                    <source src="{{ videofile_url }}" type="video/mp4" />
+<!--                    <source src="MY_VIDEO.webm" type="video/webm" />-->
+                    <p class="vjs-no-js">
+                        To view this video please enable JavaScript, and consider upgrading to a
+                        web browser that
+                        <a href="https://videojs.com/html5-video-support/" target="_blank"
+                        >supports HTML5 video</a
+                        >
+                    </p>
                 </video>
-                </div>
+<!--                </div>-->
+
+  <script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>
             </div>
         {% endfor %}
 
