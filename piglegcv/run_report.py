@@ -335,7 +335,7 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, ob
 
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    ax2.legend(loc="upper left")
+    #ax2.legend(loc="upper left")
 
 
     print('main_video_report: OK')
@@ -419,8 +419,8 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
 
-            if i > 50:
-               break
+            #if i > 50:
+               #break
 
             if img_first is None:
                 img_first = img.copy()
