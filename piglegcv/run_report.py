@@ -331,9 +331,11 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, ob
             ax.plot(t, ds_cumsum, "-"+object_color, linewidth=1)
             ax2.plot(t, gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label=object_name, linewidth=1)
 
+            print(object_color, object_name)
+
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    #ax2.legend(loc="upper left")
+    ax2.legend(loc="upper left")
 
 
     print('main_video_report: OK')
@@ -417,8 +419,8 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
 
-            #if i > 10:
-                #break
+            if i > 50:
+               break
 
             if img_first is None:
                 img_first = img.copy()
@@ -478,11 +480,12 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             t_i = 1.0/fps * i
             lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=1)
             im_graph = plot3(fig)
+            im_graph = cv2.cvtColor(im_graph, cv2.COLOR_RGB2BGR) #matplotlib generate RGB channels but cv2 BGR
             ax.lines.pop(-1)
             #print(lines)
             #exit()
-
-            im = np.concatenate((img, im_graph[:,:,:3]), axis=0)
+            im_graph = im_graph[:,:,:3]
+            im = np.concatenate((img, im_graph), axis=0)
             #print(im.shape)
             #exit()
             videoWriter.write(im)
