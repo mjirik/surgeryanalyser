@@ -102,6 +102,12 @@ RUN conda run -n piglegsurgery --no-capture-output pip install django-q
 #RUN apt-get install multitail
 RUN mkdir -p ~/piglegcv/logs/
 
+# for dash conversion
+# RUN apt-get install --yes gpac
+
+# to get rotatelogs
+RUN apt-get install --yes apache2-utils
+
 #RUN conda install -n piglegsurgery -c conda-forge django-environ
 #COPY start.sh
 #CMD cd /webapps/piglegsurgery/piglegsurgeryweb && conda run -n piglegsurgery --no-capture-output python manage.py qcluster
