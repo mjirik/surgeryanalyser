@@ -12,6 +12,11 @@ There are three parts of the application:
 
 ## Run REST API With Docker
 
+Get resources (neural network weights)
+```bash
+scp -r mjirik@nympha.zcu.cz:/storage/plzen4-ntis/projects/cv/pigleg/git/piglegsurgery/piglegcv/resources /webapps/piglegsurgery/piglegcv/resources
+```
+
 Build docker
 ```bash
 cd piglegcv
