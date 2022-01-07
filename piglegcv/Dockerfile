@@ -81,7 +81,7 @@ RUN pip install --no-cache-dir -e .
 WORKDIR /home/appuser
 
 ### to get rotatelogs
-RUN apt-get install --yes apache2-utils
+RUN sudo apt-get install --yes apache2-utils
 
 ###############
 # For perpendicular
