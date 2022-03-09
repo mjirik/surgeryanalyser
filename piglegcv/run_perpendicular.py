@@ -136,9 +136,14 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     print(last_frame)
     cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
     ret, img = cap.read()
+    i = 0
+    while (not ret) and (i < 20):
+        print('Last frame capture error, frame', last_frame - i)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - i - 1)
+        ret, img = cap.read()
+        i += 1
     cap.release()
     if not ret:
-        print('Last frame capture error')
         return
     #print(img.shape)
     #plt.imshow(img)
