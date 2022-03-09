@@ -12,6 +12,11 @@ There are three parts of the application:
 
 ## Run REST API With Docker
 
+Get resources (neural network weights)
+```bash
+scp -r mjirik@nympha.zcu.cz:/storage/plzen4-ntis/projects/cv/pigleg/git/piglegsurgery/piglegcv/resources /webapps/piglegsurgery/piglegcv/resources
+```
+
 Build docker
 ```bash
 cd piglegcv
@@ -143,7 +148,7 @@ python manage.py runserver 0:8000 |& tee -a ~/piglegcv/logs/runserver_log.txt
 ```
 or run server for production (multithreaded)
 ```bash
-gunicorn piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 150 --workers 5 |& tee -a ~/piglegcv/logs/gunicorn_log.txt
+gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 1800 --workers 5 |& tee >(rotatelogs -n 3 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt.bck 1k) | tee  >(rotatelogs -n 1 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt 1M)
 ```
 
 

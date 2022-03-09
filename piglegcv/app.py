@@ -7,6 +7,7 @@ from rq.job import Job
 
 from worker import conn
 from pathlib import Path
+import loguru
 from loguru import logger
 import flask
 from flask import request, jsonify, render_template
@@ -26,9 +27,16 @@ q = Queue(connection=conn)
 
 
 def do_computer_vision(filename, outputdir):
-    logger.debug(f"working on {filename}, outputdir={outputdir}")
-
-    logger.debug("CV processing start ...")
+    log_format = loguru._defaults.LOGURU_FORMAT
+    logger_id = logger.add(
+        str(Path(outputdir) / "piglegcv_log.txt"),
+        format=log_format,
+        level="DEBUG",
+        rotation="1 week",
+        backtrace=True,
+        diagnose=True,
+    )
+    logger.debug(f"CV processing started on {filename}, outputdir={outputdir}")
 
     #images_types = [".jpg", ".png", ".bmp", ".jpeg"]
     #video_types = [".mp4", ".mov"]
@@ -60,6 +68,7 @@ def do_computer_vision(filename, outputdir):
         logger.debug("Work finished")
     except Exception as e:
         logger.error(traceback.format_exc())
+    logger.remove(logger_id)
 
 @app.route("/run", methods=["GET", "POST"])
 def index():

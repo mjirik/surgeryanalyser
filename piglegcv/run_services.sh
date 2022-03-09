@@ -1,6 +1,13 @@
 #!/bin/bash
 
-sudo service redis-server start &>> logs/redis_log.txt
-python worker.py &>> logs/worker_log.txt &
-python app.py &>> logs/app_log.txt &
+# there is primary log in .txt file and 3 rotating backup logs
+sudo service redis-server start 2>&1 | \
+   tee >(rotatelogs -n 3 logs/piglegcv_redis_log.txt.bck 1M) | \
+   rotatelogs -n 1 logs/piglegcv_redis_log.txt 1M
+python worker.py 2>&1 | \
+   tee >(rotatelogs -n 3 logs/worker_log.txt.bck 1M) | \
+   rotatelogs -n 1 logs/worker_log.txt 1M &
+python app.py 2>&1 | \
+   tee >(rotatelogs -n 3 logs/app_log.txt.bck 1M) | \
+   rotatelogs -n 1 logs/app_log.txt 1M &
 echo "Services started"

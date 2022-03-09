@@ -18,6 +18,7 @@ from django_q.models import Schedule
 from django.utils.html import strip_tags
 # from .pigleg_cv import run_media_processing
 from datetime import datetime
+import shutil
 
 
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
@@ -60,6 +61,8 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
 
 def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir = Path(serverfile.outputdir)
+    if outputdir.exists() and outputdir.is_dir():
+        shutil.rmtree(outputdir)
     outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
