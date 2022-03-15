@@ -172,7 +172,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 PIGLEGCV_TIMEOUT = 10*3600
 
 Q_CLUSTER = {
-    "workers": 1,
+    "workers": 3,
     "redis": {
         "host": "localhost",
         "port": 6379,
