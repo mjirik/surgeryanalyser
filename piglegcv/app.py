@@ -19,6 +19,7 @@ from run_qr import main_qr
 from run_report import main_report
 from run_perpendicular import main_perpendicular
 import requests
+import time
 
 PIGLEGCV_TIMEOUT = 10*3600
 app = flask.Flask(__name__)
@@ -45,12 +46,15 @@ def do_computer_vision(filename, outputdir):
 
     try:
         #if extention in video_types:
+        s = time.time()
         main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
         #run_media_processing(Path(filename), Path(outputdir))
-        logger.debug("Detectron finished.")
+        logger.debug(f"Detectron finished in {time.time() - s}s.")
 
-        main_mmpose(filename, outputdir)
-        logger.debug("MMpose finished.")
+        #
+        # s = time.time()
+        # main_mmpose(filename, outputdir)
+        # logger.debug(f"MMpose finished in {time.time() - s}s.")
 
         main_qr(filename, outputdir)
         logger.debug("QR finished.")
