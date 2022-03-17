@@ -147,8 +147,16 @@ Run server for development
 python manage.py runserver 0:8000 |& tee -a ~/piglegcv/logs/runserver_log.txt
 ```
 or run server for production (multithreaded)
+
+### Run in production
+
+Run `qcluster`:
 ```bash
-gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 1800 --workers 5 |& tee >(rotatelogs -n 3 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt.bck 1k) | tee  >(rotatelogs -n 1 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt 1M)
+conda run -n piglegsurgery --no-capture-output python manage.py qcluster |& tee -a /webapps/piglegsurgery/piglegsurgeryweb/log/qcluster_log.txt
+```
+and in other bash run `qunicorn`:
+```bash
+conda run -n piglegsurgery --no-capture-output gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 1800 --workers 5 |& tee >(rotatelogs -n 3 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt.bck 1k) | tee  >(rotatelogs -n 1 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt 1M)
 ```
 
 
