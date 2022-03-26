@@ -101,7 +101,7 @@ from mmdet.apis import set_random_seed
 # Modify dataset type and path
 cfg.dataset_type = 'CocoDataset'
 cfg.data_root = str(local_input_data_dir)
-cfg.classes = ('date', 'fig', 'hazelnut',)
+cfg.classes = ('incision',)
 
 cfg.data.test.type = 'CocoDataset'
 cfg.data.test.data_root = str(local_input_data_dir)
@@ -122,7 +122,7 @@ cfg.data.val.img_prefix = 'images/'
 cfg.data.val.classes = cfg.classes
 
 # modify num classes of the model in box head
-cfg.model.roi_head.bbox_head.num_classes = 3
+cfg.model.roi_head.bbox_head.num_classes = 1
 # If we need to finetune a model based on a pre-trained detector, we need to
 # use load_from to set the path of checkpoints.
 cfg.load_from = str(scratchdir / 'checkpoints/faster_rcnn_r50_caffe_fpn_mstrain_3x_coco_20210526_095054-1f77628b.pth')
