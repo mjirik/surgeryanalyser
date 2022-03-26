@@ -17,7 +17,7 @@
 DATETIME=`date +"%y%m%d_%H%M%S"`
 
 # nastaveni domovskeho adresare, v promenne $LOGNAME je ulozeno vase prihlasovaci jmeno
-PROJECTDIR="/storage/plzen1/home/$LOGNAME/projects/piglegsurgery/piglegcv/incision/"
+PROJECTDIR="/storage/plzen1/home/$LOGNAME/projects/piglegsurgery/piglegcv/incision"
 DATADIR="/auto/plzen4-ntis/projects/korpusy_cv/pigleg_surgery/incision_october2021"
 OUTPUTDIR="/auto/plzen4-ntis/projects/korpusy_cv/pigleg_surgery/incision_october2021_output/$DATETIME"
 
