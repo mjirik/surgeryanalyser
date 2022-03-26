@@ -184,8 +184,10 @@ import os.path as osp
 mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
 train_detector(model, datasets, cfg, distributed=False, validate=True)
 
+filelist =  local_input_data_dir.glob("images/*.jpg")
+filelist.extend(local_input_data_dir.glob("images/*.png"))
 
-for img_fn in local_input_data_dir.glob("images/*.jpg"):
+for img_fn in filelist:
 
     # img_fn = local_input_data_dir / '/images/10.jpg'
     img = mmcv.imread(img_fn)
