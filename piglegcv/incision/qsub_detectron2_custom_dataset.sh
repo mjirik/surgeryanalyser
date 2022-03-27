@@ -55,7 +55,7 @@ module add gcc-8.3.0
 
 #source conda activate drawnUI-conda
 conda activate /storage/plzen1/home/$LOGNAME/.conda/envs/drawnUI-conda
-
+conda list
 
 
 #export PATH=/storage/plzen1/home/$LOGNAME/miniconda3/bin:$PATH
