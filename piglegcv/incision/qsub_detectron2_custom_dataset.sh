@@ -26,7 +26,7 @@ echo "job: $PBS_JOBID running on: `uname -n`"
 
 
 # nastaveni automatickeho vymazani adresare SCRATCH pro pripad chyby pri behu ulohy
-trap 'clean_scratch' TERM EXIT
+#trap 'clean_scratch' TERM EXIT
 
 # vstup do adresare SCRATCH, nebo v pripade neuspechu ukonceni s chybovou hodnotou rovnou 1
 cd $SCRATCHDIR || exit 1
@@ -56,6 +56,7 @@ module add gcc-8.3.0
 #source conda activate drawnUI-conda
 conda activate /storage/plzen1/home/$LOGNAME/.conda/envs/drawnUI-conda
 conda list
+which python
 
 
 #export PATH=/storage/plzen1/home/$LOGNAME/miniconda3/bin:$PATH

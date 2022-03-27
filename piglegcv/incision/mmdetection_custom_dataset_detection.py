@@ -25,14 +25,6 @@ from pathlib import Path
 mmdetection_path = Path(mmdet.__file__).parent.parent
 
 
-# import cv2
-# from google.colab.patches import cv2_imshow
-
-# import some common detectron2 utilities
-# from detectron2.engine import DefaultPredictor
-# from detectron2.config import get_cfg
-# from detectron2.utils.visualizer import Visualizer
-# from detectron2.data import MetadataCatalog, DatasetCatalog
 from pathlib import Path
 import os
 scratchdir = Path(os.getenv('SCRATCHDIR', "."))
