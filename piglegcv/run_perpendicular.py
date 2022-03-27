@@ -14,6 +14,7 @@ from skimage.morphology import skeletonize, binary_dilation
 from skimage.exposure import histogram
 import skimage.color
 from skimage.transform import probabilistic_hough_line, resize
+from pathlib import Path
 
 from run_report import load_json
 
@@ -127,24 +128,35 @@ def intersectLines( pt1, pt2, ptA, ptB ):
 
 
 #####################################
+def get_frame_to_process(filename):
+    if Path(filename).suffix in (".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"):
+        # image
+        img = cv2.imread(filename)
+    else:
+        ##################
+        #get frame to process (the last frame)
+        cap = cv2.VideoCapture(str(filename))
+        last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+        print(last_frame)
+        cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
+        ret, img = cap.read()
+        cap.release()
+        if not ret:
+            print('Last frame capture error')
+            return None
+        #print(img.shape)
+        #plt.imshow(img)
+        #plt.show()
+        #exit()
+        ###################
+    return img
+
 def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
-    
-    ##################
-    #get frame to process (the last frame)
-    cap = cv2.VideoCapture(str(filename))
-    last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-    print(last_frame)
-    cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
-    ret, img = cap.read()
-    cap.release()
-    if not ret:
-        print('Last frame capture error')
+    img = get_frame_to_process(filename)
+    if img is None:
+        print("Input image is None")
         return
-    #print(img.shape)
-    #plt.imshow(img)
-    #plt.show()
-    #exit()
-    ###################
+    
     #input object tracking data
     json_data = load_json('{}/tracks.json'.format(outputdir))
     sort_data = json_data['tracks'] if 'tracks' in json_data else []
@@ -372,5 +384,4 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
       
 
 if __name__ == '__main__':
-
     main_perpendicular(sys.argv[1], sys.argv[2])
