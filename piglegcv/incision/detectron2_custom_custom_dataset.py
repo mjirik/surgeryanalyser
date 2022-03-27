@@ -30,8 +30,8 @@ logger.debug(f"input_data_dir={input_data_dir}")
 logger.debug(str(Path(input_data_dir).glob("**/*")))
 
 from detectron2.data.datasets import register_coco_instances
-path_to_json = str(input_data_dir / "data/trainval.json")
-path_to_images = str(input_data_dir / "data/images")
+path_to_json = str(input_data_dir / "annotations/instances_default.json")
+path_to_images = str(input_data_dir / "images")
 
 logger.debug(f"path_to_json={path_to_json}")
 logger.debug(f"path_to_images={path_to_images}")
