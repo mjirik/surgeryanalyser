@@ -125,6 +125,12 @@ def web_report(request, filename_hash:str):
     return render(request,'uploader/web_report.html', context)
 
 def run(request, filename_id):
+    return _run(request, filename_id, port=5000)
+
+def run_development(request, filename_id):
+    return run(request, filename_id, port=5001)
+
+def _run(request, filename_id, port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
 
     from django_q.tasks import async_task
@@ -135,6 +141,7 @@ def run(request, filename_id):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
+        port,
         timeout=settings.PIGLEGCV_TIMEOUT,
         # hook="uploader.tasks.email_report_from_task",
     )
@@ -183,6 +190,7 @@ def model_form_upload(request):
             async_task(
                 "uploader.tasks.run_processing",
                 serverfile,
+                5000,
                 request.build_absolute_uri("/"),
                 timeout=settings.PIGLEGCV_TIMEOUT,
                 hook="uploader.tasks.email_report_from_task",

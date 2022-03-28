@@ -21,7 +21,7 @@ from datetime import datetime
 import shutil
 
 
-def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
+def _run_media_processing_rest_api(input_file:Path, outputdir:Path, port=5000):
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
     logger.debug("Creating request for processing")
@@ -30,7 +30,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
         "outputdir": str(outputdir),
     }
     try:
-        response = requests.post('http://127.0.0.1:5000/run', params=query)
+        response = requests.post(f'http://127.0.0.1:{port}/run', params=query)
     except Exception as e:
         logger.error(traceback.format_exc())
         logger.debug("REST API processing not finished. Connection refused.")
@@ -59,7 +59,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path):
         logger.debug(f"REST API processing finished.")
 
 
-def run_processing(serverfile: UploadedFile, absolute_uri):
+def run_processing(serverfile: UploadedFile, absolute_uri, port):
     outputdir = Path(serverfile.outputdir)
     if outputdir.exists() and outputdir.is_dir():
         shutil.rmtree(outputdir)
@@ -81,7 +81,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri):
     outputdir = Path(serverfile.outputdir)
     logger.debug(f"outputdir={outputdir}")
 
-    _run_media_processing_rest_api(input_file, outputdir)
+    _run_media_processing_rest_api(input_file, outputdir, port)
 
     # (outputdir / "empty.txt").touch(exist_ok=True)
 
