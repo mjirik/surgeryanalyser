@@ -8,6 +8,24 @@ There are three parts of the application:
 * Piglegsurgery web app - The user interface which calls internally the Rest API
 * Moodle - 
 
+
+# Run it with docker
+
+```shell
+git clone ...
+cd piglegsurgery
+# download resources
+# run docker piglegcv
+./piglegcv/run_piglegcv_docker.sh
+cd piglegsurgeryweb
+python manage.py qcluster |& tee -a /webapps/piglegsurgery/piglegsurgeryweb/log/qcluster_log.txt
+```
+
+```shell
+conda run -n piglegsurgery --no-capture-output gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 1800 --workers 5 |& tee >(rotatelogs -n 3 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt.bck 1k) | tee  >(rotatelogs -n 1 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt 1M)
+```
+
+
 # PiglegCV REST API 
 
 ## Run REST API With Docker

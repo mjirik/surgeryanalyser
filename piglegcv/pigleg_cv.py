@@ -8,6 +8,7 @@ import shutil
 
 def run_media_processing(filename: Path, outputdir: Path) -> dict:
     """
+    Not used
     Based on filename suffix the processing
     :param filename:
     :param outputdir:
@@ -21,6 +22,12 @@ def run_media_processing(filename: Path, outputdir: Path) -> dict:
 
 
 def run_video_processing(filename: Path, outputdir: Path) -> dict:
+    """
+    Not used
+    :param filename:
+    :param outputdir:
+    :return:
+    """
     # TODO here will be tracking
     outputdir = Path(outputdir)
     filename = Path(str(filename))
@@ -48,6 +55,12 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
 
 
 def run_image_processing(filename: Path, outputdir: Path) -> dict:
+    """
+    Not used
+    :param filename:
+    :param outputdir:
+    :return:
+    """
     # TODO here will be angle measurement
     return {
         "Stitch Angle 1 [°]": 0.75,

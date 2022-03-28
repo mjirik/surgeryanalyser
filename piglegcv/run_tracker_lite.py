@@ -273,6 +273,11 @@ def tracking_sort(
 ):
     track_id_last = [1 for _ in range(CFG["DATA"]["num_classes"])]
     final_tracks = list()
+    additional_data = {
+        "boxes": [],
+        "scores": [],
+        "classes": []
+    }
 
     thr_a = (CFG["TRACKING"]["THRESHOLD"]["thr_of_score_1"] - CFG["TRACKING"]["THRESHOLD"]["the_of_score_x"]) / \
             (1 - CFG["TRACKING"]["THRESHOLD"]["x"])
@@ -294,6 +299,10 @@ def tracking_sort(
         dets = outputs.pred_boxes.tensor.numpy()
         scores = outputs.scores.numpy()
         classes = outputs.pred_classes.numpy()
+
+        additional_data["boxes"].append(list(dets))
+        additional_data["scores"].append(list(scores))
+        additional_data["classes"].append(list(classes))
 
         # divide outputs by its predicted class
         split_dets = [list() for _ in range(CFG["DATA"]["num_classes"])]     # [[]] * CFG["DATA"]["num_classes"] is not
@@ -347,7 +356,7 @@ def tracking_sort(
             logger.debug(f'Frame {frame_id} processed!')
 
     # save the final tracks to the json file
-    save_json({"tracks": final_tracks}, os.path.join(output_dir, "tracks.json"))
+    save_json({"tracks": final_tracks, "additional_data": additional_data}, os.path.join(output_dir, "tracks.json"))
 
 
 
