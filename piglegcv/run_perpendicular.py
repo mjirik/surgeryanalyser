@@ -134,12 +134,17 @@ def get_frame_to_process(filename):
         img = cv2.imread(filename)
     else:
         ##################
-        #get frame to process (the last frame)
         cap = cv2.VideoCapture(str(filename))
         last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
         print(last_frame)
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
         ret, img = cap.read()
+        i = 0
+        while (not ret) and (i < 20):
+            print('Last frame capture error, frame', last_frame - i)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - i - 1)
+            ret, img = cap.read()
+            i += 1
         cap.release()
         if not ret:
             print('Last frame capture error')
@@ -151,32 +156,9 @@ def get_frame_to_process(filename):
         ###################
     return img
 
-def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
-<<<<<<< HEAD
-    
-    ##################
-    #get frame to process (the last frame)
-    cap = cv2.VideoCapture(str(filename))
-    last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-    print(last_frame)
-    cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
-    ret, img = cap.read()
-    i = 0
-    while (not ret) and (i < 20):
-        print('Last frame capture error, frame', last_frame - i)
-        cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - i - 1)
-        ret, img = cap.read()
-        i += 1
-    cap.release()
-    if not ret:
-=======
-    img = get_frame_to_process(filename)
-    if img is None:
-        print("Input image is None")
->>>>>>> bd756f78155780f6c150dfbd27edc97000e733ae
-        return
-    
-    #input object tracking data
+
+def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma):
+    # input object tracking data
     json_data = load_json('{}/tracks.json'.format(outputdir))
     sort_data = json_data['tracks'] if 'tracks' in json_data else []
     data_pixel = []
@@ -184,86 +166,102 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
         for track_object in frame:
             if (len(track_object) == 5) or ((len(track_object) == 6) and (track_object[5] == needle_holder_id)):
                 box = np.array(track_object)
-                position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+                position = np.array([np.mean([box[0], box[2]]), np.mean([box[1], box[3]])])
                 data_pixel.append(position)
-                break #use the first one
+                break  # use the first one
     print('Number of data_pixel', len(data_pixel))
-    
+
     #######################
-    #input QR data
+    # input QR data
     json_data = load_json('{}/qr_data.json'.format(outputdir))
     qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
     pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
     if pix_size == 1.0:
-        pix_size = 0.0003 #default 3 desetiny mm na pixel
+        pix_size = 0.0003  # default 3 desetiny mm na pixel
     is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
     print('use pix_size', pix_size)
-    
-    
+
     ##################
-    #compute point as center of processing
-    center = np.array([img.shape[1],img.shape[0]]) / 2.0 #default is center of image, (x,y)
+    # compute point as center of processing
+    center = np.array([img.shape[1], img.shape[0]]) / 2.0  # default is center of image, (x,y)
     if data_pixel != []:
         data_pixel = np.array(data_pixel)
         track_center = np.median(data_pixel, axis=0)
-        if track_center[0] >= 0.0 and track_center[0] < img.shape[1] and track_center[1] >= 0.0 and track_center[1] < img.shape[0]:
-            center = track_center #center is in image
+        if track_center[0] >= 0.0 and track_center[0] < img.shape[1] and track_center[1] >= 0.0 and track_center[1] < \
+                img.shape[0]:
+            center = track_center  # center is in image
     print('center=', center)
-    #plt.plot(center[0], center[1],'o')
-    #plt.show()
-    
+    # plt.plot(center[0], center[1],'o')
+    # plt.show()
+
     #################
-    #check and crop image, 1. stage
-    column_from = int(center[0] - roi[0]/pix_size/2.)
+    # check and crop image, 1. stage
+    column_from = int(center[0] - roi[0] / pix_size / 2.)
     if column_from < 0 or column_from >= img.shape[0]:
         column_from = 0
-    column_to = int(center[0] + roi[0]/pix_size/2.)
+    column_to = int(center[0] + roi[0] / pix_size / 2.)
     if column_to < 0 or column_to > img.shape[0]:
         column_from = img.shape[0]
-    row_from = int(center[1] - roi[1]/pix_size/2.)
+    row_from = int(center[1] - roi[1] / pix_size / 2.)
     if row_from < 0 or row_from >= img.shape[1]:
         row_from = 0
-    row_to = int(center[1] + roi[1]/pix_size/2.)
+    row_to = int(center[1] + roi[1] / pix_size / 2.)
     if row_to < 0 or row_to > img.shape[1]:
-        row_from = img.shape[1]    
-    image = img[row_from:row_to, column_from:column_to,:]
+        row_from = img.shape[1]
+    image = img[row_from:row_to, column_from:column_to, :]
     if image.size == 0:
         print('Image 1. crop is zero')
         return
     image = skimage.color.rgb2gray(image)
-    #print(image.shape, column_from, )
-    #exit()
-    #plt.imshow(image)
-    #plt.show()
-    
-    edges = canny(image,  sigma=canny_sigma)
-    
-    edges_location = np.where(edges==1)
-    center[0] += np.median(edges_location[1]) - int(image.shape[1]/2.0)
-    center[1] += np.median(edges_location[0]) - int(image.shape[0]/2.0)
-    
+    # print(image.shape, column_from, )
+    # exit()
+    # plt.imshow(image)
+    # plt.show()
+
+    edges = canny(image, sigma=canny_sigma)
+
+    edges_location = np.where(edges == 1)
+    center[0] += np.median(edges_location[1]) - int(image.shape[1] / 2.0)
+    center[1] += np.median(edges_location[0]) - int(image.shape[0] / 2.0)
+
     ###################################
-    #check and crop image, 2. stage
-    column_from = int(center[0] - roi[0]/pix_size/2.)
+    # check and crop image, 2. stage
+    column_from = int(center[0] - roi[0] / pix_size / 2.)
     if column_from < 0 or column_from >= img.shape[0]:
         column_from = 0
-    column_to = int(center[0] + roi[0]/pix_size/2.)
+    column_to = int(center[0] + roi[0] / pix_size / 2.)
     if column_to < 0 or column_to > img.shape[0]:
         column_from = img.shape[0]
-    row_from = int(center[1] - roi[1]/pix_size/2.)
+    row_from = int(center[1] - roi[1] / pix_size / 2.)
     if row_from < 0 or row_from >= img.shape[1]:
         row_from = 0
-    row_to = int(center[1] + roi[1]/pix_size/2.)
+    row_to = int(center[1] + roi[1] / pix_size / 2.)
     if row_to < 0 or row_to > img.shape[1]:
-        row_from = img.shape[1]    
-    image = img[row_from:row_to, column_from:column_to,:]
+        row_from = img.shape[1]
+    image = img[row_from:row_to, column_from:column_to, :]
     if image.size == 0:
         print('Image 2. crop is zero')
         return
-    image = skimage.color.rgb2gray(image[:,:,::-1])
-    #plt.imshow(image)
-    #plt.show()
-    
+    image = skimage.color.rgb2gray(image[:, :, ::-1])
+    # plt.imshow(image)
+    # plt.show()
+    return image
+
+def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
+    img = get_frame_to_process(filename)
+    if img is None:
+        print("Input image is None")
+        return
+
+    image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)
+
+
+    incision_angle_evaluation(image, canny_sigma, outputdir)
+
+
+
+def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="perpedicular.jpg"):
+    ##  image je oříznutý
     #Resize to uniform size
     image = resize(image, (100,200))
     
@@ -396,7 +394,7 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
 
     plt.tight_layout()
     #plt.show()
-    plt.savefig(os.path.join(outputdir, "perpendicular.jpg"), dpi=300)
+    plt.savefig(os.path.join(outputdir, output_filename), dpi=300)
     
 
 
