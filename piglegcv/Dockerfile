@@ -92,6 +92,7 @@ RUN pip install -U scikit-learn
 # MAIN
 RUN mkdir logs
 
+# check permissions of folowing files before this docker file build!!!
 COPY ./run_tracker_lite.py .
 COPY ./worker.py .
 COPY ./app.py .
@@ -109,6 +110,9 @@ COPY ./resources/mmpose_model/res50_onehand10k_256x256-e67998f6_20200813.pth ./.
 RUN mkdir -p ./.cache/tracker_model
 COPY ./resources/tracker_model ./.cache/tracker_model
 
+USER root
+RUN chmod 777 ./
+USER appuser
 
 #CMD ["./data/images"]
 CMD cd /home/appuser/ && \
