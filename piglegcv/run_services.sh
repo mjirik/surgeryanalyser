@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo "DOCKERLOGNAME=$DOCKERLOGNAME"
 # there is primary log in .txt file and 3 rotating backup logs
 sudo service redis-server start 2>&1 | \
    tee >(rotatelogs -n 3 logs/piglegcv_$DOCKERLOGNAME_redis_log.txt.bck 1M) | \

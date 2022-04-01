@@ -127,11 +127,13 @@ def web_report(request, filename_hash:str):
 
 def run(request, filename_id):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
-    return _run(request, filename_id, PIGLEGCV_HOSTNAME, port=5000)
+    PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
+    return _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
 
 def run_development(request, filename_id):
     PIGLEGCV_HOSTNAME_DEVEL = os.getenv("PIGLEGCV_HOSTNAME_DEVEL", default="127.0.0.1")
-    return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=5001)
+    PIGLEGCV_PORT_DEVEL = os.getenv("PIGLEGCV_PORT", default="5000")
+    return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=int(PIGLEGCV_PORT_DEVEL))
 
 def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
@@ -195,13 +197,14 @@ def model_form_upload(request):
             serverfile.started_at = datetime.now()
             serverfile.save()
             PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
+            PIGLEGCV_PORT= os.getenv("PIGLEGCV_PORT", default="5000")
             make_preview(serverfile)
             async_task(
                 "uploader.tasks.run_processing",
                 serverfile,
                 request.build_absolute_uri("/"),
                 PIGLEGCV_HOSTNAME,
-                5000,
+                int(PIGLEGCV_PORT),
                 timeout=settings.PIGLEGCV_TIMEOUT,
                 hook="uploader.tasks.email_report_from_task",
             )

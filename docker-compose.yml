@@ -34,7 +34,10 @@ services:
       - '8000:8000'
     environment:
       - PIGLEGCV_HOSTNAME=piglegcv
+      - PIGLEGCV_PORT=5000
       - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
+      - PIGLEGCV_PORT_DEVEL=5000
+#     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
       - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
