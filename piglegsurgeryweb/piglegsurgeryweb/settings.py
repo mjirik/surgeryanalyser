@@ -15,6 +15,9 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+PRIVATE_DIR = BASE_DIR / "private"
+PRIVATE_DIR.mkdir(exist_ok=True, parents=True)
+
 
 # EmailProject/settings.py
 # This should be at the start of the file
@@ -41,7 +44,8 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 # SECURITY WARNING: keep the secret key used in production secret!
 from pathlib import Path
 
-scpath = Path(__file__).parent / "secretkey.txt"
+# scpath = Path(__file__).parent / "secretkey.txt"
+scpath = PRIVATE_DIR / "secretkey.txt"
 if scpath.exists():
     with open(scpath, "r") as f:
         SECRET_KEY = f.read().strip()
@@ -106,7 +110,7 @@ WSGI_APPLICATION = "piglegsurgeryweb.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": PRIVATE_DIR / "db.sqlite3",
         'OPTIONS': {
             'timeout': 20,  # in seconds
             # see also

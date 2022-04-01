@@ -39,6 +39,7 @@ services:
     volumes:
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
       - "$HOME/tttest/:/webapps/piglegsurgery/piglegsurgeryweb/tttest"
+      - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
 #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
 #      - "$HOME/pigleg/logs:/webapps/piglegsurgery"
   piglegcv:
