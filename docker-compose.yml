@@ -60,3 +60,7 @@ volumes:
     driver: local
   moodledata_data:
     driver: local
+  piglegweb:
+    driver: local
+  piglegcv:
+    driver: local
