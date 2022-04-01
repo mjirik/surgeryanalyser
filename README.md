@@ -18,7 +18,37 @@ docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
 cd /webapps/piglegsurgery
 docker-compose up
 ```
-aasdfasdsfsafadfasdfasfasfs
+
+## Stop
+
+Stop and remove unused containers
+
+```shell
+cd /webapps/piglegsurgery
+docker-compose down
+```
+
+
+## Check logs
+
+
+```shell
+multitail ~/pigleg/logs/*.txt
+```
+
+## Get into docker
+
+```shell
+docker exec -it piglegsurgery_piglegcv_1 bash
+```
+
+```shell
+docker exec -it piglegsurgery_piglegcv_1 bash
+```
+
+```shell
+docker exec -it piglegsurgery_piglegcv_devel_1 bash
+```
 
 ## Make migrations
 
