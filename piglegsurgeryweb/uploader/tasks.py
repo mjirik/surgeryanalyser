@@ -121,7 +121,7 @@ def make_preview(serverfile: UploadedFile) -> Path:
             frame = _rescale(frame, 0.0125)
             cv2.imwrite(input_file.parent / "frame_000001.jpg")
 
-        serverfile.preview.name = str(filename.relative_to(settings.ROOT_DIR))
+        serverfile.preview.name = str(filename.relative_to(settings.BASE_DIR))
         serverfile.save()
 
 

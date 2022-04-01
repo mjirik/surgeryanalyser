@@ -10,13 +10,32 @@ There are three parts of the application:
 
 
 # Run in production 
-
-## Rest API
-
 Build
 ```
 docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
+docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
+
+cd /webapps/piglegsurgery
+docker-compose up
 ```
+
+## Make migrations
+
+```shell
+docker exec -it piglegsurgery_piglegweb_1 bash
+```
+
+```shell
+conda run -n piglegsurgery python manage.py makemigrations
+conda run -n piglegsurgery python manage.py migrate
+
+```
+
+
+# Other cases
+
+## Rest API
+
 
 Run
 ```shell
@@ -51,17 +70,6 @@ kill -- -$PGID
 ```
 
 
-### Make migrations
-
-```shell
-docker exec -it piglegsurgery_piglegweb_1 bash
-```
-
-```shell
-conda run -n piglegsurgery python manage.py makemigrations
-conda run -n piglegsurgery python manage.py migrate
-
-```
 
 # Special cases
 
