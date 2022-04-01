@@ -31,7 +31,13 @@ docker stop piglegcv
 
 
 ## Web app
+Build
+```
+cd /webapps/piglegsurgery/piglegcv/
+docker build -t piglegcv .
+```
 
+Start
 ```shell
 bash /webapps/piglegsurgery/docker/start.sh
 ```

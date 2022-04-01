@@ -21,7 +21,7 @@ from datetime import datetime
 import shutil
 
 
-def _run_media_processing_rest_api(input_file:Path, outputdir:Path, port=5000):
+def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="127.0.0.1", port=5000):
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
     logger.debug("Creating request for processing")
@@ -29,7 +29,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, port=5000):
         "filename": str(input_file),
         "outputdir": str(outputdir),
     }
-    url = f'http://{settings.PIGLEGCV_HOSTNAME}:{port}/run'
+    url = f'http://{hostname}:{port}/run'
     try:
         response = requests.post(url, params=query)
     except Exception as e:
@@ -48,7 +48,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, port=5000):
         tm += time_to_sleep
         for i in range(int(time_to_sleep/time_step)):
             time.sleep(time_step)
-        response = requests.get(f'http://{settings.PIGLEGCV_HOSTNAME}:{port}/is_finished/{hash}',
+        response = requests.get(f'http://{hostname}:{port}/is_finished/{hash}',
                                 # params=query
                                 )
         is_finished = response.json()
@@ -60,7 +60,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, port=5000):
         logger.debug(f"REST API processing finished.")
 
 
-def run_processing(serverfile: UploadedFile, absolute_uri, port):
+def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     outputdir = Path(serverfile.outputdir)
     if outputdir.exists() and outputdir.is_dir():
         shutil.rmtree(outputdir, ignore_errors=True)
@@ -82,7 +82,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, port):
     outputdir = Path(serverfile.outputdir)
     logger.debug(f"outputdir={outputdir}")
 
-    _run_media_processing_rest_api(input_file, outputdir, port)
+    _run_media_processing_rest_api(input_file, outputdir, hostname, port)
 
     # (outputdir / "empty.txt").touch(exist_ok=True)
 

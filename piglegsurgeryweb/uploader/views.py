@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.contrib.auth.decorators import login_required
 from pathlib import Path
+import os
 
 from loguru import logger
 # Create your views here.
@@ -125,12 +126,14 @@ def web_report(request, filename_hash:str):
     return render(request,'uploader/web_report.html', context)
 
 def run(request, filename_id):
-    return _run(request, filename_id, port=5000)
+    PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
+    return _run(request, filename_id, PIGLEGCV_HOSTNAME, port=5000)
 
 def run_development(request, filename_id):
-    return run(request, filename_id, port=5001)
+    PIGLEGCV_HOSTNAME_DEVEL = os.getenv("PIGLEGCV_HOSTNAME_DEVEL", default="127.0.0.1")
+    return run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=5001)
 
-def _run(request, filename_id, port=5000):
+def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
 
     from django_q.tasks import async_task
@@ -141,6 +144,7 @@ def _run(request, filename_id, port=5000):
         "uploader.tasks.run_processing",
         serverfile,
         request.build_absolute_uri("/"),
+        hostname,
         port,
         timeout=settings.PIGLEGCV_TIMEOUT,
         # hook="uploader.tasks.email_report_from_task",

@@ -163,7 +163,6 @@ STATIC_ROOT = BASE_DIR / "static"
 # )
 # UPLOAD_PATH = os.path.join(MEDIA_ROOT, 'upload')
 UPLOAD_RELATIVE_PATH = "upload"
-PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

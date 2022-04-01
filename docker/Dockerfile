@@ -114,7 +114,7 @@ RUN apt-get install --yes apache2-utils
 #CMD service redis-server start && tail -F /var/log/redis/error.log
 #CMD tail -f /dev/null
 
-ENV PIGLEGCV_HOSTNAME "PIGLEGCV_HOSTNAME"
+#ENV PIGLEGCV_HOSTNAME "PIGLEGCV_HOSTNAME"
 CMD cd /webapps/piglegsurgery/docker && \
     ./start.sh && \
 #    service redis-server start && \
