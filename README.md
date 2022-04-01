@@ -10,13 +10,16 @@ There are three parts of the application:
 
 
 # Run in production 
-Build
+
+Stop, Build and Up again
 ```
+cd /webapps/piglegsurgery
+docker-compose down
+
 docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
 docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
 docker build -t piglegweb /webapps/piglegsurgery/docker/
 
-cd /webapps/piglegsurgery
 docker-compose up
 ```
 
