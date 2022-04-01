@@ -36,8 +36,8 @@ services:
       - PIGLEGCV_HOSTNAME=piglegcv
       - PIGLEGCV_HOSTNAME_DEVEL=piglegcv
     volumes:
-#      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+#      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
 #      - "$HOME/pigleg/logs:/webapps/piglegsurgery"
   piglegcv:
     image: piglegcv:latest
