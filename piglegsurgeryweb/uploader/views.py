@@ -13,7 +13,7 @@ from .forms import UploadedFileForm
 from .models_tools import randomString
 from .tasks import email_media_recived, make_preview
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
-from django_q.tasks import async_task, schedule, queue_size,
+from django_q.tasks import async_task, schedule, queue_size
 from datetime import datetime
 from django.conf import settings
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
