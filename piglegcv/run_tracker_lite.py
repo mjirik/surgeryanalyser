@@ -259,11 +259,21 @@ def read_img(img_name: str):
 
     return img
 
+class NumpyArrayEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyArrayEncoder, self).default(obj)
 
 def save_json(data: dict, output_json: str):
     os.makedirs(os.path.dirname(output_json), exist_ok=True)
     with open(output_json, "w") as output_file:
-        json.dump(data, output_file)
+        json.dump(data, output_file, cls=NumpyArrayEncoder)
 
 
 
