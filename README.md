@@ -163,8 +163,13 @@ python piglegcv/pigleg_cv.py "H:\biomedical\orig\pigleg_surgery\first_dataset\b6
 ## Install with docker
 
 ```commandline
-docker build -t piglegsurgery .
-docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 8000:8000 --name piglegsurgery piglegsurgery
+docker build -t piglegweb .
+docker run -d -v "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery" -p 8000:8000 --name piglegweb piglegweb
+```
+
+On Linux
+```shell
+docker run -d -v "/webapps/piglegsurgery:/webapps/piglegsurgery" -p 8000:8000 --name piglegweb piglegweb
 ```
 
 

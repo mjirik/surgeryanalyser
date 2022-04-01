@@ -116,7 +116,7 @@ RUN apt-get install --yes apache2-utils
 
 #ENV PIGLEGCV_HOSTNAME "PIGLEGCV_HOSTNAME"
 CMD cd /webapps/piglegsurgery/docker && \
-    ./start.sh && \
+    bash ./start.sh && \
 #    service redis-server start && \
 #    /webapps/piglegsurgery/docker/bin/qcluster_start  & && \
 #    /webapps/piglegsurgery/docker/bin/gunicorn_start & && \
