@@ -14,7 +14,7 @@ services:
   moodle:
     image: docker.io/bitnami/moodle:3
     ports:
-      - '80:8080'
+      - '88:8080'
       - '443:8443'
     environment:
       - MOODLE_DATABASE_HOST=mariadb
@@ -38,19 +38,21 @@ services:
     volumes:
 #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
-      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+#      - "$HOME/pigleg/logs:/webapps/piglegsurgery"
   piglegcv:
     image: piglegcv:latest
     ports:
-      - '5000:8000'
+      - '5000:5000'
     volumes:
-      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
-  piglegcv_devel:
-    image: piglegcv:latest
-    ports:
-      - '5001:8000'
-    volumes:
-      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
+      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+#      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
+#  piglegcv_devel:
+#    image: piglegcv:latest
+#    ports:
+#      - '5000:5001'
+#    volumes:
+#      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+##      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
 volumes:
   mariadb_data:
     driver: local
