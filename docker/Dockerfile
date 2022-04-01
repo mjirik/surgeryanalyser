@@ -50,6 +50,8 @@ RUN /opt/conda/condabin/conda init bash
 ENV PATH="/opt/conda/condabin:${PATH}"
 ARG PATH="/opt/conda/condabin:${PATH}"
 
+
+
 # COPY scaffanweb .
 COPY environment.yml .
 COPY requirements_pip.txt .

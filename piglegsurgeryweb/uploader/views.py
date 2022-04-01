@@ -131,7 +131,7 @@ def run(request, filename_id):
 
 def run_development(request, filename_id):
     PIGLEGCV_HOSTNAME_DEVEL = os.getenv("PIGLEGCV_HOSTNAME_DEVEL", default="127.0.0.1")
-    return run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=5001)
+    return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=5001)
 
 def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
