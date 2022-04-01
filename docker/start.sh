@@ -2,6 +2,7 @@
 
 echo "Starting services..."
 echo "PATH=${PATH}"
+mkdir -p ~/piglegcv/logs/
 cd /webapps/piglegsurgery/piglegsurgeryweb
 sudo service redis-server start |& \
     tee >(rotatelogs -n 1 ~/piglegcv/logs/redis_log.txt 1M) | \
