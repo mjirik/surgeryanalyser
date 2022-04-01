@@ -1,6 +1,6 @@
 DATADIR="/webapps/piglegsurgery/piglegsurgeryweb/media"
 #LOGDIR="/webapps/piglegsurgery/piglegsurgeryweb/log"
-LOGDIR="$HOME/piglegcv/logs"
+LOGDIR="$HOME/pigleg/logs"
 mkdir -p $LOGDIR
 docker run --gpus all -d --rm \
   --shm-size=8gb --env="DISPLAY" --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \

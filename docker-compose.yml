@@ -1,7 +1,5 @@
 version: '2'
 services:
-#  test:
-
 #  mariadb:
 #    image: docker.io/bitnami/mariadb:10.3
 #    environment:
@@ -36,20 +34,36 @@ services:
       - '8000:8000'
     environment:
       - PIGLEGCV_HOSTNAME=piglegcv
-      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv
+      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
     volumes:
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
       - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
-#      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
-#      - "$HOME/pigleg/logs:/webapps/piglegsurgery"
+      - "$HOME/pigleg/logs:/root/piglegcv/logs"
+      #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
   piglegcv:
     image: piglegcv:latest
     command: nvidia-smi
     runtime: nvidia
     ports:
       - '5000:5000'
+    environment:
+      - DOCKERLOGNAME=""
     volumes:
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+      - "$HOME/pigleg/logs:/home/appuser/logs"
+      
+  piglegcv_devel:
+    image: piglegcv_devel:latest
+    command: nvidia-smi
+    runtime: nvidia
+    ports:
+      - '5001:5000'
+    environment:
+      - DOCKERLOGNAME="devel"
+    volumes:
+      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+      - "$HOME/pigleg/logs:/home/appuser/logs"
+
 #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
 #  piglegcv_devel:
 #    image: piglegcv:latest

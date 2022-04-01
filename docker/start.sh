@@ -2,24 +2,24 @@
 
 echo "Starting services..."
 echo "PATH=${PATH}"
-mkdir -p ~/piglegcv/logs/
+mkdir -p ~/pigleg/logs/
 cd /webapps/piglegsurgery/piglegsurgeryweb
 if [ -f /.dockerenv ]; then
     echo "I'm inside docker";
     sudo service redis-server start |& \
-        tee >(rotatelogs -n 1 ~/piglegcv/logs/redis_log.txt 1M) | \
-        tee >(rotatelogs -n 3 ~/piglegcv/logs/redis_log.txt.bck 1M)
+        tee >(rotatelogs -n 1 ~/pigleg/logs/redis_$LOGNAME_log.txt 1M) | \
+        tee >(rotatelogs -n 3 ~/pigleg/logs/redis_$LOGNAME_log.txt.bck 1M)
     echo "  Redis started"
 else
     echo "Not running in docker, redis should be already running.";
 fi
 conda run -n piglegsurgery --no-capture-output python manage.py qcluster |& \
-    tee >(rotatelogs -n 1 ~/piglegcv/logs/qcluster_log.txt 1M) | \
-    tee >(rotatelogs -n 3 ~/piglegcv/logs/qcluster_log.txt.bck 1M) &
+    tee >(rotatelogs -n 1 ~/pigleg/logs/qcluster_$LOGNAME_log.txt 1M) | \
+    tee >(rotatelogs -n 3 ~/pigleg/logs/qcluster_$LOGNAME_log.txt.bck 1M) &
 echo "  QCluster started"
 conda run -n piglegsurgery --no-capture-output python manage.py runserver 0:8000 |& \
-    tee >(rotatelogs -n 1 ~/piglegcv/logs/runserver_log.txt 1M) | \
-    tee >(rotatelogs -n 3 ~/piglegcv/logs/runserver_log.txt.bck 1M) &
+    tee >(rotatelogs -n 1 ~/pigleg/logs/runserver_$LOGNAME_log.txt 1M) | \
+    tee >(rotatelogs -n 3 ~/pigleg/logs/runserver_$LOGNAME_log.txt.bck 1M) &
 echo "  Django (debug) webserver started"
 
 # TODO production run
