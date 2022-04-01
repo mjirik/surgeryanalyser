@@ -11,13 +11,8 @@ import loguru
 from loguru import logger
 import flask
 from flask import request, jsonify, render_template
-import time
+from .pigleg_cv import do_computer_vision
 from pigleg_cv import run_media_processing
-from run_tracker_lite import main_tracker
-from run_mmpose import main_mmpose
-from run_qr import main_qr
-from run_report import main_report
-from run_perpendicular import main_perpendicular, get_frame_to_process
 import requests
 import time
 
@@ -25,66 +20,6 @@ PIGLEGCV_TIMEOUT = 10*3600
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
 
-
-def do_computer_vision(filename, outputdir):
-    log_format = loguru._defaults.LOGURU_FORMAT
-    logger_id = logger.add(
-        str(Path(outputdir) / "piglegcv_log.txt"),
-        format=log_format,
-        level="DEBUG",
-        rotation="1 week",
-        backtrace=True,
-        diagnose=True,
-    )
-    logger.debug(f"CV processing started on {filename}, outputdir={outputdir}")
-
-    #images_types = [".jpg", ".png", ".bmp", ".jpeg"]
-    #video_types = [".mp4", ".mov"]
-    #root, extention = os.path.splitext(filename)
-    #extention = extention.lower()
-    #print(extention)
-
-    try:
-        if Path(filename).suffix in (".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"):
-            run_image_processing(filename, outputdir)
-        else:
-            run_video_processing(filename, outputdir)
-
-        logger.debug("Work finished")
-    except Exception as e:
-        logger.error(traceback.format_exc())
-    logger.remove(logger_id)
-
-
-def run_video_processing(filename: Path, outputdir: Path) -> dict:
-    logger.debug("Running video processing...")
-    s = time.time()
-    main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
-    # run_media_processing(Path(filename), Path(outputdir))
-    logger.debug(f"Detectron finished in {time.time() - s}s.")
-
-    #
-    # s = time.time()
-    # main_mmpose(filename, outputdir)
-    # logger.debug(f"MMpose finished in {time.time() - s}s.")
-
-    main_qr(filename, outputdir)
-    logger.debug("QR finished.")
-
-    main_report(filename, outputdir)
-    logger.debug("Report finished.")
-
-    # if extention in images_types:
-
-    main_perpendicular(filename, outputdir)
-    logger.debug("Perpendicular finished.")
-    pass
-
-def run_image_processing(filename: Path, outputdir: Path) -> dict:
-    logger.debug("Running image processing...")
-    main_perpendicular(filename, outputdir)
-    logger.debug("Perpendicular finished.")
-    pass
 
 
 @app.route("/run", methods=["GET", "POST"])

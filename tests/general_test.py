@@ -1,5 +1,4 @@
 import pytest
-import pythontemplate.moduleone
 from pathlib import Path
 
 rootdir = Path(__file__).parent.parent
