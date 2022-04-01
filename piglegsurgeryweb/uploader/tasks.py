@@ -29,11 +29,12 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, port=5000):
         "filename": str(input_file),
         "outputdir": str(outputdir),
     }
+    url = f'http://{settings.PIGLEGCV_HOSTNAME}:{port}/run'
     try:
-        response = requests.post(f'http://127.0.0.1:{port}/run', params=query)
+        response = requests.post(url, params=query)
     except Exception as e:
         logger.error(traceback.format_exc())
-        logger.debug("REST API processing not finished. Connection refused.")
+        logger.debug(f"REST API processing not finished. Connection refused. url={url}")
         return
     logger.debug("Checking if processing is finished...")
 
@@ -47,7 +48,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, port=5000):
         tm += time_to_sleep
         for i in range(int(time_to_sleep/time_step)):
             time.sleep(time_step)
-        response = requests.get(f'http://127.0.0.1:5000/is_finished/{hash}',
+        response = requests.get(f'http://{settings.PIGLEGCV_HOSTNAME}:{port}/is_finished/{hash}',
                                 # params=query
                                 )
         is_finished = response.json()

@@ -113,6 +113,8 @@ RUN apt-get install --yes apache2-utils
 #CMD cd /webapps/piglegsurgery/piglegsurgeryweb && conda run -n piglegsurgery --no-capture-output python manage.py qcluster
 #CMD service redis-server start && tail -F /var/log/redis/error.log
 #CMD tail -f /dev/null
+
+ENV PIGLEGCV_HOSTNAME "PIGLEGCV_HOSTNAME"
 CMD cd /webapps/piglegsurgery/docker && \
     ./start.sh && \
 #    service redis-server start && \
