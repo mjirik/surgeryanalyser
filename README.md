@@ -51,7 +51,17 @@ kill -- -$PGID
 ```
 
 
+### Make migrations
 
+```shell
+docker exec -it piglegsurgery_piglegweb_1 bash
+```
+
+```shell
+conda run -n piglegsurgery python manage.py makemigrations
+conda run -n piglegsurgery python manage.py migrate
+
+```
 
 # Special cases
 

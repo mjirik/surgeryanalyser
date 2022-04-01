@@ -19,6 +19,7 @@ from django.utils.html import strip_tags
 # from .pigleg_cv import run_media_processing
 from datetime import datetime
 import shutil
+from django.conf import settings
 
 
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="127.0.0.1", port=5000):
@@ -120,7 +121,7 @@ def make_preview(serverfile: UploadedFile) -> Path:
             frame = _rescale(frame, 0.0125)
             cv2.imwrite(input_file.parent / "frame_000001.jpg")
 
-        serverfile.preview = filename
+        serverfile.preview.name = str(filename.relative_to(settings.ROOT_DIR))
         serverfile.save()
 
 
