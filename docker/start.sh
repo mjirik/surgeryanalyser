@@ -11,7 +11,7 @@ if [ -f /.dockerenv ]; then
         tee >(rotatelogs -n 3 ~/piglegcv/logs/redis_log.txt.bck 1M)
     echo "  Redis started"
 else
-    echo "I'm living in real world!";
+    echo "Not running in docker, redis should be already running.";
 fi
 conda run -n piglegsurgery --no-capture-output python manage.py qcluster |& \
     tee >(rotatelogs -n 1 ~/piglegcv/logs/qcluster_log.txt 1M) | \
