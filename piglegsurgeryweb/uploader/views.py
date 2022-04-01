@@ -193,12 +193,14 @@ def model_form_upload(request):
             # serverfile.owner = request.user
             serverfile.started_at = datetime.now()
             serverfile.save()
+            PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
             make_preview(serverfile)
             async_task(
                 "uploader.tasks.run_processing",
                 serverfile,
-                5000,
                 request.build_absolute_uri("/"),
+                PIGLEGCV_HOSTNAME,
+                5000,
                 timeout=settings.PIGLEGCV_TIMEOUT,
                 hook="uploader.tasks.email_report_from_task",
             )
