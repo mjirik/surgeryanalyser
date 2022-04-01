@@ -1,5 +1,6 @@
 version: '2'
 services:
+#  test:
 
 #  mariadb:
 #    image: docker.io/bitnami/mariadb:10.3
@@ -43,8 +44,8 @@ services:
 #      - "$HOME/pigleg/logs:/webapps/piglegsurgery"
   piglegcv:
     image: piglegcv:latest
-#    runtime: nvidia
-#    command: nvidia-smi
+    command: nvidia-smi
+    runtime: nvidia
     ports:
       - '5000:5000'
     volumes:
