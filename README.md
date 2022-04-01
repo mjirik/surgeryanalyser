@@ -18,6 +18,7 @@ docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
 cd /webapps/piglegsurgery
 docker-compose up
 ```
+aasdfasdsfsafadfasdfasfasfs
 
 ## Make migrations
 
