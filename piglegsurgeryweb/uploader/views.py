@@ -140,6 +140,7 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile.started_at = datetime.now()
     serverfile.finished_at = None
     serverfile.save()
+    logger.debug(f"hostname={hostname}, port={port}")
 
 
     async_task(
