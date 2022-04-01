@@ -42,8 +42,8 @@ services:
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
   piglegcv:
     image: piglegcv:latest
-    command: nvidia-smi
-    runtime: nvidia
+#    command: nvidia-smi
+#    runtime: nvidia
     ports:
       - '5000:5000'
     environment:
@@ -54,8 +54,8 @@ services:
       
   piglegcv_devel:
     image: piglegcv_devel:latest
-    command: nvidia-smi
-    runtime: nvidia
+#    command: nvidia-smi
+#    runtime: nvidia
     ports:
       - '5001:5000'
     environment:
