@@ -64,7 +64,7 @@ services:
     ports:
       - '5001:5000'
     environment:
-      - DOCKERLOGNAME="devel"
+      - DOCKERLOGNAME=devel
     volumes:
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
       - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'

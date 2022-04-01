@@ -21,6 +21,7 @@ docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
 docker build -t piglegweb /webapps/piglegsurgery/docker/
 
 docker-compose up
+
 ```
 
 ## Stop

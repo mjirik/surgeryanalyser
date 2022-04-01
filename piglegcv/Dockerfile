@@ -116,7 +116,7 @@ USER appuser
 
 #CMD ["./data/images"]
 CMD cd /home/appuser/ && \
-    ./run_services.sh && \
+    bash ./run_services.sh && \
     tail -f /dev/null
 
 #    sudo service redis-server start && \
