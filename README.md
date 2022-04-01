@@ -9,6 +9,49 @@ There are three parts of the application:
 * Moodle - 
 
 
+# Run in production 
+
+## Rest API
+
+Build
+```
+cd /webapps/piglegsurgery/piglegcv/
+docker build -t piglegcv .
+```
+
+Run
+```shell
+bash /webapps/piglegsurgery/piglegcv/run_piglegcv_docker.sh
+```
+
+To kill 
+```shell
+docker stop piglegcv
+```
+
+
+## Web app
+
+```shell
+bash /webapps/piglegsurgery/docker/start.sh
+```
+
+To kill the web app get [PGID](https://www.baeldung.com/linux/kill-members-process-group) (fourth column)
+```shell
+ps -efj | egrep "runserver|qcluster"
+```
+
+Use PGID to kill all children processes
+```shell
+kill -- -$PGID
+```
+
+
+
+
+# Special cases
+
+
 # Run it with docker
 
 ```shell
