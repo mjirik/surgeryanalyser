@@ -11,8 +11,11 @@ import loguru
 from loguru import logger
 import flask
 from flask import request, jsonify, render_template
-from .pigleg_cv import do_computer_vision
-from pigleg_cv import run_media_processing
+# from pigleg_cv import run_media_processing
+try:
+    from pigleg_cv import do_computer_vision
+except ImportError:
+    from .pigleg_cv import do_computer_vision
 import requests
 import time
 
@@ -28,7 +31,6 @@ def index():
     results = {}
     if request.method == "POST":
         # this import solves a rq bug which currently exists
-        from app import do_computer_vision
 
         # get url that the person has entered
         # url = request.form['filename']

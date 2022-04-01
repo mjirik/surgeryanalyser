@@ -14,6 +14,7 @@ Build
 ```
 docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
 docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
+docker build -t piglegweb /webapps/piglegsurgery/docker/
 
 cd /webapps/piglegsurgery
 docker-compose up
