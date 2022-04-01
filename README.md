@@ -15,8 +15,7 @@ There are three parts of the application:
 
 Build
 ```
-cd /webapps/piglegsurgery/piglegcv/
-docker build -t piglegcv .
+docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
 ```
 
 Run
@@ -33,8 +32,7 @@ docker stop piglegcv
 ## Web app
 Build
 ```
-cd /webapps/piglegsurgery/piglegcv/
-docker build -t piglegcv .
+docker build -t piglegweb /webapps/piglegsurgery/docker/
 ```
 
 Start

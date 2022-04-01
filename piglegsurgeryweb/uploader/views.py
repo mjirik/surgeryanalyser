@@ -11,9 +11,9 @@ from django.http import HttpResponse
 from .models import UploadedFile, _hash
 from .forms import UploadedFileForm
 from .models_tools import randomString
-from .tasks import email_media_recived
+from .tasks import email_media_recived, make_preview
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
-from django_q.tasks import async_task, schedule, queue_size
+from django_q.tasks import async_task, schedule, queue_size,
 from datetime import datetime
 from django.conf import settings
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
@@ -140,6 +140,8 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile.started_at = datetime.now()
     serverfile.finished_at = None
     serverfile.save()
+
+
     async_task(
         "uploader.tasks.run_processing",
         serverfile,
@@ -191,6 +193,7 @@ def model_form_upload(request):
             # serverfile.owner = request.user
             serverfile.started_at = datetime.now()
             serverfile.save()
+            make_preview(serverfile)
             async_task(
                 "uploader.tasks.run_processing",
                 serverfile,

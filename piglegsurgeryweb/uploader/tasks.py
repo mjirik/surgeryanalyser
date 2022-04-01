@@ -99,6 +99,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
     add_generated_images(serverfile)
 
+    make_preview(serverfile)
     make_zip(serverfile)
 
     serverfile.finished_at = datetime.now()
@@ -106,10 +107,27 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
+def make_preview(serverfile: UploadedFile) -> Path:
+    input_file = Path(serverfile.mediafile.path)
+    filename = input_file.parent / "frame_000001.jpg"
+    if not filename.exists():
+        if input_file.suffix in (".mp4", ".avi"):
+            fn = serverfile.mediafile
+            _make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1, suffix=".jpg", scale=0.0125)
+        else:
+            import cv2
+            frame = cv2.imread(input_file)
+            frame = _rescale(frame, 0.0125)
+            cv2.imwrite(input_file.parent / "frame_000001.jpg")
 
-def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> Path:
+        serverfile.preview = filename
+        serverfile.save()
+
+
+def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None, suffix=".png", scale=1) -> Path:
     import cv2
     outputdir.mkdir(parents=True, exist_ok=True)
+
 
     cap = cv2.VideoCapture(str(filename))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -123,7 +141,9 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
         if not ret:
             break
         else:
-            file_name = "{}/frame_{:0>6}.png".format(outputdir, frame_id)
+            file_name = "{}/frame_{:0>6}{}".format(outputdir, frame_id, suffix)
+            frame = _rescale(frame, scale)
+
             cv2.imwrite(file_name, frame)
             logger.trace(file_name)
     cap.release()
@@ -132,6 +152,16 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None) -> P
     json_file = outputdir / "meta.json"
     with open(json_file, "w") as f:
         json.dump(metadata, f)
+
+def _rescale(frame, scale):
+    import cv2
+    if scale != 1:
+        width = int(frame.shape[1] * scale)
+        height = int(frame.shape[0] * scale)
+        dim = (width, height)
+        # resize image
+        frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+    return frame
 
 
 def _convert_avi_to_mp4(avi_file_path, output_name):
