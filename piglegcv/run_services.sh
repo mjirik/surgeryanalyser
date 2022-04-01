@@ -4,7 +4,6 @@
 sudo service redis-server start 2>&1 | \
    tee >(rotatelogs -n 3 logs/piglegcv_$DOCKERLOGNAME_redis_log.txt.bck 1M) | \
    rotatelogs -n 1 logs/piglegcv_$DOCKERLOGNAME_redis_log.txt 1M
-
 python worker.py 2>&1 | \
    tee >(rotatelogs -n 3 logs/worker_$DOCKERLOGNAME_log_0.txt.bck 1M) | \
    rotatelogs -n 1 logs/worker_$DOCKERLOGNAME_log_0.txt 1M &

@@ -46,10 +46,11 @@ services:
 #    runtime: nvidia
     ports:
       - '5000:5000'
-    environment:
-      - DOCKERLOGNAME=""
+#    environment:
+#      - DOCKERLOGNAME=""
     volumes:
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+      - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "$HOME/pigleg/logs:/home/appuser/logs"
       
   piglegcv_devel:
@@ -62,6 +63,7 @@ services:
       - DOCKERLOGNAME="devel"
     volumes:
       - "/webapps/piglegsurgery:/webapps/piglegsurgery"
+      - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "$HOME/pigleg/logs:/home/appuser/logs"
 
 #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
