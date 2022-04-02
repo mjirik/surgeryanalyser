@@ -117,9 +117,9 @@ def make_preview(serverfile: UploadedFile) -> Path:
             _make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1, suffix=".jpg", scale=0.0125)
         else:
             import cv2
-            frame = cv2.imread(input_file)
+            frame = cv2.imread(str(input_file))
             frame = _rescale(frame, 0.0125)
-            cv2.imwrite(input_file.parent / "frame_000001.jpg")
+            cv2.imwrite(str(input_file.parent / "frame_000001.jpg"))
 
         serverfile.preview.name = str(filename.relative_to(settings.BASE_DIR))
         serverfile.save()
