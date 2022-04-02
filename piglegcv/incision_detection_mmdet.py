@@ -194,7 +194,7 @@ def train(cfg):
     return model
 
 def predict_image(img_fn, local_output_data_dir):
-    checkpoint_path = Path(__file__).parent / "resources/incision_detection_model/220326_234659.pth"
+    checkpoint_path = Path(__file__).parent / "resources/incision_detection_model/220326_234659_mmdet.pth"
     cfg = prepare_cfg(
         local_input_data_dir,
         local_output_data_dir,
