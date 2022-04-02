@@ -79,7 +79,6 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
     logger.debug("Perpendicular finished.")
     predict_image(filename, outputdir)
     logger.debug("Incision detection finished")
-    pass
 
 # def run_media_processing(filename: Path, outputdir: Path) -> dict:
 #     """
