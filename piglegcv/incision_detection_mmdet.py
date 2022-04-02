@@ -201,14 +201,27 @@ def predict_image(img_fn, local_output_data_dir):
         checkpoint_pth=checkpoint_path,
         work_dir=local_output_data_dir
     )
-    datasets = [build_dataset(cfg.data.train)]
+    # # Initialize the detector
+    # model = build_detector(config.model)
+    #
+    # # Load checkpoint
+    # checkpoint = load_checkpoint(model, str(checkpoint_pth), map_location=device)
+    #
+    # # Set the classes of models for inference
+    # model.CLASSES = checkpoint['meta']['CLASSES']
+    #
+    # # We need to set the model's cfg for inference
+    # model.cfg = config
 
-    logger.debug(f"classes={datasets[0].CLASSES}")
+    # model.CLASSES = checkpoint['meta']['CLASSES']
+    # datasets = [build_dataset(cfg.data.train)]
+
+    # logger.debug(f"classes={datasets[0].CLASSES}")
 
     # Build the detector
     model = build_detector(cfg.model)
     # Add an attribute for visualization convenience
-    model.CLASSES = datasets[0].CLASSES
+    # model.CLASSES = datasets[0].CLASSES
 
     # Create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
