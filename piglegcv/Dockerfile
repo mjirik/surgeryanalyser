@@ -104,10 +104,13 @@ COPY ./run_mmpose.py .
 COPY ./run_qr.py .
 COPY ./run_report.py .
 COPY ./run_perpendicular.py .
+COPY ./incision_detection_mmdet.py .
 RUN mkdir -p ./.cache/torch/hub/checkpoints/
 COPY ./resources/mmpose_model/cascade_rcnn_x101_64x4d_fpn_20e_onehand10k-dac19597_20201030.pth ./.cache/torch/hub/checkpoints/
 COPY ./resources/mmpose_model/res50_onehand10k_256x256-e67998f6_20200813.pth ./.cache/torch/hub/checkpoints/
 RUN mkdir -p ./.cache/tracker_model
+RUN mkdir -p ./resources/incision_detection_models
+COPY ./resources/incision_detection_model/220326_234659.pth ./resources/incision_detection_models/
 COPY ./resources/tracker_model ./.cache/tracker_model
 
 USER root

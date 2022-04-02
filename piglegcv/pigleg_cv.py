@@ -13,6 +13,7 @@ try:
     from .run_qr import main_qr
     from .run_report import main_report
     from .run_perpendicular import main_perpendicular, get_frame_to_process
+    from .incision_detection_mmdet import predict_image
 except ImportError as e:
     logger.debug(e)
     from run_tracker_lite import main_tracker
@@ -20,6 +21,7 @@ except ImportError as e:
     from run_qr import main_qr
     from run_report import main_report
     from run_perpendicular import main_perpendicular, get_frame_to_process
+    from incision_detection_mmdet import predict_image
 
 
 
@@ -75,6 +77,8 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
     logger.debug("Running image processing...")
     main_perpendicular(filename, outputdir)
     logger.debug("Perpendicular finished.")
+    predict_image(filename, outputdir)
+    logger.debug("Incision detection finished")
     pass
 
 # def run_media_processing(filename: Path, outputdir: Path) -> dict:
