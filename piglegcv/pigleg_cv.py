@@ -69,8 +69,10 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
 
     # if extention in images_types:
 
-    main_perpendicular(filename, outputdir)
-    logger.debug("Perpendicular finished.")
+    run_image_processing(filename, outputdir)
+    # main_perpendicular(filename, outputdir)
+    # logger.debug("Perpendicular finished.")
+    logger.debug("Video processing finished")
     pass
 
 def run_image_processing(filename: Path, outputdir: Path) -> dict:
