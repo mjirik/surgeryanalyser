@@ -79,70 +79,10 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
     logger.debug("Running image processing...")
     main_perpendicular(filename, outputdir)
     logger.debug("Perpendicular finished.")
-    predict_image(filename, outputdir)
-    logger.debug("Incision detection finished")
+    # TODO add predict image
+    # predict_image(filename, outputdir)
+    # logger.debug("Incision detection finished")
 
-# def run_media_processing(filename: Path, outputdir: Path) -> dict:
-#     """
-#     Not used
-#     Based on filename suffix the processing
-#     :param filename:
-#     :param outputdir:
-#     :return:
-#     """
-#     isvideo = True
-#     if isvideo:
-#         return run_video_processing(filename, outputdir)
-#     else:
-#         return run_image_processing(filename, outputdir)
-#
-#
-# def run_video_processing(filename: Path, outputdir: Path) -> dict:
-#     """
-#     Not used
-#     :param filename:
-#     :param outputdir:
-#     :return:
-#     """
-#     # TODO here will be tracking
-#     outputdir = Path(outputdir)
-#     filename = Path(str(filename))
-#     logger.debug("Video processing initiated...")
-#     logger.debug(f"File '{filename.name}' exists={filename.exists()}")
-#     outputdir.mkdir(parents=True, exist_ok=True)
-#
-#     # TODO here should be video processing with detectron2 (J. Vyskočil + Z. Krňoul)
-#     tmp_dir_with_images = Path("tmp_video_processing") / filename.name
-#     _make_images_from_video(filename, tmp_dir_with_images)
-#
-#     # Copy middle image to output dir
-#     png_files = list(tmp_dir_with_images.glob("*.png"))
-#     middle_img = Path(sorted(png_files)[int(len(png_files) / 2)])
-#     shutil.copy(str(middle_img), str(outputdir))
-#
-#     # TODO here should be processing of the outptut of detectron2 (Z. Krňoul)
-#
-#     # TODO here should be handpose processing (J. Kanis)
-#
-#     return {
-#         "Needle Holder Tip Track Length [m]": 123.5,
-#         "Needle Holder Tip Avg Velocity [ms^1]": 123.5,
-#     }
-#
-#
-# def run_image_processing(filename: Path, outputdir: Path) -> dict:
-#     """
-#     Not used
-#     :param filename:
-#     :param outputdir:
-#     :return:
-#     """
-#     # TODO here will be angle measurement
-#     return {
-#         "Stitch Angle 1 [°]": 0.75,
-#         "Stitch Angle 2 [°]": 0.75,
-#     }
-#
 
 def _make_images_from_video(filename: Path, outputdir: Path) -> Path:
     outputdir.mkdir(parents=True, exist_ok=True)
