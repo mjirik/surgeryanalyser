@@ -4,6 +4,7 @@ import cv2
 import json
 import numpy as np
 from pyzbar.pyzbar import decode
+from loguru import logger
 
 
 def save_json(data: dict, output_json: str):
@@ -21,6 +22,7 @@ def main_qr(filename, output_dir):
     is_detected = 0
     img_first = None
     box = []
+    qr_text = None
     while cap.isOpened():
         ret, img = cap.read()
         if not ret:
@@ -29,15 +31,24 @@ def main_qr(filename, output_dir):
         #try read QR code
         grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         res = decode(grey)
-        if len(res) > 0:
+        # if len(res) > 0:
+        for oneqr in res:
+            txt = oneqr.data.decode("utf8")
+            logger.debug(f"qr code text = {txt}")
+            if txt == "Resolution 30 mm":
+                qr_size = 0.030
+            elif txt == "QR scale pigleg":
+                qr_size = 0.027
+            else:
+                continue
             is_detected = 1
-            a = np.array(res[0].polygon[0])
-            b = np.array(res[0].polygon[1])
+            a = np.array(oneqr.polygon[0])
+            b = np.array(oneqr.polygon[1])
             #print(a,b)
             pix_size = qr_size / np.linalg.norm(a-b)
             #print(pix_size)
             img_first = img
-            box = [[point.x, point.y] for point in res[0].polygon]
+            box = [[point.x, point.y] for point in oneqr.polygon]
             break
             
     qr_data = {}
@@ -45,6 +56,7 @@ def main_qr(filename, output_dir):
     qr_data['box'] = box
     qr_data['pix_size'] = pix_size
     qr_data['qr_size'] = qr_size
+    qr_data['text'] = qr_text
 
     # save QR to the json file
     save_json({"qr_data": qr_data}, os.path.join(output_dir, "qr_data.json"))
