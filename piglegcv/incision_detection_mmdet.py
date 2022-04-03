@@ -210,9 +210,6 @@ def run_incision_detection(img_fn:Path, local_output_data_dir:Path):
     # modify num classes of the model in box head
     cfg.model.roi_head.bbox_head.num_classes = 1
 
-    # Create work_dir
-    mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
-    # model = build_detector(cfg.model)
     model = init_detector(cfg, checkpoint_path,
                           # device='cuda:0'
                           )
