@@ -62,7 +62,7 @@ def main_qr(filename, output_dir):
             #print(pix_size)
             img_first = img
             box = [[point.x, point.y] for point in oneqr.polygon]
-            break
+            # break
             
     qr_data = {}
     qr_data['is_detected'] = is_detected
