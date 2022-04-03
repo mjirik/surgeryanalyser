@@ -248,7 +248,6 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
     if image.size == 0:
         print('Image 2. crop is zero')
         return
-    image = skimage.color.rgb2gray(image[:, :, ::-1])
     # plt.imshow(image)
     # plt.show()
     return image
@@ -274,6 +273,7 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
 
 def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="perpedicular.jpg"):
     ##  image je oříznutý
+    image = skimage.color.rgb2gray(image[:, :, ::-1])
     #Resize to uniform size
     image = resize(image, (100,200))
     
