@@ -193,7 +193,7 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def predict_image(img_fn, local_output_data_dir):
+def run_incision_detection(img_fn, local_output_data_dir):
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_model/220326_234659_mmdet.pth"
     cfg = prepare_cfg(
         local_input_data_dir,
