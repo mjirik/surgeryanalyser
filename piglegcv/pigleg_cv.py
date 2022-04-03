@@ -52,6 +52,10 @@ def do_computer_vision(filename, outputdir):
 def run_video_processing(filename: Path, outputdir: Path) -> dict:
     logger.debug("Running video processing...")
     s = time.time()
+    main_qr(filename, outputdir)
+    logger.debug(f"QR finished in {time.time() - s}s.")
+
+    s = time.time()
     main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
     # run_media_processing(Path(filename), Path(outputdir))
     logger.debug(f"Detectron finished in {time.time() - s}s.")
@@ -61,8 +65,6 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     # main_mmpose(filename, outputdir)
     # logger.debug(f"MMpose finished in {time.time() - s}s.")
 
-    main_qr(filename, outputdir)
-    logger.debug("QR finished.")
 
     main_report(filename, outputdir)
     logger.debug("Report finished.")
