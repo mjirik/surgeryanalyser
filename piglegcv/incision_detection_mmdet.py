@@ -195,7 +195,7 @@ def train(cfg):
     return model
 
 def run_incision_detection(img_fn:Path, local_output_data_dir:Path):
-    checkpoint_path = Path(__file__).parent / "resources/incision_detection_model/220326_234659_mmdet.pth"
+    checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
 
     img_fn = Path(img_fn)
