@@ -210,10 +210,10 @@ def run_incision_detection(img_fn:Path, local_output_data_dir:Path):
     # modify num classes of the model in box head
     cfg.model.roi_head.bbox_head.num_classes = 1
 
-    model = init_detector(cfg, checkpoint_path,
+    model = init_detector(cfg, str(checkpoint_path),
                           # device='cuda:0'
                           )
-    img = mmcv.imread(img_fn)
+    img = mmcv.imread(str(img_fn))
     result = inference_detector(model, img)
     model.show_result(img, result, out_file=local_output_data_dir / f'incision_full.jpg')  # save image with result
 
