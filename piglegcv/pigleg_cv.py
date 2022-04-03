@@ -82,8 +82,8 @@ def run_image_processing(filename: Path, outputdir: Path) -> dict:
     main_perpendicular(filename, outputdir)
     logger.debug("Perpendicular finished.")
     # TODO add predict image
-    # predict_image(filename, outputdir)
-    # logger.debug("Incision detection finished")
+    run_incision_detection(filename, outputdir)
+    logger.debug("Incision detection finished")
 
 
 def _make_images_from_video(filename: Path, outputdir: Path) -> Path:

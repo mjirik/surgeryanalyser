@@ -11,12 +11,13 @@ There are three parts of the application:
 
 # Run in production 
 
-Stop, Build and Up again
-```
+Update repo, Stop, Build and Up again
+```shell
 cd /webapps/piglegsurgery
+git pull
 docker-compose down
 
-docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
+#docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
 docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
 docker build -t piglegweb /webapps/piglegsurgery/docker/
 
