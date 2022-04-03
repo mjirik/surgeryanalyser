@@ -31,6 +31,7 @@ def main_qr(filename, output_dir):
         #try read QR code
         grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         res = decode(grey)
+        logger.debug(res)
         # if len(res) > 0:
         for oneqr in res:
             txt = oneqr.data.decode("utf8")
