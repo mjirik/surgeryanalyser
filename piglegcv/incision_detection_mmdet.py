@@ -198,6 +198,7 @@ def run_incision_detection(img, local_output_data_dir:Path):
     # img = mmcv.imread(str(img_fn))
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
+    logger.debug(f"img={img}")
     # logger.debug(f"img_fn={img_fn}")
 
     # img_fn = Path(img_fn)
