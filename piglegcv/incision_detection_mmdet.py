@@ -194,12 +194,13 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img_fn:Path, local_output_data_dir:Path):
+def run_incision_detection(img, local_output_data_dir:Path):
+    # img = mmcv.imread(str(img_fn))
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
-    logger.debug(f"img_fn={img_fn}")
+    # logger.debug(f"img_fn={img_fn}")
 
-    img_fn = Path(img_fn)
+    # img_fn = Path(img_fn)
     local_output_data_dir = Path(local_output_data_dir)
 
     # My dataset training
@@ -215,7 +216,6 @@ def run_incision_detection(img_fn:Path, local_output_data_dir:Path):
                           # device='cuda:0'
                           )
     logger.debug(f"cfg=\n{pformat(cfg)}")
-    img = mmcv.imread(str(img_fn))
     result = inference_detector(model, img)
     model.show_result(img, result, out_file=local_output_data_dir / f'incision_full.jpg')  # save image with result
 

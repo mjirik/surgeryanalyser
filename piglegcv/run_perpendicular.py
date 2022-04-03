@@ -21,6 +21,12 @@ from run_report import load_json
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+try:
+    from incision_detection_mmdet import run_incision_detection
+except ImportError:
+
+    from .incision_detection_mmdet import run_incision_detection
+
 
 
 def intersectLines( pt1, pt2, ptA, ptB ): 
@@ -250,8 +256,6 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
 def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
     img = get_frame_to_process(filename)
 
-    # TODO add incision detection here
-    # run_incision_detection(filename, outputdir)
 
     if img is None:
         print("Input image is None")
@@ -261,6 +265,11 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
 
 
     incision_angle_evaluation(image, canny_sigma, outputdir)
+    # TODO add incision detection here
+
+    imgs = run_incision_detection(image, outputdir)
+    for i, image in enumerate(imgs):
+        incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
 
 
 
