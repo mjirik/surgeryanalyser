@@ -198,7 +198,7 @@ def run_incision_detection(img, local_output_data_dir:Path):
     # img = mmcv.imread(str(img_fn))
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
-    logger.debug(f"img={img}")
+    # logger.debug(f"img={img}")
     # logger.debug(f"img_fn={img_fn}")
 
     # img_fn = Path(img_fn)
@@ -216,7 +216,7 @@ def run_incision_detection(img, local_output_data_dir:Path):
     model = init_detector(cfg, str(checkpoint_path),
                           # device='cuda:0'
                           )
-    logger.debug(f"cfg=\n{pformat(cfg)}")
+    # logger.debug(f"cfg=\n{pformat(cfg)}")
     result = inference_detector(model, img)
     model.show_result(img, result, out_file=local_output_data_dir / f'incision_full.jpg')  # save image with result
 
