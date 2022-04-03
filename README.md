@@ -17,7 +17,7 @@ cd /webapps/piglegsurgery
 git pull
 docker-compose down
 
-#docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
+docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
 docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
 docker build -t piglegweb /webapps/piglegsurgery/docker/
 

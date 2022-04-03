@@ -23,8 +23,7 @@ from pprint import pprint, pformat
 from mmcv import Config
 from mmdet.apis import set_random_seed
 from mmdet.datasets import build_dataset
-from mmdet.models import build_detector
-from mmdet.apis import train_detector
+from mmdet.apis import train_detector, init_detector, inference_detector, show_result_pyplot
 import os.path as osp
 from typing import Optional
 
@@ -34,7 +33,6 @@ mmdetection_path = Path(mmdet.__file__).parent.parent
 import mmcv
 from mmcv.runner import load_checkpoint
 
-from mmdet.apis import inference_detector, show_result_pyplot
 from mmdet.models import build_detector
 
 from pathlib import Path
@@ -51,7 +49,8 @@ def prepare_cfg(
         local_input_data_dir:Path,
         local_output_data_dir:Path,
         checkpoint_pth:Optional[Path]=None,
-        work_dir:Optional[Path]=None
+        work_dir:Optional[Path]=None,
+        skip_data=False
 ):
     if checkpoint_pth == None:
         checkpoint_pth = scratchdir / 'checkpoints/faster_rcnn_r50_caffe_fpn_mstrain_3x_coco_20210526_095054-1f77628b.pth'
@@ -107,29 +106,29 @@ def prepare_cfg(
     # My dataset training
     cfg = Config.fromfile(mmdetection_path / 'configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py')
 
-
-    # Modify dataset type and path
     cfg.dataset_type = 'CocoDataset'
     cfg.data_root = str(local_input_data_dir)
     cfg.classes = ('incision',)
+    if not skip_data:
+        # Modify dataset type and path
 
-    cfg.data.test.type = 'CocoDataset'
-    cfg.data.test.data_root = str(local_input_data_dir)
-    cfg.data.test.ann_file = 'annotations/instances_default.json'
-    cfg.data.test.img_prefix = 'images/'
-    cfg.data.test.classes = cfg.classes
+        cfg.data.test.type = 'CocoDataset'
+        cfg.data.test.data_root = str(local_input_data_dir)
+        cfg.data.test.ann_file = 'annotations/instances_default.json'
+        cfg.data.test.img_prefix = 'images/'
+        cfg.data.test.classes = cfg.classes
 
-    cfg.data.train.type = 'CocoDataset'
-    cfg.data.train.data_root = str(local_input_data_dir)
-    cfg.data.train.ann_file = 'annotations/instances_default.json'
-    cfg.data.train.img_prefix = 'images/'
-    cfg.data.train.classes = cfg.classes
+        cfg.data.train.type = 'CocoDataset'
+        cfg.data.train.data_root = str(local_input_data_dir)
+        cfg.data.train.ann_file = 'annotations/instances_default.json'
+        cfg.data.train.img_prefix = 'images/'
+        cfg.data.train.classes = cfg.classes
 
-    cfg.data.val.type = 'CocoDataset'
-    cfg.data.val.data_root = str(local_input_data_dir)
-    cfg.data.val.ann_file = 'annotations/instances_default.json'
-    cfg.data.val.img_prefix = 'images/'
-    cfg.data.val.classes = cfg.classes
+        cfg.data.val.type = 'CocoDataset'
+        cfg.data.val.data_root = str(local_input_data_dir)
+        cfg.data.val.ann_file = 'annotations/instances_default.json'
+        cfg.data.val.img_prefix = 'images/'
+        cfg.data.val.classes = cfg.classes
 
     # modify num classes of the model in box head
     cfg.model.roi_head.bbox_head.num_classes = 1
@@ -225,7 +224,10 @@ def run_incision_detection(img_fn, local_output_data_dir):
 
     # Create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
-    model = build_detector(cfg.model)
+    # model = build_detector(cfg.model)
+    model = init_detector(cfg, checkpoint_path,
+                          # device='cuda:0'
+                          )
     predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)
 
 def predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir):
