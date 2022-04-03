@@ -2,6 +2,8 @@
 
 # import some common libraries
 import logging
+
+import cv2
 import mmcv.utils
 logger = mmcv.utils.get_logger(name=__file__, log_level=logging.DEBUG)
 
@@ -192,35 +194,21 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img_fn, local_output_data_dir):
+def run_incision_detection(img_fn:Path, local_output_data_dir:Path):
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_model/220326_234659_mmdet.pth"
-    cfg = prepare_cfg(
-        local_input_data_dir,
-        local_output_data_dir,
-        checkpoint_pth=checkpoint_path,
-        work_dir=local_output_data_dir
-    )
-    # # Initialize the detector
-    # model = build_detector(config.model)
-    #
-    # # Load checkpoint
-    # checkpoint = load_checkpoint(model, str(checkpoint_pth), map_location=device)
-    #
-    # # Set the classes of models for inference
-    # model.CLASSES = checkpoint['meta']['CLASSES']
-    #
-    # # We need to set the model's cfg for inference
-    # model.cfg = config
+    logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
 
-    # model.CLASSES = checkpoint['meta']['CLASSES']
-    # datasets = [build_dataset(cfg.data.train)]
+    img_fn = Path(img_fn)
+    local_output_data_dir = Path(local_output_data_dir)
 
-    # logger.debug(f"classes={datasets[0].CLASSES}")
+    # My dataset training
+    cfg = Config.fromfile(mmdetection_path / 'configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py')
 
-    # Build the detector
-    model = build_detector(cfg.model)
-    # Add an attribute for visualization convenience
-    # model.CLASSES = datasets[0].CLASSES
+    cfg.dataset_type = 'CocoDataset'
+    cfg.data_root = str(local_input_data_dir)
+    cfg.classes = ('incision',)
+    # modify num classes of the model in box head
+    cfg.model.roi_head.bbox_head.num_classes = 1
 
     # Create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
@@ -228,7 +216,24 @@ def run_incision_detection(img_fn, local_output_data_dir):
     model = init_detector(cfg, checkpoint_path,
                           # device='cuda:0'
                           )
-    predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)
+    img = mmcv.imread(img_fn)
+    result = inference_detector(model, img)
+    model.show_result(img, result, out_file=local_output_data_dir / f'incision_full.jpg')  # save image with result
+
+    # get cropped incision
+    class_id = 0
+    # obj_in_class_id = 0
+    bboxes = result[class_id]
+    imgs = []
+    for i, bbox in enumerate(bboxes):
+
+        imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+
+        cv2.imwrite(local_output_data_dir / f'incision_crop_{i}.jpg')
+        imgs.append(imcr)
+        # plt.imshow(imcr[:, :, ::-1])
+    # predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)
+    return imgs
 
 def predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir):
     # img_fn = local_input_data_dir / '/images/10.jpg'
