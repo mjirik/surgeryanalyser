@@ -276,7 +276,8 @@ def plot3(fig):
 
 
 #ds_threshold [m]
-def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, object_colors, object_names, video_size, ds_threshold=0.1, dpi=300):
+def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, object_colors, object_names,
+                        video_size, ds_threshold=0.1, dpi=300, scissors_frames=[]):
 
     ##################
     ## second graph
@@ -333,12 +334,15 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, ob
 
             print(object_color, object_name)
 
-
+    # Draw vlines on scissors QR code visible
+    t = 1.0 / source_fps * np.array(scissors_frames)
+    for frt in t:
+        plt.axvline(frt, c="m")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     #ax2.legend(loc="upper left")
 
 
-    print('main_video_report: OK')
+    logger.debug('main_video_report: OK')
     return fig, ax, ds_max
 
 
@@ -407,7 +411,11 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         video_name = '{}/pigleg_results.avi'.format(outputdir)
         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size_output_video)
 
-        fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors, object_names, size_input_video)
+        # frames with visible scissors qr code
+        scissors_frames = qr_data["qr_scissors_frames"] if "qr_scissors_frames" in qr_data else []
+
+        fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
+                                              object_names, size_input_video, scissors_frames=scissors_frames)
 
         img_first = None
         i = 0

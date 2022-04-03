@@ -70,7 +70,7 @@ def main_qr(filename, output_dir):
     qr_data['pix_size'] = pix_size
     qr_data['qr_size'] = qr_size
     qr_data['text'] = qr_text
-    qr_data['qr_scissors_frame'] = qr_scissors_frame
+    qr_data['qr_scissors_frames'] = qr_scissors_frame
 
     # save QR to the json file
     save_json({"qr_data": qr_data}, os.path.join(output_dir, "qr_data.json"))
