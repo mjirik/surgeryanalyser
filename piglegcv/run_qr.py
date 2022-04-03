@@ -46,7 +46,7 @@ def main_qr(filename, output_dir):
                 qr_size = 0.027
                 qr_text = txt
             elif txt == "Scissors 30 mm":
-                qr_scissors_frame.append[i]
+                qr_scissors_frame.append(i)
                 if qr_text is None:
                     # Use only if no Scale QR code was detected
                     qr_size = 0.030
