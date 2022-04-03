@@ -228,7 +228,7 @@ def run_incision_detection(img_fn:Path, local_output_data_dir:Path):
 
         imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
 
-        cv2.imwrite(local_output_data_dir / f'incision_crop_{i}.jpg', imcr)
+        cv2.imwrite(str(local_output_data_dir / f'incision_crop_{i}.jpg'), imcr)
         imgs.append(imcr)
         # plt.imshow(imcr[:, :, ::-1])
     # predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)
