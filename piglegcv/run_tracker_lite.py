@@ -186,7 +186,7 @@ class CustomPredictor(DefaultPredictor):
             return predictions
 
 
-def merge_config():
+def merge_config(args):
     if args.config is not None:
         with open(args.config, "r") as json_file:
             CFG.update(json.load(json_file))
@@ -416,13 +416,13 @@ def main_tracker(commandline):
         [os.path.join(args.model_dir, i) for i in CFG['R-CNN']['INPUT']['AUGMENTATIONS']['DOMAIN_ADAPT']['ref_img']]
 
     # update the optional arguments
-    if args.prefix is not "":
+    if args.prefix != "":
         CFG["OUTPUT"]["prefix"] = args.prefix
 
-    if args.suffix is not "":
+    if args.suffix != "":
         CFG["OUTPUT"]["suffix"] = args.suffix
 
-    if args.output_dir is not "":
+    if args.output_dir != "":
         CFG["output_dir"] = args.output_dir
 
     # get the detectron2 configuration and create an output directory

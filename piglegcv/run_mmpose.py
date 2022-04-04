@@ -158,4 +158,4 @@ def main_mmpose(filename, outputdir):
     save_json({"hand_poses": hand_poses}, os.path.join(outputdir, "hand_poses.json"))
     
 if __name__ == '__main__':
-    main()
+    pass
