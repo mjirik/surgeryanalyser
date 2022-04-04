@@ -45,7 +45,7 @@ multitail ~/pigleg/logs/*.txt
 ## Get into docker
 
 ```shell
-docker exec -it piglegsurgery_piglegcv_1 bash
+docker exec -it piglegsurgery_piglegweb_1 bash
 ```
 
 ```shell

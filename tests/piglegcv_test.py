@@ -2,16 +2,16 @@ import shutil
 
 from loguru import logger
 from pathlib import Path
-from unittest import mock
+# from unittest import mock
 
 local_dir = Path(__file__).parent
 
-from unittest.mock import patch
+# from unittest.mock import patch
 # @patch("torch.config")
 def test_pigleg_cv():
     mock.patch
     logger.debug("test init")
-    import piglegsurgeryweb
+    # import piglegsurgeryweb
     from piglegcv import pigleg_cv
 
     media_pth = local_dir / "pigleg_test.mp4"

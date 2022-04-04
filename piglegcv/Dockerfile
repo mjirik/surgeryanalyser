@@ -85,7 +85,7 @@ RUN sudo apt-get install --yes apache2-utils
 
 ###############
 # For perpendicular
-RUN pip install -U scikit-learn
+RUN pip install -U scikit-learn pytest
 
 
 ############
