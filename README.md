@@ -17,11 +17,11 @@ cd /webapps/piglegsurgery
 git pull
 docker-compose down
 
-docker build -t piglegcv /webapps/piglegsurgery/piglegcv/
-docker build -t piglegcv_devel /webapps/piglegsurgery/piglegcv/
-docker build -t piglegweb /webapps/piglegsurgery/docker/
+docker build -t piglegcv ./piglegcv/
+docker build -t piglegcv_devel ./piglegcv/
+docker build -t piglegweb ./docker/
 
-docker-compose up
+docker-compose --env-file .env.prod up
 
 ```
 

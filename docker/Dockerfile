@@ -108,6 +108,7 @@ RUN mkdir -p ~/piglegcv/logs/
 # RUN apt-get install --yes gpac
 
 # to get rotatelogs
+RUN apt-get update --yes
 RUN apt-get install --yes apache2-utils
 
 #RUN conda install -n piglegsurgery -c conda-forge django-environ

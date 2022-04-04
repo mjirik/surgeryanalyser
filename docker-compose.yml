@@ -40,9 +40,9 @@ services:
 #      - DOCKERLOGNAME="devel"
 #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
-      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
-      - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
-      - "$HOME/pigleg/logs:/root/pigleg/logs"
+      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
+      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
+      - "${PIGLEG_LOG_DIR}:/root/pigleg/logs"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
   piglegcv:
     image: piglegcv:latest
@@ -53,9 +53,9 @@ services:
 #    environment:
 #      - DOCKERLOGNAME=""
     volumes:
-      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
-      - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
-      - "$HOME/pigleg/logs:/home/appuser/logs"
+      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
+      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
+      - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
       
   piglegcv_devel:
     image: piglegcv_devel:latest
@@ -66,9 +66,9 @@ services:
     environment:
       - DOCKERLOGNAME=devel
     volumes:
-      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
-      - '/media/dnn-user/Applied Research 1/pigleg_media/media:/webapps/piglegsurgery/piglegsurgeryweb/media'
-      - "$HOME/pigleg/logs:/home/appuser/logs"
+      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
+      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
+      - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
 
 #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
 #  piglegcv_devel:
