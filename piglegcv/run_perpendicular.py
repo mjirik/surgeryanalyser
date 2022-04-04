@@ -16,16 +16,16 @@ import skimage.color
 from skimage.transform import probabilistic_hough_line, resize
 from pathlib import Path
 
-from run_report import load_json
-
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
 try:
+    from run_report import load_json
     from incision_detection_mmdet import run_incision_detection
 except ImportError:
 
     from .incision_detection_mmdet import run_incision_detection
+    from .run_report import load_json
 
 
 

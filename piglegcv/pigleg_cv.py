@@ -56,7 +56,10 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     logger.debug(f"QR finished in {time.time() - s}s.")
 
     s = time.time()
-    main_tracker("./.cache/tracker_model \"{}\" --output_dir {}".format(filename, outputdir))
+    tracker_model_path = Path(__file__).parent / "./.cache/tracker_model"
+    if not tracker_model_path.exists():
+        tracker_model_path = Path(__file__).parent / "resources/tracker_model"
+    main_tracker("{} \"{}\" --output_dir {}".format(tracker_model_path, filename, outputdir))
     # run_media_processing(Path(filename), Path(outputdir))
     logger.debug(f"Detectron finished in {time.time() - s}s.")
 

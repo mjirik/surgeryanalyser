@@ -19,7 +19,10 @@ from detectron2.engine import DefaultPredictor
 from detectron2.modeling import build_model
 from detectron2.checkpoint import DetectionCheckpointer
 
-from extern.sort import sort
+try:
+    from .extern.sort import sort
+except ImportError:
+    from extern.sort import sort
 
 CFG = {
     "output_dir": "./__OUTPUT__/",
@@ -146,6 +149,11 @@ def custom_img_preprocessing_test(image):
 class CustomPredictor(DefaultPredictor):
     def __init__(self, cfg):
         self.cfg = cfg.clone()  # cfg can be modified by model
+        if not torch.cuda.is_available():
+            cfg.MODEL.DEVICE = 'cpu'
+            logger.warning("No GPU available. Running on CPU.")
+            # device = "cuda"
+
         self.model = build_model(self.cfg)
         self.model.eval()
 
