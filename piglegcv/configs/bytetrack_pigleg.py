@@ -1,9 +1,10 @@
-from pathlib import Path
-import mmtrack
-mmtrack_path = Path(mmtrack.__file__).parent.parent
-# Choose to use a config and initialize the detector
-config = mmtrack_path / 'mmtracking/configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
+# from pathlib import Path
+# import mmtrack
+# mmtrack_path = Path(mmtrack.__file__).parent.parent
+# # Choose to use a config and initialize the detector
+# config = mmtrack_path / '/configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
 
+config =  '/home/appuser/mmtracking/configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
 _base_ = [str(config)]
 # _base_ = ['./bytetrack_yolox_x_crowdhuman_mot17-private-half.py']
 
@@ -61,7 +62,7 @@ data = dict(
     train=dict(
         dataset=dict(
             ann_file=[
-                "mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
+                "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
                 # 'data/MOT20/annotations/train_cocoformat.json',
                 # 'data/crowdhuman/annotations/crowdhuman_train.json',
                 # 'data/crowdhuman/annotations/crowdhuman_val.json'
@@ -69,16 +70,16 @@ data = dict(
             img_prefix=[
                 # 'data/MOT20/train', 'data/crowdhuman/train',
                 # 'data/crowdhuman/val'
-                "mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/"
+                "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/"
             ]),
         pipeline=train_pipeline),
     val=dict(
-        ann_file = "mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
-        img_prefix= "mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
+        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
+        img_prefix= "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
 pipeline=test_pipeline),
     test=dict(
-        ann_file = "mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
-        img_prefix= "mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
+        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
+        img_prefix= "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
         pipeline=test_pipeline))
 
 checkpoint_config = dict(interval=1)
