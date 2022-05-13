@@ -87,6 +87,13 @@ RUN sudo apt-get install --yes apache2-utils
 # For perpendicular
 RUN pip install -U scikit-learn pytest
 
+#install mmtrack
+RUN git clone https://github.com/open-mmlab/mmtracking.git
+WORKDIR /home/appuser/mmtracking
+RUN pip install -r requirements/build.txt
+RUN pip install -v -e .
+WORKDIR /home/appuser
+
 
 ############
 # MAIN
