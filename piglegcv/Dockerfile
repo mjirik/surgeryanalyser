@@ -94,6 +94,12 @@ RUN pip install -r requirements/build.txt
 RUN pip install -v -e .
 WORKDIR /home/appuser
 
+# User comfort (optional)
+USER root
+RUN apt-get install -y ranger mc sshfs
+USER appuser
+
+RUN mkdir -p mnt/pole
 
 ############
 # MAIN
