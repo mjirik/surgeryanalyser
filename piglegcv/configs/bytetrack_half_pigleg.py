@@ -3,7 +3,7 @@
 config =  '/home/appuser/mmtracking/configs/mot/bytetrack/bytetrack_yolox_x_crowdhuman_mot17-private-half.py'
 _base_ = [
     '/home/appuser/mmtracking/configs/_base_/models/yolox_x_8x8.py',
-    # '/home/appuser/mmtracking/configs/_base_/datasets/mot_challenge.py',
+    '/home/appuser/mmtracking/configs/_base_/datasets/mot_challenge.py',
     '/home/appuser/mmtracking/configs/_base_/default_runtime.py'
 ]
 

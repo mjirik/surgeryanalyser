@@ -22,3 +22,8 @@ cd mmtracking
 bash tools/dist_train.sh ~/piglegsurgery/piglegcv/configs/bytetrack_pigleg.py 1
 
 ```
+
+To pull new version of pigleg
+```
+cd ../piglegsurgery/ && git pull && cd ../mmtracking
+```
