@@ -111,9 +111,13 @@ data = dict(
             filter_empty_gt=False),
         pipeline=train_pipeline),
     val=dict(
+        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/pigleg_cocovid.json",
+        img_prefix= "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
         pipeline=test_pipeline,
         interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20)),
     test=dict(
+        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/pigleg_cocovid.json",
+        img_prefix= "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
         pipeline=test_pipeline,
         interpolate_tracks_cfg=dict(min_num_frames=5, max_num_frames=20)))
 
