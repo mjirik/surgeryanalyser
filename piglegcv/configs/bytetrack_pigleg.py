@@ -62,7 +62,7 @@ data = dict(
     train=dict(
         dataset=dict(
             ann_file=[
-                "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
+                "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/pigleg_cocovid.json",
                 # 'data/MOT20/annotations/train_cocoformat.json',
                 # 'data/crowdhuman/annotations/crowdhuman_train.json',
                 # 'data/crowdhuman/annotations/crowdhuman_val.json'
@@ -74,11 +74,11 @@ data = dict(
             ]),
         pipeline=train_pipeline),
     val=dict(
-        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
+        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/pigleg_cocovid.json",
         img_prefix= "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
 pipeline=test_pipeline),
     test=dict(
-        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/task_allgower_ok.mp4-2022_02_02_09_56_39-cvat for video 1.1.json",
+        ann_file = "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/test/pigleg_cocovid.json",
         img_prefix= "../mnt/pole/data-ntis/projects/korpusy_cv/pigleg_surgery/detection/",
         pipeline=test_pipeline))
 
