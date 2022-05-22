@@ -107,6 +107,11 @@ RUN mkdir -p ~/piglegcv/logs/
 # for dash conversion
 # RUN apt-get install --yes gpac
 
+# remove files to fix E: The repository 'https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64  InRelease' is no longer signed.
+# https://github.com/NVIDIA/nvidia-docker/issues/1632
+RUN rm /etc/apt/sources.list.d/cuda.list
+RUN rm /etc/apt/sources.list.d/nvidia-ml.list
+
 # to get rotatelogs
 RUN apt-get update --yes
 RUN apt-get install --yes apache2-utils

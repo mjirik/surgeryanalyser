@@ -99,6 +99,9 @@ USER root
 RUN apt-get install -y ranger mc sshfs
 USER appuser
 
+RUN pip install gspread
+RUN pip install --upgrade google-api-python-client oauth2client
+
 RUN mkdir -p mnt/pole
 
 ############
