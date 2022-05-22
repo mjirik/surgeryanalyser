@@ -51,6 +51,15 @@ def reset_hashes(request):
         file.save()
     return redirect("/uploader/thanks/")
 
+@login_required(login_url='/admin/')
+def update_all_uploaded_files(request):
+    files = UploadedFile.objects.all()
+    logger.info("update all uploaded files")
+    for file in files:
+
+        make_preview(file, force=True)
+    return redirect("/uploader/thanks/")
+
 def resend_report_email(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
     from django_q.tasks import async_task

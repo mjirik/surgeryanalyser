@@ -21,8 +21,10 @@
         {% for uploadedfile in uploadedfiles %}
         <tr>
             <th scope="col">
-                {% if uploadedfile.bitmapimage_set.all %}
-                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>
+                {% if uploadedfile.preview %}
+<!--                {{ uploadedfile.preview }}-->
+<!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
+                    <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>
                 {% endif %}
             </th>
             <th scope="row"> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.email }} </a> </th>

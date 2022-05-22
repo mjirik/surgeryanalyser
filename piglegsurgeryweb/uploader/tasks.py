@@ -20,6 +20,7 @@ from django.utils.html import strip_tags
 from datetime import datetime
 import shutil
 from django.conf import settings
+from typing import Optional
 
 
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="127.0.0.1", port=5000):
@@ -76,6 +77,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
         diagnose=True,
     )
     logger.debug(f"Image processing of '{serverfile.mediafile}' initiated")
+    make_preview(serverfile)
     if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
         serverfile.zip_file.delete()
     input_file = Path(serverfile.mediafile.path)
@@ -99,8 +101,6 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     #         output_video_file.unlink()
     #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
     add_generated_images(serverfile)
-
-    make_preview(serverfile)
     make_zip(serverfile)
 
     serverfile.finished_at = datetime.now()
@@ -108,24 +108,40 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
-def make_preview(serverfile: UploadedFile) -> Path:
-    input_file = Path(serverfile.mediafile.path)
-    filename = input_file.parent / "frame_000001.jpg"
-    if not filename.exists():
-        if input_file.suffix in (".mp4", ".avi"):
-            fn = serverfile.mediafile
-            _make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1, suffix=".jpg", scale=0.0125)
-        else:
-            import cv2
-            frame = cv2.imread(str(input_file))
-            frame = _rescale(frame, 0.0125)
-            cv2.imwrite(str(input_file.parent / "frame_000001.jpg"), frame)
+def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
+    if serverfile.mediafile:
+        input_file = Path(serverfile.mediafile.path)
+        filename = input_file.parent / "preview.jpg"
+        filename_rel = filename.relative_to(settings.MEDIA_ROOT)
+        logger.debug(f"  {input_file=}")
+        logger.debug(f"    {filename=}")
+        logger.debug(f"{filename_rel=}")
+        if (not filename.exists()) or force:
+            if input_file.suffix.lower() in (".mp4", ".avi"):
+                fn = serverfile.mediafile
+                _make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1,
+                                        # filemask="{outputdir}/preview.jpg",
+                                        filemask=str(filename),
+                                        # scale=0.125,
+                                        width=width
+                                        )
+            else:
+                import cv2
+                # print(input_file)
+                frame = cv2.imread(str(input_file))
+                scale = width / frame.shape[1]
+                frame = _rescale(frame, scale)
+                cv2.imwrite(str(filename), frame)
 
-        serverfile.preview.name = str(filename.relative_to(settings.BASE_DIR))
-        serverfile.save()
+            serverfile.preview.name = str(filename_rel)
+            serverfile.save()
 
 
-def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None, suffix=".png", scale=1) -> Path:
+def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
+                            scale=1,
+                            filemask:str="{outputdir}/frame_{frame_id:0>6}.png",
+                            width:Optional[int]=None
+                            ) -> Path:
     import cv2
     outputdir.mkdir(parents=True, exist_ok=True)
 
@@ -133,16 +149,25 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None, suff
     cap = cv2.VideoCapture(str(filename))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
 
+    if width:
+        scale = None
+
     frame_id = 0
     while cap.isOpened():
         ret, frame = cap.read()
+        if frame is None:
+            logger.warning(f"Reading frame {frame_id} in {str(filename)} failed.")
+            break
+        if scale is None:
+            scale = width / frame.shape[1]
+
         frame_id += 1
         if frame_id > n_frames:
             break
         if not ret:
             break
         else:
-            file_name = "{}/frame_{:0>6}{}".format(outputdir, frame_id, suffix)
+            file_name = filemask.format(outputdir=outputdir, frame_id=frame_id)
             frame = _rescale(frame, scale)
 
             cv2.imwrite(file_name, frame)
