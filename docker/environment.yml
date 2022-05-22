@@ -18,6 +18,9 @@ dependencies:
     - google-api-python-client
     - google-auth-httplib2
     - google-auth
+    - gspread
+    - google-api-python-client
+    - oauth2client
     # maybe not necessary
     - google-auth-oauthlib
     - loguru=0.5
