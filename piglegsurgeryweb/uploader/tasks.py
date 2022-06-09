@@ -12,6 +12,7 @@ import glob
 import json
 import traceback
 import subprocess
+import numpy as np
 from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule, queue_size
 from django_q.models import Schedule
@@ -27,6 +28,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
 from .data_tools import google_spreadsheet_append
+from .visualization_tools import crop_square
 
 
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="127.0.0.1", port=5000):
@@ -153,7 +155,7 @@ def _add_row_to_spreadsheet(serverfile):
         data=df_novy
     )
 
-def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
+def make_preview(serverfile: UploadedFile, force:bool=False, width=300, make_square:bool=True) -> Path:
     if serverfile.mediafile:
         input_file = Path(serverfile.mediafile.path)
         # if not input_file.exists():
@@ -170,7 +172,8 @@ def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
                                         # filemask="{outputdir}/preview.jpg",
                                         filemask=str(filename),
                                         # scale=0.125,
-                                        width=width
+                                        width=width,
+                                        make_square=make_square
                                         )
             elif input_file.suffix.lower() in (".jpg", ".jpeg", ".tiff", ".tif", ".png"):
                 import cv2
@@ -178,6 +181,8 @@ def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
                 frame = cv2.imread(str(input_file))
                 scale = width / frame.shape[1]
                 frame = _rescale(frame, scale)
+                if make_square:
+                    frame = crop_square(frame)
                 cv2.imwrite(str(filename), frame)
             else:
                 logger.warning(f"Preview generation skipped. Unknown file type. filename={str(input_file.name)}")
@@ -190,7 +195,9 @@ def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
 def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
                             scale=1,
                             filemask:str="{outputdir}/frame_{frame_id:0>6}.png",
-                            width:Optional[int]=None
+                            width:Optional[int]=None,
+                            height:Optional[int]=None,
+                            make_square:bool=False
                             ) -> Path:
     import cv2
     outputdir.mkdir(parents=True, exist_ok=True)
@@ -208,8 +215,10 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
         if frame is None:
             logger.warning(f"Reading frame {frame_id} in {str(filename)} failed.")
             break
-        if scale is None:
+        if scale is None and width is not None:
             scale = width / frame.shape[1]
+        if scale is None and height is not None:
+            scale = height / frame.shape[0]
 
         frame_id += 1
         if frame_id > n_frames:
@@ -219,7 +228,8 @@ def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
         else:
             file_name = filemask.format(outputdir=outputdir, frame_id=frame_id)
             frame = _rescale(frame, scale)
-
+            if make_square:
+                frame = crop_square(frame)
             cv2.imwrite(file_name, frame)
             logger.trace(file_name)
     cap.release()
