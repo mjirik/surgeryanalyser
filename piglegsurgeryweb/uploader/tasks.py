@@ -156,8 +156,8 @@ def _add_row_to_spreadsheet(serverfile):
 def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
     if serverfile.mediafile:
         input_file = Path(serverfile.mediafile.path)
-        if not input_file.exists():
-            return
+        # if not input_file.exists():
+        #     return
         filename = input_file.parent / "preview.jpg"
         filename_rel = filename.relative_to(settings.MEDIA_ROOT)
         # logger.debug(f"  {input_file=}")
@@ -172,13 +172,16 @@ def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
                                         # scale=0.125,
                                         width=width
                                         )
-            else:
+            elif input_file.suffix.lower() in (".jpg", ".jpeg", ".tiff", ".tif", ".png"):
                 import cv2
                 # print(input_file)
                 frame = cv2.imread(str(input_file))
                 scale = width / frame.shape[1]
                 frame = _rescale(frame, scale)
                 cv2.imwrite(str(filename), frame)
+            else:
+                logger.warning(f"Preview generation skipped. Unknown file type. filename={str(input_file.name)}")
+                return
 
             serverfile.preview.name = str(filename_rel)
             serverfile.save()
