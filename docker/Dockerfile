@@ -51,6 +51,12 @@ ENV PATH="/opt/conda/condabin:${PATH}"
 ARG PATH="/opt/conda/condabin:${PATH}"
 
 
+# create a non-root user
+ARG USER_ID=1000
+RUN useradd -m --no-log-init --system  --uid ${USER_ID} appuser -g sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+USER appuser
 
 # COPY scaffanweb .
 COPY environment.yml .
@@ -109,12 +115,16 @@ RUN mkdir -p ~/piglegcv/logs/
 
 # remove files to fix E: The repository 'https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64  InRelease' is no longer signed.
 # https://github.com/NVIDIA/nvidia-docker/issues/1632
-RUN rm /etc/apt/sources.list.d/cuda.list
-RUN rm /etc/apt/sources.list.d/nvidia-ml.list
+RUN sudo rm /etc/apt/sources.list.d/cuda.list
+RUN sudo rm /etc/apt/sources.list.d/nvidia-ml.list
 
 # to get rotatelogs
-RUN apt-get update --yes
-RUN apt-get install --yes apache2-utils
+RUN sudo apt-get update --yes
+RUN sudo apt-get install --yes apache2-utils
+
+
+# RUN sudo chmod a+w /webapps/piglegsurgery/piglegsurgeryweb/private/db.sqlite3
+#ls -l /webapps/piglegsurgery/piglegsurgeryweb/private/
 
 #RUN conda install -n piglegsurgery -c conda-forge django-environ
 #COPY start.sh

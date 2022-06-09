@@ -192,3 +192,5 @@ Q_CLUSTER = {
 }
 
 TIME_ZONE = 'Europe/Prague'
+
+CREDS_JSON_FILE = Path(PRIVATE_DIR) / 'piglegsurgery-creds.json'

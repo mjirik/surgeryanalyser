@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import generic
 from django.contrib.auth.decorators import login_required
+import django.utils
 from pathlib import Path
 import os
 
@@ -148,7 +149,7 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
 
     from django_q.tasks import async_task
-    serverfile.started_at = datetime.now()
+    serverfile.started_at = django.utils.timezone.now()
     serverfile.finished_at = None
     serverfile.save()
     logger.debug(f"hostname={hostname}, port={port}")
@@ -203,7 +204,7 @@ def model_form_upload(request):
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
             # serverfile.owner = request.user
-            serverfile.started_at = datetime.now()
+            serverfile.started_at = django.utils.timezone.now()
             serverfile.save()
             PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
             PIGLEGCV_PORT= os.getenv("PIGLEGCV_PORT", default="5000")

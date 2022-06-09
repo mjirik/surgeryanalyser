@@ -31,7 +31,7 @@ services:
   piglegweb:
     image: piglegweb:latest
     ports:
-      - '8000:8000'
+      - '8000:${PIGLEG_PORT}'
     environment:
       - PIGLEGCV_HOSTNAME=piglegcv
       - PIGLEGCV_PORT=5000
