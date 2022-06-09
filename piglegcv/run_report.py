@@ -3,12 +3,18 @@ import io
 import sys
 import copy
 from argparse import ArgumentParser
+from typing import Optional
+
+import skimage.color
 from loguru import logger
 import cv2
 import json
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+
 
 def load_json(filename):
     if os.path.isfile(filename): 
@@ -45,6 +51,48 @@ def plot_skeleton(img, joints, threshold, thickness):
     #plt.imshow(img)
     #plt.show()
 
+
+def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, filename:Optional[Path]=None):
+    """
+
+    :param points: xy points with shape = [i,2]
+    :param image: np.ndarray with image
+    :param filename: if filename is set the savefig is called and fig is closed
+    :return: figure
+    """
+    x, y = points[:, 0], points[:, 1]
+    fig = plt.figure()
+    if isinstance(image, np.ndarray):
+        im_gray = skimage.color.rgb2gray(image[:, :, ::-1])
+        plt.imshow(im_gray, cmap="gray")
+    plt.axis("off")
+
+    plt.gca().set_axis_off()
+    plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
+                        hspace=0, wspace=0)
+    plt.margins(0, 0)
+    plt.gca().xaxis.set_major_locator(plt.NullLocator())
+    plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+    sns.kdeplot(
+        x=x, y=y,
+        fill=True,
+        # thresh=0.1,
+        # levels=100,
+        # cmap="mako",
+        # cmap="jet",
+        # palette="jet",
+        # cmap="crest",
+        cmap="rocket",
+        alpha=.5,
+        linewidth=0
+    )
+    if filename is not None:
+        # plt.savefig(Path(filename))
+        plt.savefig(Path(filename), bbox_inches='tight', pad_inches=0)
+        plt.close(fig)
+
+    return fig
 
 
 #ds_threshold [m]
@@ -257,6 +305,7 @@ def main_report_old(filename, outputdir, object_colors=["b","r","g","m"], object
         #plot graphs
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
             create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
+            create_heatmap_report(data_pixel, Path(outputdir) / "heatmap_{}a.jpg".format(i))
         
         print(f'main_report: Video file {filename} is processed!')
     else:
