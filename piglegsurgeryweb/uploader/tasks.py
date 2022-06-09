@@ -139,6 +139,12 @@ def _add_row_to_spreadsheet(serverfile):
             data = json.load(fr)
             novy.update(data)
 
+    filename = Path(serverfile.outputdir) / "evaluation.json"
+    if os.path.isfile(filename):
+        with open(filename, 'r') as fr:
+            data = json.load(fr)
+            novy.update(data)
+
     df_novy = pd.DataFrame(novy, index=[0])
 
     google_spreadsheet_append(
