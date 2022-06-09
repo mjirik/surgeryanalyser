@@ -60,10 +60,9 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
     :param filename: if filename is set the savefig is called and fig is closed
     :return: figure
     """
-    logger.debug(points)
+    # logger.debug(points)
     points = np.asarray(points)
-    logger.debug(f"shape={points.shape}")
-    x, y = points[:, 0], points[:, 1]
+    logger.debug(f"points.shape={points.shape}")
     fig = plt.figure()
     if isinstance(image, np.ndarray):
         im_gray = skimage.color.rgb2gray(image[:, :, ::-1])
@@ -77,19 +76,23 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
-    sns.kdeplot(
-        x=x, y=y,
-        fill=True,
-        # thresh=0.1,
-        # levels=100,
-        # cmap="mako",
-        # cmap="jet",
-        # palette="jet",
-        # cmap="crest",
-        cmap="rocket",
-        alpha=.5,
-        linewidth=0
-    )
+    if points.ndim == 2:
+        x, y = points[:, 0], points[:, 1]
+        sns.kdeplot(
+            x=x, y=y,
+            fill=True,
+            # thresh=0.1,
+            # levels=100,
+            # cmap="mako",
+            # cmap="jet",
+            # palette="jet",
+            # cmap="crest",
+            cmap="rocket",
+            alpha=.5,
+            linewidth=0
+        )
+    else:
+        logger.warning("No points found for heatmap")
     if filename is not None:
         # plt.savefig(Path(filename))
         plt.savefig(Path(filename), bbox_inches='tight', pad_inches=0)
