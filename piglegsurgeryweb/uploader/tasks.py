@@ -156,6 +156,8 @@ def _add_row_to_spreadsheet(serverfile):
 def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
     if serverfile.mediafile:
         input_file = Path(serverfile.mediafile.path)
+        if not input_file.exists():
+            return
         filename = input_file.parent / "preview.jpg"
         filename_rel = filename.relative_to(settings.MEDIA_ROOT)
         # logger.debug(f"  {input_file=}")
