@@ -18,6 +18,7 @@ from django_q.models import Schedule
 from django.utils.html import strip_tags
 # from .pigleg_cv import run_media_processing
 from datetime import datetime
+import django.utils
 import shutil
 from django.conf import settings
 from typing import Optional, Union
@@ -108,7 +109,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     add_generated_images(serverfile)
     make_zip(serverfile)
 
-    serverfile.finished_at = datetime.now()
+    serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
     _add_row_to_spreadsheet(serverfile)
     logger.debug("Processing finished")
@@ -125,8 +126,8 @@ def _add_row_to_spreadsheet(serverfile):
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
 
     novy = {"filename": serverfile.mediafile.name, "email": serverfile.email,
-            "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime("%Y-%m-%d %H:%M:%S")
+            "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S')
             }
     df_novy = pd.DataFrame(novy, index=[0])
 
