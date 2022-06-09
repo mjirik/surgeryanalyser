@@ -41,7 +41,7 @@ services:
 #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
-      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
+      - "${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media"
       - "${PIGLEG_LOG_DIR}:/root/pigleg/logs"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
   piglegcv:
@@ -58,6 +58,7 @@ services:
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
       
   piglegcv_devel:
+    privileged: true
     image: piglegcv_devel:latest
 #    command: nvidia-smi
 #    runtime: nvidia
