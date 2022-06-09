@@ -176,7 +176,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
                 position = np.array([np.mean([box[0], box[2]]), np.mean([box[1], box[3]])])
                 data_pixel.append(position)
                 break  # use the first one
-    print('Number of data_pixel', len(data_pixel))
+    logger.debug(f'Number of data_pixel={len(data_pixel)}')
 
     #######################
     # input QR data
@@ -186,7 +186,8 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
     if pix_size == 1.0:
         pix_size = 0.0003  # default 3 desetiny mm na pixel
     is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
-    print('use pix_size', pix_size)
+    logger.debug(f'use pix_size={pix_size}')
+
 
     ##################
     # compute point as center of processing
@@ -197,7 +198,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
         if track_center[0] >= 0.0 and track_center[0] < img.shape[1] and track_center[1] >= 0.0 and track_center[1] < \
                 img.shape[0]:
             center = track_center  # center is in image
-    print('center=', center)
+    logger.debug(f'center={center}')
     # plt.plot(center[0], center[1],'o')
     # plt.show()
 
@@ -254,6 +255,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
     return image
 
 def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
+    logger.debug("main_perpendicular...")
     img = get_frame_to_process(filename)
 
 
@@ -266,6 +268,8 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
 
     incision_angle_evaluation(image, canny_sigma, outputdir)
 
+
+    logger.debug("incision detection ...")
     imgs = run_incision_detection(img, outputdir)
     for i, image in enumerate(imgs):
         incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
