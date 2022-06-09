@@ -567,7 +567,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         #plot graphs
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
             create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
-            create_heatmap_report(data_pixel, Path(outputdir) / "heatmap_{}a.jpg".format(i))
+            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / "heatmap_{}a.jpg".format(i))
 
 
         print(f'main_report: Video file {filename} is processed!')

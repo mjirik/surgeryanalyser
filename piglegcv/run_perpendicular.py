@@ -271,6 +271,7 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
 
     logger.debug("incision detection ...")
     imgs = run_incision_detection(img, outputdir)
+    logger.debug(f"len(imgs)={len(imgs)}")
     for i, image in enumerate(imgs):
         incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
 
