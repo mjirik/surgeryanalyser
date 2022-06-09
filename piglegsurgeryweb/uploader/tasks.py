@@ -125,10 +125,20 @@ def _add_row_to_spreadsheet(serverfile):
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
 
-    novy = {"filename": serverfile.mediafile.name, "email": serverfile.email,
-            "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
-            "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S')
-            }
+    novy = {
+        "email": serverfile.email,
+        "filename": Path(serverfile.mediafile.name).name,
+        "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
+        "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
+        "filename_full": serverfile.mediafile.name,
+    }
+
+    filename = Path(serverfile.outputdir) / "meta.json"
+    if os.path.isfile(filename):
+        with open(filename, 'r') as fr:
+            data = json.load(fr)
+            novy.update(data)
+
     df_novy = pd.DataFrame(novy, index=[0])
 
     google_spreadsheet_append(
