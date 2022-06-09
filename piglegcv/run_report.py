@@ -60,6 +60,7 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
     :param filename: if filename is set the savefig is called and fig is closed
     :return: figure
     """
+    points = np.asarray(points)
     x, y = points[:, 0], points[:, 1]
     fig = plt.figure()
     if isinstance(image, np.ndarray):
