@@ -105,6 +105,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     #         output_video_file.unlink()
     #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
     add_generated_images(serverfile)
+    _add_row_to_spreadsheet(serverfile)
     make_zip(serverfile)
 
     serverfile.finished_at = datetime.now()
@@ -114,7 +115,11 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
 
 def _add_row_to_spreadsheet(serverfile):
 
-    creds_file = Path(settings.PRIVATE_DIR) / 'piglegsurgery-1987db83b363.json'
+
+    creds_file = Path(settings.CREDS_JSON_FILE)  # 'piglegsurgery-1987db83b363.json'
+    if not creds_file.exists():
+        logger.error(f"Credetials file does not exist. Expected path: {creds_file}")
+        return
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
 

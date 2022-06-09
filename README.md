@@ -256,6 +256,10 @@ EMAIL_HOST_USER=YourEmail@address
 EMAIL_HOST_PASSWORD=YourAppPassword
 ```
 
+Prepare google creds file ([based on this tutorial](https://www.analyticsvidhya.com/blog/2020/07/read-and-update-google-spreadsheets-with-python/))
+and put the `piglegsurgery-creds.json` file into private directory
+
+
 Start `redis` service
 ```bash
 service redis-server start
