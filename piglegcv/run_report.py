@@ -327,7 +327,7 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, ob
             L = np.sum(ds)
             T = np.sum(dt)
             ds_cumsum = np.cumsum(ds)
-            if ds_cumsum[-1] > ds_max:
+            if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
                 ds_max = ds_cumsum[-1]
             ax.plot(t, ds_cumsum, "-"+object_color, linewidth=1)
             ax2.plot(t, gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label=object_name, linewidth=1)
