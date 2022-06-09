@@ -106,11 +106,11 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     #         output_video_file.unlink()
     #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
     add_generated_images(serverfile)
-    _add_row_to_spreadsheet(serverfile)
     make_zip(serverfile)
 
     serverfile.finished_at = datetime.now()
     serverfile.save()
+    _add_row_to_spreadsheet(serverfile)
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
@@ -124,7 +124,10 @@ def _add_row_to_spreadsheet(serverfile):
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
 
-    novy = {"filename": serverfile.mediafile.name}
+    novy = {"filename": serverfile.mediafile.name, "email": serverfile.email,
+            "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime("%Y-%m-%d %H:%M:%S")
+            }
     df_novy = pd.DataFrame(novy, index=[0])
 
     google_spreadsheet_append(
