@@ -164,7 +164,7 @@ def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
         # logger.debug(f"    {filename=}")
         # logger.debug(f"{filename_rel=}")
         if (not filename.exists()) or force:
-            if input_file.suffix.lower() in (".mp4", ".avi"):
+            if input_file.suffix.lower() in (".mp4", ".avi", ".mov", ".webm"):
                 fn = serverfile.mediafile
                 _make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1,
                                         # filemask="{outputdir}/preview.jpg",
