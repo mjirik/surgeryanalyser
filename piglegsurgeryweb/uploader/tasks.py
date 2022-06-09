@@ -25,6 +25,7 @@ import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
+from .data_tools import google_spreadsheet_append
 
 
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="127.0.0.1", port=5000):
@@ -129,7 +130,7 @@ def _add_row_to_spreadsheet(serverfile):
     google_spreadsheet_append(
         title="Pigleg Surgery Stats",
         creds=creds,
-        dataframe=df_novy
+        data=df_novy
     )
 
 def make_preview(serverfile: UploadedFile, force:bool=False, width=300) -> Path:
@@ -397,48 +398,3 @@ def make_zip(serverfile: UploadedFile):
 
 
 
-def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict], scope=None):
-    # define the scope
-
-    # https://www.analyticsvidhya.com/blog/2020/07/read-and-update-google-spreadsheets-with-python/
-
-    if type(data) in (dict):
-        df_novy = pd.DataFrame(data)
-    else:
-        df_novy = data
-    if scope is None:
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-
-    # add credentials to the account
-    if type(creds) in (str, Path):
-        creds = ServiceAccountCredentials.from_json_keyfile_name(Path(creds), scope)
-
-    # authorize the clientsheet
-    client = gspread.authorize(creds)
-
-    # get the instance of the Spreadsheet
-    sheet = client.open(title)
-
-    # get the first sheet of the Spreadsheet
-    sheet_instance = sheet.get_worksheet(0)
-
-    # get all the records of the data
-    # records_data = sheet_instance.get_all_records()
-
-    # convert the json to dataframe
-    # records_df = pd.DataFrame.from_dict(records_data)
-
-    # view the top records
-    # records_df.head()
-    records_data = sheet_instance.get_all_records()
-
-    # convert the json to dataframe
-    records_df = pd.DataFrame.from_dict(records_data)
-    df_empty = pd.DataFrame(columns=records_df.keys())
-
-    df_out = pd.concat([df_empty, df_novy], axis=0)
-
-    # remove NaN
-    df_out2 = df_out.where(pd.notnull(df_out), None)
-
-    sheet_instance.append_rows(df_out2.values.tolist())
