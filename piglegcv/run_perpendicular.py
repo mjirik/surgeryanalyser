@@ -18,6 +18,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from loguru import logger
 
 try:
     from run_report import load_json
@@ -135,7 +136,7 @@ def intersectLines( pt1, pt2, ptA, ptB ):
 
 #####################################
 def get_frame_to_process(filename):
-    if Path(filename).suffix in (".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"):
+    if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
         img = cv2.imread(filename)
     else:
@@ -257,7 +258,7 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
 
 
     if img is None:
-        print("Input image is None")
+        logger.error("Input image is None")
         return
 
     image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)

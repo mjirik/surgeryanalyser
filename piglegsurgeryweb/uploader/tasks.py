@@ -179,7 +179,7 @@ def make_preview(serverfile: UploadedFile, force:bool=False, height=300, make_sq
                 import cv2
                 # print(input_file)
                 frame = cv2.imread(str(input_file))
-                scale = width / frame.shape[1]
+                scale = height / frame.shape[0]
                 frame = _rescale(frame, scale)
                 if make_square:
                     frame = crop_square(frame)
