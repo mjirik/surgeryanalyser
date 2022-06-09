@@ -107,7 +107,7 @@ def _make_images_from_video(filename: Path, outputdir: Path) -> Path:
             logger.trace(file_name)
     cap.release()
 
-    metadata = {"filename": str(filename), "fps": fps}
+    metadata = {"filename_full": str(filename), "fps": fps}
     json_file = outputdir / "meta.json"
     with open(json_file, "w") as f:
         json.dump(metadata, f)
