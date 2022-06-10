@@ -29,6 +29,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
 from .data_tools import google_spreadsheet_append
 from .visualization_tools import crop_square
+from .media_tools import make_images_from_video, rescale, convert_avi_to_mp4
 
 
 def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="127.0.0.1", port=5000):
@@ -98,7 +99,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     # (outputdir / "empty.txt").touch(exist_ok=True)
 
     if input_file.suffix in (".mp4", ".avi"):
-        _make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
+        make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
 
     # for video_pth in outputdir.glob("*.avi"):
     #     input_video_file = video_pth
@@ -169,19 +170,19 @@ def make_preview(serverfile: UploadedFile, force:bool=False, height=300, make_sq
         if (not filename.exists()) or force:
             if input_file.suffix.lower() in (".mp4", ".avi", ".mov", ".webm"):
                 fn = serverfile.mediafile
-                _make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1,
-                                        # filemask="{outputdir}/preview.jpg",
-                                        filemask=str(filename),
-                                        # scale=0.125,
-                                        height=height,
-                                        make_square=make_square
-                                        )
+                make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1,
+                                       # filemask="{outputdir}/preview.jpg",
+                                       filemask=str(filename),
+                                       # scale=0.125,
+                                       height=height,
+                                       make_square=make_square
+                                       )
             elif input_file.suffix.lower() in (".jpg", ".jpeg", ".tiff", ".tif", ".png"):
                 import cv2
                 # print(input_file)
                 frame = cv2.imread(str(input_file))
                 scale = height / frame.shape[0]
-                frame = _rescale(frame, scale)
+                frame = rescale(frame, scale)
                 if make_square:
                     frame = crop_square(frame)
                 cv2.imwrite(str(filename), frame)
@@ -193,69 +194,6 @@ def make_preview(serverfile: UploadedFile, force:bool=False, height=300, make_sq
             serverfile.save()
 
 
-def _make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
-                            scale=1,
-                            filemask:str="{outputdir}/frame_{frame_id:0>6}.png",
-                            width:Optional[int]=None,
-                            height:Optional[int]=None,
-                            make_square:bool=False
-                            ) -> Path:
-    import cv2
-    outputdir.mkdir(parents=True, exist_ok=True)
-
-
-    cap = cv2.VideoCapture(str(filename))
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
-
-    if width:
-        scale = None
-
-    frame_id = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if frame is None:
-            logger.warning(f"Reading frame {frame_id} in {str(filename)} failed.")
-            break
-        if scale is None and width is not None:
-            scale = width / frame.shape[1]
-        if scale is None and height is not None:
-            scale = height / frame.shape[0]
-
-        frame_id += 1
-        if frame_id > n_frames:
-            break
-        if not ret:
-            break
-        else:
-            file_name = filemask.format(outputdir=outputdir, frame_id=frame_id)
-            frame = _rescale(frame, scale)
-            if make_square:
-                frame = crop_square(frame)
-            cv2.imwrite(file_name, frame)
-            logger.trace(file_name)
-    cap.release()
-
-    metadata = {"filename": str(filename), "fps": fps}
-    json_file = outputdir / "meta.json"
-    with open(json_file, "w") as f:
-        json.dump(metadata, f)
-
-def _rescale(frame, scale):
-    import cv2
-    if scale != 1:
-        width = int(frame.shape[1] * scale)
-        height = int(frame.shape[0] * scale)
-        dim = (width, height)
-        # resize image
-        frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
-    return frame
-
-
-def _convert_avi_to_mp4(avi_file_path, output_name):
-    s = ["ffmpeg", '-i', avi_file_path, '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
-         "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", output_name]
-    subprocess.call(s)
-    return True
 
 def email_report_from_task(task):
 
