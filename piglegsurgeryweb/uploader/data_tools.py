@@ -3,6 +3,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
 from typing import Optional, Union
+from loguru import logger
 
 
 
@@ -50,7 +51,7 @@ def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict],
 
     # remove NaN
     df_out2 = df_out.where(pd.notnull(df_out), None)
-
+    logger.debug(f"appended row={df_out2.values.tolist()}")
     sheet_instance.append_rows(df_out2.values.tolist())
 
     # update  header

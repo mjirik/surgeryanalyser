@@ -77,7 +77,7 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     run_image_processing(filename, outputdir)
     # logger.debug("Perpendicular finished.")
     logger.debug("Video processing finished")
-    pass
+
 
 def run_image_processing(filename: Path, outputdir: Path) -> dict:
     logger.debug("Running image processing...")

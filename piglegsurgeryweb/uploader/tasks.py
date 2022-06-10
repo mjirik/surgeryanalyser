@@ -129,7 +129,8 @@ def _add_row_to_spreadsheet(serverfile):
 
     novy = {
         "email": serverfile.email,
-        "filename": Path(serverfile.mediafile.name).name,
+        # return str(Path(self.mediafile.name).name)
+        "filename": str(Path(serverfile.mediafile.name).name),
         "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
         "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
         "filename_full": serverfile.mediafile.name,

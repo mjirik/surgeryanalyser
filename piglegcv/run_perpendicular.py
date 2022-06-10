@@ -254,6 +254,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
     # plt.show()
     return image
 
+
 def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
     logger.debug("main_perpendicular...")
     img = get_frame_to_process(filename)

@@ -63,6 +63,11 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
     # logger.debug(points)
     points = np.asarray(points)
     logger.debug(f"points.shape={points.shape}")
+
+    if points.ndim != 2:
+        logger.warning("No points found for heatmap")
+        return None
+
     fig = plt.figure()
     if isinstance(image, np.ndarray):
         im_gray = skimage.color.rgb2gray(image[:, :, ::-1])
@@ -76,23 +81,20 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
     plt.gca().xaxis.set_major_locator(plt.NullLocator())
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
-    if points.ndim == 2:
-        x, y = points[:, 0], points[:, 1]
-        sns.kdeplot(
-            x=x, y=y,
-            fill=True,
-            # thresh=0.1,
-            # levels=100,
-            # cmap="mako",
-            # cmap="jet",
-            # palette="jet",
-            # cmap="crest",
-            cmap="rocket",
-            alpha=.5,
-            linewidth=0
-        )
-    else:
-        logger.warning("No points found for heatmap")
+    x, y = points[:, 0], points[:, 1]
+    sns.kdeplot(
+        x=x, y=y,
+        fill=True,
+        # thresh=0.1,
+        # levels=100,
+        # cmap="mako",
+        # cmap="jet",
+        # palette="jet",
+        # cmap="crest",
+        cmap="rocket",
+        alpha=.5,
+        linewidth=0
+    )
     if filename is not None:
         # plt.savefig(Path(filename))
         plt.savefig(Path(filename), bbox_inches='tight', pad_inches=0)
@@ -296,8 +298,6 @@ def main_report_old(filename, outputdir, object_colors=["b","r","g","m"], object
         videoWriter.release()
         cmd = f"ffmpeg -i {video_name} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {outputdir+'/pigleg_results.mp4'}"
         os.system(cmd)
-
-
 
         #############
         # graph report
@@ -559,15 +559,13 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         cmd = f"ffmpeg -i {video_name} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {outputdir+'/pigleg_results.mp4'}"
         os.system(cmd)
 
-
-
         #############
         # graph report
 
         #plot graphs
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
             create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
-            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / "heatmap_{}a.jpg".format(i))
+            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"heatmap_{object_name.lower().replace(' ', '_')}.jpg")
 
 
         print(f'main_report: Video file {filename} is processed!')

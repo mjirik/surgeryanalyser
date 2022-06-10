@@ -20,7 +20,7 @@ from django.conf import settings
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index. HAHA")
+    return HttpResponse("Hello, world. You're at piglegsurgeryweb. HAHA")
 
 def message(request, headline=None, text=None, next_text=None, next=None):
     context = {
@@ -135,6 +135,7 @@ def web_report(request, filename_hash:str):
     }
     return render(request,'uploader/web_report.html', context)
 
+
 def run(request, filename_id):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
@@ -144,6 +145,7 @@ def run_development(request, filename_id):
     PIGLEGCV_HOSTNAME_DEVEL = os.getenv("PIGLEGCV_HOSTNAME_DEVEL", default="127.0.0.1")
     PIGLEGCV_PORT_DEVEL = os.getenv("PIGLEGCV_PORT", default="5000")
     return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=int(PIGLEGCV_PORT_DEVEL))
+
 
 def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
