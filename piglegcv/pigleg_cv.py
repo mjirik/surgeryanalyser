@@ -24,7 +24,6 @@ except ImportError as e:
     from incision_detection_mmdet import run_incision_detection
 
 
-
 def do_computer_vision(filename, outputdir):
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
@@ -38,7 +37,7 @@ def do_computer_vision(filename, outputdir):
     logger.debug(f"CV processing started on {filename}, outputdir={outputdir}")
 
     try:
-        if Path(filename).suffix in (".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG"):
+        if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
             run_image_processing(filename, outputdir)
         else:
             run_video_processing(filename, outputdir)
@@ -70,7 +69,7 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
 
 
     main_report(filename, outputdir)
-    logger.debug("Report finished.")
+    logger.debug("Report based on video is finished.")
 
     # if extention in images_types:
 
