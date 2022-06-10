@@ -168,7 +168,7 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     )
     context = {
         'headline': "Processing started",
-        'text': f"We are processing file {serverfile.mediafile.name}. " +
+        'text': f"We are processing file {str(Path(serverfile.mediafile.name).name)}. " +
         "We will let you know by email as soon as it is finished.",  # The output will be stored in {serverfile.outputdir}.",
         "next": request.GET['next'] if "next" in request.GET else None,
         "next_text": "Back"
