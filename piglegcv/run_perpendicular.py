@@ -21,12 +21,13 @@ from matplotlib import cm
 from loguru import logger
 
 try:
-    from run_report import load_json
+    from run_report import load_json, save_json
     from incision_detection_mmdet import run_incision_detection
 except ImportError:
-
     from .incision_detection_mmdet import run_incision_detection
-    from .run_report import load_json
+    from .run_report import load_json, save_json
+
+
 
 
 
@@ -397,7 +398,16 @@ def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="pe
                 #plt.text(xi, yi,'{:2.1f}'.format(alpha1 - alpha2), c='green', bbox={'facecolor': 'white', 'alpha': 1.0, 'pad': 1}, size='large')
                 intersections.append([xi, yi])
                 intersections_alphas.append(alpha1 - alpha2)
-        
+
+    #store data result
+
+    data_results = {}
+    data_results['intersections'] = intersections
+    data_results['alphas'] = intersections_alphas
+    json_file_name = os.path.join(outputdir, "perpendicular.json")
+    save_json(data_results, json_file_name)
+
+    #filtering
     if len(intersections) > 0:
         intersections = np.array(intersections)
         intersections_alphas = np.array(intersections_alphas)
@@ -415,8 +425,6 @@ def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="pe
     #plt.show()
     plt.savefig(os.path.join(outputdir, output_filename), dpi=300)
     
-
-
       
 
 if __name__ == '__main__':
