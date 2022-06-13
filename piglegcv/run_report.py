@@ -578,7 +578,6 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
 
         #plot graphs and store statistic
         data_results = {}
-        #data_results['tracks'] = []
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
 
             res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
@@ -596,9 +595,16 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         #save statistic to file
         save_json(data_results, os.path.join(outputdir, "results.json"))
 
+
+
         print(f'main_report: Video file {filename} is processed!')
     else:
         print(f'main_report: Video file {filename} is not opended!')
+
+
+    ##save perpendicular
+    #data_results = load_json(os.path.join(outputdir, "results.json"))
+    #perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
 
 
 if __name__ == '__main__':

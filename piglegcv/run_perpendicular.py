@@ -399,8 +399,7 @@ def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="pe
                 intersections.append([xi, yi])
                 intersections_alphas.append(alpha1 - alpha2)
 
-    #store data result
-
+    #store raw data result
     data_results = {}
     data_results['intersections'] = intersections
     data_results['alphas'] = intersections_alphas
