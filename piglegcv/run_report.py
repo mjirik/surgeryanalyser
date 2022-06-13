@@ -16,6 +16,8 @@ import seaborn as sns
 from pathlib import Path
 
 
+
+
 def load_json(filename):
     if os.path.isfile(filename): 
         with open(filename, 'r') as fr:
@@ -26,6 +28,11 @@ def load_json(filename):
             return data
     else:
         return {}
+
+def save_json(data: dict, output_json: str):
+    os.makedirs(os.path.dirname(output_json), exist_ok=True)
+    with open(output_json, "w") as output_file:
+        json.dump(data, output_file)
 
 
 def plot_finger(img, joints, threshold, thickness):
@@ -129,6 +136,8 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         #print(dt)
         L = np.sum(ds)
         T = np.sum(dt)
+        ds_dt_filtered = gaussian_filter(ds/dt, sigma=2)
+        V = np.mean(ds_dt_filtered)
 
         fig = plt.figure()
         fig.suptitle(f'Space trajectory analysis of {object_name}', fontsize=14, fontweight='bold')
@@ -138,10 +147,14 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
 
         if isinstance(image, np.ndarray):
             ax.imshow(image[:,:,::-1])
+
+        #check unit
         if QRinit:
-            box_text = 'Total in-plain track {:.2f} m / {:.2f} sec'.format(L, T)
+            unit = 'm'
         else:
-            box_text = 'Total in-plain track {:.2f} pix / {:.2f} sec'.format(L, T)
+            unit = 'pix'
+
+        box_text = 'Total in-plain track {:.2f} {} / {:.2f} sec'.format(L, unit, T)
         ax.text(100, 150, box_text, style='italic', bbox={'facecolor': 'white', 'alpha': 1.0, 'pad': 10})
 
         ax.plot(data_pixel[:,0], data_pixel[:,1],'+'+object_color, markersize=12)
@@ -172,18 +185,15 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         #ax.set_ylabel('Data')
         #ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         #ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
-        if QRinit:
-            track_label = "Track [m]"
-            vel_label = "Velocity [m/sec]"
-        else:
-            track_label = "Track [pix]"
-            vel_label = "Velocity [pix/sec]"
+
+        track_label = "Track [{}]".format(unit)
+        vel_label = "Velocity [{}/sec]".format(unit)
 
         ax.plot(t, np.cumsum(ds), "-"+object_color, label= 'Track', linewidth=3)
         ax.set_ylabel(track_label)
         
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-        ax2.plot(t, gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label='Velocity', linewidth=3)
+        ax2.plot(t, ds_dt_filtered, ":"+object_color, label='Velocity', linewidth=3)
         ax2.set_ylabel(vel_label)
         
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -192,8 +202,12 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         #plt.show()
         plt.savefig(output_file_name2, dpi=dpi)
         print(f'main_report: figures {output_file_name2} is saved')
+
+        return([T, L, V, unit])
+
     else:
         print('main_report: No data to report')
+        return([])
     
 
 #####################################
@@ -562,11 +576,25 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         #############
         # graph report
 
-        #plot graphs
+        #plot graphs and store statistic
+        data_results = {}
+        #data_results['tracks'] = []
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
-            create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
+
+            res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
+
+            if len(res) > 0:
+                [T, L, V, unit] = res
+                data_results[object_name] = {}
+                data_results[object_name]['length'] = L
+                data_results[object_name]['duration'] = T
+                data_results[object_name]['velocity'] = V
+                data_results[object_name]['unit'] = unit
+
             create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"heatmap_{object_name.lower().replace(' ', '_')}.jpg")
 
+        #save statistic to file
+        save_json(data_results, os.path.join(outputdir, "results.json"))
 
         print(f'main_report: Video file {filename} is processed!')
     else:
