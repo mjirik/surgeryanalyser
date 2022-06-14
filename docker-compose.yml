@@ -57,19 +57,19 @@ services:
       - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
       
-  piglegcv_devel:
-    privileged: true
-    image: piglegcv_devel:latest
-#    command: nvidia-smi
-#    runtime: nvidia
-    ports:
-      - '5001:5000'
-    environment:
-      - DOCKERLOGNAME=devel
-    volumes:
-      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
-      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
-      - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
+#  piglegcv_devel:
+#    privileged: true
+#    image: piglegcv_devel:latest
+##    command: nvidia-smi
+##    runtime: nvidia
+#    ports:
+#      - '5001:5000'
+#    environment:
+#      - DOCKERLOGNAME=devel
+#    volumes:
+#      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
+#      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
+#      - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
 
 #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
 #  piglegcv_devel:

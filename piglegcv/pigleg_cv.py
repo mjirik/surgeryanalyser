@@ -9,6 +9,7 @@ import traceback
 import time
 try:
     from .run_tracker_lite import main_tracker
+    from .run_tracker_bytetrack import main_tracker_bytetrack
     from .run_mmpose import main_mmpose
     from .run_qr import main_qr
     from .run_report import main_report
@@ -17,6 +18,7 @@ try:
 except ImportError as e:
     logger.debug(e)
     from run_tracker_lite import main_tracker
+    from run_tracker_bytetrack import main_tracker_bytetrack
     from run_mmpose import main_mmpose
     from run_qr import main_qr
     from run_report import main_report
@@ -40,7 +42,8 @@ def do_computer_vision(filename, outputdir):
         if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
             run_image_processing(filename, outputdir)
         else:
-            run_video_processing(filename, outputdir)
+            #run_video_processing(filename, outputdir)
+            run_video_processing2(filename, outputdir)
 
         logger.debug("Work finished")
     except Exception as e:
@@ -59,6 +62,31 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     if not tracker_model_path.exists():
         tracker_model_path = Path(__file__).parent / "resources/tracker_model"
     main_tracker("{} \"{}\" --output_dir {}".format(tracker_model_path, filename, outputdir))
+    # run_media_processing(Path(filename), Path(outputdir))
+    logger.debug(f"Detectron finished in {time.time() - s}s.")
+
+    #
+    # s = time.time()
+    # main_mmpose(filename, outputdir)
+    # logger.debug(f"MMpose finished in {time.time() - s}s.")
+
+
+    main_report(filename, outputdir)
+    logger.debug("Report based on video is finished.")
+
+    # if extention in images_types:
+
+    run_image_processing(filename, outputdir)
+    # logger.debug("Perpendicular finished.")
+    logger.debug("Video processing finished")
+
+def run_video_processing2(filename: Path, outputdir: Path) -> dict:
+    logger.debug("Running video processing...")
+    s = time.time()
+    main_qr(filename, outputdir)
+    logger.debug(f"QR finished in {time.time() - s}s.")
+
+    main_tracker_bytetrack("{} \"{}\" --output_dir {}".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch_3.pth', filename, outputdir))
     # run_media_processing(Path(filename), Path(outputdir))
     logger.debug(f"Detectron finished in {time.time() - s}s.")
 
