@@ -23,6 +23,7 @@ import django.utils
 import shutil
 from django.conf import settings
 from typing import Optional, Union
+from django.template import defaultfilters
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
@@ -114,11 +115,11 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
 
     serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
-    _add_row_to_spreadsheet(serverfile)
+    _add_row_to_spreadsheet(serverfile, absolute_uri)
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
-def _add_row_to_spreadsheet(serverfile):
+def _add_row_to_spreadsheet(serverfile, absolute_uri):
 
 
     creds_file = Path(settings.CREDS_JSON_FILE)  # 'piglegsurgery-1987db83b363.json'
@@ -148,10 +149,16 @@ def _add_row_to_spreadsheet(serverfile):
         "email": serverfile.email,
         # return str(Path(self.mediafile.name).name)
         "filename": str(Path(serverfile.mediafile.name).name),
-        "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
-        "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
+        # "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
+        # "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
+        "uploaded_at": None if serverfile.uploaded_at is None else defaultfilters.date(serverfile.uploaded_at, 'Y-m-d H:i'),
+        "finished_at": None if serverfile.finished_at is None else defaultfilters.date(serverfile.finished_at, 'Y-m-d H:i'),
         "filename_full": serverfile.mediafile.name,
+        "report_url": f"{absolute_uri}/uploader/web_report/{serverfile.hash}"
     })
+
+    if "filename_full" in novy:
+        novy.pop("filename_full")
     df_novy = pd.DataFrame(novy, index=[0])
 
     google_spreadsheet_append(
