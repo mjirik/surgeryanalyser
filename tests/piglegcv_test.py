@@ -4,6 +4,7 @@ from loguru import logger
 from pathlib import Path
 # from unittest import mock
 from piglegcv import pigleg_cv
+# from matplotlib import pyplot as plt
 
 local_dir = Path(__file__).parent
 
@@ -26,3 +27,5 @@ def test_pigleg_cv():
     # pigleg_cv.run_media_processing(media_pth, outputdir)
     assert len(list(outputdir.glob("*"))) > 0
     assert False
+
+

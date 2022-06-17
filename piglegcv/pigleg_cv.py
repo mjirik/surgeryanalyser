@@ -62,8 +62,7 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     if not tracker_model_path.exists():
         tracker_model_path = Path(__file__).parent / "resources/tracker_model"
     main_tracker("{} \"{}\" --output_dir {}".format(tracker_model_path, filename, outputdir))
-    # run_media_processing(Path(filename), Path(outputdir))
-    logger.debug(f"Detectron finished in {time.time() - s}s.")
+    logger.debug(f"Tracker finished in {time.time() - s}s.")
 
     #
     # s = time.time()
@@ -88,7 +87,7 @@ def run_video_processing2(filename: Path, outputdir: Path) -> dict:
 
     main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch_3.pth', filename, outputdir))
     # run_media_processing(Path(filename), Path(outputdir))
-    logger.debug(f"Detectron finished in {time.time() - s}s.")
+    logger.debug(f"Tracker finished in {time.time() - s}s.")
 
     #
     # s = time.time()
