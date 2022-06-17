@@ -14,6 +14,8 @@ from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+import scipy
+import scipy.signal
 
 
 
@@ -112,6 +114,22 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
 
 #ds_threshold [m]
 def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit, object_color, object_name, output_file_name, output_file_name2, ds_threshold=0.1, dpi=300):
+    """
+
+    :param frame_id:
+    :param data_pixel:
+    :param image:
+    :param source_fps:
+    :param pix_size:
+    :param QRinit:
+    :param object_color:
+    :param object_name:
+    :param output_file_name:
+    :param output_file_name2:
+    :param ds_threshold:  in [m]
+    :param dpi:
+    :return:
+    """
     
     if frame_id != []:
         data_pixel = np.array(data_pixel)
@@ -172,7 +190,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
 
         #plt.show()
         plt.savefig(output_file_name, dpi=dpi)
-        print(f'main_report: figures {output_file_name} is saved')
+        logger.debug(f'main_report: figures {output_file_name} is saved')
 
         ##################
         ## second graph
@@ -201,12 +219,12 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
 
         #plt.show()
         plt.savefig(output_file_name2, dpi=dpi)
-        print(f'main_report: figures {output_file_name2} is saved')
+        logger.debug(f'main_report: figures {output_file_name2} is saved')
 
         return([T, L, V, unit])
 
     else:
-        print('main_report: No data to report')
+        logger.debug('main_report: No data to report')
         return([])
     
 
@@ -414,6 +432,46 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, ob
     return fig, ax, ds_max
 
 
+def _qr_data_processing(json_data:dict, fps):
+    """
+    Get id of frame with finished knot based on `qr_scissors_frames` key in input dictionary.
+
+    :param qr_data: extract id of cut frames if the key `qr_scissors_frame` exists
+    :return:
+    """
+    qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
+    pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
+    is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
+    scissors_frames = qr_data["qr_scissors_frames"] if "qr_scissors_frames" in qr_data else []
+    scissors_frames = _scissors_frames(scissors_frames, fps)
+    return pix_size, is_qr_detected, scissors_frames
+
+
+def _scissors_frames(scissors_frames, fps, peak_distance_s=10):
+    """
+    Filter scisors frames with minimum peak distance
+
+    :param scissors_frames:
+    :param fps:
+    :param peak_distance_s:
+    :return:
+    """
+    per_frame_data = np.zeros(np.max(scissors_frames)+1)
+    per_frame_data[scissors_frames] = 1
+
+    peak_distance = peak_distance_s * fps
+    # scissors_frames = np.asarray(scissors_frames)
+    per_frame_data = scipy.ndimage.gaussian_filter(per_frame_data, peak_distance, mode="constant", cval=0)
+    peaks, _ = scipy.signal.find_peaks(per_frame_data, distance=peak_distance)
+    # plt.plot(per_frame_data)
+    # plt.plot(peaks, per_frame_data[peaks], 'rx')
+    # plt.show()
+    return peaks.tolist()
+
+
+
+
+
 
 #####################################
 def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezes","Scissors","None"]):
@@ -454,12 +512,6 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                         data_pixels[class_id].append(position)
                         frame_ids[class_id].append(i)
 
-        #input QR data
-        json_data = load_json('{}/qr_data.json'.format(outputdir))
-        qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
-        pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
-        is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
-
 
         #fig = plt.figure()
         #plt.imshow(im)
@@ -474,13 +526,15 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
 
         size_output_video = size_input_video.copy()
         size_output_video[1] *= 2
-        print(size_input_video, size_output_video)
+        logger.debug(f"{size_input_video}, {size_output_video}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_name = '{}/pigleg_results.avi'.format(outputdir)
         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size_output_video)
 
-        # frames with visible scissors qr code
-        scissors_frames = qr_data["qr_scissors_frames"] if "qr_scissors_frames" in qr_data else []
+        # input QR data
+        json_data = load_json('{}/qr_data.json'.format(outputdir))
+        pix_size, is_qr_detected, scissors_frames = _qr_data_processing(json_data, fps)
+        # scisors_frames - frames with visible scissors qr code
 
         fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
                                               object_names, size_input_video, scissors_frames=scissors_frames)

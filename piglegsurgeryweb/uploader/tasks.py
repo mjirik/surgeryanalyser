@@ -129,12 +129,6 @@ def _add_row_to_spreadsheet(serverfile):
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
 
     novy = {
-        "email": serverfile.email,
-        # return str(Path(self.mediafile.name).name)
-        "filename": str(Path(serverfile.mediafile.name).name),
-        "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
-        "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
-        "filename_full": serverfile.mediafile.name,
     }
 
     filename = Path(serverfile.outputdir) / "meta.json"
@@ -150,6 +144,14 @@ def _add_row_to_spreadsheet(serverfile):
             data = json.load(fr)
             novy.update(data)
 
+    novy.update({
+        "email": serverfile.email,
+        # return str(Path(self.mediafile.name).name)
+        "filename": str(Path(serverfile.mediafile.name).name),
+        "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
+        "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
+        "filename_full": serverfile.mediafile.name,
+    })
     df_novy = pd.DataFrame(novy, index=[0])
 
     google_spreadsheet_append(

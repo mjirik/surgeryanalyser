@@ -23,7 +23,7 @@ def main_qr(filename, output_dir):
     img_first = None
     box = []
     qr_text = None
-    qr_scissors_frame = []
+    qr_scissors_frames= []
     i = -1
     while cap.isOpened():
         i += 1
@@ -46,7 +46,7 @@ def main_qr(filename, output_dir):
                 qr_size = 0.027
                 qr_text = txt
             elif txt == "Scissors 30 mm":
-                qr_scissors_frame.append(i)
+                qr_scissors_frames.append(i)
                 if qr_text is None:
                     # Use only if no Scale QR code was detected
                     qr_size = 0.030
@@ -70,10 +70,11 @@ def main_qr(filename, output_dir):
     qr_data['pix_size'] = pix_size
     qr_data['qr_size'] = qr_size
     qr_data['text'] = qr_text
-    qr_data['qr_scissors_frames'] = qr_scissors_frame
+    qr_data['qr_scissors_frames'] = qr_scissors_frames
 
     # save QR to the json file
     save_json({"qr_data": qr_data}, os.path.join(output_dir, "qr_data.json"))
+    return qr_data
 
    
 if __name__ == '__main__':
