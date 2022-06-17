@@ -31,6 +31,7 @@ def load_json(filename):
     else:
         return {}
 
+
 def save_json(data: dict, output_json: str):
     os.makedirs(os.path.dirname(output_json), exist_ok=True)
     with open(output_json, "w") as output_file:
@@ -637,14 +638,15 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
 
             res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
+            # obj_name = object_name.lower().replace(" ", "_")
 
             if len(res) > 0:
                 [T, L, V, unit] = res
-                data_results[object_name] = {}
-                data_results[object_name]['length'] = L
-                data_results[object_name]['duration'] = T
-                data_results[object_name]['velocity'] = V
-                data_results[object_name]['unit'] = unit
+                # data_results[object_name] = {}
+                data_results[f'{object_name} length'] = L
+                data_results[f'{object_name} duration'] = T
+                data_results[f'{object_name} velocity'] = V
+                data_results[f'{object_name} unit'] = unit
 
             create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"heatmap_{object_name.lower().replace(' ', '_')}.jpg")
 
