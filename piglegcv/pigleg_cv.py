@@ -7,23 +7,23 @@ from typing import Optional
 import shutil
 import traceback
 import time
-try:
-    from .run_tracker_lite import main_tracker
-    from .run_tracker_bytetrack import main_tracker_bytetrack
-    from .run_mmpose import main_mmpose
-    from .run_qr import main_qr
-    from .run_report import main_report
-    from .run_perpendicular import main_perpendicular, get_frame_to_process
-    from .incision_detection_mmdet import run_incision_detection
-except ImportError as e:
-    logger.debug(e)
-    from run_tracker_lite import main_tracker
-    from run_tracker_bytetrack import main_tracker_bytetrack
-    from run_mmpose import main_mmpose
-    from run_qr import main_qr
-    from run_report import main_report
-    from run_perpendicular import main_perpendicular, get_frame_to_process
-    from incision_detection_mmdet import run_incision_detection
+#try:
+#    from .run_tracker_lite import main_tracker
+#    from .run_tracker_bytetrack import main_tracker_bytetrack
+#    from .run_mmpose import main_mmpose
+#    from .run_qr import main_qr
+#    from .run_report import main_report
+#    from .run_perpendicular import main_perpendicular, get_frame_to_process
+#    from .incision_detection_mmdet import run_incision_detection
+#except ImportError as e:
+#    logger.debug(e)
+#    from run_tracker_lite import main_tracker
+from run_tracker_bytetrack import main_tracker_bytetrack
+#from run_mmpose import main_mmpose
+from run_qr import main_qr
+from run_report import main_report
+from run_perpendicular import main_perpendicular, get_frame_to_process
+from incision_detection_mmdet import run_incision_detection
 
 
 def do_computer_vision(filename, outputdir):
@@ -86,7 +86,7 @@ def run_video_processing2(filename: Path, outputdir: Path) -> dict:
     main_qr(filename, outputdir)
     logger.debug(f"QR finished in {time.time() - s}s.")
 
-    main_tracker_bytetrack("{} \"{}\" --output_dir {}".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch_3.pth', filename, outputdir))
+    main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch_3.pth', filename, outputdir))
     # run_media_processing(Path(filename), Path(outputdir))
     logger.debug(f"Detectron finished in {time.time() - s}s.")
 

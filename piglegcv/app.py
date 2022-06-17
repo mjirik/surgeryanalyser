@@ -12,18 +12,16 @@ from loguru import logger
 import flask
 from flask import request, jsonify, render_template
 # from pigleg_cv import run_media_processing
-try:
-    from pigleg_cv import do_computer_vision
-except ImportError:
-    from .pigleg_cv import do_computer_vision
+#try:
+from pigleg_cv import do_computer_vision
+#except ImportError:
+#    from .pigleg_cv import do_computer_vision
 import requests
 import time
 
 PIGLEGCV_TIMEOUT = 10*3600
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
-
-
 
 @app.route("/run", methods=["GET", "POST"])
 def index():
