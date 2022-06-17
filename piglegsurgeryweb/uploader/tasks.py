@@ -143,7 +143,8 @@ def _add_row_to_spreadsheet(serverfile):
             data = json.load(fr)
             novy.update(data)
 
-    filename = Path(serverfile.outputdir) / "evaluation.json"
+    # filename = Path(serverfile.outputdir) / "evaluation.json"
+    filename = Path(serverfile.outputdir) / "results.json"
     if os.path.isfile(filename):
         with open(filename, 'r') as fr:
             data = json.load(fr)
