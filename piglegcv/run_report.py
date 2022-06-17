@@ -447,7 +447,7 @@ def _qr_data_processing(json_data:dict, fps):
     return pix_size, is_qr_detected, scissors_frames
 
 
-def _scissors_frames(scissors_frames, fps, peak_distance_s=10):
+def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
     """
     Filter scisors frames with minimum peak distance
 
@@ -456,6 +456,8 @@ def _scissors_frames(scissors_frames, fps, peak_distance_s=10):
     :param peak_distance_s:
     :return:
     """
+    if len(scissors_frames) == 0:
+        return []
     per_frame_data = np.zeros(np.max(scissors_frames)+1)
     per_frame_data[scissors_frames] = 1
 
