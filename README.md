@@ -9,6 +9,17 @@ There are three parts of the application:
 * Moodle - 
 
 
+# Install notes 
+
+[Install Docker](https://docs.docker.com/get-docker/)
+
+Login docker and nvidia ([stackoverflow - docker build error](https://stackoverflow.com/questions/70970424/docker-build-docker-compose-up-error-unknown-desc-failed-to-fetch-anonymous))
+
+```bash
+ngc config set
+docker login nvcr.io
+```
+
 # Run in production 
 
 Update repo, Stop, Build and Up again
