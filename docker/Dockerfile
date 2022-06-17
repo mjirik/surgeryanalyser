@@ -135,10 +135,8 @@ RUN sudo apt-get install --yes apache2-utils
 #ENV PIGLEGCV_HOSTNAME "PIGLEGCV_HOSTNAME"
 CMD cd /webapps/piglegsurgery/docker && \
     bash ./start.sh && \
-#    service redis-server start && \
-#    /webapps/piglegsurgery/docker/bin/qcluster_start  & && \
-#    /webapps/piglegsurgery/docker/bin/gunicorn_start & && \
     tail -f /dev/null
+#CMD tail -f /dev/null
 
 #    conda run -n piglegsurgery --no-capture-output python manage.py qcluster && \
 #    conda run -n piglegsurgery --no-capture-output python manage.py runserver 0:8000 && \
