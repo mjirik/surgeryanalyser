@@ -55,10 +55,17 @@ def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict],
     sheet_instance.append_rows(df_out2.values.tolist())
 
     # update  header
+    cell_list = sheet_instance.range(1, 1, 1, len(df_out2.keys()))
+    sheet_instance.update_cells(cell_list, )
+
     for i, key in enumerate(df_out2.keys()):
-        val = sheet_instance.cell(1, i + 1).value
+        val = cell_list[i].value
+        # val = sheet_instance.cell(1, i + 1).value
         if val != key:
-            sheet_instance.update_cell(1, i + 1, key)
+            cell_list[i].value = key
+            # sheet_instance.update_cell(1, i + 1, key)
+
+    sheet_instance.update_cells(cell_list)
 
     return df_out2
 
