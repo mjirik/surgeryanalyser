@@ -19,6 +19,13 @@ RUN wget https://bootstrap.pypa.io/pip/3.6/get-pip.py && \
 	rm get-pip.py
 
 USER root
+
+# RUN apt-get install --yes gpg vim ffmpeg libsm6 libxext6 curl supervisor multitail
+RUN apt-get install --yes gpg vim ffmpeg curl multitail mc
+# Install our public GPG key to trusted store
+RUN curl https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc | gpg --dearmor > conda.gpg
+RUN install -o root -g root -m 644 conda.gpg /usr/share/keyrings/conda-archive-keyring.gpg
+
 # Add our Debian repo
 RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/conda-archive-keyring.gpg] https://repo.anaconda.com/pkgs/misc/debrepo/conda stable main" > /etc/apt/sources.list.d/conda.list
 RUN apt-get update --yes
@@ -63,9 +70,9 @@ RUN git clone https://github.com/ajsjdfalkjdfha
 
 
 WORKDIR /home/appuser/bunky
-COPY ../../mojevahy.pth bunky/vahy/
+#COPY ../../mojevahy.pth bunky/vahy/
 
-CMD python mojegui.py
+#CMD python mojegui.py
 
 
 #RUN git clone git
