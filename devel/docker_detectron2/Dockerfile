@@ -40,7 +40,8 @@ ENV PATH="/opt/conda/condabin:${PATH}"
 ARG PATH="/opt/conda/condabin:${PATH}"
 
 USER appuser
-RUN conda create -n cell_nuclei_app -c SimpleITK -c bioconda -c conda-forge -c mjirik python=3.6 openslide-python io3d imma SimpleITK pandas loguru xlrd exsu scipy=1.5 czifile opencv scikit-image
+RUN conda create -n cell_nuclei_app -c SimpleITK -c bioconda -c conda-forge python=3.6 openslide-python SimpleITK pandas loguru xlrd scipy=1.5 czifile opencv scikit-image
+RUN conda install -n cell_nuclei_app -c SimpleITK -c bioconda -c conda-forge -c mjirik python=3.6 "io3d>=2.10" "imma>=0.18" "exsu>=0.7"
 RUN conda run -n cell_nuclei_app --no-capture-output pip install pywebio
 RUN conda list
 
@@ -68,17 +69,33 @@ ENV FVCORE_CACHE="/tmp"
 WORKDIR /home/appuser/detectron2_repo
 
 WORKDIR /home/appuser
-# RUN git clone https://github.com/ajsjdfalkjdfha
-
-
-WORKDIR /home/appuser/bunky
+RUN git clone https://github.com/janburian/Web_App_PyWebIO
+WORKDIR /home/appuser/Web_App_PyWebIO
+RUN mkdir -p src/models
+WORKDIR /home/appuser/Web_App_PyWebIO/src/models
+RUN curl https://home.zcu.cz/~mjirik/lisa/modely_cell_nuclei/mask_rcnn_R_50_C4_3x.pth
+RUN curl https://home.zcu.cz/~mjirik/lisa/modely_cell_nuclei/mask_rcnn_R_50_DC5_3x.pth
+RUN curl https://home.zcu.cz/~mjirik/lisa/modely_cell_nuclei/mask_rcnn_R_50_FPN_3x.pth
+RUN curl https://home.zcu.cz/~mjirik/lisa/modely_cell_nuclei/mask_rcnn_R_101_C4_3x.pth
+RUN curl https://home.zcu.cz/~mjirik/lisa/modely_cell_nuclei/mask_rcnn_R_101_FPN_3x.pth
 #COPY ../../mojevahy.pth bunky/vahy/
 
-#CMD python mojegui.py
+EXPOSE 64677
+WORKDIR /home/appuser/Web_App_PyWebIO/src/
 
+# odkomentovat
+CMD python app.py
+
+# zakomentovat zbytek
 RUN conda run -n cell_nuclei_app pip install jupyterlab
-EXPOSE 8888
+EXPOSE 64677
 WORKDIR /home/appuser
 RUN pip install scikit-image io3d loguru pydicom imma SimpleITK
 
-CMD jupyter lab --allow-root --ip=0.0.0.0 --port=8888
+CMD jupyter lab --allow-root --ip=0.0.0.0 --port=64677
+
+# docker build -t cell_nuclei_app .
+# docker run -d -p 8888:8888 --name cell_nuclei_app cell_nuclei_app
+
+# connection of hard drive volumes into docker image
+# docker run -d -v "C:/Users/Jirik/projects/modely:/home/appuser/Web_App_PyWebIO" -v "C:/obrazky:/home/appuser" -p 8888:8888 --name cell_nuclei_app cell_nuclei_app
