@@ -48,6 +48,7 @@ RUN conda list
 # See https://pytorch.org/ for other options if you use a different version of CUDA
 RUN conda run -n cell_nuclei_app --no-capture-output pip install --user tensorboard cmake   # cmake from apt-get is too old
 RUN conda run -n cell_nuclei_app --no-capture-output pip install --user torch==1.10 torchvision==0.11.1 -f https://download.pytorch.org/whl/cu111/torch_stable.html
+# RUN conda run -n cell_nuclei_app --no-capture-output pip install --user torch==1.10+cpu torchvision==0.11.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
 RUN conda run -n cell_nuclei_app --no-capture-output pip install --user 'git+https://github.com/facebookresearch/fvcore'
 # install detectron2
