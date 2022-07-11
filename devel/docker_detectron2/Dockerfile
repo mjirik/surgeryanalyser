@@ -20,6 +20,7 @@ RUN wget https://bootstrap.pypa.io/pip/3.6/get-pip.py && \
 
 USER root
 
+RUN apt-get update --yes
 # RUN apt-get install --yes gpg vim ffmpeg libsm6 libxext6 curl supervisor multitail
 RUN apt-get install --yes gpg vim ffmpeg curl multitail mc
 # Install our public GPG key to trusted store
@@ -66,7 +67,7 @@ ENV FVCORE_CACHE="/tmp"
 WORKDIR /home/appuser/detectron2_repo
 
 WORKDIR /home/appuser
-RUN git clone https://github.com/ajsjdfalkjdfha
+# RUN git clone https://github.com/ajsjdfalkjdfha
 
 
 WORKDIR /home/appuser/bunky
@@ -74,11 +75,9 @@ WORKDIR /home/appuser/bunky
 
 #CMD python mojegui.py
 
+RUN conda run -n cell_nuclei_app pip install jupyterlab
+EXPOSE 8888
+WORKDIR /home/appuser
+RUN pip install scikit-image io3d loguru pydicom imma SimpleITK
 
-#RUN git clone git
-# run detectron2 under user "appuser":
-# wget http://images.cocodataset.org/val2017/000000439715.jpg -O input.jpg
-# python3 demo/demo.py  \
-	#--config-file configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml \
-	#--input input.jpg --output outputs/ \
-	#--opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
+CMD jupyter lab --allow-root --ip=0.0.0.0 --port=8888
