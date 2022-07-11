@@ -18,14 +18,33 @@ RUN wget https://bootstrap.pypa.io/pip/3.6/get-pip.py && \
 	python3 get-pip.py --user && \
 	rm get-pip.py
 
+USER root
+# Add our Debian repo
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/conda-archive-keyring.gpg] https://repo.anaconda.com/pkgs/misc/debrepo/conda stable main" > /etc/apt/sources.list.d/conda.list
+RUN apt-get update --yes
+RUN apt-get install --yes conda
+
+# make conda visible
+RUN echo "source /opt/conda/etc/profile.d/conda.sh" >> /root/.bashrc
+RUN /opt/conda/condabin/conda init bash
+# RUN source /opt/conda/etc/profi le.d/conda.sh
+ENV PATH="/opt/conda/condabin:${PATH}"
+ARG PATH="/opt/conda/condabin:${PATH}"
+
+USER appuser
+RUN conda create -n cell_nuclei_app -c SimpleITK -c bioconda -c conda-forge -c mjirik python=3.6 openslide-python io3d imma SimpleITK pandas loguru xlrd exsu scipy=1.5 czifile opencv scikit-image
+RUN conda run -n cell_nuclei_app --no-capture-output pip install pywebio
+RUN conda list
+
 # install dependencies
 # See https://pytorch.org/ for other options if you use a different version of CUDA
-RUN pip install --user tensorboard cmake   # cmake from apt-get is too old
-RUN pip install --user torch==1.10 torchvision==0.11.1 -f https://download.pytorch.org/whl/cu111/torch_stable.html
+RUN conda run -n cell_nuclei_app --no-capture-output pip install --user tensorboard cmake   # cmake from apt-get is too old
+RUN conda run -n cell_nuclei_app --no-capture-output pip install --user torch==1.10 torchvision==0.11.1 -f https://download.pytorch.org/whl/cu111/torch_stable.html
 
-RUN pip install --user 'git+https://github.com/facebookresearch/fvcore'
+RUN conda run -n cell_nuclei_app --no-capture-output pip install --user 'git+https://github.com/facebookresearch/fvcore'
 # install detectron2
-RUN git clone https://github.com/facebookresearch/detectron2 detectron2_repo
+#RUN git clone https://github.com/facebookresearch/detectron2 detectron2_repo
+RUN git clone https://github.com/facebookresearch/detectron2 --branch v0.5 detectron2_repo
 # set FORCE_CUDA because during `docker build` cuda is not accessible
 ENV FORCE_CUDA="1"
 # This will by default build detectron2 for all common cuda architectures and take a lot more time,
@@ -33,7 +52,7 @@ ENV FORCE_CUDA="1"
 ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
 ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
 
-RUN pip install --user -e detectron2_repo
+RUN conda run -n cell_nuclei_app --no-capture-output pip install --user -e detectron2_repo
 
 # Set a fixed model cache directory.
 ENV FVCORE_CACHE="/tmp"
