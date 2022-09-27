@@ -34,6 +34,8 @@ def main_qr(filename, output_dir):
         #try read QR code
         grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         res = decode(grey)
+        width = cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)  # float `width`
+        height = cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)  # float `height`
         # logger.debug(res)
         # if len(res) > 0:
         for oneqr in res:
@@ -65,6 +67,18 @@ def main_qr(filename, output_dir):
             # break
             
     qr_data = {}
+
+# todo use the pigleg holder detection based estimator
+    qr_data["pix_size_method"] = "QR" if is_detected else "video size estimation"
+    if ~is_detected:
+        is_detected = True
+
+        # pigleg_holder_width [m] - usually it takes around half of the image width
+        qr_size = 0.110 # [m]
+        pix_size = qr_size * 0.5 / width
+        qr_text = "video size estimation"
+        box = []
+
     qr_data['is_detected'] = is_detected
     qr_data['box'] = box
     qr_data['pix_size'] = pix_size

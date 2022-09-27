@@ -17,6 +17,7 @@ from .tasks import email_media_recived, make_preview
 from django_q.tasks import async_task, schedule, queue_size
 from datetime import datetime
 from django.conf import settings
+import json
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
 def index(request):
@@ -110,6 +111,15 @@ def web_report(request, filename_hash:str):
     #     })
     logger.debug(serverfile.zip_file.url)
 
+    fn_results = Path(serverfile.outputdir) / "results.json"
+    results = {}
+    if fn_results.exists():
+        with open(fn_results) as f:
+            loaded_results = json.load(f)
+            for key in loaded_results:
+                if key in ("Needle holder length", "Needle holder duration", "Tweezers length", "Tweezers duration"):
+                    results[key] = loaded_results[key]
+
     image_list = serverfile.bitmapimage_set.all()
 
     videofiles = Path(serverfile.outputdir).glob("*.mp4")
@@ -131,7 +141,8 @@ def web_report(request, filename_hash:str):
         'mediafile': Path(serverfile.mediafile.name).name,
         'image_list': image_list,
         "next": request.GET['next'] if "next" in request.GET else None,
-        'videofiles_url': videofiles_url
+        'videofiles_url': videofiles_url,
+        "results": results
     }
     return render(request,'uploader/web_report.html', context)
 

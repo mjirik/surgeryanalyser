@@ -54,6 +54,13 @@
 
             </div>
         {% endfor %}
+        <div>
+            <ul>
+            {% for key, value in results.items %}
+              <li><b>{{key}}</b>: {{value}}</li>
+            {% endfor %}
+            </ul>
+        </div>
 
 <!--    <p>-->
 <!--        {{ serverfile.mediafile.name }}-->
