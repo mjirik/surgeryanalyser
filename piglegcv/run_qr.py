@@ -34,8 +34,8 @@ def main_qr(filename, output_dir):
         #try read QR code
         grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         res = decode(grey)
-        width = cap.get(cv2.CV_CAP_PROP_FRAME_WIDTH)  # float `width`
-        height = cap.get(cv2.CV_CAP_PROP_FRAME_HEIGHT)  # float `height`
+        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
+        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
         # logger.debug(res)
         # if len(res) > 0:
         for oneqr in res:
