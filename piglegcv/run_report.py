@@ -478,7 +478,7 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 
 
 #####################################
-def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezers","Scissors","None"], concat_axis=1, resize_factor=0.5):
+def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezers","Scissors","None"], concat_axis=1, resize_factor=1.0):
     """
 
     :param filename:
