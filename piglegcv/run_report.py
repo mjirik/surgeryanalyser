@@ -602,9 +602,9 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                             cv2.circle(
                                 img,
                                 (int(position[0]), int(position[1])),
-                                30/resize_factor,
+                                int(30/resize_factor),
                                 color,
-                                thickness=4/resize_factor,
+                                thickness=int(4/resize_factor),
                             )
 
                             # draw track ID, coordinates: bottom-left
@@ -613,9 +613,9 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                                 str(object_names[class_id]),
                                 (int(position[0]+1), int(position[1])),
                                 cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=2/resize_factor,
+                                fontScale=int(2/resize_factor),
                                 color=color,
-                                thickness=4/resize_factor,
+                                thickness=int(4/resize_factor),
                             )
                 #else:
                 #break
@@ -626,7 +626,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                     plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
 
             t_i = 1.0/fps * i
-            lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=1/resize_factor)
+            lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=int(1/resize_factor))
             im_graph = plot3(fig)
             im_graph = cv2.cvtColor(im_graph, cv2.COLOR_RGB2BGR) #matplotlib generate RGB channels but cv2 BGR
             ax.lines.pop(-1)
