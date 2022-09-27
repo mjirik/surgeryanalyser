@@ -101,7 +101,7 @@ COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/i
 COPY ./run_tracker_bytetrack.py .
 RUN mkdir -p ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/epoch_3.pth ./resources/tracker_model_bytetrack
+COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
 
 # USER root

@@ -85,7 +85,7 @@ def run_video_processing2(filename: Path, outputdir: Path) -> dict:
     main_qr(filename, outputdir)
     logger.debug(f"QR finished in {time.time() - s}s.")
 
-    main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch_3.pth', filename, outputdir))
+    main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch.pth', filename, outputdir))
     # run_media_processing(Path(filename), Path(outputdir))
     logger.debug(f"Tracker finished in {time.time() - s}s.")
 
