@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from typing import Optional
 
 import skimage.color
+import skimage.transform
 from loguru import logger
 import cv2
 import json
@@ -477,7 +478,7 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 
 
 #####################################
-def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezers","Scissors","None"], concat_axis=1):
+def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezers","Scissors","None"], concat_axis=1, resize_factor=0.5):
     """
 
     :param filename:
@@ -506,7 +507,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         frame_ids = [[],[],[],[]]
         N = len(sort_data)
         M = len(hand_poses)
-        print('Sort data N=', N,' MMpose data M=', M)
+        logger.debug('Sort data N=', N,' MMpose data M=', M)
 
         for i, sort_data_i in enumerate(sort_data): #co snimek to jedna polozka, i prazdna []
             frame = sort_data_i
@@ -541,6 +542,8 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             size_output_video[1] *= 2
         else:
             size_output_video[0] *= 2
+
+        size_output_video = [int(one*resize_factor) for one in size_output_video]
         logger.debug(f"{size_input_video}, {size_output_video}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_name = '{}/pigleg_results.avi'.format(outputdir)
@@ -552,7 +555,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         # scisors_frames - frames with visible scissors qr code
 
         fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
-                                              object_names, size_input_video, scissors_frames=scissors_frames)
+                                              object_names, size_input_video, dpi=300, scissors_frames=scissors_frames)
 
         img_first = None
         i = 0
@@ -599,9 +602,9 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                             cv2.circle(
                                 img,
                                 (int(position[0]), int(position[1])),
-                                15,
+                                30/resize_factor,
                                 color,
-                                thickness=2,
+                                thickness=4/resize_factor,
                             )
 
                             # draw track ID, coordinates: bottom-left
@@ -610,9 +613,9 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                                 str(object_names[class_id]),
                                 (int(position[0]+1), int(position[1])),
                                 cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=1,
+                                fontScale=2/resize_factor,
                                 color=color,
-                                thickness=2,
+                                thickness=4/resize_factor,
                             )
                 #else:
                 #break
@@ -623,7 +626,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                     plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
 
             t_i = 1.0/fps * i
-            lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=1)
+            lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=1/resize_factor)
             im_graph = plot3(fig)
             im_graph = cv2.cvtColor(im_graph, cv2.COLOR_RGB2BGR) #matplotlib generate RGB channels but cv2 BGR
             ax.lines.pop(-1)
@@ -631,6 +634,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             #exit()
             im_graph = im_graph[:,:,:3]
             im = np.concatenate((img, im_graph), axis=concat_axis)
+            im = skimage.transform.resize(im, output_shape=size_output_video)
             #exit()
             videoWriter.write(im)
 

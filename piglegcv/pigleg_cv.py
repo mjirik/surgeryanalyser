@@ -26,7 +26,7 @@ from run_perpendicular import main_perpendicular, get_frame_to_process
 from incision_detection_mmdet import run_incision_detection
 
 
-def do_computer_vision(filename, outputdir):
+def do_computer_vision(filename, outputdir, meta):
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
         str(Path(outputdir) / "piglegcv_log.txt"),
@@ -79,8 +79,17 @@ def run_video_processing(filename: Path, outputdir: Path) -> dict:
     # logger.debug("Perpendicular finished.")
     logger.debug("Video processing finished")
 
-def run_video_processing2(filename: Path, outputdir: Path) -> dict:
+def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> dict:
+    """
+
+    :param filename:
+    :param outputdir:
+    :param meta: might be used for progressbar
+    :return:
+    """
     logger.debug("Running video processing...")
+    if meta is None:
+        meta = {}
     s = time.time()
     main_qr(filename, outputdir)
     logger.debug(f"QR finished in {time.time() - s}s.")

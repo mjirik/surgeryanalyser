@@ -45,8 +45,9 @@ def index():
             logger.debug(f"File does not exist. filename={filename}")
             return jsonify({"error": "File does not exists."})
 
+        meta = {}
         job = q.enqueue_call(
-            func=do_computer_vision, args=(filename, outputdir), result_ttl=5000,
+            func=do_computer_vision, args=(filename, outputdir, meta), result_ttl=5000,
             timeout=PIGLEGCV_TIMEOUT,
         )
         job_id = job.get_id()
