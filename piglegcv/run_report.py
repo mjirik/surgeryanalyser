@@ -537,7 +537,10 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                 int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))]
 
         size_output_video = size_input_video.copy()
-        size_output_video[1] *= 2
+        if concat_axis == 0:
+            size_output_video[1] *= 2
+        else:
+            size_output_video[0] *= 2
         logger.debug(f"{size_input_video}, {size_output_video}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_name = '{}/pigleg_results.avi'.format(outputdir)
@@ -628,12 +631,12 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             #exit()
             im_graph = im_graph[:,:,:3]
             im = np.concatenate((img, im_graph), axis=concat_axis)
-            #print(im.shape)
             #exit()
             videoWriter.write(im)
 
             i += 1
 
+        logger.debug(f"frameshape={im.shape}")
         cap.release()
         videoWriter.release()
         cmd = f"ffmpeg -i {video_name} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {outputdir+'/pigleg_results.mp4'}"
