@@ -117,7 +117,9 @@ def web_report(request, filename_hash:str):
         with open(fn_results) as f:
             loaded_results = json.load(f)
             for key in loaded_results:
-                if key in ("Needle holder length", "Needle holder duration", "Tweezers length", "Tweezers duration"):
+                if key in ("Needle holder length", "Needle holder duration", "Tweezers length", "Tweezers duration",
+                           "Tweezes length", "Tweezes duration" # typo in some older processings
+                           ):
                     results[key] = loaded_results[key]
 
     image_list = serverfile.bitmapimage_set.all()

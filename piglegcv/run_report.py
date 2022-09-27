@@ -477,7 +477,16 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 
 
 #####################################
-def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezes","Scissors","None"]):
+def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezers","Scissors","None"], concat_axis=1):
+    """
+
+    :param filename:
+    :param outputdir:
+    :param object_colors:
+    :param object_names:
+    :param concat_axis: axis of original video and graph concatenation. 0 for vertical, 1 for horizontal
+    :return:
+    """
 
     cap = cv2.VideoCapture(filename)
     assert cap.isOpened(), f'Faild to load video file {filename}'
@@ -587,7 +596,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                             cv2.circle(
                                 img,
                                 (int(position[0]), int(position[1])),
-                                5,
+                                15,
                                 color,
                                 thickness=2,
                             )
@@ -618,7 +627,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             #print(lines)
             #exit()
             im_graph = im_graph[:,:,:3]
-            im = np.concatenate((img, im_graph), axis=0)
+            im = np.concatenate((img, im_graph), axis=concat_axis)
             #print(im.shape)
             #exit()
             videoWriter.write(im)
