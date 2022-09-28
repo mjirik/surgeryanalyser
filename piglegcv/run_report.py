@@ -364,7 +364,7 @@ def plot3(fig):
 
 
 #ds_threshold [m]
-def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit, object_colors, object_names,
+def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit:bool, object_colors, object_names,
                         video_size, ds_threshold=0.1, dpi=300, scissors_frames=[]):
 
     ##################
@@ -555,7 +555,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
         # scisors_frames - frames with visible scissors qr code
 
         fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
-                                              object_names, size_input_video, dpi=300, scissors_frames=scissors_frames)
+                                              object_names, size_input_video, dpi=400, scissors_frames=scissors_frames)
 
         img_first = None
         i = 0
@@ -628,6 +628,9 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             t_i = 1.0/fps * i
             lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=int(1/resize_factor))
             im_graph = plot3(fig)
+            # fix the video size if it is not correct
+            if not im_graph.shape[:2] == tuple(size_input_video[::-1]):
+                im_graph = skimage.transform.resize(img, size_input_video[::-1], preserve_range=True).astype(img.dtype)
             im_graph = cv2.cvtColor(im_graph, cv2.COLOR_RGB2BGR) #matplotlib generate RGB channels but cv2 BGR
             ax.lines.pop(-1)
             #print(lines)
