@@ -671,8 +671,8 @@ def main_report(
 
             res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,
                                     object_name,
-                                    os.path.join(outputdir, f"fig_{i}a_{simplename}_graph.jpg"),
-                                    os.path.join(outputdir, f"graph_{i}c_trajectory.jpg"))
+                                    os.path.join(outputdir, f"graph_{i}c_trajectory.jpg"),
+                                    os.path.join(outputdir, f"fig_{i}a_{simplename}_graph.jpg"))
             # obj_name = object_name.lower().replace(" ", "_")
 
             if len(res) > 0:
