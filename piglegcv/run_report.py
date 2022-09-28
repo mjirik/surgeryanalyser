@@ -478,7 +478,14 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 
 
 #####################################
-def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezers","Scissors","None"], concat_axis=1, resize_factor=1.0):
+def main_report(
+        filename, outputdir,
+        object_colors=["b","r","g","m"],
+        object_names=["Needle holder","Tweezers","Scissors","None"],
+        concat_axis=1,
+        resize_factor=.5,
+        circle_radius=20
+):
     """
 
     :param filename:
@@ -602,7 +609,7 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                             cv2.circle(
                                 img,
                                 (int(position[0]), int(position[1])),
-                                int(30/resize_factor),
+                                int(circle_radius/resize_factor),
                                 color,
                                 thickness=int(4/resize_factor),
                             )
@@ -611,11 +618,11 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
                             cv2.putText(
                                 img,
                                 str(object_names[class_id]),
-                                (int(position[0]+1), int(position[1])),
+                                (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
                                 cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=int(2/resize_factor),
+                                fontScale=.5/resize_factor,
                                 color=color,
-                                thickness=int(4/resize_factor),
+                                thickness=int(2/resize_factor),
                             )
                 #else:
                 #break
@@ -637,7 +644,8 @@ def main_report(filename, outputdir, object_colors=["b","r","g","m"], object_nam
             #exit()
             im_graph = im_graph[:,:,:3]
             im = np.concatenate((img, im_graph), axis=concat_axis)
-            im = skimage.transform.resize(im, output_shape=size_output_video)
+            im = skimage.transform.resize(im, output_shape=[
+                size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
             #exit()
             videoWriter.write(im)
 

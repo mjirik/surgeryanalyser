@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 from pathlib import Path
 import skimage.data
 import skimage.transform
+import shutil
 
 local_dir = Path(__file__).parent
 
@@ -63,3 +64,27 @@ def test_create_video_report():
     if not img.shape[:2] == tuple(video_size[::-1]):
         img = skimage.transform.resize(img, video_size[::-1], preserve_range=True).astype(img.dtype)
     assert img.shape == (video_size[1], video_size[0], 4)
+
+def test_main_report():
+    filename = local_dir / "pigleg_test2.mp4"
+    outputdir = local_dir / "test_main_report_outputdir"
+    expected_file = outputdir / "pigleg_results.avi"
+    if expected_file.exists():
+        expected_file.unlink()
+
+    outputdir.mkdir(exist_ok=True, parents=True)
+
+
+
+    required_files= ["qr_data.json", "tracks.json", "meta.json"]
+    for fn in required_files:
+        fnp = Path(local_dir / fn)
+        if ~fnp.exists():
+            shutil.copy(fnp, outputdir)
+
+    run_report.main_report(
+        str(filename), str(outputdir),
+        object_colors=["b","r","g","m"],
+        object_names=["Needle holder","Tweezers","Scissors","None"],
+        concat_axis=1, resize_factor=.5
+    )
