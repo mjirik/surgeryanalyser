@@ -667,8 +667,12 @@ def main_report(
         #plot graphs and store statistic
         data_results = {}
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
+            simplename = object_name.lower().replace(' ', '_')
 
-            res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
+            res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,
+                                    object_name,
+                                    os.path.join(outputdir, f"fig_{i}a_{simplename}_graph.jpg"),
+                                    os.path.join(outputdir, f"graph_{i}c_trajectory.jpg"))
             # obj_name = object_name.lower().replace(" ", "_")
 
             if len(res) > 0:
@@ -679,7 +683,7 @@ def main_report(
                 data_results[f'{object_name} velocity'] = V
                 data_results[f'{object_name} unit'] = unit
 
-            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"heatmap_{object_name.lower().replace(' ', '_')}.jpg")
+            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg")
 
         #save statistic to file
         save_json(data_results, os.path.join(outputdir, "results.json"))
