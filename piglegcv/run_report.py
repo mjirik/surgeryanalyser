@@ -213,7 +213,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         ax.set_ylabel(track_label)
         
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-        ax2.plot(t, ds_dt_filtered, ":"+object_color, label='Velocity', linewidth=3)
+        ax2.plot(t, ds_dt_filtered, ":"+object_color, label='Velocity', linewidth=1)
         ax2.set_ylabel(vel_label)
         
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
