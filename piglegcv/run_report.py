@@ -565,6 +565,7 @@ def main_report(
                                               object_names, size_input_video, dpi=400, scissors_frames=scissors_frames)
 
         img_first = None
+        video_frame_first = None
         i = 0
         while (cap.isOpened()):
             flag, img = cap.read()
@@ -647,6 +648,8 @@ def main_report(
             im = skimage.transform.resize(im, output_shape=[
                 size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
             #exit()
+            if video_frame_first is None:
+                cv2.imwrite(str(outputdir / "pigleg_results.mp4.jpg"))
             videoWriter.write(im)
 
             i += 1
