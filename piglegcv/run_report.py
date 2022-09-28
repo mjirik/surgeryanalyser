@@ -649,7 +649,8 @@ def main_report(
                 size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
             #exit()
             if video_frame_first is None:
-                cv2.imwrite(str(outputdir / "pigleg_results.mp4.jpg"))
+                video_frame_first = im.copy()
+                cv2.imwrite(str(Path(outputdir) / "pigleg_results.mp4.jpg"), im)
             videoWriter.write(im)
 
             i += 1
