@@ -52,6 +52,12 @@ def do_computer_vision(filename, outputdir, meta):
 
 
 def run_video_processing(filename: Path, outputdir: Path) -> dict:
+    """
+    Deprecated
+    :param filename:
+    :param outputdir:
+    :return:
+    """
     logger.debug("Running video processing...")
     s = time.time()
     main_qr(filename, outputdir)
