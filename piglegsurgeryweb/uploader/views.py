@@ -128,14 +128,14 @@ def web_report(request, filename_hash:str):
                        ):
                     new_value = loaded_results[key]
                     new_key = key.replace("duration", "visibility")\
-                        .replace("visibility", "visibility [cm]")\
-                        .replace("length", "length [s]")
+                        .replace("visibility", "visibility [s]")\
+                        .replace("length", "length [cm]")
 
                     if new_key.find("[cm]") > 0:
                         new_value = f"{new_value * 100:0.0f}"
                     if new_key.find("[s]") > 0:
                         new_value = f"{new_value:0.0f}"
-                    results[key] = new_value
+                    results[new_key] = new_value
 
     image_list = serverfile.bitmapimage_set.all()
 
