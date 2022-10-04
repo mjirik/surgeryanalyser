@@ -117,19 +117,19 @@ def web_report(request, filename_hash:str):
         with open(fn_results) as f:
             loaded_results = json.load(f)
             for key in loaded_results:
-                if key in (
+                new_value = loaded_results[key]
+                # backward compatibility
+                new_key = key.replace("Tweezes", "Forceps").replace("Tweezers", "Forceps").replace("duration", "visibility")
+                if new_key in (
                         "Needle holder length", "Needle holder visibility",
                         "Forceps length", "Forceps visibility",
                         "Scissors length", "Scissors visibility",
-                        "Tweezes length", "Tweezes duration" # typo in some older processings
-                        "Tweezers length", "Tweezers duration", # backward compatibility
-                        "Scissors length", "Scissors duration", # backward compatibility
-                        "Needle holder length", "Needle holder duration", # backward compatibility
+                        # "Tweezes length", "Tweezes duration" # typo in some older processings
+                        # "Tweezers length", "Tweezers duration", # backward compatibility
+                        # "Scissors length", "Scissors duration", # backward compatibility
+                        # "Needle holder length", "Needle holder duration", # backward compatibility
                        ):
-                    new_value = loaded_results[key]
-                    new_key = key.replace("duration", "visibility")\
-                        .replace("visibility", "visibility [s]")\
-                        .replace("length", "length [cm]")
+                    new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
 
                     if new_key.find("[cm]") > 0:
                         new_value = f"{new_value * 100:0.0f}"
