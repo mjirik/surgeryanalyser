@@ -213,7 +213,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         ax.set_ylabel(track_label)
         
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-        ax2.plot(t, ds_dt_filtered, ":"+object_color, label='Velocity', linewidth=1)
+        ax2.plot(t, ds_dt_filtered, ":"+object_color, label='Velocity', linewidth=0.5)
         ax2.set_ylabel(vel_label)
         
         fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -418,7 +418,7 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit:boo
             if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
                 ds_max = ds_cumsum[-1]
             ax.plot(t, ds_cumsum, "-"+object_color, linewidth=1)
-            ax2.plot(t, gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label=object_name, linewidth=0.5)
+            ax2.plot(t, gaussian_filter(ds/dt, sigma=2) , ":"+object_color, label=object_name, linewidth=0.2)
 
             print(object_color, object_name)
 
@@ -481,7 +481,7 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 def main_report(
         filename, outputdir,
         object_colors=["b","r","g","m"],
-        object_names=["Needle holder","Tweezers","Scissors","None"],
+        object_names=["Needle holder","Forceps","Scissors","None"],
         concat_axis=1,
         resize_factor=.5,
         circle_radius=20
@@ -679,7 +679,7 @@ def main_report(
                 [T, L, V, unit] = res
                 # data_results[object_name] = {}
                 data_results[f'{object_name} length'] = L
-                data_results[f'{object_name} duration'] = T
+                data_results[f'{object_name} visibility'] = T
                 data_results[f'{object_name} velocity'] = V
                 data_results[f'{object_name} unit'] = unit
 

@@ -117,10 +117,25 @@ def web_report(request, filename_hash:str):
         with open(fn_results) as f:
             loaded_results = json.load(f)
             for key in loaded_results:
-                if key in ("Needle holder length", "Needle holder duration", "Tweezers length", "Tweezers duration",
-                           "Tweezes length", "Tweezes duration" # typo in some older processings
-                           ):
-                    results[key] = loaded_results[key]
+                if key in (
+                        "Needle holder length", "Needle holder visibility",
+                        "Forceps length", "Forceps visibility",
+                        "Scissors length", "Scissors visibility",
+                        "Tweezes length", "Tweezes duration" # typo in some older processings
+                        "Tweezers length", "Tweezers duration", # backward compatibility
+                        "Scissors length", "Scissors duration", # backward compatibility
+                        "Needle holder length", "Needle holder duration", # backward compatibility
+                       ):
+                    new_value = loaded_results[key]
+                    new_key = key.replace("duration", "visibility")\
+                        .replace("visibility", "visibility [cm]")\
+                        .replace("length", "length [s]")
+
+                    if new_key.find("[cm]") > 0:
+                        new_value = f"{new_value * 100:0.0f}"
+                    if new_key.find("[s]") > 0:
+                        new_value = f"{new_value:0.0f}"
+                    results[key] = new_value
 
     image_list = serverfile.bitmapimage_set.all()
 
@@ -188,6 +203,11 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     }
     return render(request, "uploader/thanks.html", context)
     # return redirect("/uploader/upload/")
+
+def about_ev_cs(request):
+    return render(request, "uploader/about_ev_cs.html", {})
+def about_ev_en(request):
+    return render(request, "uploader/about_ev_en.html", {})
 
 class DetailView(generic.DetailView):
     model = UploadedFile
