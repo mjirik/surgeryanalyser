@@ -5,12 +5,9 @@ import json
 import numpy as np
 from pyzbar.pyzbar import decode
 from loguru import logger
+from tools import save_json, load_json
+from pathlib import Path
 
-
-def save_json(data: dict, output_json: str):
-    os.makedirs(os.path.dirname(output_json), exist_ok=True)
-    with open(output_json, "w") as output_file:
-        json.dump(data, output_file)
 
 
 def main_qr(filename, output_dir):
@@ -70,24 +67,25 @@ def main_qr(filename, output_dir):
 
 # todo use the pigleg holder detection based estimator
     qr_data["pix_size_method"] = "QR" if is_detected else "video size estimation"
-    if ~is_detected:
-        is_detected = True
+    if True:
 
         # pigleg_holder_width [m] - usually it takes around half of the image width
-        qr_size = 0.110 # [m]
-        pix_size = qr_size * 0.5 / width
-        qr_text = "video size estimation"
-        box = []
+        scene_size = 0.300 # [m]
+        size_by_scene = scene_size / width
+        # qr_text = "pixel size by scene"
+        # box = []
 
     qr_data['is_detected'] = is_detected
     qr_data['box'] = box
     qr_data['pix_size'] = pix_size
     qr_data['qr_size'] = qr_size
+    qr_data['size_by_scene'] = size_by_scene
     qr_data['text'] = qr_text
     qr_data['qr_scissors_frames'] = qr_scissors_frames
 
     # save QR to the json file
-    save_json({"qr_data": qr_data}, os.path.join(output_dir, "qr_data.json"))
+    json_file = Path(output_dir) / "meta.json"
+    save_json({"qr_data": qr_data}, json_file)
     return qr_data
 
    

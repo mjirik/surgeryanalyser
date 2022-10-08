@@ -91,6 +91,7 @@ COPY ./res50_onehand10k_256x256.py .
 COPY ./run_qr.py .
 COPY ./run_report.py .
 COPY ./run_perpendicular.py .
+COPY ./tools.py .
 
 RUN mkdir -p ./.cache/torch/hub/checkpoints/
 

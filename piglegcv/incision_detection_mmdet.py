@@ -33,14 +33,19 @@ from pathlib import Path
 mmdetection_path = Path(mmdet.__file__).parent.parent
 
 import mmcv
+import json
 from mmcv.runner import load_checkpoint
 
 from mmdet.models import build_detector
+from typing import Union
+
+from tools import load_json, save_json
 
 from pathlib import Path
 import os
 scratchdir = Path(os.getenv('SCRATCHDIR', "."))
 logname = Path(os.getenv('LOGNAME', "."))
+
 # from loguru import logger
 
 local_input_data_dir = Path(scratchdir) / 'data/orig/'
@@ -194,7 +199,7 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img, local_output_data_dir:Path):
+def run_incision_detection(img, local_output_data_dir:Path, expected_incision_size_mm=70):
     # img = mmcv.imread(str(img_fn))
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
@@ -226,14 +231,27 @@ def run_incision_detection(img, local_output_data_dir:Path):
     bboxes = result[class_id]
     logger.debug(f"number of detected incisions = {len(bboxes)}")
     imgs = []
+    bbox_sizes = [] # used for resolution evaluation
     for i, bbox in enumerate(bboxes):
 
         imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+
+        sz = sorted([int(bbox[1])-int(bbox[3]), int(bbox[0])-int(bbox[2])])
+        bbox_sizes.append(sz)
 
         cv2.imwrite(str(local_output_data_dir / f'incision_crop_{i}.jpg'), imcr)
         imgs.append(imcr)
         # plt.imshow(imcr[:, :, ::-1])
     # predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)
+    if len(bbox_sizes) > 0:
+        bbox_sizes = np.asarray(bbox_sizes)
+        incision_size_px = np.median(bbox_sizes, axis=0)  #  first is the smaller size
+        pixelsize_mm = expected_incision_size_mm / incision_size_px[2]
+    else:
+        pixelsize_mm = None
+    json_file = Path(local_output_data_dir) / "meta.json"
+    save_json({"pixelsize_mm_by_incision_size": pixelsize_mm}, json_file)
+
     return imgs
 
 def predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir):

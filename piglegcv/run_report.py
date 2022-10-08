@@ -17,26 +17,10 @@ import seaborn as sns
 from pathlib import Path
 import scipy
 import scipy.signal
-
-
-
-
-def load_json(filename):
-    if os.path.isfile(filename): 
-        with open(filename, 'r') as fr:
-            try:
-                data = json.load(fr)
-            except ValueError as e:
-                return {}
-            return data
-    else:
-        return {}
-
-
-def save_json(data: dict, output_json: str):
-    os.makedirs(os.path.dirname(output_json), exist_ok=True)
-    with open(output_json, "w") as output_file:
-        json.dump(data, output_file)
+try:
+    from tools import load_json, save_json
+except ImportError as e:
+    from .tools import load_json, save_json
 
 
 def plot_finger(img, joints, threshold, thickness):
@@ -337,7 +321,7 @@ def main_report_old(filename, outputdir, object_colors=["b","r","g","m"], object
         # graph report
 
         #input QR data
-        json_data = load_json('{}/qr_data.json'.format(outputdir))
+        json_data = load_json('{}/meta.json'.format(outputdir))
         qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
         pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
         is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
@@ -442,8 +426,14 @@ def _qr_data_processing(json_data:dict, fps):
     :return:
     """
     qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
+
     pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
     is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
+    if ~is_qr_detected:
+        pxsz_incision = json_data["pixelsize_mm_by_incision_size"] if "pixelsize_mm_by_incision_size" in json_data else None
+        if pxsz_incision:
+            pix_size = pxsz_incision
+            is_qr_detected = True
     scissors_frames = qr_data["qr_scissors_frames"] if "qr_scissors_frames" in qr_data else []
     scissors_frames = _scissors_frames(scissors_frames, fps)
     return pix_size, is_qr_detected, scissors_frames
@@ -474,6 +464,29 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 
 
 
+def insert_scale_in_image(img, pixelsize_mm, scale_size_mm=50, resize_factor=1., thickness=10.1):
+    image_size = np.asarray(img.shape[:2])
+    # start_point = np.asarray(image_size) * 0.90
+    start_point = np.array([10,10])
+
+    # start_point = np.array([image_size[1]*0.98, image_size[0]*0.97]) # right down corner
+    start_point = np.array([image_size[1]*0.02, image_size[0]*0.97])
+    scale_size_px = scale_size_mm / pixelsize_mm
+    end_point = start_point + np.array([scale_size_px,0])
+    cv2.line(img, start_point.astype(int), end_point.astype(int), (255,255,255), int(thickness/resize_factor))
+
+    # img[line]
+    cv2.putText(
+        img,
+        f"{scale_size_mm} [mm]",
+        start_point.astype(np.int) - np.array([0,30/resize_factor]).astype(int),
+        # (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=1.5/resize_factor,
+        color=(255,255,255),
+        thickness=int(3/resize_factor)
+    )
+    return img
 
 
 
@@ -557,7 +570,7 @@ def main_report(
         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size_output_video)
 
         # input QR data
-        json_data = load_json('{}/qr_data.json'.format(outputdir))
+        json_data = load_json('{}/meta.json'.format(outputdir))
         pix_size, is_qr_detected, scissors_frames = _qr_data_processing(json_data, fps)
         # scisors_frames - frames with visible scissors qr code
 

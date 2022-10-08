@@ -11,14 +11,14 @@ local_dir = Path(__file__).parent
 
 
 def test_qr_scissors_non_maximum_supression():
-    json_data = run_report.load_json(local_dir / 'qr_data.json')
+    json_data = run_report.load_json(local_dir / 'meta.json')
 
     frames = run_report._qr_data_processing(json_data, fps=25)
     assert len(frames) > 0
     # plt.plot(frames)
     # plt.show()
 def test_qr_scissors_non_maximum_supression_empty():
-    # json_data = run_report.load_json(local_dir / 'qr_data.json')
+    # json_data = run_report.load_json(local_dir / 'meta.json')
     json_data = {}
 
     frames = run_report._qr_data_processing(json_data, fps=25)
@@ -76,7 +76,7 @@ def test_main_report():
 
 
 
-    required_files= ["qr_data.json", "tracks.json", "meta.json"]
+    required_files= ["tracks.json", "meta.json"]
     for fn in required_files:
         fnp = Path(local_dir / fn)
         if ~fnp.exists():
@@ -88,3 +88,18 @@ def test_main_report():
         object_names=["Needle holder","Tweezers","Scissors","None"],
         concat_axis=1, resize_factor=.5
     )
+
+
+def test_add_scale():
+    import cv2
+    fn = list(Path(".").glob("*.jpg"))[0]
+    img = cv2.imread(str(fn))
+    run_report.insert_scale_in_image(img, pixelsize_mm=0.1, scale_size_mm=50)
+    img = img[::2,::2,:]
+    cv2.imshow("okno", img)
+    cv2.waitKey(5000)
+
+
+
+
+

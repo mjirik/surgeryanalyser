@@ -24,6 +24,7 @@ from run_qr import main_qr
 from run_report import main_report
 from run_perpendicular import main_perpendicular, get_frame_to_process
 from incision_detection_mmdet import run_incision_detection
+from tools import save_json
 
 
 def do_computer_vision(filename, outputdir, meta):
@@ -99,6 +100,9 @@ def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> di
     s = time.time()
     main_qr(filename, outputdir)
     logger.debug(f"QR finished in {time.time() - s}s.")
+    run_image_processing(filename, outputdir)
+    s = time.time()
+    logger.debug(f"Image processing finished in {time.time() - s}s.")
 
     main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch.pth', filename, outputdir))
     # run_media_processing(Path(filename), Path(outputdir))
@@ -115,7 +119,6 @@ def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> di
 
     # if extention in images_types:
 
-    run_image_processing(filename, outputdir)
     # logger.debug("Perpendicular finished.")
     logger.debug("Video processing finished")
 
@@ -150,8 +153,7 @@ def _make_images_from_video(filename: Path, outputdir: Path) -> Path:
 
     metadata = {"filename_full": str(filename), "fps": fps}
     json_file = outputdir / "meta.json"
-    with open(json_file, "w") as f:
-        json.dump(metadata, f)
+    save_json(metadata, json_file)
 
 
 if __name__ == "__main__":
