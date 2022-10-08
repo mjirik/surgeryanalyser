@@ -638,6 +638,7 @@ def main_report(
                                 color=color,
                                 thickness=int(2/resize_factor),
                             )
+
                 #else:
                 #break
 
@@ -657,6 +658,8 @@ def main_report(
             #print(lines)
             #exit()
             im_graph = im_graph[:,:,:3]
+            if is_qr_detected:
+                img = insert_scale_in_image(img, pix_size, scale_size_mm=50)
             im = np.concatenate((img, im_graph), axis=concat_axis)
             im = skimage.transform.resize(im, output_shape=[
                 size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
