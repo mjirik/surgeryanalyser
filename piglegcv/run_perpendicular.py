@@ -181,7 +181,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
 
     #######################
     # input QR data
-    json_data = load_json('{}/qr_data.json'.format(outputdir))
+    json_data = load_json('{}/meta.json'.format(outputdir))
     qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
     pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
     if pix_size == 1.0:

@@ -15,6 +15,10 @@ except (ImportError, ModuleNotFoundError):
     has_mmdet = False
 
 from loguru import logger
+try:
+    from tools import save_json
+except ImportError as e:
+    from .tools import save_json
 
 def process_mmdet_results(mmdet_results, cat_id=1):
     """Process mmdet results, and return a list of bboxes.
@@ -47,10 +51,10 @@ def printKeypoints(pose_results, _file):
     else:
         _file.write('None\n')
 
-def save_json(data: dict, output_json: str):
-    os.makedirs(os.path.dirname(output_json), exist_ok=True)
-    with open(output_json, "w") as output_file:
-        json.dump(data, output_file)
+# def save_json(data: dict, output_json: str):
+#     os.makedirs(os.path.dirname(output_json), exist_ok=True)
+#     with open(output_json, "w") as output_file:
+#         json.dump(data, output_file)
 
 
 

@@ -52,39 +52,39 @@ def do_computer_vision(filename, outputdir, meta):
     logger.remove(logger_id)
 
 
-def run_video_processing(filename: Path, outputdir: Path) -> dict:
-    """
-    Deprecated
-    :param filename:
-    :param outputdir:
-    :return:
-    """
-    logger.debug("Running video processing...")
-    s = time.time()
-    main_qr(filename, outputdir)
-    logger.debug(f"QR finished in {time.time() - s}s.")
-
-    s = time.time()
-    tracker_model_path = Path(__file__).parent / "./.cache/tracker_model"
-    if not tracker_model_path.exists():
-        tracker_model_path = Path(__file__).parent / "resources/tracker_model"
-    main_tracker("{} \"{}\" --output_dir {}".format(tracker_model_path, filename, outputdir))
-    logger.debug(f"Tracker finished in {time.time() - s}s.")
-
-    #
-    # s = time.time()
-    # main_mmpose(filename, outputdir)
-    # logger.debug(f"MMpose finished in {time.time() - s}s.")
-
-
-    main_report(filename, outputdir)
-    logger.debug("Report based on video is finished.")
-
-    # if extention in images_types:
-
-    run_image_processing(filename, outputdir)
-    # logger.debug("Perpendicular finished.")
-    logger.debug("Video processing finished")
+# def run_video_processing(filename: Path, outputdir: Path) -> dict:
+#     """
+#     Deprecated
+#     :param filename:
+#     :param outputdir:
+#     :return:
+#     """
+#     logger.debug("Running video processing...")
+#     s = time.time()
+#     main_qr(filename, outputdir)
+#     logger.debug(f"QR finished in {time.time() - s}s.")
+#
+#     s = time.time()
+#     tracker_model_path = Path(__file__).parent / "./.cache/tracker_model"
+#     if not tracker_model_path.exists():
+#         tracker_model_path = Path(__file__).parent / "resources/tracker_model"
+#     main_tracker("{} \"{}\" --output_dir {}".format(tracker_model_path, filename, outputdir))
+#     logger.debug(f"Tracker finished in {time.time() - s}s.")
+#
+#     #
+#     # s = time.time()
+#     # main_mmpose(filename, outputdir)
+#     # logger.debug(f"MMpose finished in {time.time() - s}s.")
+#
+#
+#     main_report(filename, outputdir)
+#     logger.debug("Report based on video is finished.")
+#
+#     # if extention in images_types:
+#
+#     run_image_processing(filename, outputdir)
+#     # logger.debug("Perpendicular finished.")
+#     logger.debug("Video processing finished")
 
 def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> dict:
     """

@@ -2,9 +2,11 @@ from pathlib import Path
 from typing import Union
 import json
 import os
+from loguru import logger
 
 
 def save_json(data:dict, output_json:Union[str,Path]):
+    logger.debug(f"Writing '{output_json}'")
 
     output_json = Path(output_json)
     output_json.parent.mkdir(exist_ok=True, parents=True)
