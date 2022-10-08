@@ -246,11 +246,11 @@ def run_incision_detection(img, local_output_data_dir:Path, expected_incision_si
     if len(bbox_sizes) > 0:
         bbox_sizes = np.asarray(bbox_sizes)
         incision_size_px = np.median(bbox_sizes, axis=0)  #  first is the smaller size
-        pixelsize_mm = expected_incision_size_mm / incision_size_px[2]
+        pixelsize_m = 0.001 * expected_incision_size_mm / incision_size_px[1]
     else:
-        pixelsize_mm = None
+        pixelsize_m = None
     json_file = Path(local_output_data_dir) / "meta.json"
-    save_json({"pixelsize_mm_by_incision_size": pixelsize_mm}, json_file)
+    save_json({"pixelsize_m_by_incision_size": pixelsize_m}, json_file)
 
     return imgs
 

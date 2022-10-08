@@ -215,124 +215,124 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
     
 
 #####################################
-def main_report_old(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezes","Scissors","None"]):
-    
-    cap = cv2.VideoCapture(filename)
-    assert cap.isOpened(), f'Faild to load video file {filename}'
-
-    if cap.isOpened():
-        #output video
-        video_name = '{}/pigleg_results.avi'.format(outputdir)
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
-        size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size)
-
-        #input object tracking data
-        json_data = load_json('{}/tracks.json'.format(outputdir))
-        sort_data = json_data['tracks'] if 'tracks' in json_data else []
-   
-        #input hand poses data
-        json_data = load_json('{}/hand_poses.json'.format(outputdir))
-        hand_poses = json_data['hand_poses'] if 'hand_poses' in json_data else []
-        
-        i = 0
-        data_pixels = [[],[],[],[]]
-        frame_ids = [[],[],[],[]]
-        N = len(sort_data)
-        M = len(hand_poses)
-        print('Sort data N=', N,' MMpose data M=', M)
-        img_first = None
-        while (cap.isOpened()):
-            flag, img = cap.read()
-            if not flag:
-                break
-            
-            #print(i)
-            #if i > 500:
-                #break
-
-            if img_first is None:
-                img_first = img
-
-            #object tracking
-            if i < N:
-                frame = sort_data[i]
-                for track_object in frame:
-                    if len(track_object) >= 4:
-                        box = np.array(track_object[0:4])
-                        position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-
-                        if (len(track_object) == 6):
-                            class_id = track_object[5]
-                        else:
-                            class_id = 0
-                        if class_id < 4:
-                            data_pixels[class_id].append(position)
-                            frame_ids[class_id].append(i)
-
-                        ## color
-                        color = (0, 255, 0)
-                        if class_id == 1:
-                            color = (255, 0, 0)
-                        if class_id == 2:
-                            color = (0, 0, 255)
-                        if class_id == 3:
-                            color = (0, 255, 255)
-
-                        # draw detection
-                        cv2.rectangle(
-                            img,
-                            (int(box[0]) - 1, int(box[1]) - 1),
-                            (int(box[2]) - 1, int(box[3]) - 1),
-                            color,
-                            thickness=2,
-                        )
-
-                        # draw track ID, coordinates: bottom-left
-                        cv2.putText(
-                            img,
-                            str(object_names[class_id]),
-                            (int(box[0]) - 2, int(box[3]) - 2),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            fontScale=1,
-                            color=color,
-                            thickness=2,
-                        )
-            #else:
-                #break
-
-            #hand pose tracking
-            if i < M:
-                if hand_poses[i] != []:
-                    plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
-
-            videoWriter.write(img)
-
-            i += 1
-
-        cap.release()
-        videoWriter.release()
-        cmd = f"ffmpeg -i {video_name} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {outputdir+'/pigleg_results.mp4'}"
-        os.system(cmd)
-
-        #############
-        # graph report
-
-        #input QR data
-        json_data = load_json('{}/meta.json'.format(outputdir))
-        qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
-        pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
-        is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
-
-        #plot graphs
-        for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
-            create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
-
-        print(f'main_report: Video file {filename} is processed!')
-    else:
-        print(f'main_report: Video file {filename} is not opended!')
+# def main_report_old(filename, outputdir, object_colors=["b","r","g","m"], object_names=["Needle holder","Tweezes","Scissors","None"]):
+#
+#     cap = cv2.VideoCapture(filename)
+#     assert cap.isOpened(), f'Faild to load video file {filename}'
+#
+#     if cap.isOpened():
+#         #output video
+#         video_name = '{}/pigleg_results.avi'.format(outputdir)
+#         fps = int(cap.get(cv2.CAP_PROP_FPS))
+#         size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+#                 int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+#         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size)
+#
+#         #input object tracking data
+#         json_data = load_json('{}/tracks.json'.format(outputdir))
+#         sort_data = json_data['tracks'] if 'tracks' in json_data else []
+#
+#         #input hand poses data
+#         json_data = load_json('{}/hand_poses.json'.format(outputdir))
+#         hand_poses = json_data['hand_poses'] if 'hand_poses' in json_data else []
+#
+#         i = 0
+#         data_pixels = [[],[],[],[]]
+#         frame_ids = [[],[],[],[]]
+#         N = len(sort_data)
+#         M = len(hand_poses)
+#         print('Sort data N=', N,' MMpose data M=', M)
+#         img_first = None
+#         while (cap.isOpened()):
+#             flag, img = cap.read()
+#             if not flag:
+#                 break
+#
+#             #print(i)
+#             #if i > 500:
+#                 #break
+#
+#             if img_first is None:
+#                 img_first = img
+#
+#             #object tracking
+#             if i < N:
+#                 frame = sort_data[i]
+#                 for track_object in frame:
+#                     if len(track_object) >= 4:
+#                         box = np.array(track_object[0:4])
+#                         position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+#
+#                         if (len(track_object) == 6):
+#                             class_id = track_object[5]
+#                         else:
+#                             class_id = 0
+#                         if class_id < 4:
+#                             data_pixels[class_id].append(position)
+#                             frame_ids[class_id].append(i)
+#
+#                         ## color
+#                         color = (0, 255, 0)
+#                         if class_id == 1:
+#                             color = (255, 0, 0)
+#                         if class_id == 2:
+#                             color = (0, 0, 255)
+#                         if class_id == 3:
+#                             color = (0, 255, 255)
+#
+#                         # draw detection
+#                         cv2.rectangle(
+#                             img,
+#                             (int(box[0]) - 1, int(box[1]) - 1),
+#                             (int(box[2]) - 1, int(box[3]) - 1),
+#                             color,
+#                             thickness=2,
+#                         )
+#
+#                         # draw track ID, coordinates: bottom-left
+#                         cv2.putText(
+#                             img,
+#                             str(object_names[class_id]),
+#                             (int(box[0]) - 2, int(box[3]) - 2),
+#                             cv2.FONT_HERSHEY_SIMPLEX,
+#                             fontScale=1,
+#                             color=color,
+#                             thickness=2,
+#                         )
+#             #else:
+#                 #break
+#
+#             #hand pose tracking
+#             if i < M:
+#                 if hand_poses[i] != []:
+#                     plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
+#
+#             videoWriter.write(img)
+#
+#             i += 1
+#
+#         cap.release()
+#         videoWriter.release()
+#         cmd = f"ffmpeg -i {video_name} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {outputdir+'/pigleg_results.mp4'}"
+#         os.system(cmd)
+#
+#         #############
+#         # graph report
+#
+#         #input QR data
+#         json_data = load_json('{}/meta.json'.format(outputdir))
+#         qr_data = json_data['qr_data'] if 'qr_data' in json_data else {}
+#         pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
+#         is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
+#
+#         #plot graphs
+#         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
+#             create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,object_name, os.path.join(outputdir, "graph_{}a.jpg".format(i)), os.path.join(outputdir, "graph_{}b.jpg".format(i)))
+#
+#         print(f'main_report: Video file {filename} is processed!')
+#     else:
+#         print(f'main_report: Video file {filename} is not opended!')
 
 
 #####################
@@ -430,7 +430,7 @@ def _qr_data_processing(json_data:dict, fps):
     pix_size = qr_data['pix_size'] if 'pix_size' in qr_data else 1.0
     is_qr_detected = qr_data['is_detected'] if 'is_detected' in qr_data else False
     if ~is_qr_detected:
-        pxsz_incision = json_data["pixelsize_mm_by_incision_size"] if "pixelsize_mm_by_incision_size" in json_data else None
+        pxsz_incision = json_data["pixelsize_m_by_incision_size"] if "pixelsize_m_by_incision_size" in json_data else None
         if pxsz_incision:
             pix_size = pxsz_incision
             is_qr_detected = True
@@ -659,7 +659,7 @@ def main_report(
             #exit()
             im_graph = im_graph[:,:,:3]
             if is_qr_detected:
-                img = insert_scale_in_image(img, pix_size, scale_size_mm=50)
+                img = insert_scale_in_image(img, pixelsize_mm=pix_size*1000, scale_size_mm=50)
             im = np.concatenate((img, im_graph), axis=concat_axis)
             im = skimage.transform.resize(im, output_shape=[
                 size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
