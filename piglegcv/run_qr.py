@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 def main_qr(filename, output_dir):
+    logger.debug("looking for qr code...")
     
     cap = cv2.VideoCapture(str(filename))
     QRinit = False
@@ -85,6 +86,8 @@ def main_qr(filename, output_dir):
 
     # save QR to the json file
     json_file = Path(output_dir) / "meta.json"
+    print(f"prepared to save to file {str(json_file)}")
+    logger.debug(f"prepared to save to file {str(json_file)}")
     save_json({"qr_data": qr_data}, json_file)
     return qr_data
 
