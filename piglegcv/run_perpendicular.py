@@ -265,8 +265,6 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
         logger.error("Input image is None")
         return
 
-
-
     logger.debug("incision detection ...")
     imgs = run_incision_detection(img, outputdir)
     logger.debug(f"len(imgs)={len(imgs)}")

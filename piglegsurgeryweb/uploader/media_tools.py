@@ -1,11 +1,40 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 import cv2
 from loguru import logger
 import json
 import subprocess
 from .visualization_tools import crop_square
 
+
+def save_json(data:dict, output_json:Union[str,Path]):
+    logger.debug(f"Writing '{output_json}'")
+
+    output_json = Path(output_json)
+    output_json.parent.mkdir(exist_ok=True, parents=True)
+    # os.makedirs(os.path.dirname(output_json), exist_ok=True)
+    dct = {}
+    if output_json.exists():
+        with open(output_json, "r") as output_file:
+            dct = json.load(output_file)
+    logger.debug(f"old keys: {list(dct.keys())}")
+    dct.update(data)
+    logger.debug(f"updated keys: {list(dct.keys())}")
+    with open(output_json, "w") as output_file:
+        json.dump(dct, output_file)
+
+
+def load_json(filename:Union[str,Path]):
+    filename = Path(filename)
+    if os.path.isfile(filename):
+        with open(filename, 'r') as fr:
+            try:
+                data = json.load(fr)
+            except ValueError as e:
+                return {}
+            return data
+    else:
+        return {}
 
 
 def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
@@ -17,7 +46,6 @@ def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
                            ) -> Path:
     import cv2
     outputdir.mkdir(parents=True, exist_ok=True)
-
 
     cap = cv2.VideoCapture(str(filename))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -52,8 +80,7 @@ def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
 
     metadata = {"filename_full": str(filename), "fps": fps}
     json_file = outputdir / "meta.json"
-    with open(json_file, "w") as f:
-        json.dump(metadata, f)
+    save_json(metadata, json_file)
 
 def rescale(frame, scale):
     import cv2
