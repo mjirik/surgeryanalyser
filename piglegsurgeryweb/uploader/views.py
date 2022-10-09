@@ -169,10 +169,10 @@ def run(request, filename_id):
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
     return _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
 
-def run_development(request, filename_id):
-    PIGLEGCV_HOSTNAME_DEVEL = os.getenv("PIGLEGCV_HOSTNAME_DEVEL", default="127.0.0.1")
-    PIGLEGCV_PORT_DEVEL = os.getenv("PIGLEGCV_PORT", default="5000")
-    return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=int(PIGLEGCV_PORT_DEVEL))
+# def run_development(request, filename_id):
+#     PIGLEGCV_HOSTNAME_DEVEL = os.getenv("PIGLEGCV_HOSTNAME_DEVEL", default="127.0.0.1")
+#     PIGLEGCV_PORT_DEVEL = os.getenv("PIGLEGCV_PORT", default="5000")
+#     return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=int(PIGLEGCV_PORT_DEVEL))
 
 
 def _run(request, filename_id, hostname="127.0.0.1", port=5000):
