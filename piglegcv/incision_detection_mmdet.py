@@ -236,7 +236,7 @@ def run_incision_detection(img, local_output_data_dir:Path, expected_incision_si
 
         imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
 
-        sz = sorted([int(bbox[1])-int(bbox[3]), int(bbox[0])-int(bbox[2])])
+        sz = sorted([int(bbox[3])-int(bbox[1]), int(bbox[2])-int(bbox[0])])
         bbox_sizes.append(sz)
 
         cv2.imwrite(str(local_output_data_dir / f'incision_crop_{i}.jpg'), imcr)
