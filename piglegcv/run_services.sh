@@ -11,9 +11,9 @@ python worker.py 2>&1 | \
 python worker.py 2>&1 | \
 #   tee >(rotatelogs -n 3 logs/worker_${DOCKERLOGNAME}_log_1.txt.bck 1M) | \
    rotatelogs -n 1 logs/worker_${DOCKERLOGNAME}_log_1.txt 1M &
-python worker.py 2>&1 | \
+#python worker.py 2>&1 | \
 #   tee >(rotatelogs -n 3 logs/worker_${DOCKERLOGNAME}_log_2.txt.bck 1M) | \
-   rotatelogs -n 1 logs/worker_${DOCKERLOGNAME}_log_2.txt 1M &
+#   rotatelogs -n 1 logs/worker_${DOCKERLOGNAME}_log_2.txt 1M &
 
 python app.py 2>&1 | \
    tee >(rotatelogs -n 3 logs/app_${DOCKERLOGNAME}_log.txt.bck 1M) | \
