@@ -15,8 +15,9 @@ def save_json(data:dict, output_json:Union[str,Path]):
     if output_json.exists():
         with open(output_json, "r") as output_file:
             dct = json.load(output_file)
-
+    logger.debug(f"old keys: {list(dct.keys())}")
     dct.update(data)
+    logger.debug(f"updated keys: {list(dct.keys())}")
     with open(output_json, "w") as output_file:
         json.dump(dct, output_file)
 

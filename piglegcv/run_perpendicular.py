@@ -265,10 +265,6 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
         logger.error("Input image is None")
         return
 
-    image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)
-
-
-    incision_angle_evaluation(image, canny_sigma, outputdir)
 
 
     logger.debug("incision detection ...")
@@ -277,6 +273,9 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     for i, image in enumerate(imgs):
         incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
 
+    # uncomment to run old incision detection
+    # image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)
+    # incision_angle_evaluation(image, canny_sigma, outputdir)
 
 
 def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="perpedicular.jpg"):

@@ -25,6 +25,8 @@ docker login nvcr.io
 Update repo, Stop, Build and Up again
 ```shell
 cd /webapps/piglegsurgery
+docker-compose --env-file .env.prod down
+
 git pull
 docker-compose down
 
