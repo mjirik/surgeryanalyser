@@ -467,7 +467,7 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 def insert_scale_in_image(img, pixelsize_mm, scale_size_mm=50, resize_factor=1., thickness=10.1):
     image_size = np.asarray(img.shape[:2])
     # start_point = np.asarray(image_size) * 0.90
-    start_point = np.array([10,10])
+    # start_point = np.array([10,10])
 
     # start_point = np.array([image_size[1]*0.98, image_size[0]*0.97]) # right down corner
     start_point = np.array([image_size[1]*0.02, image_size[0]*0.97])
@@ -479,12 +479,12 @@ def insert_scale_in_image(img, pixelsize_mm, scale_size_mm=50, resize_factor=1.,
     cv2.putText(
         img,
         f"{scale_size_mm} [mm]",
-        start_point.astype(np.int) - np.array([0,30/resize_factor]).astype(int),
+        start_point.astype(np.int) - np.array([0,int(0.020 * img.shape[0])/resize_factor]).astype(int),
         # (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
         cv2.FONT_HERSHEY_SIMPLEX,
-        fontScale=1.5/resize_factor,
+        fontScale=.0007 * img.shape[0]/resize_factor,
         color=(255,255,255),
-        thickness=int(3/resize_factor)
+        thickness=int(0.0015 * img.shape[0]/resize_factor)
     )
     return img
 
@@ -566,8 +566,9 @@ def main_report(
         size_output_video = [int(one*resize_factor) for one in size_output_video]
         logger.debug(f"{size_input_video}, {size_output_video}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video_name = '{}/pigleg_results.avi'.format(outputdir)
-        videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size_output_video)
+        output_video_fn_tmp = Path(f'{outputdir}/pigleg_results.avi')
+        output_video_fn = Path(outputdir+'/pigleg_results.mp4')
+        videoWriter = cv2.VideoWriter(str(output_video_fn_tmp), fourcc, fps, size_output_video)
 
         # input QR data
         json_data = load_json('{}/meta.json'.format(outputdir))
@@ -674,7 +675,7 @@ def main_report(
         logger.debug(f"frameshape={im.shape}")
         cap.release()
         videoWriter.release()
-        cmd = f"ffmpeg -i {video_name} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {outputdir+'/pigleg_results.mp4'}"
+        cmd = f"ffmpeg -i {str(output_video_fn_tmp)} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {str(output_video_fn)}"
         os.system(cmd)
 
         #############
@@ -704,7 +705,8 @@ def main_report(
         #save statistic to file
         save_json(data_results, os.path.join(outputdir, "results.json"))
 
-
+        if output_video_fn.exists():
+            output_video_fn_tmp.unlink()
 
         print(f'main_report: Video file {filename} is processed!')
     else:
