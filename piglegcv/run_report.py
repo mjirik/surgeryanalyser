@@ -497,7 +497,8 @@ def main_report(
         object_names=["Needle holder","Forceps","Scissors","None"],
         concat_axis=1,
         resize_factor=.5,
-        circle_radius=20
+        circle_radius=20.,
+        expected_video_width=1110
 ):
     """
 
@@ -510,7 +511,13 @@ def main_report(
     """
 
     cap = cv2.VideoCapture(filename)
-    assert cap.isOpened(), f'Faild to load video file {filename}'
+    assert cap.isOpened(), f'Failed to load video file {filename}'
+    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    if width > expected_video_width:
+        resize_factor = float(expected_video_width) / width
+    else:
+        resize_factor = 1
+
 
     if cap.isOpened():
 
