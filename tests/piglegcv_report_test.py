@@ -68,7 +68,7 @@ def test_create_video_report():
 def test_main_report():
     filename = local_dir / "pigleg_test2.mp4"
     outputdir = local_dir / "test_main_report_outputdir"
-    expected_file = outputdir / "pigleg_results.avi"
+    expected_file = outputdir / "pigleg_results.mp4"
     if expected_file.exists():
         expected_file.unlink()
 
@@ -88,14 +88,15 @@ def test_main_report():
         object_names=["Needle holder","Tweezers","Scissors","None"],
         concat_axis=1, resize_factor=.5
     )
+    assert expected_file.exists()
 
 
-def test_add_scale():
+def test_add_ruler():
     import cv2
     fn = list(Path(".").glob("*.jpg"))[0]
     img = cv2.imread(str(fn))
-    run_report.insert_scale_in_image(img, pixelsize_mm=0.1, scale_size_mm=50)
-    img = img[::2,::2,:]
+    run_report.insert_ruler_in_image(img, pixelsize_mm=0.1, ruler_size_mm=50)
+    img = img[::3,::3,:]
     cv2.imshow("okno", img)
     cv2.waitKey(5000)
 

@@ -464,27 +464,33 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 
 
 
-def insert_scale_in_image(img, pixelsize_mm, scale_size_mm=50, resize_factor=1., thickness=10.1):
+def insert_ruler_in_image(img, pixelsize_mm, ruler_size_mm=50, resize_factor=1.):
     image_size = np.asarray(img.shape[:2])
     # start_point = np.asarray(image_size) * 0.90
     # start_point = np.array([10,10])
-
+    thickness = int(0.01 * img.shape[0]/resize_factor)
     # start_point = np.array([image_size[1]*0.98, image_size[0]*0.97]) # right down corner
     start_point = np.array([image_size[1]*0.02, image_size[0]*0.97])
-    scale_size_px = scale_size_mm / pixelsize_mm
-    end_point = start_point + np.array([scale_size_px,0])
-    cv2.line(img, start_point.astype(int), end_point.astype(int), (255,255,255), int(thickness/resize_factor))
+    ruler_size_px = ruler_size_mm / pixelsize_mm
+    end_point = start_point + np.array([ruler_size_px,0])
 
+    cv2.line(img, start_point.astype(int), end_point.astype(int), (255,255,255), thickness)
+
+    text_point = start_point.astype(np.int) - np.array([0,int(0.020 * img.shape[0])/resize_factor]).astype(int)
     # img[line]
+    text_thickness = int(0.004 * img.shape[0]/resize_factor)
+    logger.debug(f"ruler_size_px={ruler_size_px}")
+    logger.debug(f"text_point={text_point}")
+    logger.debug(f"text_thickness={text_thickness}")
     cv2.putText(
         img,
-        f"{scale_size_mm} [mm]",
-        start_point.astype(np.int) - np.array([0,int(0.020 * img.shape[0])/resize_factor]).astype(int),
+        f"{ruler_size_mm} [mm]",
+        text_point,
         # (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
         cv2.FONT_HERSHEY_SIMPLEX,
         fontScale=.0007 * img.shape[0]/resize_factor,
         color=(255,255,255),
-        thickness=int(0.0015 * img.shape[0]/resize_factor)
+        thickness=text_thickness
     )
     return img
 
@@ -512,11 +518,6 @@ def main_report(
 
     cap = cv2.VideoCapture(filename)
     assert cap.isOpened(), f'Failed to load video file {filename}'
-    width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-    if width > expected_video_width:
-        resize_factor = float(expected_video_width) / width
-    else:
-        resize_factor = 1
 
 
     if cap.isOpened():
@@ -564,7 +565,15 @@ def main_report(
         size_input_video = [int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
                 int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))]
 
+        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        if concat_axis == 1:
+            expected_video_width = expected_video_width/2
+        if width > expected_video_width:
+            resize_factor = float(expected_video_width) / width
+        else:
+            resize_factor = 1.
         size_output_video = size_input_video.copy()
+
         if concat_axis == 0:
             size_output_video[1] *= 2
         else:
@@ -667,7 +676,7 @@ def main_report(
             #exit()
             im_graph = im_graph[:,:,:3]
             if is_qr_detected:
-                img = insert_scale_in_image(img, pixelsize_mm=pix_size*1000, scale_size_mm=50)
+                img = insert_ruler_in_image(img, pixelsize_mm=pix_size * 1000, ruler_size_mm=50)
             im = np.concatenate((img, im_graph), axis=concat_axis)
             im = skimage.transform.resize(im, output_shape=[
                 size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
@@ -679,6 +688,7 @@ def main_report(
 
             i += 1
 
+        logger.debug(f"pix_size={pix_size}")
         logger.debug(f"frameshape={im.shape}")
         cap.release()
         videoWriter.release()
