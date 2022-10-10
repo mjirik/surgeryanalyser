@@ -18,11 +18,13 @@ from detectron2.config import get_cfg, CfgNode
 from detectron2.engine import DefaultPredictor
 from detectron2.modeling import build_model
 from detectron2.checkpoint import DetectionCheckpointer
-
+from typing import Union
+from pathlib import Path
 try:
-    from .extern.sort import sort
-except ImportError:
-    from extern.sort import sort
+    from tools import save_json
+except Exception as e:
+    from .tools import save_json
+
 
 CFG = {
     "output_dir": "./__OUTPUT__/",
@@ -277,11 +279,6 @@ class NumpyArrayEncoder(json.JSONEncoder):
             return obj.tolist()
         else:
             return super(NumpyArrayEncoder, self).default(obj)
-
-def save_json(data: dict, output_json: str):
-    os.makedirs(os.path.dirname(output_json), exist_ok=True)
-    with open(output_json, "w") as output_file:
-        json.dump(data, output_file, cls=NumpyArrayEncoder)
 
 
 

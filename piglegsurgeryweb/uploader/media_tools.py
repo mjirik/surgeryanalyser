@@ -5,23 +5,24 @@ from loguru import logger
 import json
 import subprocess
 from .visualization_tools import crop_square
+import os
 
 
-def save_json(data:dict, output_json:Union[str,Path]):
+def save_json(data:dict, output_json:Union[str,Path], update:bool=True):
     logger.debug(f"Writing '{output_json}'")
 
     output_json = Path(output_json)
     output_json.parent.mkdir(exist_ok=True, parents=True)
     # os.makedirs(os.path.dirname(output_json), exist_ok=True)
     dct = {}
-    if output_json.exists():
+    if update and output_json.exists():
         with open(output_json, "r") as output_file:
             dct = json.load(output_file)
-    logger.debug(f"old keys: {list(dct.keys())}")
+        logger.debug(f"old keys: {list(dct.keys())}")
     dct.update(data)
     logger.debug(f"updated keys: {list(dct.keys())}")
     with open(output_json, "w") as output_file:
-        json.dump(dct, output_file)
+        json.dump(dct, output_file, indent=4)
 
 
 def load_json(filename:Union[str,Path]):
