@@ -688,7 +688,7 @@ def main_report(
 
             i += 1
 
-        video_duration_s = float(i-1 / fps)
+        video_duration_s = float( (i-1) / fps)
         logger.debug(f"pix_size={pix_size}")
         logger.debug(f"frameshape={im.shape}")
         cap.release()
