@@ -18,6 +18,7 @@ from django_q.tasks import async_task, schedule, queue_size
 from datetime import datetime
 from django.conf import settings
 import json
+import re
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
 def index(request):
@@ -125,6 +126,10 @@ def web_report(request, filename_hash:str):
     if fn_results.exists():
         with open(fn_results) as f:
             loaded_results = json.load(f)
+            if "Video duration [s]" in loaded_results:
+                video_duration = loaded_results["Video duration [s]"]
+            else:
+                video_duration = None
             for key in loaded_results:
                 new_value = loaded_results[key]
                 # backward compatibility
@@ -138,11 +143,15 @@ def web_report(request, filename_hash:str):
                         # "Scissors length", "Scissors duration", # backward compatibility
                         # "Needle holder length", "Needle holder duration", # backward compatibility
                        ):
-                    new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
+                    # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
+                    new_key = re.sub("visibility$", "visibility [s]", new_key)
+                    new_key = re.sub("length$", "length [cm]", new_key)
 
                     if new_key.find("[cm]") > 0:
                         new_value = f"{new_value * 100:0.0f}"
                     if new_key.find("[s]") > 0:
+                        new_value = f"{new_value:0.0f}"
+                    if new_key.find("[%]") > 0:
                         new_value = f"{new_value:0.0f}"
                     results[new_key] = new_value
 

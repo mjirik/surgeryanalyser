@@ -688,6 +688,7 @@ def main_report(
 
             i += 1
 
+        video_duration_s = float(i-1 / fps)
         logger.debug(f"pix_size={pix_size}")
         logger.debug(f"frameshape={im.shape}")
         cap.release()
@@ -713,9 +714,10 @@ def main_report(
                 [T, L, V, unit] = res
                 # data_results[object_name] = {}
                 data_results[f'{object_name} length'] = L
-                data_results[f'{object_name} visibility'] = T
+                data_results[f'{object_name} visibility [s]'] = T
                 data_results[f'{object_name} velocity'] = V
                 data_results[f'{object_name} unit'] = unit
+                data_results[f'{object_name} visibility [%]'] = int(100 * T/video_duration_s)
 
             create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg")
 

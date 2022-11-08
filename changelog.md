@@ -5,6 +5,7 @@ Actual version: "0.0.0"
 
 ## 2022-11
 
+* [added] Instrument duration in percent
 * [added] Download original file button
 * [added] Individual user view with list of all his reports
 
