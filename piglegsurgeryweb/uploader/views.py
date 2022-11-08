@@ -134,19 +134,19 @@ def web_report(request, filename_hash:str):
                 new_value = loaded_results[key]
                 # backward compatibility
                 new_key = key.replace("Tweezes", "Forceps").replace("Tweezers", "Forceps").replace("duration", "visibility")
+                new_key = re.sub("visibility$", "visibility [s]", new_key)
+                new_key = re.sub("length$", "length [cm]", new_key)
+                new_key = re.sub("length \[s\]$", "length [cm]", new_key)
                 if new_key in (
-                        "Needle holder length", "Needle holder visibility",
-                        "Forceps length", "Forceps visibility",
-                        "Scissors length", "Scissors visibility",
+                        "Needle holder length [cm]", "Needle holder visibility [s]", "Needle holder visibility [%]",
+                        "Forceps length [cm]", "Forceps visibility [s]","Forceps visibility [%]",
+                        "Scissors length [cm]", "Scissors visibility [s]", "Scissors visibility [%]",
                         # "Tweezes length", "Tweezes duration" # typo in some older processings
                         # "Tweezers length", "Tweezers duration", # backward compatibility
                         # "Scissors length", "Scissors duration", # backward compatibility
                         # "Needle holder length", "Needle holder duration", # backward compatibility
                        ):
                     # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
-                    new_key = re.sub("visibility$", "visibility [s]", new_key)
-                    new_key = re.sub("length$", "length [cm]", new_key)
-                    new_key = re.sub("length \[s\]$", "length [cm]", new_key)
 
                     if new_key.find("[cm]") > 0:
                         new_value = f"{new_value * 100:0.0f}"
