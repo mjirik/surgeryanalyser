@@ -146,6 +146,7 @@ def web_report(request, filename_hash:str):
                     # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
                     new_key = re.sub("visibility$", "visibility [s]", new_key)
                     new_key = re.sub("length$", "length [cm]", new_key)
+                    new_key = re.sub("length \[s\]$", "length [cm]", new_key)
 
                     if new_key.find("[cm]") > 0:
                         new_value = f"{new_value * 100:0.0f}"
