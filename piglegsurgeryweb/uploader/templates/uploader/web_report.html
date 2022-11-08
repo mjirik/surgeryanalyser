@@ -99,7 +99,8 @@
     {% else %}
     <a class="btn btn-secondary" href="{{ next }}">Back</a>
     {% endif %}
-    <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report</a>
+    <a class="btn btn-secondary" href='{{ serverfile.mediafile.url }}' download> Download original file </a>
+    <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report </a>
 </div>
 
 {% endblock %}

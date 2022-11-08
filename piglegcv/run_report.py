@@ -479,9 +479,9 @@ def insert_ruler_in_image(img, pixelsize_mm, ruler_size_mm=50, resize_factor=1.)
     text_point = start_point.astype(np.int) - np.array([0,int(0.020 * img.shape[0])/resize_factor]).astype(int)
     # img[line]
     text_thickness = int(0.004 * img.shape[0]/resize_factor)
-    logger.debug(f"ruler_size_px={ruler_size_px}")
-    logger.debug(f"text_point={text_point}")
-    logger.debug(f"text_thickness={text_thickness}")
+    # logger.debug(f"ruler_size_px={ruler_size_px}")
+    # logger.debug(f"text_point={text_point}")
+    # logger.debug(f"text_thickness={text_thickness}")
     cv2.putText(
         img,
         f"{ruler_size_mm} [mm]",
@@ -722,6 +722,7 @@ def main_report(
         #save statistic to file
         save_json(data_results, os.path.join(outputdir, "results.json"))
 
+        # TODO unlink but wait for finishing ffmpeg
         if output_video_fn.exists():
             output_video_fn_tmp.unlink()
 
