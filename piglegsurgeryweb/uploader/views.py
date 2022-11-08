@@ -9,7 +9,7 @@ from loguru import logger
 # Create your views here.
 
 from django.http import HttpResponse
-from .models import UploadedFile, _hash
+from .models import UploadedFile, _hash, Owner
 from .forms import UploadedFileForm
 from .models_tools import randomString
 from .tasks import email_media_recived, make_preview
@@ -60,6 +60,7 @@ def update_all_uploaded_files(request):
     for file in files:
 
         make_preview(file, force=True)
+        update_owner(file)
     return redirect("/uploader/thanks/")
 
 def resend_report_email(request, filename_id):
@@ -82,6 +83,14 @@ def show_report_list(request):
 
     return render(request, "uploader/report_list.html", context)
 
+def owners_reports_list(request, owner_hash:str):
+    owner = get_object_or_404(Owner, hash=owner_hash)
+    files = UploadedFile.objects.filter(owner=owner).order_by('-uploaded_at')
+    context = {
+        "uploadedfiles": files, 'queue_size': queue_size()
+    }
+
+    return render(request, "uploader/report_list.html", context)
 
 
 def web_report(request, filename_hash:str):
@@ -214,6 +223,25 @@ class DetailView(generic.DetailView):
     template_name = "uploader/model_form_upload.html"
 
 
+def update_owner(uploadedfile:UploadedFile) -> Owner:
+    if not uploadedfile.owner:
+        owners = Owner.objects.filter(email=uploadedfile.email)
+        if len(owners) == 0:
+            owner = Owner(email=uploadedfile.email, hash=_hash())
+            owner.save()
+            #create one
+        else:
+            owner = owners[0]
+    else:
+        owner = uploadedfile.owner
+
+    # uploadedfiles = UploadedFile.objects.filter(owner=owner)
+    if uploadedfile.owner != owner:
+        uploadedfile.owner = owner
+        uploadedfile.save()
+
+    return owner
+
 def model_form_upload(request):
     if request.method == "POST":
         form = UploadedFileForm(
@@ -245,6 +273,7 @@ def model_form_upload(request):
             PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
             PIGLEGCV_PORT= os.getenv("PIGLEGCV_PORT", default="5000")
             make_preview(serverfile)
+            update_owner(serverfile)
             async_task(
                 "uploader.tasks.run_processing",
                 serverfile,

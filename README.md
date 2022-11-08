@@ -76,6 +76,8 @@ docker exec -it piglegsurgery_piglegweb_1 bash
 ```
 
 ```shell
+cd piglegsurgery/piglegsurgeryweb/
+# sudo chmod a+rw uploader/migrations/
 conda run -n piglegsurgery python manage.py makemigrations
 conda run -n piglegsurgery python manage.py migrate
 

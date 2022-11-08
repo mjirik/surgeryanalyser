@@ -227,7 +227,10 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         f"<body>"
         f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {serverfile.mediafile}</p>"
         f'<p></p>'
-        f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Download report here</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
+        f'<p></p>'
+        f'<p></p>'
+        f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
         f'<p></p>'
         f'<p>Best regards</p>\n'
         f'<p>Miroslav Jirik</p>\n'

@@ -11,6 +11,11 @@ def _hash():
     hash = generate_sha1(dt, salt=randomString())
     return hash
 
+class Owner(models.Model):
+    email = models.EmailField(max_length=200)
+    hash = models.CharField(max_length=255, blank=True, default=_hash)
+    def __str__(self):
+        return str(self.email)
 
 class UploadedFile(models.Model):
     email = models.EmailField(max_length=200)
@@ -29,6 +34,7 @@ class UploadedFile(models.Model):
     hash = models.CharField(max_length=255, blank=True, default=_hash)
     started_at = models.DateTimeField("Started at", blank=True, null=True)
     finished_at = models.DateTimeField("Finished at", blank=True, null=True)
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)
@@ -40,4 +46,7 @@ class BitmapImage(models.Model):
     @property
     def filename(self):
         return op.basename(self.bitmap_image.name)
+
+    def __str__(self):
+        return str(op.basename(self.bitmap_image.name))
 

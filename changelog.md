@@ -6,6 +6,7 @@ Actual version: "0.0.0"
 ## 2022-11
 
 * [added] Download original file button
+* [added] Individual user view with list of all his reports
 
 
 ## 0.0
