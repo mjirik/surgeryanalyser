@@ -95,7 +95,7 @@ def test_add_ruler():
     import cv2
     fn = list(Path(".").glob("*.jpg"))[0]
     img = cv2.imread(str(fn))
-    run_report.insert_ruler_in_image(img, pixelsize_mm=0.1, ruler_size_mm=50)
+    run_report.insert_ruler_in_image(img, pixelsize=0.1, ruler_size=50)
     img = img[::3,::3,:]
     cv2.imshow("okno", img)
     cv2.waitKey(5000)

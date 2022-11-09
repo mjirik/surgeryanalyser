@@ -135,12 +135,20 @@ def web_report(request, filename_hash:str):
                 # backward compatibility
                 new_key = key.replace("Tweezes", "Forceps").replace("Tweezers", "Forceps").replace("duration", "visibility")
                 new_key = re.sub("visibility$", "visibility [s]", new_key)
-                new_key = re.sub("length$", "length [cm]", new_key)
-                new_key = re.sub("length \[s\]$", "length [cm]", new_key)
+                new_key = re.sub("length$", "length [m]", new_key)
                 if new_key in (
-                        "Needle holder length [cm]", "Needle holder visibility [s]", "Needle holder visibility [%]",
-                        "Forceps length [cm]", "Forceps visibility [s]","Forceps visibility [%]",
-                        "Scissors length [cm]", "Scissors visibility [s]", "Scissors visibility [%]",
+                        "Needle holder length [pix]",
+                        "Needle holder length [m]",
+                        "Needle holder visibility [s]",
+                        "Needle holder visibility [%]",
+                        "Forceps length [pix]",
+                        "Forceps length [m]",
+                        "Forceps visibility [s]",
+                        "Forceps visibility [%]",
+                        "Scissors length [pix]",
+                        "Scissors length [m]",
+                        "Scissors visibility [s]",
+                        "Scissors visibility [%]",
                         # "Tweezes length", "Tweezes duration" # typo in some older processings
                         # "Tweezers length", "Tweezers duration", # backward compatibility
                         # "Scissors length", "Scissors duration", # backward compatibility
@@ -148,8 +156,12 @@ def web_report(request, filename_hash:str):
                        ):
                     # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
 
-                    if new_key.find("[cm]") > 0:
+                    if new_key.find("[m]") > 0:
+                        new_key = re.sub("length \[m\]$", "length [cm]", new_key)
                         new_value = f"{new_value * 100:0.0f}"
+                    if new_key.find("[pix]") > 0:
+                        # new_key = re.sub("length \[m\]$", "length [cm]", new_key)
+                        new_value = f"{new_value:0.0f}"
                     if new_key.find("[s]") > 0:
                         new_value = f"{new_value:0.0f}"
                     if new_key.find("[%]") > 0:

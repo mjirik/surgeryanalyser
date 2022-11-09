@@ -1,6 +1,7 @@
 import pytest
 from piglegcv import tools
 from pathlib import Path
+import numpy as np
 
 
 
@@ -15,3 +16,12 @@ def test_save_json():
 
     data = tools.load_json(fn)
     assert data == expected_data
+
+
+def test_unit_conversion():
+    v = tools.unit_conversion(100, "cm", "mm")
+    assert v == 1000
+
+    v = tools.unit_conversion(np.asarray([1000, 1500]), "mm", "m")
+    assert v[0] == 1.
+    assert v[1] == 1.5

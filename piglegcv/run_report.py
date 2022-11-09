@@ -18,9 +18,9 @@ from pathlib import Path
 import scipy
 import scipy.signal
 try:
-    from tools import load_json, save_json
+    from tools import load_json, save_json, unit_conversion
 except ImportError as e:
-    from .tools import load_json, save_json
+    from .tools import load_json, save_json, unit_conversion
 
 
 def plot_finger(img, joints, threshold, thickness):
@@ -349,7 +349,7 @@ def plot3(fig):
 
 #ds_threshold [m]
 def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit:bool, object_colors, object_names,
-                        video_size, ds_threshold=0.1, dpi=300, scissors_frames=[]):
+                        video_size, ds_threshold=0.1, dpi=300, scissors_frames=[], visualization_unit="cm"):
 
     ##################
     ## second graph
@@ -364,8 +364,8 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit:boo
     #ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
     #ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
     if QRinit:
-        track_label = "Track [m]"
-        vel_label = "Velocity [m/sec]"
+        track_label = f"Track [{visualization_unit}]"
+        vel_label = f"Velocity [{visualization_unit}/sec]"
     else:
         track_label = "Track [pix]"
         vel_label = "Velocity [pix/sec]"
@@ -386,6 +386,7 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit:boo
                 ds_threshold = 200.0
 
             ds[ds>ds_threshold] = 0.0
+            ds = unit_conversion(ds, "m", output_unit=visualization_unit)
             dt = t[1:] - t[:-1]
             t = t[0:-1]
 
@@ -464,14 +465,14 @@ def _scissors_frames(scissors_frames:dict, fps, peak_distance_s=10) -> list:
 
 
 
-def insert_ruler_in_image(img, pixelsize_mm, ruler_size_mm=50, resize_factor=1.):
+def insert_ruler_in_image(img, pixelsize, ruler_size=50, resize_factor=1., unit='mm'):
     image_size = np.asarray(img.shape[:2])
     # start_point = np.asarray(image_size) * 0.90
     # start_point = np.array([10,10])
     thickness = int(0.01 * img.shape[0]/resize_factor)
     # start_point = np.array([image_size[1]*0.98, image_size[0]*0.97]) # right down corner
     start_point = np.array([image_size[1]*0.02, image_size[0]*0.97])
-    ruler_size_px = ruler_size_mm / pixelsize_mm
+    ruler_size_px = ruler_size / pixelsize
     end_point = start_point + np.array([ruler_size_px,0])
 
     cv2.line(img, start_point.astype(int), end_point.astype(int), (255,255,255), thickness)
@@ -484,7 +485,7 @@ def insert_ruler_in_image(img, pixelsize_mm, ruler_size_mm=50, resize_factor=1.)
     # logger.debug(f"text_thickness={text_thickness}")
     cv2.putText(
         img,
-        f"{ruler_size_mm} [mm]",
+        f"{ruler_size:0.0f} [{unit}]",
         text_point,
         # (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
         cv2.FONT_HERSHEY_SIMPLEX,
@@ -504,7 +505,8 @@ def main_report(
         concat_axis=1,
         resize_factor=.5,
         circle_radius=20.,
-        expected_video_width=1110
+        expected_video_width=1110,
+        visualization_length_unit="cm"
 ):
     """
 
@@ -676,7 +678,10 @@ def main_report(
             #exit()
             im_graph = im_graph[:,:,:3]
             if is_qr_detected:
-                img = insert_ruler_in_image(img, pixelsize_mm=pix_size * 1000, ruler_size_mm=50)
+                img = insert_ruler_in_image(img,
+                                            pixelsize=unit_conversion(pix_size, "m", visualization_length_unit),
+                                            ruler_size=int(unit_conversion(50, "mm", visualization_length_unit)),
+                                            unit=visualization_length_unit)
             im = np.concatenate((img, im_graph), axis=concat_axis)
             im = skimage.transform.resize(im, output_shape=[
                 size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
@@ -713,11 +718,11 @@ def main_report(
             if len(res) > 0:
                 [T, L, V, unit] = res
                 # data_results[object_name] = {}
-                data_results[f'{object_name} length'] = L
+                data_results[f'{object_name} length [{unit}]'] = L
                 data_results[f'{object_name} visibility [s]'] = T
                 data_results[f'{object_name} velocity'] = V
                 data_results[f'{object_name} unit'] = unit
-                data_results[f'{object_name} visibility [%]'] = int(100 * T/video_duration_s)
+                data_results[f'{object_name} visibility [%]'] = float(100 * T/video_duration_s)
 
             create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg")
 
