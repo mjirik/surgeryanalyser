@@ -696,7 +696,10 @@ def main_report(
             #exit()
             if video_frame_first is None:
                 video_frame_first = im.copy()
-                cv2.imwrite(str(Path(outputdir) / "pigleg_results.mp4.jpg"), video_frame_first)
+                jpg_pth = Path(outputdir) / "pigleg_results.mp4.jpg"
+                if jpg_pth.exists():
+                    jpg_pth.unlink()
+                cv2.imwrite(str(jpg_pth), video_frame_first)
             videoWriter.write(im)
 
             i += 1
