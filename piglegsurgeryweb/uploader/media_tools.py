@@ -50,6 +50,7 @@ def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
 
     cap = cv2.VideoCapture(str(filename))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
+    totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     if width:
         scale = None
@@ -79,7 +80,7 @@ def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
             logger.trace(file_name)
     cap.release()
 
-    metadata = {"filename_full": str(filename), "fps": fps}
+    metadata = {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
     json_file = outputdir / "meta.json"
     save_json(metadata, json_file)
 
