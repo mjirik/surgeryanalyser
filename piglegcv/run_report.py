@@ -99,7 +99,9 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
 
 
 #ds_threshold [m]
-def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit, object_color, object_name, output_file_name, output_file_name2, ds_threshold=0.1, dpi=300):
+def create_pdf_report(
+        frame_id, data_pixel, image, source_fps, pix_size, QRinit, object_color, object_name, output_file_name, output_file_name2, ds_threshold=0.1, dpi=300,
+        visualization_unit="cm"):
     """
 
     :param frame_id:
@@ -127,6 +129,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
             ds_threshold = 200.0
 
         ds[ds>ds_threshold] = 0.0
+        ds = unit_conversion(ds, "m", output_unit=visualization_unit)
         dt = t[1:] - t[:-1]
         t = t[0:-1]
         
@@ -154,7 +157,7 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
 
         #check unit
         if QRinit:
-            unit = 'm'
+            unit = visualization_unit
         else:
             unit = 'pix'
 
@@ -206,6 +209,11 @@ def create_pdf_report(frame_id, data_pixel, image, source_fps, pix_size, QRinit,
         #plt.show()
         plt.savefig(output_file_name2, dpi=dpi)
         logger.debug(f'main_report: figures {output_file_name2} is saved')
+
+        if QRinit:
+            L = unit_conversion(L, visualization_unit, "m")
+            V = unit_conversion(V, visualization_unit, "m")
+            unit = 'm'
 
         return([T, L, V, unit])
 
