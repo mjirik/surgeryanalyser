@@ -76,7 +76,10 @@ export LANG=C.UTF-8
 
 # spusteni aplikace - samotny vypocet
 # Put your code here
-singularity exec -B $SCRATCHDIR:$SCRATCHDIR /auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id\:v1.0.sif python  $PROJECTDIR/mmdetection_custom_dataset_detection.py
+# SIF_IMAGE=/auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id\:v1.0.sif
+SIF_IMAGE=/auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id_v22_12_0.sif
+singularity exec -B $SCRATCHDIR:$SCRATCHDIR $SIF_IMAGE  python  $PROJECTDIR/mmdetection_custom_dataset_detection.py
+# singularity exec -B $SCRATCHDIR:$SCRATCHDIR /auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id\:v1.0.sif python  $PROJECTDIR/mmdetection_custom_dataset_detection.py
 
 # kopirovani vystupnich dat z vypocetnicho uzlu do domovskeho adresare,
 # pokud by pri kopirovani doslo k chybe, nebude adresar SCRATCH vymazan pro moznost rucniho vyzvednuti dat
