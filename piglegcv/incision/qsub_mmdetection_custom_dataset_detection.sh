@@ -20,6 +20,8 @@ DATETIME=`date +"%y%m%d_%H%M%S"`
 PROJECTDIR="/storage/plzen1/home/$LOGNAME/projects/piglegsurgery/piglegcv/incision"
 DATADIR="/auto/plzen4-ntis/projects/korpusy_cv/pigleg_surgery/incision_october2021"
 OUTPUTDIR="/auto/plzen4-ntis/projects/korpusy_cv/pigleg_surgery/incision_october2021_output/$DATETIME"
+# SIF_IMAGE=/auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id_v22_12_0.sif
+SIF_IMAGE=/auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id_v22_05.sif
 
 
 echo "job: $PBS_JOBID running on: `uname -n`"
@@ -77,7 +79,6 @@ export LANG=C.UTF-8
 # spusteni aplikace - samotny vypocet
 # Put your code here
 # SIF_IMAGE=/auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id\:v1.0.sif
-SIF_IMAGE=/auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id_v22_12_0.sif
 singularity exec -B $SCRATCHDIR:$SCRATCHDIR $SIF_IMAGE  python  $PROJECTDIR/mmdetection_custom_dataset_detection.py
 # singularity exec -B $SCRATCHDIR:$SCRATCHDIR /auto/plzen4-ntis/projects/cv/CarnivoreID/carnivore_id\:v1.0.sif python  $PROJECTDIR/mmdetection_custom_dataset_detection.py
 
