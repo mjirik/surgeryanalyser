@@ -74,6 +74,7 @@ RUN apt-get install -y ranger mc sshfs
 
 RUN pip install gspread
 RUN pip install --upgrade google-api-python-client oauth2client
+RUN pip install jupyterlab
 
 RUN mkdir -p mnt/pole
 

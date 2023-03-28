@@ -20,6 +20,11 @@ ngc config set
 docker login nvcr.io
 ```
 
+# Get all resources
+
+* `piglegsurgery/piglegsurgeryweb/private/`
+* `piglegsurgery/piglegsurgeryweb/media/`
+
 # Run in production 
 
 Update repo, Stop, Build and Up again

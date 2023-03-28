@@ -19,7 +19,7 @@ def add_tracking_results(tracking_results, result):
                 frame_tr.append(tr[0].tolist()[1:] + [i])
         tracking_results['tracks'].append(frame_tr)
 
-def main_tracker_bytetrack(commandline):
+def main_tracker_bytetrack(commandline, crop:list=[None, None, None, None]):
 
     parser = ArgumentParser()
     parser.add_argument('config', help='config file')
@@ -51,7 +51,7 @@ def main_tracker_bytetrack(commandline):
     for i, img in enumerate(imgs):
         if isinstance(img, str):
             img = osp.join(args.input, img)
-        result = inference_mot(model, img, frame_id=i)
+        result = inference_mot(model, img[crop[0]:crop[1], crop[2]:crop[3]], frame_id=i)
 
         add_tracking_results(tracking_results, result)
         
