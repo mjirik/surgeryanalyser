@@ -48,7 +48,7 @@ services:
     image: "dev_piglegcv:latest"
 #    command: nvidia-smi
 #    runtime: nvidia
-    ports:
+    expose:
       - '5000:5000'
 #    environment:
 #      - DOCKERLOGNAME=""
