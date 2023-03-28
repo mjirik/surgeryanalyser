@@ -31,7 +31,8 @@ services:
   dev_piglegweb:
     image: "dev_piglegweb:latest"
     ports:
-      - '8000:${PIGLEG_PORT}'
+      # outer:inner
+      - '${PIGLEG_PORT}:8000'
     environment:
       - PIGLEGCV_HOSTNAME=piglegcv
       - PIGLEGCV_PORT=5000
