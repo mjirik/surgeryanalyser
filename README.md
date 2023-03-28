@@ -25,6 +25,7 @@ docker login nvcr.io
 * `piglegsurgery/piglegsurgeryweb/private/`
 * `piglegsurgery/piglegsurgeryweb/media/`
 * `piglegsurgery/piglegcv/resources/`
+* `piglegsurgery/piglegsurgeryweb/piglegsurgeryweb/.env` with email setup by `EMAIL_HOST` ...
 
 # Run in production 
 
