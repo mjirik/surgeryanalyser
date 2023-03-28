@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.1.1-cudnn8-devel
+FROM nvidia/cuda:11.3.1-cudnn8-devel
 ENV TZ="Europe/Berlin"
 #FROM nginx
 MAINTAINER Miroslav Jiřík <mjirik@kky.zcu.cz>

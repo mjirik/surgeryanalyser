@@ -24,6 +24,7 @@ docker login nvcr.io
 
 * `piglegsurgery/piglegsurgeryweb/private/`
 * `piglegsurgery/piglegsurgeryweb/media/`
+* `piglegsurgery/piglegcv/resources/`
 
 # Run in production 
 
@@ -36,7 +37,7 @@ git pull
 docker-compose down
 
 docker build -t piglegcv ./piglegcv/
-docker build -t piglegcv_devel ./piglegcv/
+docker build -t dev_piglegcv_devel ./piglegcv/
 docker build -t piglegweb ./docker/
 
 docker-compose --env-file .env.prod up
@@ -85,6 +86,23 @@ cd piglegsurgery/piglegsurgeryweb/
 # sudo chmod a+rw uploader/migrations/
 conda run -n piglegsurgery python manage.py makemigrations
 conda run -n piglegsurgery python manage.py migrate
+
+```
+
+# Development
+
+
+```shell
+cd /webapps/piglegsurgery
+docker-compose --env-file .env.prod down
+
+git pull
+docker-compose down
+
+docker build -t dev_piglegcv ./piglegcv/
+docker build -t dev_piglegweb ./docker/
+
+docker-compose --env-file .env.prod up
 
 ```
 
