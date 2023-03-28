@@ -102,7 +102,7 @@ docker-compose down
 docker build -t dev_piglegcv ./piglegcv/
 docker build -t dev_piglegweb ./docker/
 
-docker-compose --env-file .env.prod up
+docker-compose --env-file .env.dev up
 
 ```
 
