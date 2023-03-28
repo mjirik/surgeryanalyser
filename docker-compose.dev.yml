@@ -29,7 +29,7 @@ services:
 #    depends_on:
 #      - mariadb
   dev_piglegweb:
-    image: "${PIGLEG_IMAGE_PREFIX}piglegweb:latest"
+    image: "dev_piglegweb:latest"
     ports:
       - '8000:${PIGLEG_PORT}'
     environment:
@@ -45,7 +45,7 @@ services:
       - "${PIGLEG_LOG_DIR}:/root/pigleg/logs"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
   dev_piglegcv:
-    image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
+    image: "dev_piglegcv:latest"
 #    command: nvidia-smi
 #    runtime: nvidia
     ports:

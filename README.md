@@ -94,15 +94,15 @@ conda run -n piglegsurgery python manage.py migrate
 
 ```shell
 cd /webapps/piglegsurgery
-docker-compose --env-file .env.prod down
+docker-compose --file docker-compose.dev.yml --env-file .env.prod down
 
 git pull
-docker-compose down
+docker-compose --file docker-compose.dev.yml down
 
 docker build -t dev_piglegcv ./piglegcv/
 docker build -t dev_piglegweb ./docker/
 
-docker-compose --env-file .env.dev up
+docker-compose --file docker-compose.dev.yml --env-file .env.dev up --build
 
 ```
 
