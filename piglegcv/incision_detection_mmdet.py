@@ -199,7 +199,7 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img, local_output_data_dir:Path, expected_incision_size_mm=70):
+def run_incision_detection(img, local_output_data_dir:Path, expected_incision_size_mm=70, device=None):
     # todo J. Viktora
     # img = mmcv.imread(str(img_fn))
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
@@ -220,6 +220,7 @@ def run_incision_detection(img, local_output_data_dir:Path, expected_incision_si
     cfg.model.roi_head.bbox_head.num_classes = 1
 
     model = init_detector(cfg, str(checkpoint_path),
+                          device=device
                           # device='cuda:0'
                           )
     # logger.debug(f"cfg=\n{pformat(cfg)}")
