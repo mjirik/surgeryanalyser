@@ -26,6 +26,7 @@ docker login nvcr.io
 * `piglegsurgery/piglegsurgeryweb/media/`
 * `piglegsurgery/piglegcv/resources/`
 * `piglegsurgery/piglegsurgeryweb/piglegsurgeryweb/.env` with email setup by `EMAIL_HOST` ...
+* `piglegsurgery/.jupyter`
 
 # Run in production 
 
@@ -95,10 +96,7 @@ conda run -n piglegsurgery python manage.py migrate
 
 ```shell
 cd /webapps/piglegsurgery
-docker-compose --file docker-compose.dev.yml --env-file .env.prod down
-
-git pull
-docker-compose --file docker-compose.dev.yml down
+docker-compose --file docker-compose.dev.yml --env-file .env.dev down
 
 docker build -t dev_piglegcv ./piglegcv/
 docker build -t dev_piglegweb ./docker/
