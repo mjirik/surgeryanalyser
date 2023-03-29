@@ -56,9 +56,11 @@ services:
 #    environment:
 #      - DOCKERLOGNAME=""
     volumes:
+      # outer:inner
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
       - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
+      - "${PIGLEG_NBCONFIG_DIR}:/root/.jupyter"
       
 #  piglegcv_devel:
 #    privileged: true

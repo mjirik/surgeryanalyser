@@ -23,7 +23,8 @@ echo "Services started"
 
 # Run jupyter lab
 
-HOMEDIR=/storage/plzen1/home/$USER # substitute username and path to to your real username and path
+# HOMEDIR=/storage/plzen1/home/$USER # substitute username and path to to your real username and path
+# PRIVATEDIR=/webapps/piglegsurgery/piglegsurgeryweb/private
 HOSTNAME=`hostname -f`
 JUPYTER_PORT="8808"
 HOMEDIR=`eval echo ~$USER`
@@ -37,13 +38,14 @@ done
 
 # move into $HOME directory
 cd $HOMEDIR
+NBCONFIGFN=$HOMEDIR/.jupyter/jupyter_notebook_config.json
 if [ ! -f ./.jupyter/jupyter_notebook_config.json ]; then
    echo "jupyter passwd reset!"
    mkdir -p .jupyter/
    #here you can commem=nt randomly generated password and set your password
    pass=`dd if=/dev/urandom count=1 2> /dev/null | uuencode -m - | sed -ne 2p | cut -c-12` ; echo $pass
    #pass="SecretPassWord"
-   hash=`singularity exec $SING_IMAGE python -c "from notebook.auth import passwd ; hash = passwd('$pass') ; print(hash)" 2>/dev/null`
+   hash=`python -c "from notebook.auth import passwd ; hash = passwd('$pass') ; print(hash)" 2>/dev/null`
    cat > .jupyter/jupyter_notebook_config.json << EOJson
 {
   "NotebookApp": {
@@ -56,7 +58,13 @@ else
   PASS_MESSAGE="Your password was already set before."
 fi
 
-cd /webapps/piglegsurgery/ && jupyter lab --no-browser --port $JUPYTER_PORT 2>&1 | \
+echo $NBCONFIGFN
+cat $NBVONFIGFN
+echo "hash="
+echo $hash
+
+cd /webapps/piglegsurgery/ && \
+    jupyter lab --no-browser --port $JUPYTER_PORT 2>&1 | \
 #   tee >(rotatelogs -n 3 logs/jupyterlab_${DOCKERLOGNAME}_log_2.txt.bck 1M) | \
    rotatelogs -n 1 logs/jupyterlab_${DOCKERLOGNAME}_log.txt 1M &
 echo "jupyterlab started"

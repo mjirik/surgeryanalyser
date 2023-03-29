@@ -70,11 +70,14 @@ RUN sudo apt-get install --yes apache2-utils
 # For perpendicular
 RUN pip install -U scikit-learn pytest
 
-RUN apt-get install -y ranger mc sshfs
+RUN apt-get install -y ranger mc sshfs 
 
 RUN pip install gspread
 RUN pip install --upgrade google-api-python-client oauth2client
 RUN pip install jupyterlab protobuf==3.20
+
+# for password generation for jupyterlab
+RUN apt-get install -y net-tools sharutils
 
 RUN mkdir -p mnt/pole
 
@@ -82,29 +85,29 @@ RUN mkdir -p mnt/pole
 # MAIN
 RUN mkdir logs
 
+# Get models
+RUN mkdir -p ./resources/tracker_model_bytetrack
+RUN mkdir -p ./.cache/torch/hub/checkpoints/
+RUN mkdir -p ./resources/incision_detection_models
+
+COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
+COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
+COPY ./resources/tracker_model_bytetrack/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
+COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
+# Copy scripts
 # check permissions of folowing files before this docker file build!!!
 COPY ./worker.py .
 COPY ./app.py .
 COPY ./pigleg_cv.py .
-COPY ./run_services.sh .
 COPY ./cascade_rcnn_x101_64x4d_fpn_1class.py .
 COPY ./res50_onehand10k_256x256.py .
 COPY ./run_qr.py .
 COPY ./run_report.py .
 COPY ./run_perpendicular.py .
 COPY ./tools.py .
-
-RUN mkdir -p ./.cache/torch/hub/checkpoints/
-
+COPY ./run_services.sh .
 COPY ./incision_detection_mmdet.py .
-RUN mkdir -p ./resources/incision_detection_models
-COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
-
 COPY ./run_tracker_bytetrack.py .
-RUN mkdir -p ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
 
 # USER root
 RUN chmod 777 ./
