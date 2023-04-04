@@ -26,7 +26,7 @@ echo "Services started"
 # HOMEDIR=/storage/plzen1/home/$USER # substitute username and path to to your real username and path
 # PRIVATEDIR=/webapps/piglegsurgery/piglegsurgeryweb/private
 HOSTNAME=`hostname -f`
-JUPYTER_PORT="8808"
+JUPYTER_PORT="8888"
 HOMEDIR=`eval echo ~$USER`
 
 #find nearest free port to listen
@@ -62,9 +62,12 @@ echo $NBCONFIGFN
 cat $NBVONFIGFN
 echo "hash="
 echo $hash
+echo "PORT=$JUPYTER_PORT"
+
+# --port $JUPYTER_PORT
 
 cd /webapps/piglegsurgery/ && \
-    jupyter lab --no-browser --port $JUPYTER_PORT 2>&1 | \
+    jupyter lab --no-browser  2>&1 | \
 #   tee >(rotatelogs -n 3 logs/jupyterlab_${DOCKERLOGNAME}_log_2.txt.bck 1M) | \
    rotatelogs -n 1 logs/jupyterlab_${DOCKERLOGNAME}_log.txt 1M &
 echo "jupyterlab started"

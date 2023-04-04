@@ -105,7 +105,14 @@ def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> di
     logger.debug(f"Image processing finished in {time.time() - s}s.")
 
     # main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch.pth', filename, outputdir))
-    main_tracker_bytetrack(f"\"./resources/tracker_model_bytetrack/bytetrack_pigleg.py\" \"./resources/tracker_model_bytetrack/epoch.pth\" \"{filename}\" --output_dir \"{outputdir}\"")
+    # f"\"./resources/tracker_model_bytetrack/bytetrack_pigleg.py\" \"{filename}\" --output_dir \"{outputdir}\"",
+    main_tracker_bytetrack(
+        config_file="./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
+        filename=filename,
+        output_dir=outputdir,
+        checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
+        device="cuda"
+    )
     # run_media_processing(Path(filename), Path(outputdir))
     logger.debug(f"Tracker finished in {time.time() - s}s.")
 
@@ -114,8 +121,11 @@ def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> di
     # main_mmpose(filename, outputdir)
     # logger.debug(f"MMpose finished in {time.time() - s}s.")
 
+    logger.debug(f"filename={filename}, outputdir={outputdir}")
+    logger.debug(f"filename={Path(filename).exists()}, outputdir={Path(outputdir).exists()}")
 
     main_report(filename, outputdir)
+    
     logger.debug("Report based on video is finished.")
 
     # if extention in images_types:

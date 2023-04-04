@@ -525,6 +525,8 @@ def main_report(
     :param concat_axis: axis of original video and graph concatenation. 0 for vertical, 1 for horizontal
     :return:
     """
+    filename = str(filename)
+    outputdir = str(outputdir)
 
     cap = cv2.VideoCapture(filename)
     assert cap.isOpened(), f'Failed to load video file {filename}'

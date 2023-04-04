@@ -199,8 +199,9 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img, local_output_data_dir:Path, expected_incision_size_mm=70, device=None):
+def run_incision_detection(img, local_output_data_dir:Path, expected_incision_size_mm=70, device="cuda"):
     # todo J. Viktora
+    # nemělo by tady být spíš device="cuda" ? To ale nefunguje protože: RuntimeError: nms_impl: implementation for device cuda:0 not found.
     # img = mmcv.imread(str(img_fn))
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")

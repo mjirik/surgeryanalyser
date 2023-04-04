@@ -17,6 +17,8 @@ RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 # USER appuser
 WORKDIR /home/appuser
 
+RUN pip list
+
 ENV PATH="/home/appuser/.local/bin:${PATH}"
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
 	python3 get-pip.py --user && \
@@ -26,10 +28,12 @@ RUN apt-get update && apt-get install -y redis ffmpeg vim
 
 RUN pip install opencv-python==4.5.5.64
 
+# We used fallowing line to fix the RuntimeError: nms_impl: implementation for device cuda:0 not found
+#     MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install mmcv-full==1.5.2
 RUN git clone --branch v1.5.2 https://github.com/open-mmlab/mmcv.git &&\
     cd mmcv &&\
     pip install -r requirements/optional.txt &&\
-    MMCV_WITH_OPS=1 pip install -e .
+    MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install -e .
 RUN cd ..
 
 RUN git clone --branch v2.25.0 https://github.com/open-mmlab/mmdetection &&\
@@ -49,6 +53,8 @@ RUN git clone --branch v0.13.0 https://github.com/open-mmlab/mmtracking.git &&\
     pip install -r requirements.txt &&\
     pip install -v -e .
 RUN cd ..
+
+RUN pip list
 
 #RUN git clone https://github.com/open-mmlab/mmtracking.git &&\
 #    cd mmtracking &&\
@@ -74,10 +80,12 @@ RUN apt-get install -y ranger mc sshfs
 
 RUN pip install gspread
 RUN pip install --upgrade google-api-python-client oauth2client
-RUN pip install jupyterlab protobuf==3.20
+RUN pip install jupyterlab protobuf==3.20 ipywidgets
 
 # for password generation for jupyterlab
 RUN apt-get install -y net-tools sharutils
+
+RUN pip list
 
 RUN mkdir -p mnt/pole
 
@@ -90,10 +98,17 @@ RUN mkdir -p ./resources/tracker_model_bytetrack
 RUN mkdir -p ./.cache/torch/hub/checkpoints/
 RUN mkdir -p ./resources/incision_detection_models
 
+# this is for final user appuser
+# RUN TORCH_CHECKPOINTS=./.cache/torch/hub/checkpoints/
+# this is for final user root
+RUN TORCH_CHECKPOINTS=/root/.cache/torch/hub/checkpoints/
+
 COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
 COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
+# COPY ./resources/incision_detection_models/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth $TORCH_CHECKPOINTS 
+COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth $TORCH_CHECKPOINTS
+
 # Copy scripts
 # check permissions of folowing files before this docker file build!!!
 COPY ./worker.py .
