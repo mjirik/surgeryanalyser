@@ -48,7 +48,7 @@ docker build -t piglegcv ./piglegcv/
 docker build -t dev_piglegcv_devel ./piglegcv/
 docker build -t piglegweb ./docker/
 
-docker-compose --env-file .env.prod up
+docker-compose --env-file .env.prod up -d
 
 ```
 

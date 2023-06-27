@@ -50,6 +50,7 @@ services:
 #    runtime: nvidia
     ports:
       - '5000'
+      - '8888'
 #    environment:
 #      - DOCKERLOGNAME=""
     volumes:
