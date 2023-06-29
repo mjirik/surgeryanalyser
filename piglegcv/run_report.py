@@ -576,7 +576,6 @@ def main_report(
                 if len(track_object) >= 4:
                     box = np.array(track_object[0:4])
                     position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-                    position *= resize_factor
 
                     if (len(track_object) == 6):
                         class_id = track_object[5]
@@ -624,7 +623,7 @@ def main_report(
                     if len(track_object) >= 4:
                         box = np.array(track_object[0:4])
                         position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-                        position *= resize_factor
+                        position *= resize_factor #to size uniform video frame
 
                         if (len(track_object) == 6):
                             class_id = track_object[5]
