@@ -66,6 +66,10 @@ RUN pip list
 RUN apt-get install libzbar0 -y
 RUN pip install pyzbar
 
+#########
+#yolov7-package
+RUN pip install yolov7-package
+
 RUN pip install --user filterpy==1.4.5 scikit-image==0.17.2 lap==0.4.0
 RUN pip install --user flask loguru rq
 
@@ -97,6 +101,7 @@ RUN mkdir logs
 RUN mkdir -p ./resources/tracker_model_bytetrack
 RUN mkdir -p ./.cache/torch/hub/checkpoints/
 RUN mkdir -p ./resources/incision_detection_models
+RUN mkdir -p ./resources/yolov7_qrdet
 
 # this is for final user appuser
 # RUN TORCH_CHECKPOINTS=./.cache/torch/hub/checkpoints/
@@ -108,6 +113,7 @@ COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_byt
 COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
 # COPY ./resources/incision_detection_models/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth $TORCH_CHECKPOINTS 
 COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth $TORCH_CHECKPOINTS
+COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
 
 # Copy scripts
 # check permissions of folowing files before this docker file build!!!
@@ -117,6 +123,8 @@ COPY ./pigleg_cv.py .
 COPY ./cascade_rcnn_x101_64x4d_fpn_1class.py .
 COPY ./res50_onehand10k_256x256.py .
 COPY ./run_qr.py .
+COPY ./qrdet.py .
+COPY ./qreader.py .
 COPY ./run_report.py .
 COPY ./run_perpendicular.py .
 COPY ./tools.py .
