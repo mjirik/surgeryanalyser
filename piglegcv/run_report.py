@@ -361,7 +361,8 @@ def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit:boo
 
     ##################
     ## second graph
-    fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
+    #fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
+    fig = plt.figure()
 
     #fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
     ax = fig.add_subplot()
@@ -514,6 +515,7 @@ def main_report(
         resize_factor=.5,
         circle_radius=20.,
         expected_video_width=1110,
+        expected_video_height=420,
         visualization_length_unit="cm"
 ):
     """
@@ -533,6 +535,24 @@ def main_report(
 
 
     if cap.isOpened():
+
+        #output video
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        size_input_video = [int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))]
+
+        if concat_axis == 1:
+            size_output_fig = [int(expected_video_width / 2), int(expected_video_height)]
+            resize_factor = float(expected_video_height) / float(size_input_video[1])
+            size_output_img = [int(resize_factor * size_input_video[0]) , int(expected_video_height)]
+            size_output_video = [ size_output_img[0] + size_output_fig[0], int(expected_video_height)]
+
+
+        logger.debug(f"size_input_video: {size_input_video}, size_output_video: {size_output_video}, size_output_img: {size_output_img}, resize_factor: {resize_factor}")
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        output_video_fn_tmp = Path(f'{outputdir}/pigleg_results.avi')
+        output_video_fn = Path(outputdir+'/pigleg_results.mp4')
+        videoWriter = cv2.VideoWriter(str(output_video_fn_tmp), fourcc, fps, size_output_video)
 
 
         #input object tracking data
@@ -556,6 +576,7 @@ def main_report(
                 if len(track_object) >= 4:
                     box = np.array(track_object[0:4])
                     position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+                    position *= resize_factor
 
                     if (len(track_object) == 6):
                         class_id = track_object[5]
@@ -566,37 +587,6 @@ def main_report(
                         frame_ids[class_id].append(i)
 
 
-        #fig = plt.figure()
-        #plt.imshow(im)
-        #plt.show()
-        #cv2.imshow('aaa', im)
-        #cv2.waitkey(0)
-
-        #output video
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
-        size_input_video = [int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))]
-
-        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        if concat_axis == 1:
-            expected_video_width = expected_video_width/2
-        if width > expected_video_width:
-            resize_factor = float(expected_video_width) / width
-        else:
-            resize_factor = 1.
-        size_output_video = size_input_video.copy()
-
-        if concat_axis == 0:
-            size_output_video[1] *= 2
-        else:
-            size_output_video[0] *= 2
-
-        size_output_video = [int(one*resize_factor) for one in size_output_video]
-        logger.debug(f"{size_input_video}, {size_output_video}")
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        output_video_fn_tmp = Path(f'{outputdir}/pigleg_results.avi')
-        output_video_fn = Path(outputdir+'/pigleg_results.mp4')
-        videoWriter = cv2.VideoWriter(str(output_video_fn_tmp), fourcc, fps, size_output_video)
 
         # input QR data
         json_data = load_json('{}/meta.json'.format(outputdir))
@@ -604,7 +594,8 @@ def main_report(
         # scisors_frames - frames with visible scissors qr code
 
         fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
-                                              object_names, size_input_video, dpi=400, scissors_frames=scissors_frames)
+                                              object_names, size_output_fig, dpi=300, scissors_frames=scissors_frames)
+
 
         img_first = None
         video_frame_first = None
@@ -614,10 +605,12 @@ def main_report(
             if not flag:
                 break
 
+            img = skimage.transform.resize(img, size_output_img[::-1], preserve_range=True).astype(img.dtype)
+
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
 
-            #if i > 50:
+            #if i > 150:
                #break
 
             if img_first is None:
@@ -631,6 +624,7 @@ def main_report(
                     if len(track_object) >= 4:
                         box = np.array(track_object[0:4])
                         position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+                        position *= resize_factor
 
                         if (len(track_object) == 6):
                             class_id = track_object[5]
@@ -680,8 +674,8 @@ def main_report(
             lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=int(1/resize_factor))
             im_graph = plot3(fig)
             # fix the video size if it is not correct
-            if not im_graph.shape[:2] == tuple(size_input_video[::-1]):
-                im_graph = skimage.transform.resize(img, size_input_video[::-1], preserve_range=True).astype(img.dtype)
+            #if not im_graph.shape[:2] == tuple(size_output_frame[::-1]):
+            im_graph = skimage.transform.resize(im_graph, size_output_fig[::-1], preserve_range=True).astype(img.dtype)
             im_graph = cv2.cvtColor(im_graph, cv2.COLOR_RGB2BGR) #matplotlib generate RGB channels but cv2 BGR
             ax.lines.pop(-1)
             #print(lines)
@@ -693,8 +687,8 @@ def main_report(
                                             ruler_size=int(unit_conversion(50, "mm", visualization_length_unit)),
                                             unit=visualization_length_unit)
             im = np.concatenate((img, im_graph), axis=concat_axis)
-            im = skimage.transform.resize(im, output_shape=[
-                size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
+            #im = skimage.transform.resize(im, output_shape=[
+                #size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
             #exit()
             if video_frame_first is None:
                 video_frame_first = im.copy()
