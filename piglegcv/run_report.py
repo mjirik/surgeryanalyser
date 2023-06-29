@@ -516,7 +516,8 @@ def main_report(
         circle_radius=20.,
         expected_video_width=1110,
         expected_video_height=420,
-        visualization_length_unit="cm"
+        visualization_length_unit="cm",
+        confidence_score_thr=0.0
 ):
     """
 
@@ -546,7 +547,11 @@ def main_report(
             resize_factor = float(expected_video_height) / float(size_input_video[1])
             size_output_img = [int(resize_factor * size_input_video[0]) , int(expected_video_height)]
             size_output_video = [ size_output_img[0] + size_output_fig[0], int(expected_video_height)]
-
+        else:
+            size_output_fig = [int(expected_video_width), int(expected_video_height/2)]
+            resize_factor = float(expected_video_width) / float(size_input_video[0])
+            size_output_img = [int(expected_video_width), int(resize_factor * size_input_video[1]) , ]
+            size_output_video = [ int(expected_video_width), size_output_img[1] + size_output_fig[1]]
 
         logger.debug(f"size_input_video: {size_input_video}, size_output_video: {size_output_video}, size_output_img: {size_output_img}, resize_factor: {resize_factor}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -579,9 +584,12 @@ def main_report(
 
                     if (len(track_object) == 6):
                         class_id = track_object[5]
+                        confidence_score = track_object[4]
                     else:
                         class_id = 0
-                    if class_id < 4:
+                        confidence_score = 1.0
+
+                    if (class_id >= 0) and (class_id < 4) and (confidence_score > confidence_score_thr):
                         data_pixels[class_id].append(position)
                         frame_ids[class_id].append(i)
 
@@ -604,16 +612,17 @@ def main_report(
             if not flag:
                 break
 
+            if img_first is None:
+                img_first = img.copy()
+
             img = skimage.transform.resize(img, size_output_img[::-1], preserve_range=True).astype(img.dtype)
 
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
 
-            #if i > 150:
-               #break
+            if i > 1050:
+               break
 
-            if img_first is None:
-                img_first = img.copy()
 
             #object tracking
             if i < N:
@@ -627,11 +636,14 @@ def main_report(
 
                         if (len(track_object) == 6):
                             class_id = track_object[5]
+                            confidence_score = track_object[4]
                         else:
                             class_id = 0
-                        if class_id < 4:
+                            confidence_score = 1.0
+
+                        if (class_id >= 0) and (class_id < 4):
                             ## color
-                            color = (255, 255, 255)
+                            color = (128, 128, 128)
                             if object_colors[class_id] == "b":
                                 color = (255, 0, 0)
                             if object_colors[class_id] == "r":
@@ -640,6 +652,9 @@ def main_report(
                                 color = (0, 255, 0)
                             if object_colors[class_id] == "m":
                                 color = (255, 0, 255)
+                            color_text = color
+                            if confidence_score < confidence_score_thr:
+                                color_text = (180, 180, 180)
 
                             # draw detection
                             cv2.circle(
@@ -657,7 +672,7 @@ def main_report(
                                 (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
                                 cv2.FONT_HERSHEY_SIMPLEX,
                                 fontScale=.5/resize_factor,
-                                color=color,
+                                color=color_text,
                                 thickness=int(2/resize_factor),
                             )
 
@@ -670,7 +685,7 @@ def main_report(
                     plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
 
             t_i = 1.0/fps * i
-            lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=int(1/resize_factor))
+            lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label= 'Track', linewidth=2)
             im_graph = plot3(fig)
             # fix the video size if it is not correct
             #if not im_graph.shape[:2] == tuple(size_output_frame[::-1]):
@@ -702,6 +717,7 @@ def main_report(
         video_duration_s = float( (i-1) / fps)
         logger.debug(f"pix_size={pix_size}")
         logger.debug(f"frameshape={im.shape}")
+        logger.debug(f"confidence_score_thr={confidence_score_thr}")
         cap.release()
         videoWriter.release()
         cmd = f"ffmpeg -i {str(output_video_fn_tmp)} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {str(output_video_fn)}"
@@ -752,4 +768,5 @@ def main_report(
 if __name__ == '__main__':
     #main_report('/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/output.mp4', '/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/')
     #main_report_old(sys.argv[1], sys.argv[2])
-    main_report(sys.argv[1], sys.argv[2])
+    #main_report(sys.argv[1], sys.argv[2])
+    main_report(sys.argv[1], sys.argv[2], concat_axis=1, confidence_score_thr=0.7)
