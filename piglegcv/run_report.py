@@ -620,8 +620,8 @@ def main_report(
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
 
-            if i > 1050:
-               break
+            #if i > 1050:
+               #break
 
 
             #object tracking
