@@ -50,6 +50,8 @@ docker build -t piglegweb ./docker/
 
 docker-compose --env-file .env.prod up -d
 
+docker-compose --env-file .env.prod logs -f
+
 ```
 
 ## Stop
