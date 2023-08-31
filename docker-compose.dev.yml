@@ -11,6 +11,8 @@ services:
       - PIGLEGCV_PORT=5000
       - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
       - PIGLEGCV_PORT_DEVEL=5000
+    env_file:
+      - ".env.dev"
 #      - DOCKERLOGNAME="devel"
 #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
@@ -21,6 +23,8 @@ services:
   dev_piglegcv:
     image: "dev_piglegcv:latest"
     build: ./piglegcv
+    env_file:
+      - ".env.dev"
 #    command: nvidia-smi
 #    runtime: nvidia
     ports:

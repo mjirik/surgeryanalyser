@@ -266,7 +266,7 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
         return
 
     logger.debug("incision detection ...")
-    imgs = run_incision_detection(img, outputdir)
+    imgs, bboxes = run_incision_detection(img, outputdir)
     logger.debug(f"len(imgs)={len(imgs)}")
     for i, image in enumerate(imgs):
         incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
@@ -274,6 +274,17 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     # uncomment to run old incision detection
     # image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)
     # incision_angle_evaluation(image, canny_sigma, outputdir)
+
+def find_largest_incision_bbox(bboxes):
+    max_area = 0
+    max_bbox = None
+    for bbox in bboxes:
+        area = int(bbox[3])-int(bbox[1]) * int(bbox[2]) - int(bbox[0])
+        # area = bbox[2] * bbox[3]
+        if area > max_area:
+            max_area = area
+            max_bbox = bbox
+    return max_bbox
 
 
 def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="perpedicular.jpg"):

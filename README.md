@@ -34,6 +34,18 @@ cd piglegsurgery/resources/torch
 wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth
 ```
 
+# Run devel 
+    
+```shell
+cd /webapps/piglegsurgery
+docker-compose --file docker-compose.dev.yml --env-file .env.dev down
+
+docker build -t dev_piglegcv ./piglegcv/
+docker build -t dev_piglegweb ./docker/
+
+docker-compose --file docker-compose.dev.yml --env-file .env.dev up --build
+```
+
 # Run in production 
 
 Update repo, Stop, Build and Up again

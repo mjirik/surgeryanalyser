@@ -253,9 +253,9 @@ def run_incision_detection(img, local_output_data_dir:Path, expected_incision_si
     else:
         pixelsize_m = None
     json_file = Path(local_output_data_dir) / "meta.json"
-    save_json({"pixelsize_m_by_incision_size": pixelsize_m}, json_file)
+    save_json({"pixelsize_m_by_incision_size": pixelsize_m, "incision_bboxes": bboxes}, json_file)
 
-    return imgs
+    return imgs, bboxes
 
 def predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir):
     # img_fn = local_input_data_dir / '/images/10.jpg'
