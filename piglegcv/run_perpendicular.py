@@ -16,6 +16,13 @@ import skimage.color
 from skimage.transform import probabilistic_hough_line, resize
 from pathlib import Path
 
+from skimage.draw import line
+from skimage.transform import (hough_line, hough_line_peaks,
+                               probabilistic_hough_line)
+from skimage.feature import canny
+from skimage import filters
+import scipy
+
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from loguru import logger
@@ -268,8 +275,14 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     logger.debug("incision detection ...")
     imgs, bboxes = run_incision_detection(img, outputdir)
     logger.debug(f"len(imgs)={len(imgs)}")
+    json_meta = load_json(f"{outputdir}/meta.json")
+    pixelsize_m =  json_meta["pixelsize_m_by_incision_size"]
+    
     for i, image in enumerate(imgs):
         incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
+        draw_expected_stitch_line(image, pixelsize_m, blue_line_distance_m=0.005, filename=f"{outputdir}/incision_stitch_{i}.jpg", visualization=False)
+            
+        
 
     # uncomment to run old incision detection
     # image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)
@@ -432,7 +445,48 @@ def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="pe
     #plt.show()
     plt.savefig(os.path.join(outputdir, output_filename), dpi=300)
     
-      
+def draw_expected_stitch_line(img_bgr, pixelsize_m, blue_line_distance_m, filename, visualization=False):
+    
+    image = img_bgr[:,:,2]
+    background = scipy.ndimage.gaussian_filter(image, sigma=(image.shape[0] * 0.5), )
+
+    imagef = image.astype(float) - (background*.2)
+
+    if visualization:
+        plt.imshow(image, cmap="gray")
+        plt.colorbar()
+        plt.figure()
+        plt.imshow(background, cmap="gray")
+        plt.colorbar()
+        plt.figure()
+        plt.imshow(imagef, cmap="gray", vmin=0)
+        plt.colorbar()
+    val = filters.threshold_otsu(imagef)
+    mask = image < val
+
+    
+    theta = np.concatenate([np.linspace(-np.pi/2, -np.pi/8), np.linspace(np.pi/8, np.pi/2)])
+
+    h, theta, d = hough_line(mask, theta)
+    fig = plt.figure()
+    plt.imshow(img_bgr[:,:,::-1], cmap=plt.cm.gray)
+
+    shift_px = blue_line_distance_m / pixelsize_m
+
+    rows, cols = image.shape
+    for _, angle, dist in zip(*hough_line_peaks(h, theta, d, num_peaks=1)):
+        y0 = (dist - 0 * np.cos(angle)) / np.sin(angle)
+        y1 = (dist - cols * np.cos(angle)) / np.sin(angle)
+    #     plt.plot((0, cols), (y0, y1), ':r', linewidth=1, alpha=0.2)
+        plt.plot((0, cols), (y0 + shift_px, y1 + shift_px), '-b', linewidth=2, alpha=0.4)
+        plt.plot((0, cols), (y0 - shift_px, y1 - shift_px), '-b', linewidth=2, alpha=0.4)
+    plt.axis((0, cols, rows, 0))
+    # plt.title('Detected lines')
+    # plt.show()
+    plt.axis('off')
+    plt.savefig(filename, bbox_inches='tight')
+    plt.close(fig)
+    
 
 if __name__ == '__main__':
     main_perpendicular(sys.argv[1], sys.argv[2])

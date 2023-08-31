@@ -253,7 +253,9 @@ def run_incision_detection(img, local_output_data_dir:Path, expected_incision_si
     else:
         pixelsize_m = None
     json_file = Path(local_output_data_dir) / "meta.json"
-    save_json({"pixelsize_m_by_incision_size": pixelsize_m, "incision_bboxes": bboxes}, json_file)
+    save_json({"pixelsize_m_by_incision_size": pixelsize_m, 
+               "incision_bboxes": bboxes.tolist()
+              }, json_file)
 
     return imgs, bboxes
 

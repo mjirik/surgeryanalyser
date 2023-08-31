@@ -21,6 +21,7 @@ import time
 from run_tracker_bytetrack import main_tracker_bytetrack
 #from run_mmpose import main_mmpose
 from run_qr import main_qr
+import run_qr
 from run_report import main_report
 from run_perpendicular import main_perpendicular, get_frame_to_process
 from incision_detection_mmdet import run_incision_detection
@@ -100,7 +101,7 @@ def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> di
     s = time.time()
     main_qr(filename, outputdir)
     logger.debug(f"QR finished in {time.time() - s}s.")
-    run_image_processing(filename, outputdir)
+    run_image_processing(filename, outputdir, skip_qr=True)
     s = time.time()
     logger.debug(f"Image processing finished in {time.time() - s}s.")
 
@@ -134,8 +135,10 @@ def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> di
     logger.debug("Video processing finished")
 
 
-def run_image_processing(filename: Path, outputdir: Path) -> dict:
+def run_image_processing(filename: Path, outputdir: Path, skip_qr=False) -> dict:
     logger.debug("Running image processing...")
+    frame = get_frame_to_process(str(filename))
+    run_qr.read_qr_from_frame(frame)
     main_perpendicular(filename, outputdir)
     logger.debug("Perpendicular finished.")
     # TODO add predict image

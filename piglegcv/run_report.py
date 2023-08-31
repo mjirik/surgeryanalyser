@@ -17,6 +17,9 @@ import seaborn as sns
 from pathlib import Path
 import scipy
 import scipy.signal
+
+
+
 try:
     from tools import load_json, save_json, unit_conversion
 except ImportError as e:
@@ -45,7 +48,59 @@ def plot_skeleton(img, joints, threshold, thickness):
     img = plot_finger(img, joints[1][[0, 17, 18, 19, 20]], threshold, thickness)
     #plt.imshow(img)
     #plt.show()
+    
+def draw_bbox(img, bbox, linecolor=(255,0,0), linewidth=2):
+    bbox=np.asarray(bbox)
+    x1, y1, x2, y2, confidence = bbox.astype(int).tolist()
+    cv2.rectangle(img, (x1, y1), (x2, y2), linecolor, linewidth)
+    return img
+    
 
+def calculate_operation_zone_presence(points:np.ndarray, bbox:np.ndarray):
+
+    points = np.asarray(points)
+    bbox = np.asarray(bbox)
+#     x, y = points[:, 0], points[:, 1]
+    if len(points) > 0:
+        return count_points_in_bbox(points, bbox) / float(len(points))
+    else:
+        return 0
+
+
+def find_largest_incision_bbox(bboxes):
+    max_area = 0
+    max_bbox = None
+    for bbox in bboxes:
+        area = (bbox[3]-bbox[1]) * (bbox[2] - bbox[0])
+        print(area)
+        # area = bbox[2] * bbox[3]
+        if area > max_area:
+            max_area = area
+            max_bbox = bbox
+    return max_bbox
+
+def count_points_in_bbox(points, bbox):
+    count = 0
+    for point in points:
+        if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
+            count += 1
+    return count
+    
+def make_bbox_larger(bbox, multiplicator=2.):
+    size = np.asarray([(bbox[3])-(bbox[1]), (bbox[2])-(bbox[0])]) * multiplicator
+    center = ((bbox[3]+bbox[1])/2., (bbox[2]+bbox[0])/2.)
+    newbbox = [
+        center[1] - (size[1] / 2.), center[0] - (size[0] / 2.),
+        center[1] + (size[1] / 2.), center[0] + (size[0] / 2.),
+        bbox[4]
+    ]
+    return newbbox
+    
+def crop_image(img, bbox):
+    imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+    return imcr
+    
+    
 
 def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, filename:Optional[Path]=None):
     """
@@ -96,6 +151,8 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
         plt.close(fig)
 
     return fig
+
+
 
 
 #ds_threshold [m]
@@ -599,7 +656,23 @@ def main_report(
         json_data = load_json('{}/meta.json'.format(outputdir))
         pix_size, is_qr_detected, scissors_frames = _qr_data_processing(json_data, fps)
         # scisors_frames - frames with visible scissors qr code
+        bboxes = np.asarray(json_data["incision_bboxes"])
+        operation_zone_bbox = None
+        if len(bboxes) > 0:
+            bboxes *= resize_factor
+            bboxes[:, 4] = bboxes[:, 4] / resize_factor
+            operation_zone_bbox = make_bbox_larger(find_largest_incision_bbox(bboxes), multiplicator=3.)
 
+        frame_ids_list = np.asarray(frame_ids).tolist()
+        json_data = save_json(
+            {
+                "frame_ids": frame_ids_list, 
+                "data_pixels_0": np.asarray(data_pixels[0]).tolist(),
+                "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
+                "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
+                "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
+            }, '{}/tracks_points.json'.format(outputdir), update=False)
+        
         fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
                                               object_names, size_output_fig, dpi=300, scissors_frames=scissors_frames)
 
@@ -616,6 +689,8 @@ def main_report(
                 img_first = img.copy()
 
             img = skimage.transform.resize(img, size_output_img[::-1], preserve_range=True).astype(img.dtype)
+            if operation_zone_bbox is not None:
+                img = draw_bbox(img, operation_zone_bbox, linecolor=(128, 255, 0))
 
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
@@ -669,7 +744,7 @@ def main_report(
                             cv2.putText(
                                 img,
                                 str(object_names[class_id]),
-                                (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
+                                (int(position[0]+(circle_radius*1.5)), int(position[1]-circle_radius*1.)),
                                 cv2.FONT_HERSHEY_SIMPLEX,
                                 fontScale=.5/resize_factor,
                                 color=color_text,
@@ -735,8 +810,11 @@ def main_report(
                                     object_name,
                                     os.path.join(outputdir, f"graph_{i}c_trajectory.jpg"),
                                     os.path.join(outputdir, f"fig_{i}a_{simplename}_graph.jpg"))
+            
+            oz_presence = calculate_operation_zone_presence(data_pixel, operation_zone_bbox)
             # obj_name = object_name.lower().replace(" ", "_")
-
+            # 
+            #
             if len(res) > 0:
                 [T, L, V, unit] = res
                 # data_results[object_name] = {}
@@ -745,6 +823,7 @@ def main_report(
                 data_results[f'{object_name} velocity'] = V
                 data_results[f'{object_name} unit'] = unit
                 data_results[f'{object_name} visibility [%]'] = float(100 * T/video_duration_s)
+                data_results[f'{object_name} zone presence [%]'] = float(100 * oz_presence)
 
             create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg")
 
