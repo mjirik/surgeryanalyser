@@ -7,7 +7,7 @@ services:
       - '${PIGLEG_PORT}:8000'
       # outer:inner
     environment:
-      - PIGLEGCV_HOSTNAME=piglegcv
+      - PIGLEGCV_HOSTNAME=dev_piglegcv
       - PIGLEGCV_PORT=5000
       - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
       - PIGLEGCV_PORT_DEVEL=5000
