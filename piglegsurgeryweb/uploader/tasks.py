@@ -157,8 +157,8 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
         "report_url": f"{absolute_uri}/uploader/web_report/{serverfile.hash}"
     })
 
-    if "filename_full" in novy:
-        novy.pop("filename_full")
+    pop_from_dict(novy, "incision_bboxes")
+    pop_from_dict(novy, "filename_full")
     novy = remove_empty_lists(flatten_dict(novy))
     logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
@@ -168,6 +168,12 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
         creds=creds,
         data=df_novy
     )
+
+
+def pop_from_dict(d, key):
+    if key in d:
+        d.pop(key)
+
 
 def make_preview(serverfile: UploadedFile, force:bool=False, height=300, make_square:bool=True) -> Path:
     if serverfile.mediafile:

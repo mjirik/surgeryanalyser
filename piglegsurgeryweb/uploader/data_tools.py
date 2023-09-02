@@ -34,7 +34,6 @@ def remove_empty_lists(dct:dict) -> dict:
     return {k: v for k, v in dct.items() if v != []}
 
 
-
 def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict], scope=None, sheet_index=0) -> pd.DataFrame:
     # define the scope
 
