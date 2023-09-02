@@ -7,6 +7,23 @@ from loguru import logger
 
 
 
+def flatten_dict(dct:dict, parent_key:str='', sep:str='_') -> dict:
+    """
+    Flatten nested dictionary
+    :param dct: nested dictionary
+    :param parent_key: parent key
+    :param sep: separator
+    :return: flattened dictionary
+    """
+    items = []
+    for k, v in dct.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
 def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict], scope=None, sheet_index=0) -> pd.DataFrame:
     # define the scope
 

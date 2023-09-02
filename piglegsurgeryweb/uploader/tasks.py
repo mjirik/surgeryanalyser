@@ -28,7 +28,7 @@ import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
-from .data_tools import google_spreadsheet_append
+from .data_tools import google_spreadsheet_append, flatten_dict
 from .visualization_tools import crop_square
 from .media_tools import make_images_from_video, rescale, convert_avi_to_mp4
 
@@ -159,6 +159,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
 
     if "filename_full" in novy:
         novy.pop("filename_full")
+    novy = flatten_dict(novy)
     logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
 
