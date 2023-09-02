@@ -98,3 +98,11 @@ def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict],
 
     return df_out2
 
+
+def remove_iterables_from_dict(dct:dict) -> dict:
+    """
+    Remove iterables from dictionary
+    :param dct: dictionary
+    :return: dictionary without iterables
+    """
+    return {k: v for k, v in dct.items() if not hasattr(v, '__iter__')}

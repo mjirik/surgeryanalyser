@@ -28,7 +28,7 @@ import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
-from .data_tools import google_spreadsheet_append, flatten_dict, remove_empty_lists
+from .data_tools import google_spreadsheet_append, flatten_dict, remove_empty_lists, remove_iterables_from_dict
 from .visualization_tools import crop_square
 from .media_tools import make_images_from_video, rescale, convert_avi_to_mp4
 
@@ -160,6 +160,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
     pop_from_dict(novy, "incision_bboxes")
     pop_from_dict(novy, "filename_full")
     novy = remove_empty_lists(flatten_dict(novy))
+    novy = remove_iterables_from_dict(novy)
     logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
 
