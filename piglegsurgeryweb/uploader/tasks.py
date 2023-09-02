@@ -160,7 +160,9 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
     pop_from_dict(novy, "incision_bboxes")
     pop_from_dict(novy, "filename_full")
     novy = remove_empty_lists(flatten_dict(novy))
-    novy = remove_iterables_from_dict(novy)
+    pop_from_dict(novy, "qr_data_box")
+
+    # novy = remove_iterables_from_dict(novy)
     logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
 
