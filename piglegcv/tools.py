@@ -65,3 +65,30 @@ def _unit_multiplier(kvantif:str):
         raise ValueError(f"Unknown unit kvantifier {kvantif}")
 
     return multiplier
+
+
+def flatten_dict(dct:dict, parent_key:str='', sep:str='_') -> dict:
+    """
+    Flatten nested dictionary
+    :param dct: nested dictionary
+    :param parent_key: parent key
+    :param sep: separator
+    :return: flattened dictionary
+    """
+    items = []
+    for k, v in dct.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
+def remove_empty_lists(dct:dict) -> dict:
+    """
+    Remove empty lists from dictionary
+    :param dct: dictionary
+    :return: dictionary without empty lists
+    """
+    return {k: v for k, v in dct.items() if v != []}
