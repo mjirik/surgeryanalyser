@@ -24,6 +24,17 @@ def flatten_dict(dct:dict, parent_key:str='', sep:str='_') -> dict:
             items.append((new_key, v))
     return dict(items)
 
+
+def remove_empty_lists(dct:dict) -> dict:
+    """
+    Remove empty lists from dictionary
+    :param dct: dictionary
+    :return: dictionary without empty lists
+    """
+    return {k: v for k, v in dct.items() if v != []}
+
+
+
 def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict], scope=None, sheet_index=0) -> pd.DataFrame:
     # define the scope
 
