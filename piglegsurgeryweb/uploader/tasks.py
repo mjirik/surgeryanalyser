@@ -159,6 +159,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
 
     if "filename_full" in novy:
         novy.pop("filename_full")
+    logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
 
     google_spreadsheet_append(
