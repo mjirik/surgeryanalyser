@@ -62,12 +62,35 @@ def calculate_operation_zone_presence(points:np.ndarray, bbox:np.ndarray):
     bbox = np.asarray(bbox)
 #     x, y = points[:, 0], points[:, 1]
     if len(points) > 0:
-        return count_points_in_bbox(points, bbox) / float(len(points))
+        return _count_points_in_bbox(points, bbox) / float(len(points))
     else:
         return 0
 
+class RelativePresenceInOperatingArea(object):
 
-def find_largest_incision_bbox(bboxes):
+    def __init__(self):
+        self.operating_area_bbox = None
+
+    def set_operation_area_based_on_bboxes(self, bboxes, resize_factor):
+        """Create operating area based on largest incision bbox.
+
+        :param bboxes: incision bounding boxes
+        :param resize_factor: the factor used for video resize
+        :return:
+        """
+        self.operating_area_bbox = None
+        if len(bboxes) > 0:
+            bboxes *= resize_factor
+            bboxes[:, 4] = bboxes[:, 4] / resize_factor
+            self.operating_area_bbox = _make_bbox_square_and_larger(_find_largest_incision_bbox(bboxes), multiplicator=1.)
+
+    def calculate_presence(self, points):
+        if self.operating_area_bbox is not None:
+            return calculate_operation_zone_presence(points, self.operating_area_bbox)
+        else:
+            return 0
+
+def _find_largest_incision_bbox(bboxes):
     max_area = 0
     max_bbox = None
     for bbox in bboxes:
@@ -79,14 +102,24 @@ def find_largest_incision_bbox(bboxes):
             max_bbox = bbox
     return max_bbox
 
-def count_points_in_bbox(points, bbox):
+def _count_points_in_bbox(points, bbox):
     count = 0
     for point in points:
         if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
             count += 1
     return count
+
+def _make_bbox_square_and_larger(bbox, multiplicator=1.):
+    size = np.max(np.asarray([(bbox[3])-(bbox[1]), (bbox[2])-(bbox[0])]) * multiplicator)
+    center = ((bbox[3]+bbox[1])/2., (bbox[2]+bbox[0])/2.)
+    newbbox = [
+        center[1] - (size[1] / 2.), center[0] - (size / 2.),
+        center[1] + (size[1] / 2.), center[0] + (size / 2.),
+        bbox[4]
+    ]
+    return newbbox
     
-def make_bbox_larger(bbox, multiplicator=2.):
+def _make_bbox_larger(bbox, multiplicator=2.):
     size = np.asarray([(bbox[3])-(bbox[1]), (bbox[2])-(bbox[0])]) * multiplicator
     center = ((bbox[3]+bbox[1])/2., (bbox[2]+bbox[0])/2.)
     newbbox = [
@@ -102,12 +135,13 @@ def crop_image(img, bbox):
     
     
 
-def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, filename:Optional[Path]=None):
+def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, filename:Optional[Path]=None, bbox:Optional[np.ndarray]=None):
     """
 
     :param points: xy points with shape = [i,2]
     :param image: np.ndarray with image
     :param filename: if filename is set the savefig is called and fig is closed
+    :param bbox: bounding box to be drawn into image
     :return: figure
     """
     # logger.debug(points)
@@ -121,6 +155,10 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
     fig = plt.figure()
     if isinstance(image, np.ndarray):
         im_gray = skimage.color.rgb2gray(image[:, :, ::-1])
+        # one channel gray scale image to 3 channel gray scale image
+        im_gray = np.stack([im_gray, im_gray, im_gray], axis=-1)
+        if bbox is not None:
+            im_gray = draw_bbox(im_gray, bbox, linecolor=(128, 255, 0))
         plt.imshow(im_gray, cmap="gray")
     plt.axis("off")
 
@@ -657,11 +695,8 @@ def main_report(
         pix_size, is_qr_detected, scissors_frames = _qr_data_processing(json_data, fps)
         # scisors_frames - frames with visible scissors qr code
         bboxes = np.asarray(json_data["incision_bboxes"])
-        operation_zone_bbox = None
-        if len(bboxes) > 0:
-            bboxes *= resize_factor
-            bboxes[:, 4] = bboxes[:, 4] / resize_factor
-            operation_zone_bbox = make_bbox_larger(find_largest_incision_bbox(bboxes), multiplicator=3.)
+        relative_presence = RelativePresenceInOperatingArea()
+        relative_presence.set_operation_area_based_on_bboxes(bboxes, resize_factor=resize_factor)
 
         frame_ids_list = np.asarray(frame_ids).tolist()
         json_data = save_json(
@@ -689,8 +724,8 @@ def main_report(
                 img_first = img.copy()
 
             img = skimage.transform.resize(img, size_output_img[::-1], preserve_range=True).astype(img.dtype)
-            if operation_zone_bbox is not None:
-                img = draw_bbox(img, operation_zone_bbox, linecolor=(128, 255, 0))
+            if relative_presence.operating_area_bbox is not None:
+                img = draw_bbox(img, relative_presence.operating_area_bbox, linecolor=(128, 255, 0))
 
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
@@ -810,8 +845,8 @@ def main_report(
                                     object_name,
                                     os.path.join(outputdir, f"graph_{i}c_trajectory.jpg"),
                                     os.path.join(outputdir, f"fig_{i}a_{simplename}_graph.jpg"))
-            
-            oz_presence = calculate_operation_zone_presence(data_pixel, operation_zone_bbox)
+
+            oz_presence = relative_presence.calculate_presence(data_pixel)
             # obj_name = object_name.lower().replace(" ", "_")
             # 
             #
@@ -825,7 +860,11 @@ def main_report(
                 data_results[f'{object_name} visibility [%]'] = float(100 * T/video_duration_s)
                 data_results[f'{object_name} zone presence [%]'] = float(100 * oz_presence)
 
-            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg")
+            oa_bbox = None
+            if object_name == "Needle Holder":
+                oa_bbox = relative_presence.operating_area_bbox
+
+            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg", bbox=oa_bbox)
 
         #save statistic to file
         save_json(data_results, os.path.join(outputdir, "results.json"))
