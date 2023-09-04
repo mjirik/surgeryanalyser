@@ -71,7 +71,7 @@ class RelativePresenceInOperatingArea(object):
     def __init__(self):
         self.operating_area_bbox = None
 
-    def set_operation_area_based_on_bboxes(self, bboxes, resize_factor):
+    def set_operation_area_based_on_bboxes(self, bboxes):
         """Create operating area based on largest incision bbox.
 
         :param bboxes: incision bounding boxes
@@ -80,8 +80,7 @@ class RelativePresenceInOperatingArea(object):
         """
         self.operating_area_bbox = None
         if len(bboxes) > 0:
-            bboxes *= resize_factor
-            bboxes[:, 4] = bboxes[:, 4] / resize_factor
+ 
             self.operating_area_bbox = _make_bbox_square_and_larger(_find_largest_incision_bbox(bboxes), multiplicator=1.)
 
     def calculate_presence(self, points):
@@ -89,6 +88,22 @@ class RelativePresenceInOperatingArea(object):
             return calculate_operation_zone_presence(points, self.operating_area_bbox)
         else:
             return 0
+        
+    def draw_image(self, img:np.ndarray, points:np.ndarray, bbox_linecolor=(0,255,128)):
+        img = draw_bbox(img, self.operating_area_bbox, linecolor=bbox_linecolor)
+        points = np.asarray(points)
+        bbox = np.asarray(self.operating_area_bbox)
+    #     x, y = points[:, 0], points[:, 1]
+        if len(points) > 0:
+            for point in points:
+                
+                if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
+                    img = cv2.circle(img, (int(point[0]), int(point[1])), radius=0, color=(0, 255, 0), thickness=2)
+                else:
+                    img = cv2.circle(img, (int(point[0]), int(point[1])), radius=0, color=(0, 0, 255), thickness=2)
+            return img
+        else:
+            return img
 
 def _find_largest_incision_bbox(bboxes):
     max_area = 0
@@ -113,8 +128,8 @@ def _make_bbox_square_and_larger(bbox, multiplicator=1.):
     size = np.max(np.asarray([(bbox[3])-(bbox[1]), (bbox[2])-(bbox[0])]) * multiplicator)
     center = ((bbox[3]+bbox[1])/2., (bbox[2]+bbox[0])/2.)
     newbbox = [
-        center[1] - (size[1] / 2.), center[0] - (size / 2.),
-        center[1] + (size[1] / 2.), center[0] + (size / 2.),
+        center[1] - (size / 2.), center[0] - (size / 2.),
+        center[1] + (size / 2.), center[0] + (size / 2.),
         bbox[4]
     ]
     return newbbox
@@ -135,7 +150,7 @@ def crop_image(img, bbox):
     
     
 
-def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, filename:Optional[Path]=None, bbox:Optional[np.ndarray]=None):
+def create_heatmap_report_plt(points:np.ndarray, image:Optional[np.ndarray]=None, filename:Optional[Path]=None, bbox:Optional[np.ndarray]=None, bbox_linecolor=(128,255,0)):
     """
 
     :param points: xy points with shape = [i,2]
@@ -158,7 +173,9 @@ def create_heatmap_report(points:np.ndarray, image:Optional[np.ndarray]=None, fi
         # one channel gray scale image to 3 channel gray scale image
         im_gray = np.stack([im_gray, im_gray, im_gray], axis=-1)
         if bbox is not None:
-            im_gray = draw_bbox(im_gray, bbox, linecolor=(128, 255, 0))
+            print("bbox")
+            print(bbox)
+            im_gray = draw_bbox(im_gray, bbox, linecolor=bbox_linecolor)
         plt.imshow(im_gray, cmap="gray")
     plt.axis("off")
 
@@ -608,11 +625,12 @@ def main_report(
         object_names=["Needle holder","Forceps","Scissors","None"],
         concat_axis=1,
         resize_factor=.5,
-        circle_radius=20.,
+        circle_radius=16.,
         expected_video_width=1110,
         expected_video_height=420,
         visualization_length_unit="cm",
-        confidence_score_thr=0.0
+        confidence_score_thr=0.0,
+        oa_bbox_linecolor=[0,255,128]
 ):
     """
 
@@ -696,7 +714,7 @@ def main_report(
         # scisors_frames - frames with visible scissors qr code
         bboxes = np.asarray(json_data["incision_bboxes"])
         relative_presence = RelativePresenceInOperatingArea()
-        relative_presence.set_operation_area_based_on_bboxes(bboxes, resize_factor=resize_factor)
+        relative_presence.set_operation_area_based_on_bboxes(bboxes)
 
         frame_ids_list = np.asarray(frame_ids).tolist()
         json_data = save_json(
@@ -725,7 +743,10 @@ def main_report(
 
             img = skimage.transform.resize(img, size_output_img[::-1], preserve_range=True).astype(img.dtype)
             if relative_presence.operating_area_bbox is not None:
-                img = draw_bbox(img, relative_presence.operating_area_bbox, linecolor=(128, 255, 0))
+                oa_bbox_resized = np.asarray(relative_presence.operating_area_bbox.copy())
+#                 print(oa_bbox_resized)
+                oa_bbox_resized = oa_bbox_resized * resize_factor
+                img = draw_bbox(img, oa_bbox_resized, linecolor=oa_bbox_linecolor)
 
             if not(i % 10):
                 logger.debug(f'Frame {i} processed!')
@@ -772,18 +793,18 @@ def main_report(
                                 (int(position[0]), int(position[1])),
                                 int(circle_radius/resize_factor),
                                 color,
-                                thickness=int(4/resize_factor),
+                                thickness=int(2./resize_factor),
                             )
 
                             # draw track ID, coordinates: bottom-left
                             cv2.putText(
                                 img,
                                 str(object_names[class_id]),
-                                (int(position[0]+(circle_radius*1.5)), int(position[1]-circle_radius*1.)),
+                                (int(position[0]+(circle_radius*2.5)), int(position[1]-circle_radius*1.)),
                                 cv2.FONT_HERSHEY_SIMPLEX,
                                 fontScale=.5/resize_factor,
                                 color=color_text,
-                                thickness=int(2/resize_factor),
+                                thickness=int(2./resize_factor),
                             )
 
                 #else:
@@ -847,6 +868,8 @@ def main_report(
                                     os.path.join(outputdir, f"fig_{i}a_{simplename}_graph.jpg"))
 
             oz_presence = relative_presence.calculate_presence(data_pixel)
+            image_presence = relative_presence.draw_image(img_first.copy(), data_pixel, bbox_linecolor=oa_bbox_linecolor)
+            cv2.imwrite(str(Path(outputdir)/ f"{simplename}_area_presence.jpg"), image_presence)
             # obj_name = object_name.lower().replace(" ", "_")
             # 
             #
@@ -858,13 +881,15 @@ def main_report(
                 data_results[f'{object_name} velocity'] = V
                 data_results[f'{object_name} unit'] = unit
                 data_results[f'{object_name} visibility [%]'] = float(100 * T/video_duration_s)
-                data_results[f'{object_name} zone presence [%]'] = float(100 * oz_presence)
+                data_results[f'{object_name} area presence [%]'] = float(100 * oz_presence)
 
             oa_bbox = None
-            if object_name == "Needle Holder":
+            if simplename == "needle_holder":
+                logger.debug("adding operating area to the heatmap")
                 oa_bbox = relative_presence.operating_area_bbox
 
-            create_heatmap_report(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg", bbox=oa_bbox)
+            create_heatmap_report_plt(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg", 
+                                      bbox=oa_bbox, bbox_linecolor=oa_bbox_linecolor)
 
         #save statistic to file
         save_json(data_results, os.path.join(outputdir, "results.json"))
