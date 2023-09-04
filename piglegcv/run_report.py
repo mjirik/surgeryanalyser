@@ -451,8 +451,8 @@ def plot3(fig):
 
 
 #ds_threshold [m]
-def create_video_report(frame_ids, data_pixels, source_fps, pix_size, QRinit:bool, object_colors, object_names,
-                        video_size, ds_threshold=0.1, dpi=300, scissors_frames=[], visualization_unit="cm"):
+def create_video_report_figure(frame_ids, data_pixels, source_fps, pix_size, QRinit:bool, object_colors, object_names,
+                               video_size, ds_threshold=0.1, dpi=300, scissors_frames=[], visualization_unit="cm"):
 
     ##################
     ## second graph
@@ -708,8 +708,8 @@ def main_report(
                 "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
             }, '{}/tracks_points.json'.format(outputdir), update=False)
         
-        fig, ax, ds_max = create_video_report(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
-                                              object_names, size_output_fig, dpi=300, scissors_frames=scissors_frames)
+        fig, ax, ds_max = create_video_report_figure(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
+                                                     object_names, size_output_fig, dpi=300, scissors_frames=scissors_frames)
 
 
         img_first = None

@@ -149,6 +149,7 @@ def web_report(request, filename_hash:str):
                         "Scissors length [m]",
                         "Scissors visibility [s]",
                         "Scissors visibility [%]",
+                        "Needle holder area presence [%]",
                         # "Tweezes length", "Tweezes duration" # typo in some older processings
                         # "Tweezers length", "Tweezers duration", # backward compatibility
                         # "Scissors length", "Scissors duration", # backward compatibility
