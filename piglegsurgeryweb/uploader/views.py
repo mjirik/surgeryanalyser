@@ -82,6 +82,7 @@ def show_report_list(request):
     for e in files:
         qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
 
+    logger.debug(qs_data)
     context = {
         "uploadedfiles": files, 'queue_size': queue_size(), 'qs_data': qs_data
     }
