@@ -82,9 +82,10 @@ def show_report_list(request):
     for e in files:
         qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
 
+    qs_json = json.dumps(qs_data)
     logger.debug(qs_data)
     context = {
-        "uploadedfiles": files, 'queue_size': queue_size(), 'qs_data': qs_data
+        "uploadedfiles": files, 'queue_size': queue_size(), 'qs_json': qs_json
     }
 
     return render(request, "uploader/report_list.html", context)
@@ -92,8 +93,13 @@ def show_report_list(request):
 def owners_reports_list(request, owner_hash:str):
     owner = get_object_or_404(Owner, hash=owner_hash)
     files = UploadedFile.objects.filter(owner=owner).order_by('-uploaded_at')
+    qs_data = {}
+    for e in files:
+        qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
+
+    qs_json = json.dumps(qs_data)
     context = {
-        "uploadedfiles": files, 'queue_size': queue_size()
+        "uploadedfiles": files, 'queue_size': queue_size(), "qs_json": qs_json
     }
 
     return render(request, "uploader/report_list.html", context)
