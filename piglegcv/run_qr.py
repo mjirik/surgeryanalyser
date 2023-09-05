@@ -19,7 +19,7 @@ def read_qr_from_frame(img, qreader=None):
     is_detected = False
     box = []
     qr_text = None
-    qr_scissors_frames= []
+    qr_scissors_frame_detected = False
 
     for bbox, _oneqr in detected_qr_codes:
         if _oneqr != None:
@@ -33,7 +33,7 @@ def read_qr_from_frame(img, qreader=None):
                 qr_size = 0.027
                 qr_text = txt
             elif txt == "Scissors 30 mm":
-                qr_scissors_frames.append(i)
+                qr_scissors_frame_detected=True
                 if qr_text is None:
                     # Use only if no Scale QR code was detected
                     qr_size = 0.030
@@ -59,7 +59,7 @@ def read_qr_from_frame(img, qreader=None):
                 a = np.array(box[0])
                 b = np.array(box[1])
                 pix_size = qr_size / np.linalg.norm(a-b)
-    return pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frames
+    return pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frame_detected
 
 
 def main_qr(filename, output_dir):
@@ -94,7 +94,10 @@ def main_qr(filename, output_dir):
             #try read QR code
             logger.debug(f"frame={i}")
                 
-            pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frames = read_qr_from_frame(img, qreader)
+            pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frame_detected = read_qr_from_frame(img, qreader)
+            if qr_scissors_frame_detected:
+                qr_scissors_frames.append(i)
+                
     qr_data = {}
 
 # todo use the pigleg holder detection based estimator
