@@ -78,8 +78,12 @@ def resend_report_email(request, filename_id):
 # @login_required(login_url='/admin/')
 def show_report_list(request):
     files = UploadedFile.objects.all().order_by('-uploaded_at')
+    qs_data = {}
+    for e in files:
+        qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
+
     context = {
-        "uploadedfiles": files, 'queue_size': queue_size()
+        "uploadedfiles": files, 'queue_size': queue_size(), 'qs_data': qs_data
     }
 
     return render(request, "uploader/report_list.html", context)
