@@ -21,7 +21,7 @@
         </thead>
         <tbody>
         {% for uploadedfile in uploadedfiles %}
-        <tr>
+        <tr id="row{{uploadedfile.id}}">
             <th scope="col">
                 {% if uploadedfile.preview %}
 <!--                {{ uploadedfile.preview }}-->
@@ -55,7 +55,7 @@
         input.addEventListener('keyup', (e) => {
             for (const element_id in rdata) {
                 if (rdata[element_id].includes(e.target.value)) {
-                    const el = document.getElementById("card" + element_id);
+                    const el = document.getElementById("row" + element_id);
                     el.classList.remove("d-none");
                 } else {
                     document.getElementById("card" + element_id).classList.add('d-none');
