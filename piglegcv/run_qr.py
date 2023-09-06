@@ -63,7 +63,7 @@ def bbox_info_extraction_from_frame(img, qreader=None):
                 a = np.array(qr_bbox[0])
                 b = np.array(qr_bbox[1])
                 pix_size_best = qr_size / np.linalg.norm(a-b)
-    return pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected, bbox_scene_area, bboxes_incision_area
+    return pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area
 
 
 def main_qr(filename, output_dir):
