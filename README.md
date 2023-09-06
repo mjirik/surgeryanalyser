@@ -39,11 +39,15 @@ wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco
 ```shell
 cd /webapps/piglegsurgery
 docker-compose --file docker-compose.dev.yml --env-file .env.dev down
+docker-compose --file docker-compose.dev.yml --env-file .env.dev up --build -d
+```
 
-docker build -t dev_piglegcv ./piglegcv/
-docker build -t dev_piglegweb ./docker/
+See the logs
+```shell
+docker-compose --file docker-compose.dev.yml --env-file .env.dev logs -f
+```
 
-docker-compose --file docker-compose.dev.yml --env-file .env.dev up --build
+```shell
 ```
 
 # Run in production 
