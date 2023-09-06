@@ -8,16 +8,20 @@ from tools import save_json, load_json
 from pathlib import Path
 from qreader import QReader
 
-def read_qr_from_frame(img, qreader=None):
+def bbox_info_extraction_from_frame(img, qreader=None):
+    # Todo Viktora
+    # bboxes_qr, bbox_scene_area, bboxes_incision_area = zazracna_funkce(img)
+
+
     if qreader is None:
         
         qreader = QReader()
     
     detected_qr_codes = qreader.detect_and_decode(image=img, return_bboxes=True)
-    pix_size = 1.0
+    pix_size_best = 1.0
     qr_size = 0.027
     is_detected = False
-    box = []
+    qr_bbox = []
     qr_text = None
     qr_scissors_frame_detected = False
 
@@ -46,7 +50,7 @@ def read_qr_from_frame(img, qreader=None):
 
                 # qreader returns detection bbox to input image, pyzbar reactangle and polygon to the bbox crop resized by resize_factor -> 
                 # qr code polygon in input image = polygon / resize_facor + bbox 
-                box = [[int(point.x / resize_factor + bbox[0]), int(point.y / resize_factor + bbox[1])] for point in oneqr.polygon]
+                qr_bbox = [[int(point.x / resize_factor + bbox[0]), int(point.y / resize_factor + bbox[1])] for point in oneqr.polygon]
 
                 # debug only
                 #cv2.drawContours(img, [np.asarray(box)], 0, (0, 255, 0), 2)
@@ -56,10 +60,10 @@ def read_qr_from_frame(img, qreader=None):
                 #cv2.imwrite(filename='_image.jpeg', img=img)
                 # debug only
 
-                a = np.array(box[0])
-                b = np.array(box[1])
-                pix_size = qr_size / np.linalg.norm(a-b)
-    return pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frame_detected
+                a = np.array(qr_bbox[0])
+                b = np.array(qr_bbox[1])
+                pix_size_best = qr_size / np.linalg.norm(a-b)
+    return pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected, bbox_scene_area, bboxes_incision_area
 
 
 def main_qr(filename, output_dir):
@@ -94,7 +98,7 @@ def main_qr(filename, output_dir):
             #try read QR code
             logger.debug(f"frame={i}")
                 
-            pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frame_detected = read_qr_from_frame(img, qreader)
+            pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frame_detected = bbox_info_extraction_from_frame(img, qreader)
             if qr_scissors_frame_detected:
                 qr_scissors_frames.append(i)
                 

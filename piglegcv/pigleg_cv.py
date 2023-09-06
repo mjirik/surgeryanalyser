@@ -24,7 +24,6 @@ from run_qr import main_qr
 import run_qr
 from run_report import main_report
 from run_perpendicular import main_perpendicular, get_frame_to_process
-from incision_detection_mmdet import run_incision_detection
 from tools import save_json
 
 
@@ -138,7 +137,7 @@ def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> di
 def run_image_processing(filename: Path, outputdir: Path, skip_qr=False) -> dict:
     logger.debug("Running image processing...")
     frame = get_frame_to_process(str(filename))
-    run_qr.read_qr_from_frame(frame)
+    run_qr.bbox_info_extraction_from_frame(frame)
     main_perpendicular(filename, outputdir)
     logger.debug("Perpendicular finished.")
     # TODO add predict image
