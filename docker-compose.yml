@@ -1,14 +1,16 @@
 version: '2'
 services:
   piglegweb:
+    container_name: "${PIGLEG_IMAGE_PREFIX}piglegweb"
     image: "${PIGLEG_IMAGE_PREFIX}piglegweb:latest"
     ports:
-      - '8000:${PIGLEG_PORT}'
+      - '${PIGLEG_PORT}:8000'
+      # outer:inner
     environment:
       - PIGLEGCV_HOSTNAME=piglegcv
       - PIGLEGCV_PORT=5000
-      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
-      - PIGLEGCV_PORT_DEVEL=5000
+#      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
+#      - PIGLEGCV_PORT_DEVEL=5000
 #      - DOCKERLOGNAME="devel"
 #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
@@ -17,12 +19,15 @@ services:
       - "${PIGLEG_LOG_DIR}:/root/pigleg/logs"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
   piglegcv:
+    container_name: "${PIGLEG_IMAGE_PREFIX}piglegcv"
     image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
 #    command: nvidia-smi
 #    runtime: nvidia
     ports:
       - '5000'
-      - '8888'
+#      - '8888'
+#      - '8808:8888'
+      - '${PIGLEG_JUPYTER_PORT}:8888'
 #    environment:
 #      - DOCKERLOGNAME=""
     volumes:
@@ -30,35 +35,18 @@ services:
       - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
       
-#  piglegcv_devel:
-#    privileged: true
-#    image: piglegcv_devel:latest
-##    command: nvidia-smi
-##    runtime: nvidia
-#    ports:
-#      - '5001:5000'
-#    environment:
-#      - DOCKERLOGNAME=devel
+#  redis:
+#    image: redis:7.0.11-alpine
+#    container_name: redis
+#    restart: always
+#    expose:
+#      - 6379
+#    command: >
+#      --loglevel warning
+##      --requirepass password
 #    volumes:
-#      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
-#      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
-#      - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
-
-#      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
-#  piglegcv_devel:
-#    image: piglegcv:latest
-#    ports:
-#      - '5000:5001'
-#    volumes:
-#      - "/webapps/piglegsurgery:/webapps/piglegsurgery"
-##      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
+#      - redis-data:/data:Z
 volumes:
-#  mariadb_data:
-#    driver: local
-#  moodle_data:
-#    driver: local
-#  moodledata_data:
-#    driver: local
   piglegweb:
     driver: local
   piglegcv:
