@@ -25,6 +25,7 @@ import run_qr
 from run_report import main_report
 from run_perpendicular import main_perpendicular, get_frame_to_process
 from tools import save_json
+from incision_detection_mmdet import run_incision_detection
 
 
 def do_computer_vision(filename, outputdir, meta):
