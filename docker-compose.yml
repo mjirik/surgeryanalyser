@@ -21,6 +21,7 @@ services:
   piglegcv:
     container_name: "${PIGLEG_IMAGE_PREFIX}piglegcv"
     image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
+    build: piglegcv
 #    command: nvidia-smi
 #    runtime: nvidia
     ports:
