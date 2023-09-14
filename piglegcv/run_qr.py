@@ -10,6 +10,7 @@ from qreader import QReader
 import math
 from mmdet.apis import inference_detector
 import torch
+import pprint
 
 
 def get_bboxes(img):
@@ -115,8 +116,10 @@ def bbox_info_extraction_from_frame(img, qreader=None):
     qr_data['size_by_scene'] = size_by_scene
     qr_data['text'] = qr_text
     qr_data["pix_size_single_frame_detector_m"] = qr_size / qr_side_length
-    qr_data["bbox_scene_area"] = bbox_scene_area
+    qr_data["bbox_scene_area"] = np.asarray(bbox_scene_area).tolist()
     qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
+
+    logger.debug(pprint.pformat(qr_data))
 
     return qr_data
     #pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area
