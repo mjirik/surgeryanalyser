@@ -18,6 +18,8 @@ services:
       - "${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media"
       - "${PIGLEG_LOG_DIR}:/root/pigleg/logs"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
+    networks:
+      - dev_piglegnet
   dev_piglegcv:
     container_name: "${PIGLEG_IMAGE_PREFIX}piglegcv"
     image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
@@ -35,6 +37,8 @@ services:
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
       - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
+    networks:
+      - dev_piglegnet
 
 #  redis:
 #    image: redis:7.0.11-alpine
@@ -52,3 +56,6 @@ volumes:
     driver: local
   dev_piglegcv:
     driver: local
+
+networks:
+  dev_piglegnet:

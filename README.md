@@ -38,19 +38,39 @@ wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco
     
 ```shell
 cd ~/projects/piglegsurgery
-docker-compose --file docker-compose.yml --file docker-compose.dev.yml --env-file .env.dev down
-docker-compose --file docker-compose.yml --file docker-compose.dev.yml --env-file .env.dev up --build -d
+docker-compose -f docker-compose.dev.yml --env-file .env.dev down
+docker-compose -f docker-compose.dev.yml --env-file .env.dev up --build -d
 ```
 
-See the logs
+## Logs
+
+See all the logs
 ```shell
-docker-compose --file docker-compose.dev.yml --env-file .env.dev logs -f
+multitail logs/*.txt
 ```
 
+See the logs from webapp
+```shell
+docker-compose -f docker-compose.dev.yml --env-file .env.dev logs -f
+```
 
-
+## Make migrations
 
 ```shell
+docker compose -f docker-compose.dev.yml --env-file .env.dev exec dev_piglegweb bash
+```
+or 
+```shell
+docker exec -it piglegsurgery_piglegweb_1 bash
+```
+
+Make migrations
+```shell
+cd piglegsurgery/piglegsurgeryweb/
+# sudo chmod a+rw uploader/migrations/
+conda run -n piglegsurgery python manage.py makemigrations
+conda run -n piglegsurgery python manage.py migrate
+
 ```
 
 # Run in production 
@@ -79,9 +99,6 @@ docker-compose down
 ## Check logs
 
 
-```shell
-multitail ~/pigleg/logs/*.txt
-```
 
 ## Get into docker
 
@@ -110,21 +127,6 @@ conda run -n piglegsurgery python manage.py makemigrations
 conda run -n piglegsurgery python manage.py migrate
 
 ```
-
-# Development
-
-
-```shell
-cd /webapps/piglegsurgery
-docker-compose --file docker-compose.dev.yml --env-file .env.dev down
-
-docker build -t dev_piglegcv ./piglegcv/
-docker build -t dev_piglegweb ./docker/
-
-docker-compose --file docker-compose.dev.yml --env-file .env.dev up --build
-
-```
-
 
 # Other cases
 
