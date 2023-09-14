@@ -7,11 +7,43 @@ from loguru import logger
 from tools import save_json, load_json
 from pathlib import Path
 from qreader import QReader
+from mmdet.apis import inference_detector
+import torch
+
+
+def get_bboxes(img):
+    single_model_path = Path(__file__).parent / "resources/single_image_detector/mdl.pth"
+    single_image_model = torch.load(single_model_path)["model"]
+    single_image_model_cfg = torch.load(single_model_path)["my_params"]
+    single_image_model.cfg = single_image_model_cfg
+
+    bboxes, masks = inference_detector(single_image_model, img)
+
+    bboxes_inicision_area = bboxes[0]
+    bbox_scene_area = bboxes[1][0]
+    bboxes_qr = bboxes[3][:2]
+
+    threshold = 0.8
+    ia_filter = bboxes_inicision_area[:, -1] > threshold
+    bboxes_inicision_area = bboxes_inicision_area[ia_filter]
+
+    threshold = 0.35
+    if bbox_scene_area[-1] < threshold:
+        bbox_scene_area = []
+
+    threshold = 0.9
+    qr_filter = bboxes_qr[:, -1] > threshold
+    bboxes_qr = bboxes_qr[qr_filter]
+
+    qr_mask = masks[3][0]
+
+    side_length = math.sqrt(np.count_nonzero(qr_mask == True))
+
+    return bboxes_inicision_area, bbox_scene_area, bboxes_qr, side_length
 
 def bbox_info_extraction_from_frame(img, qreader=None):
     # Todo Viktora
-    # bboxes_qr, bbox_scene_area, bboxes_incision_area = zazracna_funkce(img)
-
+    bboxes_qr, bbox_scene_area, bboxes_incision_area, qr_side_length = get_bboxes(img)
 
     if qreader is None:
         
