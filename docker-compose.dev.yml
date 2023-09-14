@@ -1,45 +1,52 @@
 version: '2'
 services:
   dev_piglegweb:
-    image: "dev_piglegweb:latest"
-    build: ./docker
+    container_name: "${PIGLEG_IMAGE_PREFIX}piglegweb"
+    image: "${PIGLEG_IMAGE_PREFIX}piglegweb:latest"
     ports:
       - '${PIGLEG_PORT}:8000'
       # outer:inner
     environment:
       - PIGLEGCV_HOSTNAME=dev_piglegcv
       - PIGLEGCV_PORT=5000
-      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
-      - PIGLEGCV_PORT_DEVEL=5000
-    env_file:
-      - ".env.dev"
-#      - DOCKERLOGNAME="devel"
-#     dockery vidí své vnitřní porty, nikoliv ty vnější
+    #      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
+    #      - PIGLEGCV_PORT_DEVEL=5000
+    #      - DOCKERLOGNAME="devel"
+    #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
       - "${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media"
       - "${PIGLEG_LOG_DIR}:/root/pigleg/logs"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
   dev_piglegcv:
-    image: "dev_piglegcv:latest"
-    build: ./piglegcv
-    env_file:
-      - ".env.dev"
-#    command: nvidia-smi
-#    runtime: nvidia
+    container_name: "${PIGLEG_IMAGE_PREFIX}piglegcv"
+    image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
+    build: piglegcv
+    #    command: nvidia-smi
+    #    runtime: nvidia
     ports:
       - '5000'
-      - '8808:8888'
-      # outer:inner
-#    environment:
-#      - DOCKERLOGNAME=""
+      #      - '8888'
+      #      - '8808:8888'
+      - '${PIGLEG_JUPYTER_PORT}:8888'
+    #    environment:
+    #      - DOCKERLOGNAME=""
     volumes:
-      # outer:inner
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
       - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
-      - "${PIGLEG_NBCONFIG_DIR}:/root/.jupyter"
-      
+
+#  redis:
+#    image: redis:7.0.11-alpine
+#    container_name: redis
+#    restart: always
+#    expose:
+#      - 6379
+#    command: >
+#      --loglevel warning
+##      --requirepass password
+#    volumes:
+#      - redis-data:/data:Z
 volumes:
   dev_piglegweb:
     driver: local
