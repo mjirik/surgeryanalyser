@@ -37,9 +37,9 @@ wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco
 # Run devel 
     
 ```shell
-cd /webapps/piglegsurgery
-docker-compose --file docker-compose.dev.yml --env-file .env.dev down
-docker-compose --file docker-compose.dev.yml --env-file .env.dev up --build -d
+cd ~/projects/piglegsurgery
+docker-compose --file docker-compose.yml --file docker-compose.dev.yml --env-file .env.dev down
+docker-compose --file docker-compose.yml --file docker-compose.dev.yml --env-file .env.dev up --build -d
 ```
 
 See the logs
@@ -55,16 +55,9 @@ docker-compose --file docker-compose.dev.yml --env-file .env.dev logs -f
 Update repo, Stop, Build and Up again
 ```shell
 cd /webapps/piglegsurgery
-docker-compose --env-file .env.prod down
 
-git pull
-docker-compose down
-
-docker build -t piglegcv ./piglegcv/
-docker build -t dev_piglegcv_devel ./piglegcv/
-docker build -t piglegweb ./docker/
-
-docker-compose --env-file .env.prod up -d
+docker-compose --env-file .env down
+docker-compose --env-file .env up --build -d
 
 docker-compose --env-file .env.prod logs -f
 
