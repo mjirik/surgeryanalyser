@@ -7,6 +7,7 @@ from loguru import logger
 from tools import save_json, load_json
 from pathlib import Path
 from qreader import QReader
+import math
 from mmdet.apis import inference_detector
 import torch
 
@@ -42,6 +43,8 @@ def get_bboxes(img):
     return bboxes_inicision_area, bbox_scene_area, bboxes_qr, side_length
 
 def bbox_info_extraction_from_frame(img, qreader=None):
+    img = np.asarray(img)
+    width = img.shape[1]
     # Todo Viktora
     bboxes_qr, bbox_scene_area, bboxes_incision_area, qr_side_length = get_bboxes(img)
 
@@ -95,7 +98,27 @@ def bbox_info_extraction_from_frame(img, qreader=None):
                 a = np.array(qr_bbox[0])
                 b = np.array(qr_bbox[1])
                 pix_size_best = qr_size / np.linalg.norm(a-b)
-    return pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area
+        output = {}
+    # todo use the pigleg holder detection based estimator
+    qr_data = {}
+    qr_data["pix_size_method"] = "QR" if is_detected else "video size estimation"
+    if True:
+        # pigleg_holder_width [m] - usually it takes around half of the image width
+        scene_size = 0.300 # [m]
+        size_by_scene = scene_size / width
+
+
+    qr_data['is_detected'] = is_detected
+    qr_data['box'] = qr_bbox
+    qr_data['pix_size'] = pix_size_best
+    qr_data['qr_size'] = qr_size
+    qr_data['size_by_scene'] = size_by_scene
+    qr_data['text'] = qr_text
+    qr_data["pix_size_single_frame_detector_m"] = qr_size / qr_side_length
+    qr_data["bbox_scene_area"] = bbox_scene_area
+
+    return qr_data
+    #pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area
 
 
 def main_qr(filename, output_dir):
@@ -112,6 +135,8 @@ def main_qr(filename, output_dir):
     i = -1
     first_img = False
     image_processing_step = 10
+
+    # TODO find another way how to detect scissors
     while cap.isOpened():
         i += 1
         ret = cap.grab()
@@ -129,26 +154,13 @@ def main_qr(filename, output_dir):
 
             #try read QR code
             logger.debug(f"frame={i}")
-                
+
             pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frame_detected = bbox_info_extraction_from_frame(img, qreader)
             if qr_scissors_frame_detected:
                 qr_scissors_frames.append(i)
-                
-    qr_data = {}
 
-# todo use the pigleg holder detection based estimator
-    qr_data["pix_size_method"] = "QR" if is_detected else "video size estimation"
-    if True:
-        # pigleg_holder_width [m] - usually it takes around half of the image width
-        scene_size = 0.300 # [m]
-        size_by_scene = scene_size / width
+    qr_data = bbox_info_extraction_from_frame(img, qreader)
 
-    qr_data['is_detected'] = is_detected
-    qr_data['box'] = box
-    qr_data['pix_size'] = pix_size
-    qr_data['qr_size'] = qr_size
-    qr_data['size_by_scene'] = size_by_scene
-    qr_data['text'] = qr_text
     qr_data['qr_scissors_frames'] = qr_scissors_frames
 
     # save QR to the json file
