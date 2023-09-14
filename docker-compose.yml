@@ -37,7 +37,7 @@ services:
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
       - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
-      - .jupyter/:/root/.jupyter/
+      - "./.jupyter:/root/.jupyter"
     networks:
       - piglegnet
 
