@@ -116,6 +116,7 @@ def bbox_info_extraction_from_frame(img, qreader=None):
     qr_data['text'] = qr_text
     qr_data["pix_size_single_frame_detector_m"] = qr_size / qr_side_length
     qr_data["bbox_scene_area"] = bbox_scene_area
+    qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
 
     return qr_data
     #pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area
@@ -155,7 +156,8 @@ def main_qr(filename, output_dir):
             #try read QR code
             logger.debug(f"frame={i}")
 
-            pix_size, qr_size, is_detected, box, qr_text, qr_scissors_frame_detected = bbox_info_extraction_from_frame(img, qreader)
+            qr_data = bbox_info_extraction_from_frame(img, qreader)
+            qr_scissors_frame_detected = qr_data["qr_scissors_frame_detected"]
             if qr_scissors_frame_detected:
                 qr_scissors_frames.append(i)
 
