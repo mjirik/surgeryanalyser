@@ -38,6 +38,8 @@ done
 
 # move into $HOME directory
 cd $HOMEDIR
+ls -la
+pwd
 NBCONFIGFN=$HOMEDIR/.jupyter/jupyter_notebook_config.json
 if [ ! -f ./.jupyter/jupyter_notebook_config.json ]; then
    echo "jupyter passwd reset!"
