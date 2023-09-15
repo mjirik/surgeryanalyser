@@ -30,8 +30,10 @@ from loguru import logger
 try:
     from run_report import load_json, save_json
     from incision_detection_mmdet import run_incision_detection
+    from stitch_detection_mmdet import run_stitch_detection
 except ImportError:
     from .incision_detection_mmdet import run_incision_detection
+    from .stitch_detection_mmdet import run_stitch_detection
     from .run_report import load_json, save_json
 
 
@@ -281,8 +283,11 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     for i, image in enumerate(imgs):
         incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
         draw_expected_stitch_line(image, pixelsize_m, blue_line_distance_m=0.005, filename=f"{outputdir}/incision_stitch_{i}.jpg", visualization=False)
-            
+
         
+    for i, image in enumerate(imgs):
+        bboxes_stitches, labels_stitches = run_stitch_detection(image, f"{outputdir}/stitch_detection_{i}.json")
+        run_stitch_analyser(image, bboxes_stitches, labels_stitches, f"{outputdir}/stitch_detection_{i}.jpg")
 
     # uncomment to run old incision detection
     # image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)
