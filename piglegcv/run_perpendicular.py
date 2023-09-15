@@ -30,10 +30,10 @@ from loguru import logger
 try:
     from run_report import load_json, save_json
     from incision_detection_mmdet import run_incision_detection
-    from stitch_detection_mmdet import run_stitch_detection
+    from stitch_detection_mmdet import run_stitch_detection, run_stitch_analyser
 except ImportError:
     from .incision_detection_mmdet import run_incision_detection
-    from .stitch_detection_mmdet import run_stitch_detection
+    from .stitch_detection_mmdet import run_stitch_detection, run_stitch_analyser
     from .run_report import load_json, save_json
 
 
