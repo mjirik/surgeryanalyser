@@ -21,7 +21,10 @@ def flatten_dict(dct:dict, parent_key:str='', sep:str='_') -> dict:
         if isinstance(v, dict):
             items.extend(flatten_dict(v, new_key, sep=sep).items())
         else:
-            items.append((new_key, v))
+            if isinstance(v, list):
+                items.append((new_key, str(v)))
+            else:
+                items.append((new_key, v))
     return dict(items)
 
 
