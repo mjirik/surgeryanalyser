@@ -103,6 +103,7 @@ RUN mkdir -p ./.cache/torch/hub/checkpoints/
 RUN mkdir -p ./resources/incision_detection_models
 RUN mkdir -p ./resources/yolov7_qrdet
 RUN mkdir -p ./resources/single_image_detector
+RUN mkdir -p ./resources/stitch_detection_models/
 
 # this is for final user appuser
 # RUN TORCH_CHECKPOINTS=./.cache/torch/hub/checkpoints/
@@ -116,6 +117,7 @@ COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/i
 COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth $TORCH_CHECKPOINTS
 COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
 COPY ./resources/single_image_detector/mdl.pth ./resources/single_image_detector
+COPY ./resources/resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
 
 # Copy scripts
 # check permissions of folowing files before this docker file build!!!
