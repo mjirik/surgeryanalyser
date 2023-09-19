@@ -152,8 +152,9 @@ def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, cla
         plt.plot(x2, res2.intercept + res2.slope*x2, 'b:')
 
         plt.legend()
-    plt.show()
-    #plt.savefig(output_filename, dpi=300) # save image with result
+    # plt.show()
+    plt.savefig(output_filename, dpi=300) # save image with result
+    plt.close()
 
 
 
