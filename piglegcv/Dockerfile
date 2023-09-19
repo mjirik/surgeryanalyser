@@ -133,6 +133,8 @@ COPY ./tools.py .
 COPY ./run_services.sh .
 COPY ./incision_detection_mmdet.py .
 COPY ./run_tracker_bytetrack.py .
+COPY ./stitch_detection_mmdet.py .
+COPY ./stitch_detection_mmdet_config.py .
 
 # USER root
 RUN chmod 777 ./
