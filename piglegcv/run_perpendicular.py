@@ -280,14 +280,16 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     json_meta = load_json(f"{outputdir}/meta.json")
     pixelsize_m =  json_meta["pixelsize_m_by_incision_size"]
     
-    for i, image in enumerate(imgs):
-        incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg", json_file_name=f"perpendicular_{i}.json")
-        draw_expected_stitch_line(image, pixelsize_m, blue_line_distance_m=0.005, filename=f"{outputdir}/incision_stitch_{i}.jpg", visualization=False)
-        
     json_meta["stitch_scores"] = []
     for i, image in enumerate(imgs):
+        #perpendicular analysis
+        incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg", json_file_name=f"perpendicular_{i}.json")
+        #expected stitches
+        expected_stitch_line = draw_expected_stitch_line(image, pixelsize_m, blue_line_distance_m=0.005, filename=f"{outputdir}/incision_stitch_{i}.jpg", visualization=False)
+        #stitch detection
         bboxes_stitches, labels_stitches = run_stitch_detection(image, f"{outputdir}/stitch_detection_{i}.json")
-        stitch_score = run_stitch_analyser(image, bboxes_stitches, labels_stitches, f"{outputdir}/stitch_detection_{i}.jpg")
+        #score
+        stitch_score = run_stitch_analyser(image, bboxes_stitches, labels_stitches, expected_stitch_line, f"{outputdir}/stitch_detection_{i}.jpg")
         json_meta["stitch_scores"].append(stitch_score)
     save_json(json_meta, f"{outputdir}/meta.json")
     
@@ -456,8 +458,8 @@ def draw_expected_stitch_line(img_bgr, pixelsize_m, blue_line_distance_m, filena
     plt.imshow(img_bgr[:,:,::-1], cmap=plt.cm.gray)
 
     shift_px = blue_line_distance_m / pixelsize_m
-
     rows, cols = image.shape
+    y0 = y1 = rows/2.
     for _, angle, dist in zip(*hough_line_peaks(h, theta, d, num_peaks=1)):
         y0 = (dist - 0 * np.cos(angle)) / np.sin(angle)
         y1 = (dist - cols * np.cos(angle)) / np.sin(angle)
@@ -470,6 +472,8 @@ def draw_expected_stitch_line(img_bgr, pixelsize_m, blue_line_distance_m, filena
     plt.axis('off')
     plt.savefig(filename, bbox_inches='tight')
     plt.close(fig)
+    
+    return([y0, y1, shift_px])
     
 
 if __name__ == '__main__':

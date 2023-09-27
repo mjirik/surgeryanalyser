@@ -94,15 +94,15 @@ def run_stitch_detection(img, json_file, device="cuda"):
                "stitch_bboxes": bboxes_best
               }, json_file)
     
-    logger.debug(f"number of detected incisions = {len(bboxes_best)}")
-    logger.debug(f"Stitch detection finished: {json_file}")
+    logger.debug(f"number of detected stitches = {len(bboxes_best)}")
+    logger.debug(f"Stitch detection finished, boxes in: {json_file}")
 
     return bboxes_best, labels_best
     #return bboxes, labels
 
 
 
-def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, class_names=['<5', '5-10', '10-15','>15'], bbox_color=[(0,255,0),(0,255,255), (0,165,255), (0,0,255)]):
+def run_stitch_analyser(img, bboxes, labels, expected_stitch_line, output_filename, basewidth=640, class_names=['<5', '5-10', '10-15','>15'], bbox_color=[(0,255,0),(0,255,255), (0,165,255), (0,0,255)]):
 
     #uniform size ... basewidth
     #wpercent = 1.0
@@ -131,17 +131,27 @@ def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, cla
     ax.imshow(img)
 
     #show_result_pyplot(model, args.img, result, score_thr=0.0)
+    _, cols, _ = img.shape
     
     r_score = 0.
     s_score = 1.
     ########
     if len(bboxes)>1:
-        x1 = np.concatenate([bboxes[:,0],bboxes[:,2]])
-        y1 = np.concatenate([bboxes[:,1],bboxes[:,1]])
-        res1 = stats.linregress(x1, y1)
-        x2 = np.concatenate([bboxes[:,0],bboxes[:,2]])
-        y2 = np.concatenate([bboxes[:,3],bboxes[:,3]])
-        res2 = stats.linregress(x2, y2)
+        
+        w = np.abs(bboxes[:,0] - bboxes[:,2])
+        h = np.abs(bboxes[:,1] - bboxes[:,3])
+                
+        pad = 0.1 * np.max(np.array([w,h]), axis=0)
+        
+        x = bboxes[:,0] + w/2
+        y1 = bboxes[:,1]+pad
+        y2 = bboxes[:,3]-pad
+        
+        ax.plot(x, y1, 'bo')
+        ax.plot(x, y2, 'bo')
+        
+        res1 = stats.linregress(x, y1)
+        res2 = stats.linregress(x, y2)
 
         score1 = res1.rvalue**2
         score2 = res2.rvalue**2
@@ -152,10 +162,15 @@ def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, cla
         logger.debug(f"R-squared upper line: {score1:.3f}")
         logger.debug(f"R-squared lower line: {score2:.3f}")
         
-        xx1 = np.array([np.min(x1), np.max(x1)])
-        xx2 = np.array([np.min(x2), np.max(x2)])
-        ax.plot(xx1, res1.intercept + res1.slope*xx1, 'b:', label=f"R-squared: {r_score:.2f}, Slope-diff: {s_score:.3f}")
-        ax.plot(xx2, res2.intercept + res2.slope*xx2, 'b:')
+        xx = np.array([0, cols])
+        ax.plot(xx, res1.intercept + res1.slope*xx, 'b:', label=f"R-squared: {r_score:.2f}, Slope-diff: {s_score:.3f}")
+        ax.plot(xx, res2.intercept + res2.slope*xx, 'b:')
+        
+        #reference lines
+        y0, y1, shift_px = expected_stitch_line
+        ax.plot(xx, [wpercent*(y0 + shift_px), wpercent*(y1 + shift_px)], 'k')
+        ax.plot(xx, [wpercent*(y0 - shift_px), wpercent*(y1 - shift_px)], 'k')
+        
 
         plt.legend()
     # plt.show()
