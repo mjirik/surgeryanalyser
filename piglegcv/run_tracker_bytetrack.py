@@ -43,13 +43,13 @@ def main_tracker_bytetrack(config_file, filename, checkpoint, output_dir="", dev
     # Parsing arguments
     #args = parser.parse_args()
 #     args = parser.parse_args(shlex.split(commandline))
-    print(f"device={device}")
+#     print(f"device={device}")
     
     imgs = mmcv.VideoReader(str(filename))
 
     # build the model from a config file and a checkpoint file
     model = init_model(config_file, str(checkpoint), device=device)
-    print(model)
+    #print(model)
 
     # test and show/save the images
     tracking_results = {'tracks':[]}
