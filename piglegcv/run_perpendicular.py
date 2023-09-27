@@ -28,15 +28,15 @@ from matplotlib import cm
 from loguru import logger
 
 try:
-    from run_report import load_json, save_json
+#     from run_report import load_json, save_json
     from incision_detection_mmdet import run_incision_detection
     from stitch_detection_mmdet import run_stitch_detection, run_stitch_analyser
 except ImportError:
     from .incision_detection_mmdet import run_incision_detection
     from .stitch_detection_mmdet import run_stitch_detection, run_stitch_analyser
-    from .run_report import load_json, save_json
+#     from .run_report import load_json, save_json
 
-
+from tools import load_json, save_json
 
 
 
@@ -281,14 +281,16 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
     pixelsize_m =  json_meta["pixelsize_m_by_incision_size"]
     
     for i, image in enumerate(imgs):
-        incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg")
+        incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg", json_file_name=f"perpendicular_{i}.json")
         draw_expected_stitch_line(image, pixelsize_m, blue_line_distance_m=0.005, filename=f"{outputdir}/incision_stitch_{i}.jpg", visualization=False)
-
         
+    json_meta["stitch_scores"] = []
     for i, image in enumerate(imgs):
         bboxes_stitches, labels_stitches = run_stitch_detection(image, f"{outputdir}/stitch_detection_{i}.json")
-        run_stitch_analyser(image, bboxes_stitches, labels_stitches, f"{outputdir}/stitch_detection_{i}.jpg")
-
+        stitch_score = run_stitch_analyser(image, bboxes_stitches, labels_stitches, f"{outputdir}/stitch_detection_{i}.jpg")
+        json_meta["stitch_scores"].append(stitch_score)
+    save_json(json_meta, f"{outputdir}/meta.json")
+    
     # uncomment to run old incision detection
     # image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)
     # incision_angle_evaluation(image, canny_sigma, outputdir)
@@ -305,20 +307,13 @@ def find_largest_incision_bbox(bboxes):
     return max_bbox
 
 
-def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="perpedicular.jpg"):
+def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="perpedicular.jpg", json_file_name="perpendicular.json"):
     ##  image je oříznutý
     image = skimage.color.rgb2gray(image[:, :, ::-1])
     #Resize to uniform size
     image = resize(image, (100,200))
     
     edges = canny(image, sigma=canny_sigma)
-    
-    #plt.imshow(edges)
-    #plt.show()
-    #exit()
-  
-    #thresh = threshold_otsu(image)
-    #thresh = threshold_local(image, 101, offset=0)
     
     #dilatation of edges defines amount pixels to detrmine binary Otsu treshold
     edges = binary_dilation(edges)
@@ -327,25 +322,9 @@ def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="pe
     edges = binary_dilation(edges)
     edges = binary_dilation(edges)
     
-    #his = histogram(image[edges==1], normalize=True)
-    #cumhist = np.cumsum(his[0])
-    #thresh = 0.5
-    #for i in range(len(cumhist)-1):
-        #if cumhist[i] < 0.5 and cumhist[i+1] >= 0.5:
-            #thresh = his[1][i]
-    #plt.plot(his[1], his[0])
-    #plt.show()
-    #exit()
-    #thresh = threshold_otsu(image)
     thresh = threshold_otsu(image[edges==1])
     #edges = skeletonize(image < thresh)
     edges *= image < thresh
-    
-    #print(thresh)
-    #plt.imshow(np.array(edges, dtype=np.int32))
-    #plt.show()
-    #exit()
-    
     
     ############################
     #perpendicular analysis
@@ -429,8 +408,7 @@ def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="pe
     data_results = {}
     data_results['intersections'] = intersections
     data_results['alphas'] = intersections_alphas
-    json_file_name = os.path.join(outputdir, "perpendicular.json")
-    save_json(data_results, json_file_name)
+    save_json(data_results, os.path.join(outputdir, json_file_name))
 
     #filtering
     if len(intersections) > 0:
@@ -449,6 +427,7 @@ def incision_angle_evaluation(image, canny_sigma, outputdir, output_filename="pe
     plt.tight_layout()
     #plt.show()
     plt.savefig(os.path.join(outputdir, output_filename), dpi=300)
+    plt.close(fig)
     
 def draw_expected_stitch_line(img_bgr, pixelsize_m, blue_line_distance_m, filename, visualization=False):
     

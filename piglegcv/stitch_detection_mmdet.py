@@ -39,7 +39,6 @@ def parse_args():
 #def main(args):
 def run_stitch_detection(img, json_file, device="cuda"):
 
-
     cfg = Config.fromfile('./stitch_detection_mmdet_config.py')
 
     checkpoint_path = Path(__file__).parent / "resources/stitch_detection_models/model.pth"
@@ -55,7 +54,6 @@ def run_stitch_detection(img, json_file, device="cuda"):
             np.full(bbox.shape[0], i, dtype=np.int32)
             for i, bbox in enumerate(bbox_result)
         ]
-
 
     labels_best = []
     bboxes_best = []
@@ -95,17 +93,16 @@ def run_stitch_detection(img, json_file, device="cuda"):
     save_json({"stitch_labels": labels_best,
                "stitch_bboxes": bboxes_best
               }, json_file)
-
-    logger.debug("stitch detection finished "+json_file)
+    
+    logger.debug(f"number of detected incisions = {len(bboxes_best)}")
+    logger.debug(f"Stitch detection finished: {json_file}")
 
     return bboxes_best, labels_best
     #return bboxes, labels
 
 
 
-
 def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, class_names=['<5', '5-10', '10-15','>15'], bbox_color=[(0,255,0),(0,255,255), (0,165,255), (0,0,255)]):
-
 
     #uniform size ... basewidth
     #wpercent = 1.0
@@ -121,7 +118,7 @@ def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, cla
     if len(bboxes)>0:
         bboxes[:,0:4] *= wpercent
 
-        img = imshow_det_bboxes(img, bboxes, labels, class_names=class_names,
+        img = imshow_det_bboxes(img[:,:,::-1], bboxes, labels, class_names=class_names,
                         bbox_color=bbox_color,
                         text_color='white',
                         mask_color=None,
@@ -129,10 +126,14 @@ def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, cla
                         font_size=12, show=False)
 
 
-    plt.imshow(img)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.imshow(img)
 
     #show_result_pyplot(model, args.img, result, score_thr=0.0)
-
+    
+    r_score = 0.
+    s_score = 1.
     ########
     if len(bboxes)>1:
         x1 = np.concatenate([bboxes[:,0],bboxes[:,2]])
@@ -144,19 +145,25 @@ def run_stitch_analyser(img, bboxes, labels, output_filename, basewidth=640, cla
 
         score1 = res1.rvalue**2
         score2 = res2.rvalue**2
+        
+        r_score = (score1+score2)/2.0  
+        s_score = abs(res1.slope - res2.slope)
 
         logger.debug(f"R-squared upper line: {score1:.3f}")
         logger.debug(f"R-squared lower line: {score2:.3f}")
-
-        plt.plot(x1, res1.intercept + res1.slope*x1, 'b:', label=f"R-squared: {(score1+score2)/2.0:.2f}, Slope-diff: {abs(res1.slope - res2.slope):.3f}")
-        plt.plot(x2, res2.intercept + res2.slope*x2, 'b:')
+        
+        xx1 = np.array([np.min(x1), np.max(x1)])
+        xx2 = np.array([np.min(x2), np.max(x2)])
+        ax.plot(xx1, res1.intercept + res1.slope*xx1, 'b:', label=f"R-squared: {r_score:.2f}, Slope-diff: {s_score:.3f}")
+        ax.plot(xx2, res2.intercept + res2.slope*xx2, 'b:')
 
         plt.legend()
     # plt.show()
-    plt.savefig(output_filename, dpi=300) # save image with result
-    plt.close()
-
-
+    plt.axis('off')
+    plt.savefig(output_filename, bbox_inches='tight', dpi=300) # save image with result
+    plt.close(fig)
+    
+    return({'r_score':r_score, 's_score':s_score})
 
 if __name__ == '__main__':
 
