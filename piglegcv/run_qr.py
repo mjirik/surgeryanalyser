@@ -22,8 +22,8 @@ def get_bboxes(img):
     bboxes, masks = inference_detector(single_image_model, img)
 
     bboxes_inicision_area = bboxes[0]
-    bbox_scene_area = bboxes[1][0]
-    bboxes_qr = bboxes[3][:2]
+    bbox_scene_area = bboxes[1][0] if bboxes[1].shape[0] > 0 else None
+    bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
 
     threshold = 0.8
     ia_filter = bboxes_inicision_area[:, -1] > threshold
@@ -47,7 +47,7 @@ def bbox_info_extraction_from_frame(img, qreader=None):
     img = np.asarray(img)
     width = img.shape[1]
     # Todo Viktora
-    bboxes_qr, bbox_scene_area, bboxes_incision_area, qr_side_length = get_bboxes(img)
+    bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length = get_bboxes(img)
 
     if qreader is None:
         
