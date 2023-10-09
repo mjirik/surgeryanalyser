@@ -22,7 +22,11 @@ def get_bboxes(img):
     bboxes, masks = inference_detector(single_image_model, img)
 
     bboxes_inicision_area = bboxes[0]
-    bbox_scene_area = bboxes[1][0] if bboxes[1].shape[0] > 0 else None
+    if bboxes[1].shape[0] > 0:
+        bbox_scene_area = bboxes[1][0]
+    else:
+        bbox_scene_area = None
+
     bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
 
     threshold = 0.8
@@ -116,7 +120,7 @@ def bbox_info_extraction_from_frame(img, qreader=None):
     qr_data['size_by_scene'] = size_by_scene
     qr_data['text'] = qr_text
     qr_data["pix_size_single_frame_detector_m"] = qr_size / qr_side_length
-    qr_data["bbox_scene_area"] = np.asarray(bbox_scene_area).tolist()
+    qr_data["bbox_scene_area"] = np.asarray(bbox_scene_area).tolist() if bbox_scene_area is not None else None
     qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
 
     logger.debug(pprint.pformat(qr_data))
@@ -151,10 +155,10 @@ def main_qr(filename, output_dir):
         if not i % image_processing_step:
             _, img = cap.retrieve()
         
-            if not first_img:
-                first_img = True
-                width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
-                height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
+            # if not first_img:
+            #     first_img = True
+            #     width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)  # float `width`
+            #     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float `height`
 
             #try read QR code
             logger.debug(f"frame={i}")
