@@ -22,28 +22,36 @@ def get_bboxes(img):
     bboxes, masks = inference_detector(single_image_model, img)
 
     bboxes_inicision_area = bboxes[0]
+    
+    scene_area_threshold = 0.35
     if bboxes[1].shape[0] > 0:
         bbox_scene_area = bboxes[1][0]
+        if bbox_scene_area[-1] < scene_area_threshold:
+            bbox_scene_area = None
+        
     else:
         bbox_scene_area = None
+        
+    qr_threshold = 0.9
+    if bboxes[3].shape[0] > 0:
+        logger.debug(bboxes[3])
+        bboxes_qr = bboxes[3][:2]
+        qr_filter = bboxes_qr[:, -1] > qr_threshold
+        bboxes_qr = bboxes_qr[qr_filter]
+        
+        qr_mask = masks[3][0]
+        side_length = math.sqrt(np.count_nonzero(qr_mask == True))
+    else:
+        bboxes_qr = None
+        side_length = None
+#     bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
 
-    bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
-
-    threshold = 0.8
-    ia_filter = bboxes_inicision_area[:, -1] > threshold
+    ia_threshold = 0.8
+    ia_filter = bboxes_inicision_area[:, -1] > ia_threshold
     bboxes_inicision_area = bboxes_inicision_area[ia_filter]
 
-    threshold = 0.35
-    if bbox_scene_area[-1] < threshold:
-        bbox_scene_area = []
+ 
 
-    threshold = 0.9
-    qr_filter = bboxes_qr[:, -1] > threshold
-    bboxes_qr = bboxes_qr[qr_filter]
-
-    qr_mask = masks[3][0]
-
-    side_length = math.sqrt(np.count_nonzero(qr_mask == True))
 
     return bboxes_inicision_area, bbox_scene_area, bboxes_qr, side_length
 
@@ -119,7 +127,7 @@ def bbox_info_extraction_from_frame(img, qreader=None):
     qr_data['qr_size'] = qr_size
     qr_data['size_by_scene'] = size_by_scene
     qr_data['text'] = qr_text
-    qr_data["pix_size_single_frame_detector_m"] = qr_size / qr_side_length
+    qr_data["pix_size_single_frame_detector_m"] = qr_size / qr_side_length if qr_side_length else None
     qr_data["bbox_scene_area"] = np.asarray(bbox_scene_area).tolist() if bbox_scene_area is not None else None
     qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
 
