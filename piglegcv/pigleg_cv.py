@@ -93,7 +93,7 @@ class DoComputerVision():
         # make_report
 
         s = time.time()
-        self.frame = np.asarray(get_frame_to_process(str(self.filename)))
+        self.frame = get_frame_to_process(str(self.filename))
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
         qr_data['qr_scissors_frames'] = []
         logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")

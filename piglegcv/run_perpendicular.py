@@ -153,25 +153,25 @@ def get_frame_to_process(filename):
         ##################
         cap = cv2.VideoCapture(str(filename))
         last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-        print(last_frame)
+        logger.debug(last_frame)
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
         ret, img = cap.read()
         i = 0
         while (not ret) and (i < 20):
-            print('Last frame capture error, frame', last_frame - i)
+            logger.debug('Last frame capture error, frame', last_frame - i)
             cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - i - 1)
             ret, img = cap.read()
             i += 1
         cap.release()
         if not ret:
-            print('Last frame capture error')
+            logger.error('Last frame capture error')
             return None
         #print(img.shape)
         #plt.imshow(img)
         #plt.show()
         #exit()
         ###################
-    return img
+    return np.asarray(img)
 
 
 def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma):
