@@ -169,7 +169,7 @@ class DoComputerVision():
 
         logger.debug(f"filename_cropped={self.filename_cropped}")
         # return self.filename_cropped
-        return new_file_path
+        return self.filename
 
 
 def do_computer_vision(filename, outputdir, meta):
