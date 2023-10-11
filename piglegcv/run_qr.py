@@ -124,6 +124,7 @@ def bbox_info_extraction_from_frame(img, qreader=None):
     qr_data['is_detected'] = is_detected
     qr_data['box'] = qr_bbox
     qr_data['pix_size'] = pix_size_best
+    # qr_data['incision_bboxes'] = bboxes_incision_area
     qr_data['qr_size'] = qr_size
     qr_data['size_by_scene'] = size_by_scene
     qr_data['text'] = qr_text
