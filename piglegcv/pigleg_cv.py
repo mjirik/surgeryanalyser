@@ -178,12 +178,13 @@ class DoComputerVision():
 
         # Recreate the modified file path
         new_file_path = new_base_name + '.' + "mp4"
+        logger.debug(f"new_file_path={new_file_path}")
 
         # s = ["ffmpeg", '-i', str(self.filename), '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
         #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
         s = ["ffmpeg", '-i', str(self.filename),
              "-vcodec", "h264", "-filter:v", "scale=720:-1" '-an', "-y", "-b:v", "2000k",
-             base_name]
+             new_file_path]
         p = subprocess.Popen(s)
         p.wait()
 
