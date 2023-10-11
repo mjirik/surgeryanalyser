@@ -199,7 +199,7 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img, local_output_data_dir:Path, expected_incision_size_mm=70, device="cuda"):
+def run_incision_detection(img, local_output_data_dir:Path, meta:dict, expected_incision_size_mm=70, device="cuda"):
     # todo J. Viktora
     # nemělo by tady být spíš device="cuda" ? To ale nefunguje protože: RuntimeError: nms_impl: implementation for device cuda:0 not found.
     # img = mmcv.imread(str(img_fn))
@@ -252,10 +252,10 @@ def run_incision_detection(img, local_output_data_dir:Path, expected_incision_si
         pixelsize_m = 0.001 * expected_incision_size_mm / incision_size_px[1]
     else:
         pixelsize_m = None
-    json_file = Path(local_output_data_dir) / "meta.json"
-    save_json({"pixelsize_m_by_incision_size": pixelsize_m, 
+    # json_file = Path(local_output_data_dir) / "meta.json"
+    meta.update({"pixelsize_m_by_incision_size": pixelsize_m,
                "incision_bboxes": bboxes.tolist()
-              }, json_file)
+              })
 
     return imgs, bboxes
 

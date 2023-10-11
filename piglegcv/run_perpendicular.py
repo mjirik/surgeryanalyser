@@ -266,7 +266,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
     return image
 
 
-def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
+def main_perpendicular(filename, outputdir, meta:dict, roi=(0.08, 0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
     logger.debug("main_perpendicular...")
     img = get_frame_to_process(filename)
 
@@ -276,12 +276,11 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
         return
 
     logger.debug("incision detection ...")
-    imgs, bboxes = run_incision_detection(img, outputdir)
+    imgs, bboxes = run_incision_detection(img, outputdir, meta)
     logger.debug(f"len(imgs)={len(imgs)}")
-    json_meta = load_json(f"{outputdir}/meta.json")
-    pixelsize_m =  json_meta["pixelsize_m_by_incision_size"]
+    pixelsize_m =  meta["pixelsize_m_by_incision_size"]
     
-    json_meta["stitch_scores"] = []
+    meta["stitch_scores"] = []
     for i, image in enumerate(imgs):
         #perpendicular analysis
         incision_angle_evaluation(image, canny_sigma, outputdir, output_filename=f"perpendicular_incision_{i}.jpg", json_file_name=f"perpendicular_{i}.json")
@@ -291,8 +290,8 @@ def main_perpendicular(filename, outputdir, roi=(0.08,0.04), needle_holder_id=0,
         bboxes_stitches, labels_stitches = run_stitch_detection(image, f"{outputdir}/stitch_detection_{i}.json")
         #score
         stitch_score = run_stitch_analyser(image, bboxes_stitches, labels_stitches, expected_stitch_line, f"{outputdir}/stitch_detection_{i}.jpg")
-        json_meta["stitch_scores"].append(stitch_score)
-    save_json(json_meta, f"{outputdir}/meta.json")
+        meta["stitch_scores"].append(stitch_score)
+    # save_json(json_meta, f"{outputdir}/meta.json")
     
     # uncomment to run old incision detection
     # image = do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma)

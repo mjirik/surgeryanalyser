@@ -70,7 +70,8 @@ class DoComputerVision():
         logger.debug("Running image processing...")
         frame = get_frame_to_process(str(self.filename))
         run_qr.bbox_info_extraction_from_frame(frame)
-        main_perpendicular(self.filename, self.outputdir)
+        main_perpendicular(self.filename, self.outputdir, self.meta)
+        save_json(self.meta, Path(self.outputdir) / "meta.json")
         logger.debug("Perpendicular finished.")
 
     def run_video_processing2(self):
