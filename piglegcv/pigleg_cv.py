@@ -7,6 +7,7 @@ from typing import Optional
 import shutil
 import traceback
 import time
+import subprocess
 #try:
 #    from .run_tracker_lite import main_tracker
 #    from .run_tracker_bytetrack import main_tracker_bytetrack
@@ -59,7 +60,7 @@ class DoComputerVision():
                 self.run_image_processing()
             else:
                 #run_video_processing(filename, outputdir)
-                self.run_video_processing2()
+                self.run_video_processing()
             save_json(self.meta, Path(self.outputdir) / "meta.json")
 
             logger.debug("Work finished")
@@ -77,7 +78,7 @@ class DoComputerVision():
         main_perpendicular(self.filename, self.outputdir, self.meta)
         logger.debug("Perpendicular finished.")
 
-    def run_video_processing2(self):
+    def run_video_processing(self):
 
         """
 
@@ -176,7 +177,15 @@ class DoComputerVision():
         new_base_name = base_name + "_edited"
 
         # Recreate the modified file path
-        new_file_path = new_base_name + '.' + extension
+        new_file_path = new_base_name + '.' + "mp4"
+
+        # s = ["ffmpeg", '-i', str(self.filename), '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
+        #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
+        s = ["ffmpeg", '-i', str(self.filename),
+             "-vcodec", "h264", "-filter:v", "scale=720:-1" '-an', "-y", "-b:v", "2000k",
+             base_name]
+        p = subprocess.Popen(s)
+        p.wait()
 
         return self.filename
         # return new_file_path
