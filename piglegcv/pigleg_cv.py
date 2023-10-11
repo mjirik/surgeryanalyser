@@ -60,6 +60,7 @@ class DoComputerVision():
             else:
                 #run_video_processing(filename, outputdir)
                 self.run_video_processing2()
+            save_json(self.meta, Path(self.outputdir) / "meta.json")
 
             logger.debug("Work finished")
         except Exception as e:
@@ -68,10 +69,12 @@ class DoComputerVision():
 
     def run_image_processing(self):
         logger.debug("Running image processing...")
-        frame = get_frame_to_process(str(self.filename))
-        run_qr.bbox_info_extraction_from_frame(frame)
+        self.frame = get_frame_to_process(str(self.filename_cropped))
+        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
+        qr_data['qr_scissors_frames'] = []
+        self.meta["qr_data"] = qr_data
+
         main_perpendicular(self.filename, self.outputdir, self.meta)
-        save_json(self.meta, Path(self.outputdir) / "meta.json")
         logger.debug("Perpendicular finished.")
 
     def run_video_processing2(self):
@@ -106,14 +109,10 @@ class DoComputerVision():
         logger.debug(f"Cropping done in {time.time() - s}s.")
 
         s = time.time()
-        self.frame = get_frame_to_process(str(self.filename_cropped))
-        logger.debug(self.frame)
-        logger.debug(type(self.frame))
-        logger.debug(self.frame.shape)
-        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
-        qr_data['qr_scissors_frames'] = []
-        self.meta["qr_data"] = qr_data
+        self.run_image_processing()
         logger.debug(f"Single frame processing on cropped mediafile finished in {time.time() - s}s.")
+
+        logger.debug(f"Image processing finished in {time.time() - s}s.")
 
         s = time.time()
         main_tracker_bytetrack(
@@ -133,7 +132,6 @@ class DoComputerVision():
         logger.debug(f"Report finished in {time.time() - s}s.")
 
         logger.debug("Report based on video is finished.")
-        save_json(self.meta, Path(self.outputdir) / "meta.json")
         logger.debug("Video processing finished")
 
         #
