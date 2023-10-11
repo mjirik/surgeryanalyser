@@ -54,6 +54,8 @@ def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
 
     if width:
         scale = None
+    if height:
+        scale = None
 
     frame_id = 0
     while cap.isOpened():
