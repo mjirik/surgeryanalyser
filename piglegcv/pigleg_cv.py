@@ -51,6 +51,7 @@ class DoComputerVision():
 
 
     def run(self):
+        self.meta = {}
         logger.debug(f"CV processing started on {self.filename}, outputdir={self.outputdir}")
 
         try:
