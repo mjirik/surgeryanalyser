@@ -148,7 +148,7 @@ class DoComputerVision():
         # s = ["ffmpeg", '-i', str(self.filename), '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
         #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
 
-        filter_str = '"'
+        filter_str = ''
         cr_out_w = 400
         cr_out_h = 100
         cr_x = 0
