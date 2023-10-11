@@ -164,7 +164,7 @@ class DoComputerVision():
         # logger.debug("Video processing finished")
 
     def rotate_rescale_crop(self):
-        base_name, extension = self.filename.rsplit('.', 1)
+        base_name, extension = str(self.filename).rsplit('.', 1)
 
         # Add "_edited" to the base name
         new_base_name = base_name + "_edited"
