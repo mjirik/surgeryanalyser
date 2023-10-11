@@ -8,10 +8,25 @@ import shutil
 def test_empty_test():
     assert True
 
+
+def test_whole_piglegcv_test2():
     
-def test_whole_piglegcv():
+    do_the_test("*/pigleg_test2_2.mp4")
     
-    img_pths = list(Path("../piglegsurgeryweb/media/upload/").glob("*/Anasto*.mp4"))
+def test_whole_piglegcv_test_video_end():
+    do_the_test("*/test_video_end.mp4")
+    
+# def test_whole_piglegcv_Anasto.mp4
+#     do_the_test("*/Anasto*.mp4")
+
+# @pytest.fixtures.paramteres([
+#     "*/pigleg_test2_2.mp4", 
+#     "*/test_video_end.mp4", 
+#     "*/test_video_end.mp4"
+# ])
+def do_the_test(path_mask):
+#     pigleg_test2
+    img_pths = list(Path("../piglegsurgeryweb/media/upload/").glob(path_mask))
     
     outputdir = "./del_pytest_video_output/"
     outputdirp = Path(outputdir)

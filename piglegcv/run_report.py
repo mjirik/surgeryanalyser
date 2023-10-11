@@ -50,9 +50,10 @@ def plot_skeleton(img, joints, threshold, thickness):
     #plt.show()
     
 def draw_bbox(img, bbox, linecolor=(255,0,0), linewidth=2):
-    bbox=np.asarray(bbox)
-    x1, y1, x2, y2, confidence = bbox.astype(int).tolist()
-    cv2.rectangle(img, (x1, y1), (x2, y2), linecolor, linewidth)
+    if bbox is not None:
+        bbox=np.asarray(bbox)
+        x1, y1, x2, y2, confidence = bbox.astype(int).tolist()
+        cv2.rectangle(img, (x1, y1), (x2, y2), linecolor, linewidth)
     return img
     
 
@@ -96,11 +97,13 @@ class RelativePresenceInOperatingArea(object):
     #     x, y = points[:, 0], points[:, 1]
         if len(points) > 0:
             for point in points:
-                
-                if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
+                if self.operating_area_bbox is None:
                     img = cv2.circle(img, (int(point[0]), int(point[1])), radius=0, color=(0, 255, 0), thickness=2)
                 else:
-                    img = cv2.circle(img, (int(point[0]), int(point[1])), radius=0, color=(0, 0, 255), thickness=2)
+                    if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
+                        img = cv2.circle(img, (int(point[0]), int(point[1])), radius=0, color=(0, 255, 0), thickness=2)
+                    else:
+                        img = cv2.circle(img, (int(point[0]), int(point[1])), radius=0, color=(0, 0, 255), thickness=2)
             return img
         else:
             return img
