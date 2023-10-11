@@ -25,6 +25,7 @@ import run_qr
 from run_report import main_report
 from run_perpendicular import main_perpendicular, get_frame_to_process
 from tools import save_json
+import numpy as np
 from incision_detection_mmdet import run_incision_detection
 # from run_qr import bbox_info_extraction_from_frame
 
@@ -92,7 +93,7 @@ class DoComputerVision():
         # make_report
 
         s = time.time()
-        self.frame = get_frame_to_process(str(self.filename))
+        self.frame = np.asarray(get_frame_to_process(str(self.filename)))
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
         qr_data['qr_scissors_frames'] = []
         logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")
