@@ -33,12 +33,12 @@ from incision_detection_mmdet import run_incision_detection
 
 class DoComputerVision():
     def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None):
-        self.filename = filename
-        self.outputdir = outputdir
-        self.meta = meta
+        self.filename:Path = Path(filename)
+        self.outputdir:Path = Path(outputdir)
+        self.meta:dict = meta
         self.logger_id = None
-        self.frame = None
-        self.filename_cropped = None
+        self.frame:Optional[np.ndarray] = None
+        self.filename_cropped:Optional[Path] = None
 
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
@@ -171,20 +171,19 @@ class DoComputerVision():
         # logger.debug("Video processing finished")
 
     def rotate_rescale_crop(self):
-        base_name, extension = str(self.filename).rsplit('.', 1)
+        # base_name, extension = str(self.filename).rsplit('.', 1)
 
-        # Add "_edited" to the base name
-        new_base_name = base_name + "_edited"
+        self.filename_cropped = self.outputdir / "cropped.mp4"
 
         # Recreate the modified file path
-        new_file_path = new_base_name + '.' + "mp4"
-        logger.debug(f"new_file_path={new_file_path}")
+        # new_file_path = new_base_name + '.' + "mp4"
+        logger.debug(f"self.filename_cropped={self.filename_cropped}")
 
         # s = ["ffmpeg", '-i', str(self.filename), '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
         #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
         s = ["ffmpeg", '-i', str(self.filename),
              "-vcodec", "h264", "-filter:v", "scale=720:-1" '-an', "-y", "-b:v", "2000k",
-             new_file_path]
+             str(self.filename_cropped)]
         p = subprocess.Popen(s)
         p.wait()
 
