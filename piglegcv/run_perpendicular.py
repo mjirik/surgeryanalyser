@@ -149,6 +149,7 @@ def get_frame_to_process(filename):
     if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
         img = cv2.imread(filename)
+        return np.asarray(img)
     else:
         ##################
         cap = cv2.VideoCapture(str(filename))
