@@ -135,42 +135,8 @@ class DoComputerVision():
         logger.debug("Report based on video is finished.")
         logger.debug("Video processing finished")
 
-        #
-        #
-        #
-        # s = time.time()
-        # main_qr(self.filename, self.outputdir)
-        # logger.debug(f"QR finished in {time.time() - s}s.")
-        # run_image_processing(self.filename, self.outputdir, skip_qr=True)
-        # s = time.time()
-        # logger.debug(f"Image processing finished in {time.time() - s}s.")
-        #
-        # # main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch.pth', filename, outputdir))
-        # # f"\"./resources/tracker_model_bytetrack/bytetrack_pigleg.py\" \"{filename}\" --output_dir \"{outputdir}\"",
-        # main_tracker_bytetrack(
-        #     config_file="./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
-        #     filename=self.filename,
-        #     output_dir=self.outputdir,
-        #     checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
-        #     device="cuda"
-        # )
-        # # run_media_processing(Path(filename), Path(outputdir))
-        # logger.debug(f"Tracker finished in {time.time() - s}s.")
-        #
-        # #
-        # # s = time.time()
-        # # main_mmpose(filename, outputdir)
-        # # logger.debug(f"MMpose finished in {time.time() - s}s.")
-        #
-        # logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
-        # logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
-        #
-        # main_report(self.filename, self.outputdir)
-        #
-        # logger.debug("Report based on video is finished.")
-        # logger.debug("Video processing finished")
 
-    def rotate_rescale_crop(self):
+    def rotate_rescale_crop(self, transpose=False):
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
         self.filename_cropped = self.outputdir / "cropped.mp4"
@@ -181,13 +147,27 @@ class DoComputerVision():
 
         # s = ["ffmpeg", '-i', str(self.filename), '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
         #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
+
+        filter_str = '"'
+        cr_out_w = 400
+        cr_out_h = 100
+        cr_x = 0
+        cr_y = 0
+        if True:
+            filter_str += f"crop={cr_out_w}:{cr_out_h}:{cr_x}:{cr_y},"
+        if transpose:
+            filter_str += "transpose=1,"
+
+        filter_str += 'scale="720:trunc(ow/a/2)*2"'
+
         s = ["ffmpeg", '-i', str(self.filename),
-             "-vcodec", "h264", "-filter:v", "scale=720:-1" '-an', "-y", "-b:v", "2000k",
-             str(self.filename_cropped)]
+             '-filter:v', filter_str, "-an", "-y", "-b:v", "500k",
+             str(self.filename_cropped)
+             ]
         p = subprocess.Popen(s)
         p.wait()
 
-        return self.filename
+        return self.filename_cropped
         # return new_file_path
 
 
