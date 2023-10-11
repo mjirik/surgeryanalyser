@@ -110,6 +110,7 @@ class DoComputerVision():
         logger.debug(self.frame.shape)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
         qr_data['qr_scissors_frames'] = []
+        self.meta["qr_data"] = qr_data
         logger.debug(f"Single frame processing on cropped mediafile finished in {time.time() - s}s.")
 
         s = time.time()
@@ -130,6 +131,7 @@ class DoComputerVision():
         logger.debug(f"Report finished in {time.time() - s}s.")
 
         logger.debug("Report based on video is finished.")
+        save_json(self.meta, Path(self.outputdir) / "meta.json")
         logger.debug("Video processing finished")
 
         #

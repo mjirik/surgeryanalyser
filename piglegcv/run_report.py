@@ -624,6 +624,7 @@ def insert_ruler_in_image(img, pixelsize, ruler_size=50, resize_factor=1., unit=
 #####################################
 def main_report(
         filename, outputdir,
+        meta:dict,
         object_colors=["b","r","g","m"],
         object_names=["Needle holder","Forceps","Scissors","None"],
         concat_axis=1,
@@ -633,7 +634,7 @@ def main_report(
         expected_video_height=420,
         visualization_length_unit="cm",
         confidence_score_thr=0.0,
-        oa_bbox_linecolor=[0,255,128]
+        oa_bbox_linecolor=[0,255,128],
 ):
     """
 
@@ -712,15 +713,16 @@ def main_report(
 
 
         # input QR data
-        json_data = load_json('{}/meta.json'.format(outputdir))
-        pix_size, is_qr_detected, scissors_frames = _qr_data_processing(json_data, fps)
+        # if meta is None:
+        #     meta = load_json('{}/meta.json'.format(outputdir))
+        pix_size, is_qr_detected, scissors_frames = _qr_data_processing(meta, fps)
         # scisors_frames - frames with visible scissors qr code
-        bboxes = np.asarray(json_data["incision_bboxes"])
+        bboxes = np.asarray(meta["incision_bboxes"])
         relative_presence = RelativePresenceInOperatingArea()
         relative_presence.set_operation_area_based_on_bboxes(bboxes)
 
         frame_ids_list = np.asarray(frame_ids).tolist()
-        json_data = save_json(
+        json_metadata = save_json(
             {
                 "frame_ids": frame_ids_list, 
                 "data_pixels_0": np.asarray(data_pixels[0]).tolist(),
