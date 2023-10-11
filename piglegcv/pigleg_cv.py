@@ -126,7 +126,7 @@ class DoComputerVision():
         logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
 
         s = time.time()
-        main_report(self.filename, self.outputdir)
+        main_report(self.filename, self.outputdir, self.meta)
         logger.debug(f"Report finished in {time.time() - s}s.")
 
         logger.debug("Report based on video is finished.")
