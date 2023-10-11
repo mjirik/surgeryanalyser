@@ -26,9 +26,159 @@ from run_report import main_report
 from run_perpendicular import main_perpendicular, get_frame_to_process
 from tools import save_json
 from incision_detection_mmdet import run_incision_detection
+# from run_qr import bbox_info_extraction_from_frame
+
+
+class DoComputerVision():
+    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None):
+        self.filename = filename
+        self.outputdir = outputdir
+        self.meta = meta
+        self.logger_id = None
+        self.frame = None
+        self.filename_cropped = None
+
+        log_format = loguru._defaults.LOGURU_FORMAT
+        self.logger_id = logger.add(
+            str(Path(outputdir) / "piglegcv_log.txt"),
+            format=log_format,
+            level="DEBUG",
+            rotation="1 week",
+            backtrace=True,
+            diagnose=True,
+        )
+
+
+    def run(self):
+        logger.debug(f"CV processing started on {self.filename}, outputdir={self.outputdir}")
+
+        try:
+            if Path(self.filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
+                self.run_image_processing(self.filename, self.outputdir)
+            else:
+                #run_video_processing(filename, outputdir)
+                self.run_video_processing2(self.filename, self.outputdir)
+
+            logger.debug("Work finished")
+        except Exception as e:
+            logger.error(traceback.format_exc())
+        logger.remove(self.logger_id)
+
+    def run_image_processing(self):
+        logger.debug("Running image processing...")
+        frame = get_frame_to_process(str(self.filename))
+        run_qr.bbox_info_extraction_from_frame(frame)
+        main_perpendicular(self.filename, self.outputdir)
+        logger.debug("Perpendicular finished.")
+
+    def run_video_processing2(self):
+
+        """
+
+        :param filename:
+        :param outputdir:
+        :param meta: might be used for progressbar
+        :return:
+        """
+        logger.debug("Running video processing...")
+        if self.meta is None:
+            meta = {}
+
+        # get_sigle_frame
+        # single_frame_processing ->
+        # video_preprocessing - rotate, rescale and crop -> file
+        # single_frame_processing on rotated
+        # bytrack
+        # make_report
+
+        s = time.time()
+        self.frame = get_frame_to_process(str(self.filename))
+        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
+        qr_data['qr_scissors_frames'] = []
+        logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")
+
+        # video_preprocessing - rotate, rescale and crop -> file
+        s = time.time()
+        self.filename_cropped = self.rotate_rescale_crop()
+        logger.debug(f"Cropping done in {time.time() - s}s.")
+
+        s = time.time()
+        self.frame = get_frame_to_process(str(self.filename_cropped))
+        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
+        qr_data['qr_scissors_frames'] = []
+        logger.debug(f"Single frame processing on cropped mediafile finished in {time.time() - s}s.")
+
+        s = time.time()
+        main_tracker_bytetrack(
+            config_file="./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
+            filename=self.filename,
+            output_dir=self.outputdir,
+            checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
+            device="cuda"
+        )
+        logger.debug(f"Tracker finished in {time.time() - s}s.")
+
+        logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
+        logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
+
+        s = time.time()
+        main_report(self.filename, self.outputdir)
+        logger.debug(f"Report finished in {time.time() - s}s.")
+
+        logger.debug("Report based on video is finished.")
+        logger.debug("Video processing finished")
+
+        #
+        #
+        #
+        # s = time.time()
+        # main_qr(self.filename, self.outputdir)
+        # logger.debug(f"QR finished in {time.time() - s}s.")
+        # run_image_processing(self.filename, self.outputdir, skip_qr=True)
+        # s = time.time()
+        # logger.debug(f"Image processing finished in {time.time() - s}s.")
+        #
+        # # main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch.pth', filename, outputdir))
+        # # f"\"./resources/tracker_model_bytetrack/bytetrack_pigleg.py\" \"{filename}\" --output_dir \"{outputdir}\"",
+        # main_tracker_bytetrack(
+        #     config_file="./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
+        #     filename=self.filename,
+        #     output_dir=self.outputdir,
+        #     checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
+        #     device="cuda"
+        # )
+        # # run_media_processing(Path(filename), Path(outputdir))
+        # logger.debug(f"Tracker finished in {time.time() - s}s.")
+        #
+        # #
+        # # s = time.time()
+        # # main_mmpose(filename, outputdir)
+        # # logger.debug(f"MMpose finished in {time.time() - s}s.")
+        #
+        # logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
+        # logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
+        #
+        # main_report(self.filename, self.outputdir)
+        #
+        # logger.debug("Report based on video is finished.")
+        # logger.debug("Video processing finished")
+
+    def rotate_rescale_crop(self):
+        base_name, extension = self.filename.rsplit('.', 1)
+
+        # Add "_edited" to the base name
+        new_base_name = base_name + "_edited"
+
+        # Recreate the modified file path
+        new_file_path = new_base_name + '.' + extension
+        return new_file_path
 
 
 def do_computer_vision(filename, outputdir, meta):
+    DoComputerVision(filename, outputdir, meta).run()
+
+
+def do_computer_vision_2(filename, outputdir, meta):
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
         str(Path(outputdir) / "piglegcv_log.txt"),

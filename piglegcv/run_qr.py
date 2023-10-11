@@ -138,6 +138,12 @@ def bbox_info_extraction_from_frame(img, qreader=None):
 
 
 def main_qr(filename, output_dir):
+    """
+    Detect QR cod in video and detect frames with scissors of the QR code.
+    :param filename:
+    :param output_dir:
+    :return:
+    """
     logger.debug("looking for qr code...")
     qreader = QReader()
     
