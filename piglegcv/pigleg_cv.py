@@ -57,7 +57,7 @@ class DoComputerVision():
                 self.run_image_processing()
             else:
                 #run_video_processing(filename, outputdir)
-                self.run_video_processing2(self.filename, self.outputdir)
+                self.run_video_processing2()
 
             logger.debug("Work finished")
         except Exception as e:
