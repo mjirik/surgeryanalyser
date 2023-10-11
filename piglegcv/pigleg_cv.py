@@ -167,8 +167,9 @@ class DoComputerVision():
         p = subprocess.Popen(s)
         p.wait()
 
-        return self.filename_cropped
-        # return new_file_path
+        logger.debug(f"filename_cropped={self.filename_cropped}")
+        # return self.filename_cropped
+        return new_file_path
 
 
 def do_computer_vision(filename, outputdir, meta):
