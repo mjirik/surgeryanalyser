@@ -54,7 +54,7 @@ class DoComputerVision():
 
         try:
             if Path(self.filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
-                self.run_image_processing(self.filename, self.outputdir)
+                self.run_image_processing()
             else:
                 #run_video_processing(filename, outputdir)
                 self.run_video_processing2(self.filename, self.outputdir)
