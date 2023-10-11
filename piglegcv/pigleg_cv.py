@@ -105,6 +105,9 @@ class DoComputerVision():
 
         s = time.time()
         self.frame = get_frame_to_process(str(self.filename_cropped))
+        logger.debug(self.frame)
+        logger.debug(type(self.frame))
+        logger.debug(self.frame.shape)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
         qr_data['qr_scissors_frames'] = []
         logger.debug(f"Single frame processing on cropped mediafile finished in {time.time() - s}s.")
@@ -172,7 +175,9 @@ class DoComputerVision():
 
         # Recreate the modified file path
         new_file_path = new_base_name + '.' + extension
-        return new_file_path
+
+        return self.filename
+        # return new_file_path
 
 
 def do_computer_vision(filename, outputdir, meta):
