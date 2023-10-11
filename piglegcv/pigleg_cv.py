@@ -153,7 +153,7 @@ class DoComputerVision():
         cr_out_h = 100
         cr_x = 0
         cr_y = 0
-        if True:
+        if False:
             filter_str += f"crop={cr_out_w}:{cr_out_h}:{cr_x}:{cr_y},"
         if transpose:
             filter_str += "transpose=1,"
