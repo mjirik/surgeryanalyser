@@ -865,7 +865,7 @@ def main_report(
         #plot graphs and store statistic
         data_results = {}
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
-            simplename = object_name.lower().replace(' ', '_')
+            simplename = object_name.lower().strip().replace(' ', '_')
 
             res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,
                                     object_name,

@@ -151,7 +151,7 @@ class DoComputerVision():
         transpose = False
         if self.frame.shape[0] > self.frame.shape[1]:
             transpose = True
-        self.filename_cropped = self.outputdir / "cropped.mp4"
+        self.filename_cropped = self.outputdir / "_cropped.mp4"
 
         # Recreate the modified file path
         # new_file_path = new_base_name + '.' + "mp4"

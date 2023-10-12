@@ -377,7 +377,11 @@ def add_generated_images(serverfile:UploadedFile):
     logger.debug(lst)
     # remove all older references and objects
     serverfile.bitmapimage_set.all().delete()
+
     for fn in lst:
+        # skip the files with __ in the beginning of the name
+        if Path(fn).name.startswith("__"):
+            continue
         pth_rel = op.relpath(fn, settings.MEDIA_ROOT)
         bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)
         bi.save()
