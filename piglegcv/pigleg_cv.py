@@ -160,16 +160,19 @@ class DoComputerVision():
 
         filter_str += 'scale="720:trunc(ow/a/2)*2"'
 
+        logger.debug(f"filename={self.filename}, {self.filename.exists()}")
         s = ["ffmpeg", '-i', str(self.filename),
              '-filter:v', filter_str, "-an", "-y", "-b:v", "500k",
              str(self.filename_cropped)
              ]
-        p = subprocess.Popen(s)
-        p.wait()
+        logger.debug(f"{' '.join(s)}")
+        # p = subprocess.Popen(s)
+        # p.wait()
+        subprocess.check_output(s)
 
-        logger.debug(f"filename_cropped={self.filename_cropped}")
-        # return self.filename_cropped
-        return self.filename
+        logger.debug(f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}")
+        return self.filename_cropped
+        # return self.filename
 
 
 def do_computer_vision(filename, outputdir, meta):
