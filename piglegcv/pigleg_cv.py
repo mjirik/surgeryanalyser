@@ -187,6 +187,7 @@ class DoComputerVision():
         logger.debug(f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}")
         make_images_from_video(
             self.filename_cropped,
+            outputdir=self.outputdir,
             filemask=str(self.filename_cropped.with_suffix(".jpg")),
             n_frames=1,
             create_meta_json=False
