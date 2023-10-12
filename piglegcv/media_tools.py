@@ -42,7 +42,8 @@ def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
                            filemask:str="{outputdir}/frame_{frame_id:0>6}.png",
                            width:Optional[int]=None,
                            height:Optional[int]=None,
-                           make_square:bool=False
+                           make_square:bool=False,
+                           create_meta_json:bool=True
                            ) -> Path:
     import cv2
     outputdir.mkdir(parents=True, exist_ok=True)
@@ -81,9 +82,10 @@ def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
             logger.trace(file_name)
     cap.release()
 
-    metadata = {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
-    json_file = outputdir / "meta.json"
-    save_json(metadata, json_file)
+    if create_meta_json:
+        metadata = {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
+        json_file = outputdir / "meta.json"
+        save_json(metadata, json_file)
 
 def rescale(frame, scale):
     import cv2

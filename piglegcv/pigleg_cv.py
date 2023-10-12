@@ -149,15 +149,14 @@ class DoComputerVision():
         # s = ["ffmpeg", '-i', str(self.filename), '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
         #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
 
-        # meta = self.meta
-        meta = {
-            "qr_data": {
-                "bbox_scene_area":{
-                    [0, 923.24, 536.68, 0.38988]
-                }
-                # xmin, ymin, xmax, ymax
-            }
-        }
+        meta = self.meta
+        # meta = {
+        #     "qr_data": {
+        #         "bbox_scene_area":
+        #             [0, 923.24, 536.68, 0.38988]
+        #         # xmin, ymin, xmax, ymax
+        #     }
+        # }
 
         filter_str = ''
 
@@ -186,7 +185,8 @@ class DoComputerVision():
         make_images_from_video(
             self.filename_cropped,
             filemask=str(self.filename_cropped.with_suffix(".jpg")),
-            n_frames=1
+            n_frames=1,
+            create_meta_json=False
         )
         return self.filename_cropped
         # return self.filename
