@@ -44,7 +44,7 @@
                 <!--                {{ uploadedfile.preview }}-->
                 <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
                 <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
-                       alt="thumbnail with the processed video" style="min-width: 66px;"></image>
+                       alt="thumbnail with the processed video" style="min-width: 66px; max-width: 100px;"></image>
                 {% endif %}
             </th>
             <th scope="row"><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">

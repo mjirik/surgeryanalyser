@@ -179,7 +179,7 @@ def pop_from_dict(d, key):
         d.pop(key)
 
 
-def make_preview(serverfile: UploadedFile, force:bool=False, height=300, make_square:bool=True) -> Path:
+def make_preview(serverfile: UploadedFile, force:bool=False, height=100, make_square:bool=True) -> Path:
     if serverfile.mediafile:
         input_file = Path(serverfile.mediafile.path)
         # if not input_file.exists():
