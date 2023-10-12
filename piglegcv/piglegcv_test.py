@@ -9,12 +9,12 @@ def test_empty_test():
     assert True
 
 
-def test_whole_piglegcv_test2():
+# def test_whole_piglegcv_test2():
+#
+#     do_the_test("*/pigleg_test2_2.mp4")
     
-    do_the_test("*/pigleg_test2_2.mp4")
-    
-def test_whole_piglegcv_test_video_end():
-    do_the_test("*/test_video_end.mp4")
+# def test_whole_piglegcv_test_video_end():
+#     do_the_test("*/test_video_end.mp4")
     
 # def test_whole_piglegcv_Anasto.mp4
 #     do_the_test("*/Anasto*.mp4")
@@ -24,11 +24,24 @@ def test_whole_piglegcv_test_video_end():
 #     "*/test_video_end.mp4", 
 #     "*/test_video_end.mp4"
 # ])
-def do_the_test(path_mask):
+meta = {
+    "qr_data": {
+        [0, 923.24, 536.68, 0.38988]
+    }
+}
+@pytest.mark.parametrize("path_mask,expected", [
+    ("*/pigleg_test2_2.mp4", []),
+    ("*/test_video_end.mp4", []),
+    ("*/test_Einzelknopfnaht.mov", []),
+    ("*/test_2023.02.22-B-Balßuweit-Kevin-Fortlaufend-transcutan_1.webm",[])
+    # ("*/Anasto*.mp4", []),
+    ])
+def test_do_the_test(path_mask, expected):
 #     pigleg_test2
     img_pths = list(Path("../piglegsurgeryweb/media/upload/").glob(path_mask))
-    
-    outputdir = "./del_pytest_video_output/"
+    img_pth = img_pths[0]
+
+    outputdir = f"./del_pytest_video_output/{img_pth.stem}"
     outputdirp = Path(outputdir)
     if outputdirp.exists():
         shutil.rmtree(outputdirp)
@@ -36,7 +49,7 @@ def do_the_test(path_mask):
     assert not outputdirp.exists()
         
     
-    pigleg_cv.do_computer_vision(img_pths[0], outputdir , meta=None)
+    pigleg_cv.do_computer_vision(img_pth, outputdir , meta=None)
     
     assert outputdirp.exists()
     
