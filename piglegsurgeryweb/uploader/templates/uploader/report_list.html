@@ -1,8 +1,25 @@
 {% extends 'base.html' %}
 
 {% block body%}
-<div class="container">
+<div
+        {% if user.is_authenticated %}
+            class="container-xl"
+        {% else %}
+            class="container"
+        {% endif %}
+>
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+    {% if request.user.is_staff %}
+        <a class="btn-secondary"
+           href="{% url 'uploader:upldate_all_uploaded_files' %}">
+            <i class="bi bi-arrow-clockwise"></i> Update all uploaded files
+        </a>
+        <a class="btn-secondary"
+           href="{% url 'admin:index' %}">
+            <i class="fa fa-gear"></i> Admin
+        </a>
+
+    {% endif %}
     <H2> List of reports </H2>
     <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
     <table class="table">
