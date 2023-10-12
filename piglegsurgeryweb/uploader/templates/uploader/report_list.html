@@ -3,55 +3,62 @@
 {% block body %}
 <div
         {% if user.is_authenticated %}
-            class="container-xxl"
+        class="container-xl"
         {% else %}
-            class="container"
+        class="container"
         {% endif %}
 >
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
     {% if request.user.is_staff %}
-        <a class="btn btn-secondary"
-           href="{% url 'uploader:update_all_uploaded_files' %}">
-            <i class="bi bi-arrow-clockwise"></i> Update all uploaded files
-        </a>
-        <a class="btn btn-secondary"
-           href="{% url 'admin:index' %}">
-            <i class="fa fa-gear"></i> Admin
-        </a>
+    <a class="btn btn-secondary"
+       href="{% url 'uploader:update_all_uploaded_files' %}">
+        <i class="bi bi-arrow-clockwise"></i> Update all uploaded files
+    </a>
+    <a class="btn btn-secondary"
+       href="{% url 'admin:index' %}">
+        <i class="fa fa-gear"></i> Admin
+    </a>
 
     {% endif %}
     <H2> List of reports </H2>
     <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
     <table class="table">
         <thead>
-            <tr>
-                <th scope="col"></th>
-                <th scope="col">Email</th>
-                <th scope="col">File name</th>
-                <th scope="col">Uploaded At</th>
-                {% if user.is_authenticated %}
-                <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>
-                <th scope="col">Started At</th>
-                <th scope="col">Finished At</th>
-                {% endif %}
-            </tr>
+        <tr>
+            <th scope="col"></th>
+            <th scope="col">Email</th>
+            <th scope="col">File name</th>
+            <th scope="col">Uploaded At</th>
+            {% if user.is_authenticated %}
+            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>
+            <th scope="col">Started At</th>
+            <th scope="col">Finished At</th>
+            {% endif %}
+        </tr>
         </thead>
         <tbody>
         {% for uploadedfile in uploadedfiles %}
         <tr class="" id="row{{uploadedfile.id}}">
             <th scope="col">
                 {% if uploadedfile.preview %}
-<!--                {{ uploadedfile.preview }}-->
-<!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
-                    <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>
+                <!--                {{ uploadedfile.preview }}-->
+                <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
+                <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
+                       alt="thumbnail with the processed video" style="min-width: 66px;"></image>
                 {% endif %}
             </th>
-            <th scope="row"> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.email }} </a> </th>
-            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile }}</a> </th>
-            <th> <a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile.uploaded_at |date:'Y-m-d H:i'}}</a> </th>
+            <th scope="row"><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{
+                uploadedfile.email }} </a></th>
+            <th><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{ uploadedfile
+                }}</a></th>
+            <th><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">{{
+                uploadedfile.uploaded_at |date:'Y-m-d H:i'}}</a></th>
             {% if user.is_authenticated %}
-            <th><a class="btn btn-light" href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}">Run</a></th>
-            <th><a class="btn btn-light" href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send Email</a></th>
+            <th><a class="btn btn-light"
+                   href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}">Run</a></th>
+            <th><a class="btn btn-light"
+                   href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send
+                Email</a></th>
             <th>{{ uploadedfile.started_at |date:'Y-m-d H:i'}}</th>
             <th>{{ uploadedfile.finished_at |date:'Y-m-d H:i'}}</th>
             {% endif %}
