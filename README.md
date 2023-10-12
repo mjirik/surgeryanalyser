@@ -75,6 +75,11 @@ conda run -n piglegsurgery python manage.py migrate
 
 # Run in production 
 
+Get resources
+```shell
+rsync -azvh ~/projects/piglegsurgery/piglegcv/resources /webapps/piglegsurgery/piglegcv/resources
+```
+
 Update repo, Stop, Build and Up again
 ```shell
 cd /webapps/piglegsurgery
