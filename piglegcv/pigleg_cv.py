@@ -148,12 +148,23 @@ class DoComputerVision():
         # s = ["ffmpeg", '-i', str(self.filename), '-ac', '2', "-y", "-b:v", "2000k", "-c:a", "aac", "-c:v", "libx264", "-b:a", "160k",
         #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
 
+        # meta = self.meta
+        meta = {
+            "qr_data": {
+                "bbox_scene_area":{
+                    [0, 923.24, 536.68, 0.38988]
+                }
+                # xmin, ymin, xmax, ymax
+            }
+        }
+
         filter_str = ''
-        cr_out_w = 400
-        cr_out_h = 100
-        cr_x = 0
-        cr_y = 0
-        if False:
+
+        if len(meta["qr_data"]["bbox_scene_area"]) > 0:
+            cr_out_w = meta["qr_data"]["bbox_scene_area"][2] - meta["qr_data"][0]
+            cr_out_h = meta["qr_data"]["bbox_scene_area"][3] - meta["qr_data"][1]
+            cr_x = meta["qr_data"]["bbox_scene_area"][0]
+            cr_y = meta["qr_data"]["bbox_scene_area"][1]
             filter_str += f"crop={cr_out_w}:{cr_out_h}:{cr_x}:{cr_y},"
         if transpose:
             filter_str += "transpose=1,"
@@ -171,6 +182,7 @@ class DoComputerVision():
         subprocess.check_output(s)
 
         logger.debug(f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}")
+        _make_images_from_video()
         return self.filename_cropped
         # return self.filename
 
@@ -321,6 +333,50 @@ def _make_images_from_video(filename: Path, outputdir: Path) -> Path:
     json_file = outputdir / "meta.json"
     save_json(metadata, json_file)
 
+
+def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
+                           scale=1,
+                           filemask:str="{outputdir}/frame_{frame_id:0>6}.png",
+                           width:Optional[int]=None,
+                           height:Optional[int]=None,
+                           make_square:bool=False
+                           ) -> Path:
+    import cv2
+    outputdir.mkdir(parents=True, exist_ok=True)
+
+    cap = cv2.VideoCapture(str(filename))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    if width:
+        scale = None
+    if height:
+        scale = None
+
+    frame_id = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if frame is None:
+            logger.warning(f"Reading frame {frame_id} in {str(filename)} failed.")
+            break
+        if scale is None and width is not None:
+            scale = width / frame.shape[1]
+        if scale is None and height is not None:
+            scale = height / frame.shape[0]
+
+        frame_id += 1
+        if frame_id > n_frames:
+            break
+        if not ret:
+            break
+        else:
+            file_name = filemask.format(outputdir=outputdir, frame_id=frame_id)
+            frame = rescale(frame, scale)
+            if make_square:
+                frame = crop_square(frame)
+            cv2.imwrite(file_name, frame)
+            logger.trace(file_name)
+    cap.release()
 
 if __name__ == "__main__":
     import argparse
