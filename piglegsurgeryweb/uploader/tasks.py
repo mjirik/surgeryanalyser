@@ -37,6 +37,7 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="12
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
     logger.debug("Creating request for processing")
+    logger.debug(f"hostname={hostname}, port={port}")
     query = {
         "filename": str(input_file),
         "outputdir": str(outputdir),
