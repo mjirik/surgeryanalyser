@@ -132,8 +132,10 @@ class DoComputerVision():
 
         s = time.time()
         data_results = main_report(self.filename, self.outputdir, self.meta)
-        data_results["Stitching r-score"] = self.meta["stitch_scores"]["r_score"]
-        data_results["Stitching s-score"] = self.meta["stitch_scores"]["s_score"]
+        if "stitch_scores" in self.meta:
+            if len(self.meta["stitch_scores"]) > 0:
+                data_results["Stitching r-score"] = self.meta["stitch_scores"][0]["r_score"]
+                data_results["Stitching s-score"] = self.meta["stitch_scores"][0]["s_score"]
         #save statistic to file
         save_json(data_results, self.outputdir / "results.json")
 
