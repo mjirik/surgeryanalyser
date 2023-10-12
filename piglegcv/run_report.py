@@ -897,15 +897,17 @@ def main_report(
                                       bbox=oa_bbox, bbox_linecolor=oa_bbox_linecolor)
 
         #save statistic to file
-        save_json(data_results, os.path.join(outputdir, "results.json"))
+        # save_json(data_results, os.path.join(outputdir, "results.json"))
 
         # TODO unlink but wait for finishing ffmpeg
         if output_video_fn.exists():
             output_video_fn_tmp.unlink()
 
         print(f'main_report: Video file {filename} is processed!')
+        return data_results
     else:
         print(f'main_report: Video file {filename} is not opended!')
+        return {}
 
 
     ##save perpendicular

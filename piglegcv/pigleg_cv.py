@@ -131,7 +131,12 @@ class DoComputerVision():
         logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
 
         s = time.time()
-        main_report(self.filename, self.outputdir, self.meta)
+        data_results = main_report(self.filename, self.outputdir, self.meta)
+        data_results["Stitching r-score"] = self.meta["stitch_scores"]["r_score"]
+        data_results["Stitching s-score"] = self.meta["stitch_scores"]["s_score"]
+        #save statistic to file
+        save_json(data_results, self.outputdir / "results.json")
+
         logger.debug(f"Report finished in {time.time() - s}s.")
 
         logger.debug("Report based on video is finished.")
