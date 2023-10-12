@@ -100,7 +100,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
 
     # (outputdir / "empty.txt").touch(exist_ok=True)
 
-    if input_file.suffix in (".mp4", ".avi"):
+    if input_file.suffix in (".mp4", ".avi", ".mov", ".webm"):
         make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
 
     # for video_pth in outputdir.glob("*.avi"):

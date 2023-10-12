@@ -83,7 +83,7 @@ def show_report_list(request):
         qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
 
     qs_json = json.dumps(qs_data)
-    logger.debug(qs_data)
+    # logger.debug(qs_data)
     context = {
         "uploadedfiles": files, 'queue_size': queue_size(), 'qs_json': qs_json
     }
@@ -191,6 +191,7 @@ def web_report(request, filename_hash:str):
         logger.debug(videofile.name)
         if videofile.exists():
             if videofile.name.startswith("__"):
+                logger.debug(f"Skipping video file {videofile.name}")
                 continue
             s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
             videofile_url = s[:s.rfind("/")] + "/" + videofile.name

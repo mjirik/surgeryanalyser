@@ -87,7 +87,7 @@ cd /webapps/piglegsurgery
 docker-compose --env-file .env down
 docker-compose --env-file .env up --build -d
 
-docker-compose --env-file .env.prod logs -f
+docker-compose --env-file .env logs -f
 
 ```
 

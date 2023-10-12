@@ -151,7 +151,7 @@ class DoComputerVision():
         transpose = False
         if self.frame.shape[0] > self.frame.shape[1]:
             transpose = True
-        self.filename_cropped = self.outputdir / "_cropped.mp4"
+        self.filename_cropped = self.outputdir / "__cropped.mp4"
 
         # Recreate the modified file path
         # new_file_path = new_base_name + '.' + "mp4"
@@ -196,7 +196,7 @@ class DoComputerVision():
         make_images_from_video(
             self.filename_cropped,
             outputdir=self.outputdir,
-            filemask=str(self.filename_cropped.with_suffix(".jpg")),
+            filemask=str(self.filename_cropped.with_suffix(self.filename_cropped.suffix + ".jpg")),
             n_frames=1,
             create_meta_json=False
         )
