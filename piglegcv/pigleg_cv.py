@@ -28,6 +28,7 @@ from run_perpendicular import main_perpendicular, get_frame_to_process
 from tools import save_json
 import numpy as np
 from incision_detection_mmdet import run_incision_detection
+from media_tools import make_images_from_video
 # from run_qr import bbox_info_extraction_from_frame
 
 
@@ -182,7 +183,11 @@ class DoComputerVision():
         subprocess.check_output(s)
 
         logger.debug(f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}")
-        _make_images_from_video()
+        make_images_from_video(
+            self.filename_cropped,
+            filemask=str(self.filename_cropped.with_suffix(".jpg")),
+            n_frames=1
+        )
         return self.filename_cropped
         # return self.filename
 
@@ -334,49 +339,6 @@ def _make_images_from_video(filename: Path, outputdir: Path) -> Path:
     save_json(metadata, json_file)
 
 
-def make_images_from_video(filename: Path, outputdir: Path, n_frames=None,
-                           scale=1,
-                           filemask:str="{outputdir}/frame_{frame_id:0>6}.png",
-                           width:Optional[int]=None,
-                           height:Optional[int]=None,
-                           make_square:bool=False
-                           ) -> Path:
-    import cv2
-    outputdir.mkdir(parents=True, exist_ok=True)
-
-    cap = cv2.VideoCapture(str(filename))
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
-    totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    if width:
-        scale = None
-    if height:
-        scale = None
-
-    frame_id = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if frame is None:
-            logger.warning(f"Reading frame {frame_id} in {str(filename)} failed.")
-            break
-        if scale is None and width is not None:
-            scale = width / frame.shape[1]
-        if scale is None and height is not None:
-            scale = height / frame.shape[0]
-
-        frame_id += 1
-        if frame_id > n_frames:
-            break
-        if not ret:
-            break
-        else:
-            file_name = filemask.format(outputdir=outputdir, frame_id=frame_id)
-            frame = rescale(frame, scale)
-            if make_square:
-                frame = crop_square(frame)
-            cv2.imwrite(file_name, frame)
-            logger.trace(file_name)
-    cap.release()
 
 if __name__ == "__main__":
     import argparse
