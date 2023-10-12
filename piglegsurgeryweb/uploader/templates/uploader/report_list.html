@@ -49,7 +49,9 @@
             </th>
             <th scope="row"><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
                 {{ uploadedfile.email }} </a></th>
-            <th><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
+            <th><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}"
+                   style="word-break: break-all;"
+            >
                 {{ uploadedfile }}</a></th>
             <th><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
                 {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></th>
