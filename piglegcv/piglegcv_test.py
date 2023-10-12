@@ -24,11 +24,6 @@ def test_empty_test():
 #     "*/test_video_end.mp4", 
 #     "*/test_video_end.mp4"
 # ])
-meta = {
-    "qr_data": {
-        [0, 923.24, 536.68, 0.38988]
-    }
-}
 @pytest.mark.parametrize("path_mask,expected", [
     ("*/pigleg_test2_2.mp4", []),
     ("*/test_video_end.mp4", []),
