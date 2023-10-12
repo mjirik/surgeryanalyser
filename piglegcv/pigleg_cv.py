@@ -140,6 +140,7 @@ class DoComputerVision():
     def rotate_rescale_crop(self, crop_bbox:Optional[list]=None) -> Path:
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
+        transpose = False
         if self.frame.shape[0] > self.frame.shape[1]:
             transpose = True
         self.filename_cropped = self.outputdir / "cropped.mp4"
