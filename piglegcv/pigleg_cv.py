@@ -35,6 +35,7 @@ from media_tools import make_images_from_video
 class DoComputerVision():
     def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None):
         self.filename:Path = Path(filename)
+        self.filename_original:Path = Path(filename)
         self.outputdir:Path = Path(outputdir)
         self.meta:dict = meta
         self.logger_id = None
@@ -54,7 +55,7 @@ class DoComputerVision():
 
     def run(self):
         self.meta = {}
-        logger.debug(f"CV processing started on {self.filename}, outputdir={self.outputdir}")
+        logger.info(f"CV processing started on {self.filename}, outputdir={self.outputdir}")
 
         try:
             if Path(self.filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
@@ -107,7 +108,7 @@ class DoComputerVision():
 
         # video_preprocessing - rotate, rescale and crop -> file
         s = time.time()
-        self.filename_cropped = self.rotate_rescale_crop(qr_data["bbox_scene_area"])
+        self.filename = self.rotate_rescale_crop(qr_data["bbox_scene_area"])
         logger.debug(f"Cropping done in {time.time() - s}s.")
 
         s = time.time()
@@ -176,7 +177,7 @@ class DoComputerVision():
 
         logger.debug(f"filename={self.filename}, {self.filename.exists()}")
         s = ["ffmpeg", '-i', str(self.filename),
-             '-filter:v', filter_str, "-an", "-y", "-b:v", "500k",
+             '-filter:v', filter_str, "-an", "-y", "-b:v", "1000k",
              str(self.filename_cropped)
              ]
         logger.debug(f"{' '.join(s)}")
