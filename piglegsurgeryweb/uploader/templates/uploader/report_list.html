@@ -10,11 +10,11 @@
 >
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
     {% if request.user.is_staff %}
-        <a class="btn-secondary"
+        <a class="btn btn-secondary"
            href="{% url 'uploader:update_all_uploaded_files' %}">
             <i class="bi bi-arrow-clockwise"></i> Update all uploaded files
         </a>
-        <a class="btn-secondary"
+        <a class="btn btn-secondary"
            href="{% url 'admin:index' %}">
             <i class="fa fa-gear"></i> Admin
         </a>
