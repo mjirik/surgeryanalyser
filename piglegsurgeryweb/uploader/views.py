@@ -190,6 +190,8 @@ def web_report(request, filename_hash:str):
     for videofile in videofiles:
         logger.debug(videofile.name)
         if videofile.exists():
+            if videofile.name.startswith("__"):
+                continue
             s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
             videofile_url = s[:s.rfind("/")] + "/" + videofile.name
             videofiles_url.append(videofile_url)
