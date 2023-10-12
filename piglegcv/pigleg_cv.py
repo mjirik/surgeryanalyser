@@ -158,7 +158,7 @@ class DoComputerVision():
         if transpose:
             filter_str += "transpose=1,"
 
-        filter_str += 'scale="720:trunc(ow/a/2)*2"'
+        filter_str += 'scale=720:trunc(ow/a/2)*2'
 
         logger.debug(f"filename={self.filename}, {self.filename.exists()}")
         s = ["ffmpeg", '-i', str(self.filename),
