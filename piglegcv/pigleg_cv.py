@@ -107,7 +107,7 @@ class DoComputerVision():
 
         # video_preprocessing - rotate, rescale and crop -> file
         s = time.time()
-        self.filename_cropped = self.rotate_rescale_crop()
+        self.filename_cropped = self.rotate_rescale_crop(qr_data["bbox_scene_area"])
         logger.debug(f"Cropping done in {time.time() - s}s.")
 
         s = time.time()
@@ -137,9 +137,11 @@ class DoComputerVision():
         logger.debug("Video processing finished")
 
 
-    def rotate_rescale_crop(self, transpose=False):
+    def rotate_rescale_crop(self, crop_bbox:Optional[list]=None) -> Path:
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
+        if self.frame.shape[0] > self.frame.shape[1]:
+            transpose = True
         self.filename_cropped = self.outputdir / "cropped.mp4"
 
         # Recreate the modified file path
@@ -160,11 +162,11 @@ class DoComputerVision():
 
         filter_str = ''
 
-        if len(meta["qr_data"]["bbox_scene_area"]) > 0:
-            cr_out_w = meta["qr_data"]["bbox_scene_area"][2] - meta["qr_data"][0]
-            cr_out_h = meta["qr_data"]["bbox_scene_area"][3] - meta["qr_data"][1]
-            cr_x = meta["qr_data"]["bbox_scene_area"][0]
-            cr_y = meta["qr_data"]["bbox_scene_area"][1]
+        if crop_bbox is not None:
+            cr_out_w = crop_bbox[2] - crop_bbox[0]
+            cr_out_h = crop_bbox[3] - crop_bbox[1]
+            cr_x = crop_bbox[0]
+            cr_y = crop_bbox[1]
             filter_str += f"crop={cr_out_w}:{cr_out_h}:{cr_x}:{cr_y},"
         if transpose:
             filter_str += "transpose=1,"

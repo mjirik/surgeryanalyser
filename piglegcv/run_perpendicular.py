@@ -145,10 +145,15 @@ def intersectLines( pt1, pt2, ptA, ptB ):
 
 
 #####################################
-def get_frame_to_process(filename):
+
+
+def get_frame_to_process(filename, return_metadata:bool=False):
     if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
         img = cv2.imread(filename)
+        if return_metadata:
+            return np.asarray(img), {"filename_full": str(filename)}
+
         return np.asarray(img)
     else:
         ##################
@@ -157,6 +162,8 @@ def get_frame_to_process(filename):
         logger.debug(last_frame)
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame)
         ret, img = cap.read()
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         i = 0
         while (not ret) and (i < 20):
             logger.debug('Last frame capture error, frame', last_frame - i)
@@ -172,7 +179,11 @@ def get_frame_to_process(filename):
         #plt.show()
         #exit()
         ###################
-    return np.asarray(img)
+        metadata = {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
+    if return_metadata:
+        return np.asarray(img), metadata
+    else:
+        return np.asarray(img)
 
 
 def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma):
