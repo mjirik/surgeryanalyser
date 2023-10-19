@@ -147,7 +147,7 @@ def intersectLines( pt1, pt2, ptA, ptB ):
 #####################################
 
 
-def get_frame_to_process(filename, return_metadata:bool=False):
+def get_frame_to_process(filename, return_metadata:bool=False, n_tries=None):
     if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
         img = cv2.imread(filename)
@@ -164,8 +164,10 @@ def get_frame_to_process(filename, return_metadata:bool=False):
         ret, img = cap.read()
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if n_tries is None:
+            n_tries = totalframecount
         i = 0
-        while (not ret) and (i < 20):
+        while (not ret) and (i < n_tries):
             logger.debug('Last frame capture error, frame', last_frame - i)
             cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - i - 1)
             ret, img = cap.read()
@@ -173,7 +175,7 @@ def get_frame_to_process(filename, return_metadata:bool=False):
         cap.release()
         if not ret:
             logger.error('Last frame capture error')
-            return None
+            img = None
         #print(img.shape)
         #plt.imshow(img)
         #plt.show()

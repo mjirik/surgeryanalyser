@@ -33,7 +33,7 @@ from media_tools import make_images_from_video
 
 
 class DoComputerVision():
-    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None):
+    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, test_first_seconds:bool=False):
         self.filename:Path = Path(filename)
         self.filename_original:Path = Path(filename)
         self.outputdir:Path = Path(outputdir)
@@ -41,6 +41,7 @@ class DoComputerVision():
         self.logger_id = None
         self.frame:Optional[np.ndarray] = None
         self.filename_cropped:Optional[Path] = None
+        self.test_first_seconds = test_first_seconds
 
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
@@ -63,7 +64,7 @@ class DoComputerVision():
             else:
                 #run_video_processing(filename, outputdir)
                 self.run_video_processing()
-            save_json(self.meta, Path(self.outputdir) / "meta.json")
+            save_json(self.meta, Path(self.outputdir) / "meta.json", update=False)
 
             logger.debug("Work finished")
         except Exception as e:
@@ -72,7 +73,7 @@ class DoComputerVision():
 
     def run_image_processing(self):
         logger.debug("Running image processing...")
-        self.frame = get_frame_to_process(str(self.filename_cropped))
+        self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
         qr_data['qr_scissors_frames'] = []
         self.meta["qr_data"] = qr_data
@@ -91,7 +92,7 @@ class DoComputerVision():
         """
         logger.debug("Running video processing...")
         if self.meta is None:
-            meta = {}
+            self.meta = {}
 
         # get_sigle_frame
         # single_frame_processing ->
@@ -101,20 +102,19 @@ class DoComputerVision():
         # make_report
 
         s = time.time()
-        self.frame = get_frame_to_process(str(self.filename))
-        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
-        qr_data['qr_scissors_frames'] = []
+        qr_data = self.get_parameters_for_crop_rotate_rescale()
         logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")
-
+        self.meta["duration_s_get_parameters_for_crop_rotate_rescale"] = float(time.time() - s)
         # video_preprocessing - rotate, rescale and crop -> file
         s = time.time()
-        self.filename = self.rotate_rescale_crop(qr_data["bbox_scene_area"])
+        self.filename = self.do_crop_rotate_rescale(qr_data["bbox_scene_area"], qr_data["incision_bboxes"])
+        self.meta["duration_s_do_crop_rotate_rescale"] = time.time() - s
         logger.debug(f"Cropping done in {time.time() - s}s.")
 
         s = time.time()
         self.run_image_processing()
         logger.debug(f"Single frame processing on cropped mediafile finished in {time.time() - s}s.")
-
+        self.meta["duration_s_run_image_processing"] = float(time.time() - s)
         logger.debug(f"Image processing finished in {time.time() - s}s.")
 
         s = time.time()
@@ -125,6 +125,7 @@ class DoComputerVision():
             checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
             device="cuda"
         )
+        self.meta["duration_s_tracking"] = float(time.time() - s)
         logger.debug(f"Tracker finished in {time.time() - s}s.")
 
         logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
@@ -137,19 +138,36 @@ class DoComputerVision():
                 data_results["Stitching r-score"] = self.meta["stitch_scores"][0]["r_score"]
                 data_results["Stitching s-score"] = self.meta["stitch_scores"][0]["s_score"]
         #save statistic to file
+        
+        self.meta["duration_s_report"] = float(time.time() - s)
         save_json(data_results, self.outputdir / "results.json")
-
+        
         logger.debug(f"Report finished in {time.time() - s}s.")
 
         logger.debug("Report based on video is finished.")
         logger.debug("Video processing finished")
 
+    def get_parameters_for_crop_rotate_rescale(self):
+        self.frame = get_frame_to_process(str(self.filename_original), n_tries=None)
+        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
+        qr_data['qr_scissors_frames'] = []
+        return qr_data
 
-    def rotate_rescale_crop(self, crop_bbox:Optional[list]=None) -> Path:
+    def do_crop_rotate_rescale(self, crop_bbox:Optional[list]=None,
+                              incision_bboxes:Optional[list]=None
+                              ) -> Path:
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
         transpose = False
-        if self.frame.shape[0] > self.frame.shape[1]:
+        if incision_bboxes is not None and len(incision_bboxes) > 0:
+            width = int(incision_bboxes[0][2] - incision_bboxes[0][0])
+            height = int(incision_bboxes[0][3] - incision_bboxes[0][1])
+            
+            if width > height:
+                transpose=False
+            else:
+                transpose=True
+        elif self.frame.shape[0] > self.frame.shape[1]:
             transpose = True
         self.filename_cropped = self.outputdir / "__cropped.mp4"
 
@@ -172,19 +190,24 @@ class DoComputerVision():
         filter_str = ''
 
         if crop_bbox is not None:
-            cr_out_w = crop_bbox[2] - crop_bbox[0]
-            cr_out_h = crop_bbox[3] - crop_bbox[1]
-            cr_x = crop_bbox[0]
-            cr_y = crop_bbox[1]
+            cr_out_w = int(crop_bbox[2] - crop_bbox[0])
+            cr_out_h = int(crop_bbox[3] - crop_bbox[1])
+            cr_x = int(crop_bbox[0])
+            cr_y = int(crop_bbox[1])
             filter_str += f"crop={cr_out_w}:{cr_out_h}:{cr_x}:{cr_y},"
         if transpose:
             filter_str += "transpose=1,"
 
         filter_str += 'scale=720:trunc(ow/a/2)*2'
+        
+        additional_params = []
+        
+        if self.test_first_seconds:
+            additional_params.extend(["-t", "3"])
 
         logger.debug(f"filename={self.filename}, {self.filename.exists()}")
-        s = ["ffmpeg", '-i', str(self.filename),
-             '-filter:v', filter_str, "-an", "-y", "-b:v", "1000k",
+        s = ["ffmpeg", '-i', str(self.filename)] + additional_params +\
+             ['-filter:v', filter_str, "-an", "-y", "-b:v", "1000k",
              str(self.filename_cropped)
              ]
         logger.debug(f"{' '.join(s)}")
@@ -204,8 +227,8 @@ class DoComputerVision():
         # return self.filename
 
 
-def do_computer_vision(filename, outputdir, meta):
-    DoComputerVision(filename, outputdir, meta).run()
+def do_computer_vision(filename, outputdir, meta=None):
+    return DoComputerVision(filename, outputdir, meta).run()
 
 
 def do_computer_vision_2(filename, outputdir, meta):
