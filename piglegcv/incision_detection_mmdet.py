@@ -199,17 +199,21 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img, local_output_data_dir:Path, meta:dict, expected_incision_size_mm=70, device="cuda"):
+def run_incision_detection(img, local_output_data_dir:Optional[Path]=None, meta:Optional[dict]=None, expected_incision_size_mm=70, device="cuda"):
     # todo J. Viktora
     # nemělo by tady být spíš device="cuda" ? To ale nefunguje protože: RuntimeError: nms_impl: implementation for device cuda:0 not found.
     # img = mmcv.imread(str(img_fn))
+    
+    if meta is None:
+        meta = {}
     checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
     logger.debug(f"img.shape={img.shape}, max(img)={np.max(img)}")
     # logger.debug(f"img_fn={img_fn}")
 
     # img_fn = Path(img_fn)
-    local_output_data_dir = Path(local_output_data_dir)
+    if local_output_data_dir is not None:
+        local_output_data_dir = Path(local_output_data_dir)
 
     # My dataset training
     cfg = Config.fromfile(mmdetection_path / 'configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py')
@@ -226,7 +230,8 @@ def run_incision_detection(img, local_output_data_dir:Path, meta:dict, expected_
                           )
     # logger.debug(f"cfg=\n{pformat(cfg)}")
     result = inference_detector(model, img)
-    model.show_result(img, result, out_file=local_output_data_dir / f'incision_full.jpg')  # save image with result
+    if local_output_data_dir is not None:
+        model.show_result(img, result, out_file=local_output_data_dir / f'incision_full.jpg')  # save image with result
 
     # get cropped incision
     class_id = 0
@@ -241,8 +246,8 @@ def run_incision_detection(img, local_output_data_dir:Path, meta:dict, expected_
 
         sz = sorted([int(bbox[3])-int(bbox[1]), int(bbox[2])-int(bbox[0])])
         bbox_sizes.append(sz)
-
-        cv2.imwrite(str(local_output_data_dir / f'incision_crop_{i}.jpg'), imcr)
+        if local_output_data_dir is not None:
+            cv2.imwrite(str(local_output_data_dir / f'incision_crop_{i}.jpg'), imcr)
         imgs.append(imcr)
         # plt.imshow(imcr[:, :, ::-1])
     # predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)

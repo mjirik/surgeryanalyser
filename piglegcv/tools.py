@@ -3,6 +3,10 @@ from typing import Union
 import json
 import os
 from loguru import logger
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import numpy as np
+from PIL import Image
 
 
  
@@ -94,3 +98,39 @@ def remove_empty_lists(dct:dict) -> dict:
     :return: dictionary without empty lists
     """
     return {k: v for k, v in dct.items() if v != []}
+
+
+def draw_bboxes(img, bboxes, color="r") -> plt.Figure:
+    """
+    Draw bounding boxes and their confidence scores on an image.
+    
+    Parameters:
+    - image_path: Path to the image file.
+    - bboxes: List of bounding boxes in the format [x_min, y_min, x_max, y_max, score].
+    """
+    
+    # Load the image
+#     img = Image.open(image_path)
+    fig, ax = plt.subplots(1)
+
+    # Display the image
+    ax.imshow(img)
+
+    for bbox in bboxes:
+        x_min, y_min, x_max, y_max, score = bbox
+        rect = patches.Rectangle((x_min, y_min), x_max - x_min, y_max - y_min, 
+                                 linewidth=1, edgecolor=color, facecolor='none')
+        ax.add_patch(rect)
+        # Display the confidence score above the bounding box
+        plt.text(x_min, y_min, f"{score:.2f}", bbox=dict(facecolor='red', alpha=0.5))
+
+#     plt.show()
+
+#     # Convert the figure to a numpy array
+#     fig.canvas.draw()
+#     data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+#     data = data.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    
+#     plt.close(fig)  # Close the figure to free up memory
+    return fig
+    

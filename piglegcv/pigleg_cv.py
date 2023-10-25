@@ -8,6 +8,7 @@ import shutil
 import traceback
 import time
 import subprocess
+import pprint
 #try:
 #    from .run_tracker_lite import main_tracker
 #    from .run_tracker_bytetrack import main_tracker_bytetrack
@@ -25,7 +26,7 @@ from run_qr import main_qr
 import run_qr
 from run_report import main_report
 from run_perpendicular import main_perpendicular, get_frame_to_process
-from tools import save_json
+from tools import save_json, draw_bboxes
 import numpy as np
 from incision_detection_mmdet import run_incision_detection
 from media_tools import make_images_from_video
@@ -42,6 +43,7 @@ class DoComputerVision():
         self.frame:Optional[np.ndarray] = None
         self.filename_cropped:Optional[Path] = None
         self.test_first_seconds = test_first_seconds
+        self.debug_images={}
 
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
@@ -151,11 +153,20 @@ class DoComputerVision():
         self.frame = get_frame_to_process(str(self.filename_original), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
         qr_data['qr_scissors_frames'] = []
+        imgs, bboxes = run_incision_detection(self.frame)
+        qr_data["incision_bboxes_old"] = bboxes.tolist()
+#         print(qr_data)
+#         fig = draw_bboxes(self.frame[:,:,::-1], qr_data["incision_bboxes"])
+#         fig = draw_bboxes(self.frame[:,:,::-1], qr_data["bbox_scene_area"])
+#         from matplotlib import pyplot as plt
+#         plt.show()
+#         self.debug_images["crop_rotate_rescale_parameters":img]
+        logger.debug(pprint.pformat(qr_data))
         return qr_data
 
     def do_crop_rotate_rescale(self, crop_bbox:Optional[list]=None,
-                              incision_bboxes:Optional[list]=None
-                              ) -> Path:
+                              incision_bboxes:Optional[list]=None,
+                              crop_bbox_score_threshold=0.5) -> Path:
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
         transpose = False
@@ -190,11 +201,12 @@ class DoComputerVision():
         filter_str = ''
 
         if crop_bbox is not None:
-            cr_out_w = int(crop_bbox[2] - crop_bbox[0])
-            cr_out_h = int(crop_bbox[3] - crop_bbox[1])
-            cr_x = int(crop_bbox[0])
-            cr_y = int(crop_bbox[1])
-            filter_str += f"crop={cr_out_w}:{cr_out_h}:{cr_x}:{cr_y},"
+            if crop_bbox[4] > crop_bbox_score_threshold:
+                cr_out_w = int(crop_bbox[2] - crop_bbox[0])
+                cr_out_h = int(crop_bbox[3] - crop_bbox[1])
+                cr_x = int(crop_bbox[0])
+                cr_y = int(crop_bbox[1])
+                filter_str += f"crop={cr_out_w}:{cr_out_h}:{cr_x}:{cr_y},"
         if transpose:
             filter_str += "transpose=1,"
 
