@@ -20,7 +20,7 @@ ngc config set
 docker login nvcr.io
 ```
 
-# Get all resources
+## Get all resources
 
 * `piglegsurgery/piglegsurgeryweb/private/`
 * `piglegsurgery/piglegsurgeryweb/media/`
@@ -34,7 +34,7 @@ cd piglegsurgery/resources/torch
 wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth
 ```
 
-# Run devel 
+## Run devel 
     
 ```shell
 cd ~/projects/piglegsurgery
@@ -42,7 +42,38 @@ docker-compose -f docker-compose.dev.yml --env-file .env.dev down
 docker-compose -f docker-compose.dev.yml --env-file .env.dev up --build -d
 ```
 
-## Logs
+
+### Make migrations
+
+```shell
+docker compose -f docker-compose.dev.yml --env-file .env.dev exec dev_piglegweb bash
+```
+or 
+```shell
+docker exec -it piglegsurgery_piglegweb_1 bash
+```
+
+In dockers bash Make migrations
+```shell
+cd piglegsurgery/piglegsurgeryweb/
+conda activate piglegsurgery
+# sudo chmod a+rw uploader/migrations/
+python manage.py makemigrations
+python manage.py migrate
+
+```
+
+In dockers bash Create superuser
+```shell
+python manage.py createsuperuser
+```
+
+```bash
+docker exec -it carnivoreid-app-api bash -ic 'python manage.py createsuperuser'
+```
+
+
+### Logs
 
 See all the logs
 ```shell
@@ -54,26 +85,8 @@ See the logs from webapp
 docker-compose -f docker-compose.dev.yml --env-file .env.dev logs -f
 ```
 
-## Make migrations
 
-```shell
-docker compose -f docker-compose.dev.yml --env-file .env.dev exec dev_piglegweb bash
-```
-or 
-```shell
-docker exec -it piglegsurgery_piglegweb_1 bash
-```
-
-Make migrations
-```shell
-cd piglegsurgery/piglegsurgeryweb/
-# sudo chmod a+rw uploader/migrations/
-conda run -n piglegsurgery python manage.py makemigrations
-conda run -n piglegsurgery python manage.py migrate
-
-```
-
-# Run in production 
+## Run in production 
 
 Get resources
 ```shell
@@ -88,7 +101,6 @@ docker-compose --env-file .env down
 docker-compose --env-file .env up --build -d
 
 docker-compose --env-file .env logs -f
-
 ```
 
 ## Stop
@@ -100,38 +112,6 @@ cd /webapps/piglegsurgery
 docker-compose down
 ```
 
-
-## Check logs
-
-
-
-## Get into docker
-
-```shell
-docker exec -it piglegsurgery_piglegweb_1 bash
-```
-
-```shell
-docker exec -it piglegsurgery_piglegcv_1 bash
-```
-
-```shell
-docker exec -it piglegsurgery_piglegcv_devel_1 bash
-```
-
-## Make migrations
-
-```shell
-docker exec -it piglegsurgery_piglegweb_1 bash
-```
-
-```shell
-cd piglegsurgery/piglegsurgeryweb/
-# sudo chmod a+rw uploader/migrations/
-conda run -n piglegsurgery python manage.py makemigrations
-conda run -n piglegsurgery python manage.py migrate
-
-```
 
 # Other cases
 
