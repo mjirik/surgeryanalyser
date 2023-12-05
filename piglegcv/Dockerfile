@@ -30,26 +30,26 @@ RUN pip install opencv-python==4.5.5.64
 
 # We used fallowing line to fix the RuntimeError: nms_impl: implementation for device cuda:0 not found
 #     MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install mmcv-full==1.5.2
-RUN git clone --branch v1.5.2 https://github.com/open-mmlab/mmcv.git &&\
-    cd mmcv &&\
+RUN git clone --branch v1.5.2 https://github.com/open-mmlab/mmcv.git
+RUN cd mmcv &&\
     pip install -r requirements/optional.txt &&\
     MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install -e .
 RUN cd ..
 
-RUN git clone --branch v2.25.0 https://github.com/open-mmlab/mmdetection &&\
-    cd mmdetection &&\
+RUN git clone --branch v2.25.0 https://github.com/open-mmlab/mmdetection
+RUN cd mmdetection &&\
     pip install -r requirements/build.txt &&\
     pip install -v -e .
 RUN cd ..
 
-RUN git clone --branch v0.27.0 https://github.com/open-mmlab/mmpose.git &&\
-    cd mmpose &&\
+RUN git clone --branch v0.27.0 https://github.com/open-mmlab/mmpose.git
+RUN cd mmpose &&\
     pip install -r requirements.txt &&\
     pip install -v -e .
 RUN cd ..
 
-RUN git clone --branch v0.13.0 https://github.com/open-mmlab/mmtracking.git &&\
-    cd mmtracking &&\
+RUN git clone --branch v0.13.0 https://github.com/open-mmlab/mmtracking.git
+RUN cd mmtracking &&\
     pip install -r requirements.txt &&\
     pip install -v -e .
 RUN cd ..
@@ -73,6 +73,7 @@ RUN pip install yolov7-package
 RUN pip install --user filterpy==1.4.5 scikit-image==0.17.2 lap==0.4.0
 RUN pip install --user flask loguru rq
 
+RUN sudo apt-get update
 ### to get rotatelogs
 RUN sudo apt-get install --yes apache2-utils
 

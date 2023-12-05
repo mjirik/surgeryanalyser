@@ -54,6 +54,10 @@ RUN /opt/conda/condabin/conda init bash
 ENV PATH="/opt/conda/condabin:${PATH}"
 ARG PATH="/opt/conda/condabin:${PATH}"
 
+RUN conda update conda
+RUN conda update conda-build
+#RUN conda install -n base conda-libmamba-solver
+#RUN conda config --set solver libmamba
 
 # create a non-root user
 ARG USER_ID=1000
@@ -66,7 +70,10 @@ USER appuser
 COPY environment.yml .
 COPY requirements_pip.txt .
 
-RUN conda env create -f environment.yml
+RUN conda env create -v -v -f environment.yml
+RUN conda install -n piglegsurgery --yes -c conda-forge redis loguru=0.5 gunicorn=20 opencv=4 ffmpeg pillow pytest
+RUN conda install -n piglegsurgery --yes -c conda-forge google-api-python-client=2.88 gspread=5.7
+RUN conda install -n piglegsurgery --yes -c conda-forge google-auth-httplib2=0.1 google-auth=2.19 oauth2client=4.1 google-auth-oauthlib=1.0
 RUN conda list
 #RUN cd /webapps/scaffanweb_django
 # Make RUN commands use the new environment:
@@ -127,6 +134,7 @@ RUN sudo apt-get update --yes
 RUN sudo apt-get install --yes apache2-utils
 
 
+RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/
 # RUN sudo chmod a+w /webapps/piglegsurgery/piglegsurgeryweb/private/db.sqlite3
 #ls -l /webapps/piglegsurgery/piglegsurgeryweb/private/
 

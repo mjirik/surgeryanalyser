@@ -179,6 +179,7 @@ Q_CLUSTER = {
     "workers": 3,
     "redis": {
         "host": "localhost",
+        # "host": "redis",
         "port": 6379,
         "db": 0,
         "password": None,
