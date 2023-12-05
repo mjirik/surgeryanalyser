@@ -28,8 +28,8 @@ services:
     #    runtime: nvidia
     ports:
       - '5000'
-      #      - '8888'
-      #      - '8808:8888'
+        # - '8888:8888'
+        #- '8808:8888'
       - '${PIGLEG_JUPYTER_PORT}:8888'
     #    environment:
     #      - DOCKERLOGNAME=""

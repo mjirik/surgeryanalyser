@@ -84,7 +84,9 @@ RUN apt-get install -y ranger mc sshfs
 
 RUN pip install gspread
 RUN pip install --upgrade google-api-python-client oauth2client
-RUN pip install jupyterlab protobuf==3.20 ipywidgets rise jupyterlab-vim
+RUN pip install jupyterlab==3.6 protobuf==3.20 
+# RUN pip install ipywidgets rise 
+# RUN pip install jupyterlab-vim
 
 # for password generation for jupyterlab
 RUN apt-get install -y net-tools sharutils

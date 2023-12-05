@@ -70,7 +70,7 @@ echo "PORT=$JUPYTER_PORT"
 # --port $JUPYTER_PORT
 
 cd /webapps/piglegsurgery/ && \
-    jupyter lab --no-browser  2>&1 | \
+    jupyter lab --no-browser --allow-root  2>&1 | \
 #   tee >(rotatelogs -n 3 logs/jupyterlab_${DOCKERLOGNAME}_log_2.txt.bck 1M) | \
    rotatelogs -n 1 logs/piglegcv_jupyterlab_${DOCKERLOGNAME}_log.txt 1M &
 echo "jupyterlab started"
