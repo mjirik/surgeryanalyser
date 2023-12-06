@@ -48,17 +48,13 @@ docker-compose -f docker-compose.dev.yml --env-file .env.dev up --build -d
 ```shell
 docker compose -f docker-compose.dev.yml --env-file .env.dev exec dev_piglegweb bash
 ```
-or 
-```shell
-docker exec -it piglegsurgery_piglegweb_1 bash
-```
 
 In dockers bash Make migrations
 ```shell
 cd piglegsurgery/piglegsurgeryweb/
 conda activate piglegsurgery
 # sudo chmod a+rw uploader/migrations/
-python manage.py makemigrations
+python manage.py makemigrations uploader
 python manage.py migrate
 
 ```

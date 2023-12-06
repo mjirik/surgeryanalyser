@@ -7,10 +7,10 @@ mkdir -p ~/pigleg/logs/
 cd /webapps/piglegsurgery/piglegsurgeryweb
 
 # Make migrations
-conda run -n piglegsurgery --no-capture-output python manage.py makemigrations --noinput --verbosity 2
-conda run -n piglegsurgery --no-capture-output python manage.py migrate --noinput --verbosity 2
-conda run -n piglegsurgery --no-capture-output python manage.py collectstatic --noinput --verbosity 2
-echo "  Migrations done"
+#conda run -n piglegsurgery --no-capture-output python manage.py makemigrations --noinput --verbosity 2
+#conda run -n piglegsurgery --no-capture-output python manage.py migrate --noinput --verbosity 2
+#conda run -n piglegsurgery --no-capture-output python manage.py collectstatic --noinput --verbosity 2
+#echo "  Migrations done"
 
 if [ -f /.dockerenv ]; then
     echo "I'm inside docker";
