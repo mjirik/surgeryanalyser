@@ -38,8 +38,8 @@ wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco
     
 ```shell
 cd ~/projects/piglegsurgery
-docker-compose -f docker-compose.dev.yml --env-file .env.dev down
-docker-compose -f docker-compose.dev.yml --env-file .env.dev up --build -d
+docker compose -f docker-compose.dev.yml --env-file .env.dev down
+docker compose -f docker-compose.dev.yml --env-file .env.dev up --build -d
 ```
 
 
