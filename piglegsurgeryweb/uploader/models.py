@@ -36,7 +36,7 @@ class UploadedFile(models.Model):
     started_at = models.DateTimeField("Started at", blank=True, null=True)
     finished_at = models.DateTimeField("Finished at", blank=True, null=True)
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
-    # is_microscopy = models.BooleanField(default=False)
+    is_microscopy = models.BooleanField(default=False)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)
