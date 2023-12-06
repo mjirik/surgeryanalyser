@@ -6,7 +6,7 @@ echo "PATH=${PATH}"
 mkdir -p ~/pigleg/logs/
 cd /webapps/piglegsurgery/piglegsurgeryweb
 
- Make migrations
+# Make migrations
 conda run -n piglegsurgery --no-capture-output python manage.py makemigrations --noinput --verbosity 2
 conda run -n piglegsurgery --no-capture-output python manage.py migrate --noinput --verbosity 2
 conda run -n piglegsurgery --no-capture-output python manage.py collectstatic --noinput --verbosity 2
