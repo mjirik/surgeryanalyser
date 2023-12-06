@@ -59,6 +59,9 @@
             <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
             {{ button }}
         </button>
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'uploader:web_reports' %}" class="btn btn-secondary">Go to list of reports</a>
+            {% endif %}
 
         </form>
     </div>

@@ -14,6 +14,7 @@ from flask import request, jsonify, render_template
 # from pigleg_cv import run_media_processing
 #try:
 from pigleg_cv import do_computer_vision
+import pigleg_cv
 #except ImportError:
 #    from .pigleg_cv import do_computer_vision
 import requests
@@ -80,7 +81,7 @@ def get_results(job_key):
     except rq.exceptions.NoSuchJobError as e:
         logger.debug(f"Job not found. Job ID={job_key}")
         return jsonify(f"Job not found.")
-    logger.debug(f"   job.is_finished={job.is_finished}, queue length = {len(q)}")
+    logger.debug(f"   job.is_finished={job.is_finished}, len(q)={len(q)}, progress={pigleg_cv.PROGRESS}")
 
     return jsonify(job.is_finished)
     # if job.is_finished:

@@ -31,19 +31,37 @@ import numpy as np
 from incision_detection_mmdet import run_incision_detection
 from media_tools import make_images_from_video
 # from run_qr import bbox_info_extraction_from_frame
+import os
 
+
+PROGRESS = 0
+PROGRESS_MAX = 100
+
+DEVICE = os.getenv("DEVICE", default="cpu")
+
+
+def set_progress(progress=None, progress_max=None):
+    global PROGRESS
+    global PROGRESS_MAX
+
+    if progress:
+        PROGRESS = progress
+    if progress_max:
+        PROGRESS_MAX = progress_max
 
 class DoComputerVision():
-    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, test_first_seconds:bool=False):
+    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, test_first_seconds:bool=False, device="cpu"):
         self.filename:Path = Path(filename)
         self.filename_original:Path = Path(filename)
         self.outputdir:Path = Path(outputdir)
-        self.meta:dict = meta
+        self.meta: dict = meta
         self.logger_id = None
-        self.frame:Optional[np.ndarray] = None
-        self.filename_cropped:Optional[Path] = None
+        self.frame: Optional[np.ndarray] = None
+        self.filename_cropped: Optional[Path] = None
         self.test_first_seconds = test_first_seconds
-        self.debug_images={}
+        self.debug_images = {}
+        self.is_microsurgery = False
+        self.device = device
 
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
@@ -54,7 +72,6 @@ class DoComputerVision():
             backtrace=True,
             diagnose=True,
         )
-
 
     def run(self):
         self.meta = {}
@@ -76,11 +93,11 @@ class DoComputerVision():
     def run_image_processing(self):
         logger.debug("Running image processing...")
         self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
-        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
+        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame, device=self.device)
         qr_data['qr_scissors_frames'] = []
         self.meta["qr_data"] = qr_data
 
-        main_perpendicular(self.filename, self.outputdir, self.meta)
+        main_perpendicular(self.filename, self.outputdir, self.meta, device=self.device)
         logger.debug("Perpendicular finished.")
 
     def run_video_processing(self):
@@ -96,6 +113,7 @@ class DoComputerVision():
         if self.meta is None:
             self.meta = {}
 
+        set_progress(1)
         # get_sigle_frame
         # single_frame_processing ->
         # video_preprocessing - rotate, rescale and crop -> file
@@ -120,21 +138,48 @@ class DoComputerVision():
         logger.debug(f"Image processing finished in {time.time() - s}s.")
 
         s = time.time()
-        main_tracker_bytetrack(
-            config_file="./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
-            filename=self.filename,
-            output_dir=self.outputdir,
-            checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
-            device="cuda"
-        )
+        from mmtrack.apis import init_model
+        if self.is_microsurgery:
+
+            model = init_model(
+                "./resources/tracker_model_bytetrack_microsurgery/bytetrack_pigleg.py",
+                str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth"),
+                device=self.device
+            )
+            main_tracker_bytetrack(
+                trackers=[model],
+                filename=self.filename,
+                output_file_path=self.outputdir / "tracks.json",
+            )
+        else:
+            models = [
+                init_model(
+                    "./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth"),
+                    device=self.device
+                )
+                # ,
+                # init_model(
+                #     "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
+                #     str(Path(__file__).parent / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"),
+                #     device=self.device
+                # )
+            ]
+        # main_tracker_bytetrack(
+        #     trackers=models,
+        #     filename=self.filename,
+        #     output_file_path=self.outputdir / "tracks.json",
+        # )
         self.meta["duration_s_tracking"] = float(time.time() - s)
         logger.debug(f"Tracker finished in {time.time() - s}s.")
+        set_progress(50)
 
         logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
         logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
 
         s = time.time()
         data_results = main_report(self.filename, self.outputdir, self.meta)
+        set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
                 data_results["Stitching r-score"] = self.meta["stitch_scores"][0]["r_score"]
@@ -143,7 +188,8 @@ class DoComputerVision():
         
         self.meta["duration_s_report"] = float(time.time() - s)
         save_json(data_results, self.outputdir / "results.json")
-        
+        set_progress(99)
+
         logger.debug(f"Report finished in {time.time() - s}s.")
 
         logger.debug("Report based on video is finished.")
@@ -151,9 +197,10 @@ class DoComputerVision():
 
     def get_parameters_for_crop_rotate_rescale(self):
         self.frame = get_frame_to_process(str(self.filename_original), n_tries=None)
-        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame)
+        logger.debug(f"device={self.device}")
+        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame, device=self.device)
         qr_data['qr_scissors_frames'] = []
-        imgs, bboxes = run_incision_detection(self.frame)
+        imgs, bboxes = run_incision_detection(self.frame, device=self.device)
         qr_data["incision_bboxes_old"] = bboxes.tolist()
 #         print(qr_data)
 #         fig = draw_bboxes(self.frame[:,:,::-1], qr_data["incision_bboxes"])
@@ -239,33 +286,33 @@ class DoComputerVision():
         # return self.filename
 
 
-def do_computer_vision(filename, outputdir, meta=None):
-    return DoComputerVision(filename, outputdir, meta).run()
+def do_computer_vision(filename, outputdir, meta=None, device=DEVICE):
+    return DoComputerVision(filename, outputdir, meta, device=device).run()
 
 
-def do_computer_vision_2(filename, outputdir, meta):
-    log_format = loguru._defaults.LOGURU_FORMAT
-    logger_id = logger.add(
-        str(Path(outputdir) / "piglegcv_log.txt"),
-        format=log_format,
-        level="DEBUG",
-        rotation="1 week",
-        backtrace=True,
-        diagnose=True,
-    )
-    logger.debug(f"CV processing started on {filename}, outputdir={outputdir}")
-
-    try:
-        if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
-            run_image_processing(filename, outputdir)
-        else:
-            #run_video_processing(filename, outputdir)
-            run_video_processing2(filename, outputdir)
-
-        logger.debug("Work finished")
-    except Exception as e:
-        logger.error(traceback.format_exc())
-    logger.remove(logger_id)
+# def do_computer_vision_2(filename, outputdir, meta):
+#     log_format = loguru._defaults.LOGURU_FORMAT
+#     logger_id = logger.add(
+#         str(Path(outputdir) / "piglegcv_log.txt"),
+#         format=log_format,
+#         level="DEBUG",
+#         rotation="1 week",
+#         backtrace=True,
+#         diagnose=True,
+#     )
+#     logger.debug(f"CV processing started on {filename}, outputdir={outputdir}")
+#
+#     try:
+#         if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
+#             run_image_processing(filename, outputdir)
+#         else:
+#             #run_video_processing(filename, outputdir)
+#             run_video_processing2(filename, outputdir)
+#
+#         logger.debug("Work finished")
+#     except Exception as e:
+#         logger.error(traceback.format_exc())
+#     logger.remove(logger_id)
 
 
 # def run_video_processing(filename: Path, outputdir: Path) -> dict:
@@ -302,63 +349,63 @@ def do_computer_vision_2(filename, outputdir, meta):
 #     # logger.debug("Perpendicular finished.")
 #     logger.debug("Video processing finished")
 
-def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> dict:
-    """
+# def run_video_processing2(filename: Path, outputdir: Path, meta:dict=None) -> dict:
+#     """
+#
+#     :param filename:
+#     :param outputdir:
+#     :param meta: might be used for progressbar
+#     :return:
+#     """
+#     logger.debug("Running video processing...")
+#     if meta is None:
+#         meta = {}
+#     s = time.time()
+#     main_qr(filename, outputdir)
+#     logger.debug(f"QR finished in {time.time() - s}s.")
+#     run_image_processing(filename, outputdir, skip_qr=True)
+#     s = time.time()
+#     logger.debug(f"Image processing finished in {time.time() - s}s.")
+#
+#     # main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch.pth', filename, outputdir))
+#     # f"\"./resources/tracker_model_bytetrack/bytetrack_pigleg.py\" \"{filename}\" --output_dir \"{outputdir}\"",
+#     main_tracker_bytetrack(
+#         config_file="./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
+#         filename=filename,
+#         output_dir=outputdir,
+#         checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
+#         device="cuda"
+#     )
+#     # run_media_processing(Path(filename), Path(outputdir))
+#     logger.debug(f"Tracker finished in {time.time() - s}s.")
+#
+#     #
+#     # s = time.time()
+#     # main_mmpose(filename, outputdir)
+#     # logger.debug(f"MMpose finished in {time.time() - s}s.")
+#
+#     logger.debug(f"filename={filename}, outputdir={outputdir}")
+#     logger.debug(f"filename={Path(filename).exists()}, outputdir={Path(outputdir).exists()}")
+#
+#     main_report(filename, outputdir)
+#
+#     logger.debug("Report based on video is finished.")
+#
+#     # if extention in images_types:
+#
+#     # logger.debug("Perpendicular finished.")
+#     logger.debug("Video processing finished")
 
-    :param filename:
-    :param outputdir:
-    :param meta: might be used for progressbar
-    :return:
-    """
-    logger.debug("Running video processing...")
-    if meta is None:
-        meta = {}
-    s = time.time()
-    main_qr(filename, outputdir)
-    logger.debug(f"QR finished in {time.time() - s}s.")
-    run_image_processing(filename, outputdir, skip_qr=True)
-    s = time.time()
-    logger.debug(f"Image processing finished in {time.time() - s}s.")
 
-    # main_tracker_bytetrack("\"{}\" \"{}\" \"{}\" --output_dir \"{}\"".format('./resources/tracker_model_bytetrack/bytetrack_pigleg.py','./resources/tracker_model_bytetrack/epoch.pth', filename, outputdir))
-    # f"\"./resources/tracker_model_bytetrack/bytetrack_pigleg.py\" \"{filename}\" --output_dir \"{outputdir}\"",
-    main_tracker_bytetrack(
-        config_file="./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
-        filename=filename,
-        output_dir=outputdir,
-        checkpoint=Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth",
-        device="cuda"
-    )
-    # run_media_processing(Path(filename), Path(outputdir))
-    logger.debug(f"Tracker finished in {time.time() - s}s.")
-
-    #
-    # s = time.time()
-    # main_mmpose(filename, outputdir)
-    # logger.debug(f"MMpose finished in {time.time() - s}s.")
-
-    logger.debug(f"filename={filename}, outputdir={outputdir}")
-    logger.debug(f"filename={Path(filename).exists()}, outputdir={Path(outputdir).exists()}")
-
-    main_report(filename, outputdir)
-    
-    logger.debug("Report based on video is finished.")
-
-    # if extention in images_types:
-
-    # logger.debug("Perpendicular finished.")
-    logger.debug("Video processing finished")
-
-
-def run_image_processing(filename: Path, outputdir: Path, skip_qr=False) -> dict:
-    logger.debug("Running image processing...")
-    frame = get_frame_to_process(str(filename))
-    run_qr.bbox_info_extraction_from_frame(frame)
-    main_perpendicular(filename, outputdir)
-    logger.debug("Perpendicular finished.")
-    # TODO add predict image
-    # img = mmcv.imread(str(img_fn))
-    # run_incision_detection(filename, outputdir)
+# def run_image_processing(filename: Path, outputdir: Path, skip_qr=False, device="cpu") -> dict:
+#     logger.debug("Running image processing...")
+#     frame = get_frame_to_process(str(filename))
+#     run_qr.bbox_info_extraction_from_frame(frame)
+#     main_perpendicular(filename, outputdir, device=device)
+#     logger.debug("Perpendicular finished.")
+#     # TODO add predict image
+#     # img = mmcv.imread(str(img_fn))
+#     # run_incision_detection(filename, outputdir)
 
 
 def _make_images_from_video(filename: Path, outputdir: Path) -> Path:

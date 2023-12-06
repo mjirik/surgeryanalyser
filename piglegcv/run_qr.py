@@ -13,11 +13,11 @@ import torch
 import pprint
 
 
-def get_bboxes(img):
+def get_bboxes(img, device='cpu'):
     single_model_path = Path(__file__).parent / "resources/single_image_detector/mdl.pth"
-    single_image_model = torch.load(single_model_path)["model"]
-    single_image_model_cfg = torch.load(single_model_path)["my_params"]
-    single_image_model.cfg = single_image_model_cfg
+    _model = torch.load(single_model_path, map_location=torch.device(device))
+    single_image_model = _model["model"]
+    single_image_model.cfg = _model["my_params"]
 
     bboxes, masks = inference_detector(single_image_model, img)
 
@@ -55,11 +55,11 @@ def get_bboxes(img):
 
     return bboxes_inicision_area, bbox_scene_area, bboxes_qr, side_length
 
-def bbox_info_extraction_from_frame(img, qreader=None):
+def bbox_info_extraction_from_frame(img, qreader=None, device='cpu'):
     img = np.asarray(img)
     width = img.shape[1]
     # Todo Viktora
-    bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length = get_bboxes(img)
+    bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length = get_bboxes(img, device=device)
 
     if qreader is None:
         
@@ -138,7 +138,8 @@ def bbox_info_extraction_from_frame(img, qreader=None):
     #pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area
 
 
-def main_qr(filename, output_dir):
+# TODO add device
+def main_qr(filename, output_dir, device):
     """
     Detect QR cod in video and detect frames with scissors of the QR code.
     :param filename:
@@ -178,12 +179,12 @@ def main_qr(filename, output_dir):
             #try read QR code
             logger.debug(f"frame={i}")
 
-            qr_data = bbox_info_extraction_from_frame(img, qreader)
+            qr_data = bbox_info_extraction_from_frame(img, device=device, qreader=qreader)
             qr_scissors_frame_detected = qr_data["qr_scissors_frame_detected"]
             if qr_scissors_frame_detected:
                 qr_scissors_frames.append(i)
 
-    qr_data = bbox_info_extraction_from_frame(img, qreader)
+    qr_data = bbox_info_extraction_from_frame(img, qreader, device=device)
 
     qr_data['qr_scissors_frames'] = qr_scissors_frames
 
@@ -196,4 +197,4 @@ def main_qr(filename, output_dir):
    
 if __name__ == '__main__':
 
-    main_qr(sys.argv[1], sys.argv[2])
+    main_qr(sys.argv[1], sys.argv[2], device='cpu')

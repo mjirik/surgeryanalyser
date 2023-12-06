@@ -16,7 +16,7 @@ python worker.py 2>&1 | \
 #   rotatelogs -n 1 logs/worker_${DOCKERLOGNAME}_log_2.txt 1M &
 
 python app.py 2>&1 | \
-   tee >(rotatelogs -n 3 logs/piglegcv_app_${DOCKERLOGNAME}_log.txt.bck 1M) | \
+#   tee >(rotatelogs -n 3 logs/piglegcv_app_${DOCKERLOGNAME}_log.txt.bck 1M) | \
    rotatelogs -n 1 logs/piglegcv_app_${DOCKERLOGNAME}_log.txt 1M &
 echo "Services started"
 

@@ -279,7 +279,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
     return image
 
 
-def main_perpendicular(filename, outputdir, meta:dict, roi=(0.08, 0.04), needle_holder_id=0, canny_sigma=2): #(x,y)
+def main_perpendicular(filename, outputdir, meta:dict, roi=(0.08, 0.04), needle_holder_id=0, canny_sigma=2, device="cpu"): #(x,y)
     logger.debug("main_perpendicular...")
     img = get_frame_to_process(filename)
 
@@ -287,9 +287,10 @@ def main_perpendicular(filename, outputdir, meta:dict, roi=(0.08, 0.04), needle_
     if img is None:
         logger.error("Input image is None")
         return
+    logger.debug(f"img.shape={img.shape}")
 
     logger.debug("incision detection ...")
-    imgs, bboxes = run_incision_detection(img, outputdir, meta)
+    imgs, bboxes = run_incision_detection(img, outputdir, meta, device=device)
     logger.debug(f"len(imgs)={len(imgs)}")
     pixelsize_m =  meta["pixelsize_m_by_incision_size"]
     
@@ -300,7 +301,7 @@ def main_perpendicular(filename, outputdir, meta:dict, roi=(0.08, 0.04), needle_
         #expected stitches
         expected_stitch_line = draw_expected_stitch_line(image, pixelsize_m, blue_line_distance_m=0.005, filename=f"{outputdir}/incision_stitch_{i}.jpg", visualization=False)
         #stitch detection
-        bboxes_stitches, labels_stitches = run_stitch_detection(image, f"{outputdir}/stitch_detection_{i}.json")
+        bboxes_stitches, labels_stitches = run_stitch_detection(image, f"{outputdir}/stitch_detection_{i}.json", device=device)
         #score
         stitch_score = run_stitch_analyser(image, bboxes_stitches, labels_stitches, expected_stitch_line, f"{outputdir}/stitch_detection_{i}.jpg")
         meta["stitch_scores"].append(stitch_score)

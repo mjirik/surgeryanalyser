@@ -60,11 +60,11 @@ def printKeypoints(pose_results, _file):
 
 
 ###############################
-def main_mmpose(filename, outputdir):
+def main_mmpose(filename, outputdir, device=None):
     
     det_config = 'cascade_rcnn_x101_64x4d_fpn_1class.py'
     det_checkpoint = 'https://download.openmmlab.com/mmpose/mmdet_pretrained/cascade_rcnn_x101_64x4d_fpn_20e_onehand10k-dac19597_20201030.pth'
-    device = 'cuda:0'
+    device = 'cuda:0' if device is None else device
     det_model = init_detector(
         det_config, det_checkpoint, device=device)
     # build the pose model from a config file and a checkpoint file
