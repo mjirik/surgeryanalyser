@@ -6,28 +6,28 @@ echo "PATH=${PATH}"
 mkdir -p ~/pigleg/logs/
 cd /webapps/piglegsurgery/piglegsurgeryweb
 
-# Make migrations
-#conda run -n piglegsurgery --no-capture-output python manage.py makemigrations --noinput --verbosity 2
-#conda run -n piglegsurgery --no-capture-output python manage.py migrate --noinput --verbosity 2
-#conda run -n piglegsurgery --no-capture-output python manage.py collectstatic --noinput --verbosity 2
-#echo "  Migrations done"
+ Make migrations
+conda run -n piglegsurgery --no-capture-output python manage.py makemigrations --noinput --verbosity 2
+conda run -n piglegsurgery --no-capture-output python manage.py migrate --noinput --verbosity 2
+conda run -n piglegsurgery --no-capture-output python manage.py collectstatic --noinput --verbosity 2
+echo "  Migrations done"
 
 if [ -f /.dockerenv ]; then
     echo "I'm inside docker";
     sudo service redis-server start |& \
 #        tee >(rotatelogs -n 3 ~/pigleg/logs/redis_${DOCKERLOGNAME}_log.txt.bck 1M) | \
-        tee >(rotatelogs -n 1 ~/pigleg/logs/redis_${DOCKERLOGNAME}_log.txt 1M)
+        tee >(rotatelogs -n 1 ~/pigleg/logs/piglegweb_redis_${DOCKERLOGNAME}_log.txt 1M)
     echo "  Redis started"
 else
     echo "Not running in docker, redis should be already running.";
 fi
 conda run -n piglegsurgery --no-capture-output python manage.py qcluster |& \
 #    tee >(rotatelogs -n 3 ~/pigleg/logs/qcluster_${DOCKERLOGNAME}_log.txt.bck 1M) | \
-    tee >(rotatelogs -n 1 ~/pigleg/logs/qcluster_${DOCKERLOGNAME}_log.txt 1M) &
+    tee >(rotatelogs -n 1 ~/pigleg/logs/piglegweb_qcluster_${DOCKERLOGNAME}_log.txt 1M) &
 echo "  QCluster started"
 conda run -n piglegsurgery --no-capture-output python manage.py runserver 0:8000 |& \
 #    tee >(rotatelogs -n 3 ~/pigleg/logs/runserver_${DOCKERLOGNAME}_log.txt.bck 1M) | \
-    tee >(rotatelogs -n 1 ~/pigleg/logs/runserver_${DOCKERLOGNAME}_log.txt 1M) &
+    tee >(rotatelogs -n 1 ~/pigleg/logs/piglegweb_runserver_${DOCKERLOGNAME}_log.txt 1M) &
 echo "  Django (debug) webserver started"
 
 # TODO production run

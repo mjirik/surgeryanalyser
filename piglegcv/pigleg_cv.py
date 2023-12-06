@@ -140,17 +140,13 @@ class DoComputerVision():
         s = time.time()
         from mmtrack.apis import init_model
         if self.is_microsurgery:
-
-            model = init_model(
-                "./resources/tracker_model_bytetrack_microsurgery/bytetrack_pigleg.py",
-                str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth"),
-                device=self.device
-            )
-            main_tracker_bytetrack(
-                trackers=[model],
-                filename=self.filename,
-                output_file_path=self.outputdir / "tracks.json",
-            )
+            models = [
+                init_model(
+                    "./resources/tracker_model_bytetrack_microsurgery/bytetrack_pigleg.py",
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth"),
+                    device=self.device
+                )
+            ]
         else:
             models = [
                 init_model(
@@ -165,11 +161,11 @@ class DoComputerVision():
                 #     device=self.device
                 # )
             ]
-        # main_tracker_bytetrack(
-        #     trackers=models,
-        #     filename=self.filename,
-        #     output_file_path=self.outputdir / "tracks.json",
-        # )
+        main_tracker_bytetrack(
+            trackers=models,
+            filename=self.filename,
+            output_file_path=self.outputdir / "tracks.json",
+        )
         self.meta["duration_s_tracking"] = float(time.time() - s)
         logger.debug(f"Tracker finished in {time.time() - s}s.")
         set_progress(50)
