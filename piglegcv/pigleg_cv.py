@@ -154,12 +154,12 @@ class DoComputerVision():
                     str(Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth"),
                     device=self.device
                 )
-                # ,
-                # init_model(
-                #     "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
-                #     str(Path(__file__).parent / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"),
-                #     device=self.device
-                # )
+                ,
+                init_model(
+                    "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"),
+                    device=self.device
+                )
             ]
         main_tracker_bytetrack(
             trackers=models,

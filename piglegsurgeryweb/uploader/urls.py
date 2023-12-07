@@ -18,6 +18,8 @@ urlpatterns = [
     path('ths6eei8sadfwebw7s8d6s5e4vs8eqpzmg4710awo/', views.show_report_list, name='web_reports'),  # used for debugging purposes
     path("reset_hashes/", views.reset_hashes, name="reset_hashes"),
     path("update_all_uploaded_files/", views.update_all_uploaded_files, name="update_all_uploaded_files"),
+    path("logout/", views.logout_view, name="logout_view"),
+    path("spreadsheet/", views.redirect_to_spreadsheet, name="spreadsheet"),
     # path("about_ev_cs/", views.about_ev_cs, name="about_ev_cs"),
     # path("about_ev_en/", views.about_ev_en, name="about_ev_en"),
 ]

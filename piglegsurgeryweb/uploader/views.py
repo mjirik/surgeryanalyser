@@ -19,7 +19,15 @@ from datetime import datetime
 from django.conf import settings
 import json
 import re
+from django.contrib.auth import logout
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
+
+def logout_view(request):
+    """Logout from the application."""
+    logout(request)
+    # Redirect to a success page.
+    return redirect("uploader:model_form_upload")
+
 
 def index(request):
     return HttpResponse("Hello, world. You're at piglegsurgeryweb. HAHA")
@@ -209,6 +217,17 @@ def web_report(request, filename_hash:str):
     }
     return render(request,'uploader/web_report.html', context)
 
+
+def redirect_to_spreadsheet(request):
+    # read env variable PIGLEGCV_SPREADSHEET_URL
+    pigleg_spreadsheet_url = os.getenv("PIGLEG_SPREADSHEET_URL", default=None)
+    if pigleg_spreadsheet_url is None:
+        logger.debug(f"piglegcv_spreadsheet_url={pigleg_spreadsheet_url}")
+        return redirect("uploader:web_reports")
+    else:
+        pigleg_spreadsheet_url = pigleg_spreadsheet_url.replace('"', "")
+        logger.debug(f"piglegcv_spreadsheet_url={pigleg_spreadsheet_url}")
+        return redirect(pigleg_spreadsheet_url)
 
 def run(request, filename_id):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
