@@ -30,7 +30,8 @@
             <th scope="col">File name</th>
             <th scope="col">Uploaded At</th>
             {% if user.is_authenticated %}
-            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>
+            <th scope="col" colspan="3"></th>
+<!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
             <th scope="col">Started At</th>
             <th scope="col">Finished At</th>
             {% endif %}
@@ -39,30 +40,35 @@
         <tbody>
         {% for uploadedfile in uploadedfiles %}
         <tr class="align-middle" id="row{{uploadedfile.id}}">
-            <th scope="col">
+            <td scope="col">
                 {% if uploadedfile.preview %}
                 <!--                {{ uploadedfile.preview }}-->
                 <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
                 <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
-                       alt="thumbnail with the processed video" style="min-width: 66px; max-width: 100px;"></image>
+                       alt="thumbnail with the processed video" style="min-width: 66px; max-width: 80px;"></image>
                 {% endif %}
-            </th>
-            <th scope="row"><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
-                {{ uploadedfile.email }} </a></th>
-            <th><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}"
+            </td>
+            <td scope="row"><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
+                {{ uploadedfile.email }} </a></td>
+            <td><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}"
                    style="word-break: break-all;"
             >
-                {{ uploadedfile }}</a></th>
-            <th><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
-                {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></th>
+                {{ uploadedfile }}</a></td>
+            <td><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
+                {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
             {% if user.is_authenticated %}
-            <th><a class="btn btn-light"
-                   href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}">Run</a></th>
-            <th><a class="btn btn-light"
+            <td>
+                {% if uploadedfile.is_microscope %}
+                <i class="fa-solid fa-microscope"></i><
+                {% endif %}
+            </td>
+            <td><a class="btn btn-light"
+                   href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}">Run</a></td>
+            <td><a class="btn btn-light"
                    href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send
-                Email</a></th>
-            <th>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</th>
-            <th>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</th>
+                Email</a></td>
+            <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
+            <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
             {% endif %}
         </tr>
         {% endfor %}
