@@ -206,16 +206,40 @@ def web_report(request, filename_hash:str):
             videofiles_url.append(videofile_url)
 
 
+    image_list_in, image_list_out = _filter_images(serverfile)
 
     context = {
         'serverfile': serverfile,
         'mediafile': Path(serverfile.mediafile.name).name,
-        'image_list': image_list,
+        'image_list': image_list_in,
+        'image_list_out': image_list_out,
         "next": request.GET['next'] if "next" in request.GET else None,
         'videofiles_url': videofiles_url,
         "results": results
     }
     return render(request,'uploader/web_report.html', context)
+
+def _filter_images(serverfile:UploadedFile):
+    allowed_image_patterns = [
+        "heatmap",
+        "needle_holder_area_presence", "_stitch_detection", "jpeg", "gif"]
+    filtered_in = []
+    filtered_out = []
+
+    for image in serverfile.bitmapimage_set.all():
+        to_keep = False
+        # if image.filename.startswith("_") or image.filename.startswith("__"):
+        #     continue
+        for allowed_image_pattern in allowed_image_patterns:
+            filename = os.path.basename(image.bitmap_image.name)
+            if allowed_image_pattern in filename.lower():
+                to_keep = True
+                filtered_in.append(image)
+        if not to_keep:
+            filtered_out.append(image)
+
+    return filtered_in, filtered_out
+
 
 
 def redirect_to_spreadsheet(request):

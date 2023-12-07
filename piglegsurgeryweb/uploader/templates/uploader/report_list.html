@@ -40,7 +40,7 @@
         <tbody>
         {% for uploadedfile in uploadedfiles %}
         <tr class="align-middle" id="row{{uploadedfile.id}}">
-            <td scope="col">
+            <td scope="col" class="p-1">
                 {% if uploadedfile.preview %}
                 <!--                {{ uploadedfile.preview }}-->
                 <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->

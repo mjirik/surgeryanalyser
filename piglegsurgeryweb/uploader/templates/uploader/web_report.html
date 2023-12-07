@@ -77,10 +77,27 @@
             <figure class="figure">
                 <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
                      alt="A generic square placeholder image with rounded corners in a figure." width=550>
-                <figcaption class="figure-caption">{{ im.filename }}</figcaption>
+<!--                <figcaption class="figure-caption">{{ im.filename }}</figcaption>-->
             </figure>
         </a>
         {% endfor %}
+        <p>
+            <a class="btn btn-secondary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+                More images
+            </a>
+        </p>
+        <div class="collapse" id="collapseExample">
+                {% for im in image_list_out %}
+                <a href="#" class="pop">
+
+                    <figure class="figure">
+                        <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
+                             alt="A generic square placeholder image with rounded corners in a figure." width=550>
+                                        <figcaption class="figure-caption">{{ im.filename }}</figcaption>
+                    </figure>
+                </a>
+                {% endfor %}
+        </div>
 
         <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
              aria-hidden="true">
@@ -95,6 +112,9 @@
             </div>
         </div>
     </div>
+
+
+
     {% if next == None %}
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
     {% else %}
