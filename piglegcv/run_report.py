@@ -559,8 +559,10 @@ def _qr_data_processing(json_data:dict, fps):
         if pxsz_incision:
             pix_size = pxsz_incision
             is_qr_detected = True
-    scissors_frames = qr_data["qr_scissors_frames"] if "qr_scissors_frames" in qr_data else []
-    scissors_frames = _scissors_frames(scissors_frames, fps)
+
+    # scissors_frames = qr_data["qr_scissors_frames"] if "qr_scissors_frames" in qr_data else []
+    # scissors_frames = _scissors_frames(scissors_frames, fps)
+    scissors_frames = qr_data["stitch_split_frames"] if "stitch_split_frames" in qr_data else []
     return pix_size, is_qr_detected, scissors_frames
 
 

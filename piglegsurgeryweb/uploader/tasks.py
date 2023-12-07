@@ -33,7 +33,7 @@ from .visualization_tools import crop_square
 from .media_tools import make_images_from_video, rescale, convert_avi_to_mp4
 
 
-def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="127.0.0.1", port=5000):
+def _run_media_processing_rest_api(input_file:Path, outputdir:Path, is_microsurgery:bool, n_stitches:int, hostname="127.0.0.1", port=5000):
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
     logger.debug("Creating request for processing")
@@ -41,6 +41,8 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, hostname="12
     query = {
         "filename": str(input_file),
         "outputdir": str(outputdir),
+        "is_microsurgery": is_microsurgery,
+        "n_stitches": n_stitches
     }
     url = f'http://{hostname}:{port}/run'
     try:
@@ -96,7 +98,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     outputdir = Path(serverfile.outputdir)
     logger.debug(f"outputdir={outputdir}")
 
-    _run_media_processing_rest_api(input_file, outputdir, hostname, port)
+    _run_media_processing_rest_api(input_file, outputdir, serverfile.is_microsurgery, int(serverfile.stitch_count), hostname, port)
 
     # (outputdir / "empty.txt").touch(exist_ok=True)
 

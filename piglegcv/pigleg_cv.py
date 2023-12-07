@@ -32,6 +32,9 @@ from incision_detection_mmdet import run_incision_detection
 from media_tools import make_images_from_video
 # from run_qr import bbox_info_extraction_from_frame
 import os
+# from sklearn.cluster import MeanShift, estimate_bandwidth, SpectralClustering, KMeans, DBSCAN
+from sklearn.cluster import KMeans
+# from sklearn.mixture import GaussianMixture
 
 
 PROGRESS = 0
@@ -50,7 +53,7 @@ def set_progress(progress=None, progress_max=None):
         PROGRESS_MAX = progress_max
 
 class DoComputerVision():
-    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, test_first_seconds:bool=False, device:Optional[str]=None):
+    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, n_stitches=None, is_microsurgery=False, test_first_seconds:bool=False, device:Optional[str]=None):
         
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -64,8 +67,9 @@ class DoComputerVision():
         self.filename_cropped: Optional[Path] = None
         self.test_first_seconds = test_first_seconds
         self.debug_images = {}
-        self.is_microsurgery = False
+        self.is_microsurgery = is_microsurgery
         self.device = device
+        self.n_stitches = n_stitches
 
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
@@ -309,16 +313,13 @@ class DoComputerVision():
         
     def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9):
         
-        split_frames = find_stitch_ends_in_tracks(self.outputdir, n_clusters:int, tool_index=tool_index, time_axis:int=time_axis, 
-                                   weight_of_later=weight_of_later, 
-                                   metadata=self.meta
-                                  )
+        split_frames = find_stitch_ends_in_tracks(self.outputdir, n_clusters=n_clusters, tool_index=tool_index, time_axis=time_axis, weight_of_later=weight_of_later, metadata=self.meta )
         self.meta["qr_data"]["stitch_split_frames"] = split_frames
 
 
 
-def do_computer_vision(filename, outputdir, meta=None, device=DEVICE):
-    return DoComputerVision(filename, outputdir, meta, device=device).run()
+def do_computer_vision(filename, outputdir, meta=None, is_microsurgery:bool=False, n_stitches:Optional[int]=None, device=DEVICE):
+    return DoComputerVision(filename, outputdir, meta, is_microsurgery=is_microsurgery, n_stitches=n_stitches, device=device).run()
 
 
 
@@ -342,7 +343,7 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index:int=1, time
     time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
 
     X = np.concatenate([X, time], axis=1)
-    X = X * axis_normalization
+    # X = X * axis_normalization
     
     # bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
     # ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)

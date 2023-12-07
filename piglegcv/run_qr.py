@@ -133,7 +133,6 @@ def bbox_info_extraction_from_frame(img, qreader=None, device='cpu'):
         scene_size = 0.300 # [m]
         size_by_scene = scene_size / width
 
-
     qr_data['is_detected'] = is_detected
     qr_data['box'] = qr_bbox
     qr_data['pix_size'] = pix_size_best

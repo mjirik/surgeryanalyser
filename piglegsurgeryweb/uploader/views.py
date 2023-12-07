@@ -222,7 +222,7 @@ def web_report(request, filename_hash:str):
 def _filter_images(serverfile:UploadedFile):
     allowed_image_patterns = [
         "heatmap",
-        "needle_holder_area_presence", "_stitch_detection", "jpeg", "gif"]
+        "needle_holder_area_presence", "stitch_detection", "jpeg", "gif"]
     filtered_in = []
     filtered_out = []
 

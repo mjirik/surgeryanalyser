@@ -38,6 +38,8 @@ def index():
         filename = request.args.get("filename")
 
         outputdir = request.args.get("outputdir")
+        n_stitches = request.args.get("n_stitches")
+        is_microsurgery = request.args.get("is_microsurgery")
         # if not url[:8].startswith(('https://', 'http://')):
         #     url = 'http://' + url
 
@@ -48,7 +50,7 @@ def index():
 
         meta = {}
         job = q.enqueue_call(
-            func=do_computer_vision, args=(filename, outputdir, meta), result_ttl=5000,
+            func=do_computer_vision, args=(filename, outputdir, meta, is_microsurgery, n_stitches), result_ttl=5000,
             timeout=PIGLEGCV_TIMEOUT,
         )
         job_id = job.get_id()
