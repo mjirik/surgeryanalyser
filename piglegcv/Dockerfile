@@ -102,30 +102,25 @@ RUN mkdir -p mnt/pole
 RUN mkdir logs
 
 # Get models
+
+RUN mkdir -p ./.cache/torch/hub/checkpoints/
+COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
+
+
 # it is possible to do it togehter but then everything is in one layer and slow to build
 RUN mkdir -p ./resources
+COPY ./resources/ ./resources/
 
 #RUN mkdir -p ./resources/tracker_model_bytetrack
+#RUN mkdir -p ./resources/tracker_model_bytetrack_microsurgery
 #RUN mkdir -p ./resources/incision_detection_models
 #RUN mkdir -p ./resources/yolov7_qrdet
 #RUN mkdir -p ./resources/single_image_detector
 #RUN mkdir -p ./resources/stitch_detection_models/
-
-# this is for final user appuser
-# RUN TORCH_CHECKPOINTS=./.cache/torch/hub/checkpoints/
-# this is for final user root
-# RUN TORCH_CHECKPOINTS=/root/.cache/torch/hub/checkpoints/
-# RUN echo $TORCH_CHECKPOINTS
-# RUN mkdir -p $TORCH_CHECKPOINTS
-# RUN mkdir -p ./.cache/torch/hub/checkpoints/
-RUN mkdir -p ./.cache/torch/hub/checkpoints/
-COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
-
-COPY ./resources/ ./resources/
+#
 #COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
 #COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
 #COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
-## COPY ./resources/incision_detection_models/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth $TORCH_CHECKPOINTS
 #COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
 #COPY ./resources/single_image_detector/mdl.pth ./resources/single_image_detector
 #COPY ./resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
