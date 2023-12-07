@@ -3,7 +3,7 @@ import cv2
 import json
 import loguru
 from loguru import logger
-from typing import Optional
+from typing import Optional, List
 import shutil
 import traceback
 import time
@@ -50,7 +50,11 @@ def set_progress(progress=None, progress_max=None):
         PROGRESS_MAX = progress_max
 
 class DoComputerVision():
-    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, test_first_seconds:bool=False, device="cpu"):
+    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, test_first_seconds:bool=False, device:Optional[str]=None):
+        
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+
         self.filename:Path = Path(filename)
         self.filename_original:Path = Path(filename)
         self.outputdir:Path = Path(outputdir)
@@ -101,6 +105,7 @@ class DoComputerVision():
             self.filename = self.do_crop_rotate_rescale(qr_data["bbox_scene_area"], qr_data["incision_bboxes"])
             self.meta["duration_s_do_crop_rotate_rescale"] = time.time() - s
             logger.debug(f"Cropping done in {time.time() - s}s.")
+            self.update_meta()
 
 
     def run_image_processing(self):
@@ -291,11 +296,78 @@ class DoComputerVision():
         )
         return self.filename_cropped
         # return self.filename
+        
+        
+    def update_meta(self, filename=None):
+        if filename is None:
+            filename = self.filename
+        cap = cv2.VideoCapture(str(filename))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap.release()
+        self.meta.update({"filename_full": str(filename), "fps": fps, "frame_count": totalframecount})
+        
+    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9):
+        
+        split_frames = find_stitch_ends_in_tracks(self.outputdir, n_clusters:int, tool_index=tool_index, time_axis:int=time_axis, 
+                                   weight_of_later=weight_of_later, 
+                                   metadata=self.meta
+                                  )
+        self.meta["qr_data"]["stitch_split_frames"] = split_frames
+
 
 
 def do_computer_vision(filename, outputdir, meta=None, device=DEVICE):
     return DoComputerVision(filename, outputdir, meta, device=device).run()
 
+
+
+def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9, metadata=None) -> List:
+    points_path = outputdir / "tracks_points.json"
+    assert points_path.exists()
+    time_axis = int(time_axis)
+    with open(points_path, "r") as f:
+        data = json.load(f)
+    
+    if metadata is None:
+        meta_path = outputdir / "meta.json"
+        assert points_path.exists()
+        with open(meta_path, "r") as f:
+            metadata = json.load(f)  
+        
+    # pix_size is in [m] to normaliza data a bit we use [mm]
+    X = np.asarray(data[f"data_pixels_{tool_index}"]) * metadata["qr_data"]["pix_size"] * 1000
+
+    # time =  np.asarray(list(range(X.shape[0]))).reshape(-1,1)
+    time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
+
+    X = np.concatenate([X, time], axis=1)
+    X = X * axis_normalization
+    
+    # bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
+    # ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    
+    ms = KMeans(n_clusters=n_clusters)
+    # ms = DBSCAN()
+    # ms = SpectralClustering()
+    # ms = SpectralClustering(3, affinity='precomputed', n_init=100,
+    #                       assign_labels='discretize')
+    # ms = GaussianMixture()
+    ms.fit(X)
+    labels = ms.labels_
+    # labels = ms.predict(X)
+    cluster_centers = ms.cluster_centers_
+    
+    prev = labels[0]
+    split_frames = []
+    for frame_i, label in enumerate(labels):
+        if label != prev:
+            time_s = ((1-weight_of_later)*X[frame_i - 1,time_axis]) + (weight_of_later * X[frame_i,time_axis])
+            frame_i = time_s * metadata["fps"]
+            split_frames.append(int(frame_i))
+        prev = label
+        
+    return split_frames
 
 # def do_computer_vision_2(filename, outputdir, meta):
 #     log_format = loguru._defaults.LOGURU_FORMAT
