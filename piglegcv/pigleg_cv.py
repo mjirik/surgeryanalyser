@@ -89,17 +89,36 @@ class DoComputerVision():
         except Exception as e:
             logger.error(traceback.format_exc())
         logger.remove(self.logger_id)
+        
+    def _make_sure_media_is_cropped(self):
+        if self.filename_cropped is None:
+            s = time.time()
+            qr_data = self.get_parameters_for_crop_rotate_rescale()
+            logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")
+            self.meta["duration_s_get_parameters_for_crop_rotate_rescale"] = float(time.time() - s)
+            # video_preprocessing - rotate, rescale and crop -> file
+            s = time.time()
+            self.filename = self.do_crop_rotate_rescale(qr_data["bbox_scene_area"], qr_data["incision_bboxes"])
+            self.meta["duration_s_do_crop_rotate_rescale"] = time.time() - s
+            logger.debug(f"Cropping done in {time.time() - s}s.")
+
 
     def run_image_processing(self):
+        if self.meta is None:
+            self.meta = {}
+        self._make_sure_media_is_cropped()
         logger.debug("Running image processing...")
         self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame, device=self.device)
         qr_data['qr_scissors_frames'] = []
         self.meta["qr_data"] = qr_data
+        logger.debug(self.meta)
 
         main_perpendicular(self.filename, self.outputdir, self.meta, device=self.device)
         logger.debug("Perpendicular finished.")
-
+        
+        
+    
     def run_video_processing(self):
 
         """
@@ -121,15 +140,7 @@ class DoComputerVision():
         # bytrack
         # make_report
 
-        s = time.time()
-        qr_data = self.get_parameters_for_crop_rotate_rescale()
-        logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")
-        self.meta["duration_s_get_parameters_for_crop_rotate_rescale"] = float(time.time() - s)
-        # video_preprocessing - rotate, rescale and crop -> file
-        s = time.time()
-        self.filename = self.do_crop_rotate_rescale(qr_data["bbox_scene_area"], qr_data["incision_bboxes"])
-        self.meta["duration_s_do_crop_rotate_rescale"] = time.time() - s
-        logger.debug(f"Cropping done in {time.time() - s}s.")
+        self._make_sure_media_is_cropped()
 
         s = time.time()
         self.run_image_processing()

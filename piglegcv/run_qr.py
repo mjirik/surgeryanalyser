@@ -113,8 +113,21 @@ def bbox_info_extraction_from_frame(img, qreader=None, device='cpu'):
                 pix_size_best = qr_size / np.linalg.norm(a-b)
         output = {}
     # todo use the pigleg holder detection based estimator
+    pix_size_single_frame_detector_m = qr_size / qr_side_length if qr_side_length else None
+    
     qr_data = {}
-    qr_data["pix_size_method"] = "QR" if is_detected else "video size estimation"
+    
+    
+    
+    pix_size_method = "video size estimation"
+    if is_detected:
+        pix_size_method = "QR"
+    elif len(bboxes_qr) > 0:
+        pix_size_method = "pix_size_single_frame_detector_m"
+        pix_size_best = pix_size_single_frame_detector_m
+    
+    
+    qr_data["pix_size_method"] = pix_size_method
     if True:
         # pigleg_holder_width [m] - usually it takes around half of the image width
         scene_size = 0.300 # [m]
@@ -128,9 +141,10 @@ def bbox_info_extraction_from_frame(img, qreader=None, device='cpu'):
     qr_data['qr_size'] = qr_size
     qr_data['size_by_scene'] = size_by_scene
     qr_data['text'] = qr_text
-    qr_data["pix_size_single_frame_detector_m"] = qr_size / qr_side_length if qr_side_length else None
+    qr_data["pix_size_single_frame_detector_m"] = pix_size_single_frame_detector_m
     qr_data["bbox_scene_area"] = np.asarray(bbox_scene_area).tolist() if bbox_scene_area is not None else None
     qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
+    qr_data["qr_bboxes_SFD"] = np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
 
     logger.debug(pprint.pformat(qr_data))
 
