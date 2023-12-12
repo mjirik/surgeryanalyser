@@ -39,9 +39,12 @@ def parse_args():
 #def main(args):
 def run_stitch_detection(img, json_file, device="cuda"):
 
-    cfg = Config.fromfile('./stitch_detection_mmdet_config.py')
-
+    cfg_path = Path('./stitch_detection_mmdet_config.py')
     checkpoint_path = Path(__file__).parent / "resources/stitch_detection_models/model.pth"
+    logger.debug(f"{cfg_path=}, {cfg_path.exists()}")
+    logger.debug(f"{checkpoint_path=}, {checkpoint_path.exists()}")
+
+    cfg = Config.fromfile(str(cfg_path))
 
     # build the model from a config file and a checkpoint file
     model = init_detector(cfg, str(checkpoint_path), device=device)
