@@ -23,16 +23,17 @@ docker login nvcr.io
 ## Get all resources
 
 * `piglegsurgery/piglegsurgeryweb/private/`
-* `piglegsurgery/piglegsurgeryweb/media/`
-* `piglegsurgery/piglegcv/resources/`
+* `piglegsurgery/piglegsurgeryweb/media_symink/`
 * `piglegsurgery/piglegsurgeryweb/piglegsurgeryweb/.env` with email setup by `EMAIL_HOST` ...
+* `piglegsurgery/piglegcv/resources/`
 * `piglegsurgery/.jupyter`
+* `piglegsurgery/.env.dev` with 
 * torch checkpoints
-```bash
-mkdir -p piglegsurgery/resources/torch
-cd piglegsurgery/resources/torch
-wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth
-```
+    ```bash
+    mkdir -p piglegsurgery/resources/torch
+    cd piglegsurgery/resources/torch
+    wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth
+    ```
 
 ## Run devel 
     

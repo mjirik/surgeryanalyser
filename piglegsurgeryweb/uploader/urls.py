@@ -21,5 +21,6 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout_view"),
     path("spreadsheet/", views.redirect_to_spreadsheet, name="spreadsheet"),
     # path("about_ev_cs/", views.about_ev_cs, name="about_ev_cs"),
+    path("test/", views.test, name="test"),
     # path("about_ev_en/", views.about_ev_en, name="about_ev_en"),
 ]

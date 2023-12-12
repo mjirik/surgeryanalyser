@@ -56,6 +56,7 @@ class DoComputerVision():
     def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, n_stitches=None, is_microsurgery=False, test_first_seconds:bool=False, device:Optional[str]=None):
         
         if device is None:
+            import torch
             device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.filename:Path = Path(filename)

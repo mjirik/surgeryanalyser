@@ -371,3 +371,36 @@ def model_form_upload(request):
         "uploader/model_form_upload.html",
         {"form": form, "headline": "Upload", "button": "Upload"},
     )
+
+
+def test(request):
+    return render(request, "uploader/test.html", {})
+
+
+# def show_logs(request, filename_hash:str):
+#     # fn = get_outputdir_from_hash(hash)
+#     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+#     outputdir = Path(serverfile.outputdir)
+#     key_value = {}
+#     for file in outputdir.glob("*_log.txt"):
+#         with open(file) as f:
+#             lines = f.readlines()
+#         # lines = [_set_loglevel_color(line) for line in lines]
+#         key_value.update({
+#             str(file.stem): '<p class="text-monospace">' + "<br>".join(lines) + '</p>'
+#         })
+#     logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
+#     return render(request,'uploader/show_logs.html', {"key_value": key_value, "logpath": logpath})
+
+
+
+def _make_html_from_log(logpath: Path):
+    logpath = opath / "log.txt"
+    if logpath.exists():
+        with open(logpath) as f:
+            lines = f.readlines()
+
+        lines = [_set_loglevel_color(line) for line in lines]
+        key_value.update({
+            "Log": '<p class="text-monospace">' + "<br>".join(lines) + '</p>'
+        })
