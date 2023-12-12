@@ -124,7 +124,7 @@ COPY ./resources/ ./resources/
 #COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
 #COPY ./resources/single_image_detector/mdl.pth ./resources/single_image_detector
 #COPY ./resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
-RUN chmod a+rw -R ./resources
+RUN sudo chmod a+rw -R ./resources
 
 
 # Copy scripts
