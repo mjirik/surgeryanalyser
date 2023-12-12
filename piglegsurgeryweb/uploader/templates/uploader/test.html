@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block body %}
+    <h1>Home</h1>
+    <p> Welcome to the home page!</p>
+
+
+    <video width="320" height="240" controls>
+  <source src="/media/upload/mov_bbb.mp4" type="video/mp4">
+  <source src="movie.ogg" type="video/ogg">
+Your browser does not support the video tag.
+</video>
+    <video width="320" height="240" controls>
+        <source src="/media/SA_20231207-153656_zn1zok6guln9/SA_20231207-153656/pigleg_results.mp4"
+
+                type="video/mp4">
+        <source src="movie.ogg" type="video/ogg">
+        Your browser does not support the video tag.
+    </video>
+
+
+
+
+    <video
+                id="my-video"
+                class="video-js embed-responsive"
+                controls
+                autoplay
+                muted
+                preload="auto"
+                data-setup='{"fluid": true}'
+                poster="{{videofile_url}}.jpg"
+        >
+            <source src="/media/upload/mov_bbb.mp4" type="video/mp4"/>
+            <!--                    <source src="MY_VIDEO.webm" type="video/webm" />-->
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a
+                web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank"
+                >supports HTML5 video</a
+                >
+            </p>
+        </video>
+{% endblock %}
+
+
