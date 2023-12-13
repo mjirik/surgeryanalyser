@@ -7,5 +7,13 @@
         {{ text }}
     </p>
     <a class="btn btn-secondary" href="{{ next }}">{{next_text}}</a>
+    {%  for key, value in key_value.items %}
+        <h3>{{ key }}</h3>
+        <p>
+        {% autoescape off %}
+            {{ value }}
+        {% endautoescape %}
+        </p>
+    {% endfor %}
 </div>
 {% endblock %}
