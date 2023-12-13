@@ -49,7 +49,7 @@ def test_create_video_report():
     dpi = 400
     fig, ax, ds_max  = run_report.create_video_report_figure(
         frame_ids, data_pixels, source_fps, pix_size, QRinit, object_colors, object_names,
-        video_size, ds_threshold=0.1, dpi=dpi, scissors_frames=[])
+        video_size, ds_threshold=0.1, dpi=dpi, cut_frames=[])
 
     videosize_inch = np.asarray(video_size) / dpi
 

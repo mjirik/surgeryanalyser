@@ -472,7 +472,7 @@ def plot3(fig):
 
 #ds_threshold [m]
 def create_video_report_figure(frame_ids, data_pixels, source_fps, pix_size, QRinit:bool, object_colors, object_names,
-                               video_size, ds_threshold=0.1, dpi=300, scissors_frames=[], visualization_unit="cm"):
+                               video_size, ds_threshold=0.1, dpi=300, cut_frames=[], visualization_unit="cm"):
 
     ##################
     ## second graph
@@ -532,7 +532,7 @@ def create_video_report_figure(frame_ids, data_pixels, source_fps, pix_size, QRi
             print(object_color, object_name)
 
     # Draw vlines on scissors QR code visible
-    t = 1.0 / source_fps * np.array(scissors_frames)
+    t = 1.0 / source_fps * np.array(cut_frames)
     for frt in t:
         plt.axvline(frt, c="m")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -624,6 +624,64 @@ def insert_ruler_in_image(img, pixelsize, ruler_size=50, resize_factor=1., unit=
 
 
 #####################################
+
+def bboxes_to_points(outputdir:str, confidence_score_thr:float):
+    json_data = load_json('{}/tracks.json'.format(outputdir))
+    sort_data = json_data['tracks'] if 'tracks' in json_data else []
+
+    data_pixels = [[], [], [], []]
+    frame_ids = [[], [], [], []]
+    N = len(sort_data)
+    logger.debug(f'Sort data N={N}')
+
+    for i, sort_data_i in enumerate(sort_data):  # co snimek to jedna polozka, i prazdna []
+        frame = sort_data_i
+        # print(frame)
+        for track_object in frame:
+            if len(track_object) >= 4:
+                box = np.array(track_object[0:4])
+                position = np.array([np.mean([box[0], box[2]]), np.mean([box[1], box[3]])])
+
+                if (len(track_object) == 6):
+                    class_id = track_object[5]
+                    confidence_score = track_object[4]
+                else:
+                    class_id = 0
+                    confidence_score = 1.0
+
+                if (class_id >= 0) and (class_id < 4) and (confidence_score > confidence_score_thr):
+                    data_pixels[class_id].append(position)
+                    frame_ids[class_id].append(i)
+
+
+    frame_ids_list = np.asarray(frame_ids).tolist()
+    json_metadata = save_json(
+        {
+            "frame_ids": frame_ids_list,
+            "data_pixels_0": np.asarray(data_pixels[0]).tolist(),
+            "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
+            "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
+            "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
+            "data_pixels": np.asarray(data_pixels).tolist(),
+        }, '{}/tracks_points.json'.format(outputdir), update=False)
+    return frame_ids, data_pixels, sort_data
+
+
+def merge_cut_frames(scissors_frames:list, cut_frames:list, fps:float) -> list:
+    """Merge list of frames. The frames are merged if they are closer than 10 seconds."""
+    scissors_frames = np.asarray(scissors_frames)
+    cut_frames = np.asarray(cut_frames)
+    all_frames = np.unique(np.concatenate([scissors_frames, cut_frames]))
+    all_frames = np.sort(all_frames)
+    merged_frames = []
+    for frame in all_frames:
+        if len(merged_frames) == 0:
+            merged_frames.append(frame)
+        else:
+            if frame - merged_frames[-1] > 10 * fps:
+                merged_frames.append(frame)
+    return merged_frames
+
 def main_report(
         filename, outputdir,
         meta:dict,
@@ -637,6 +695,7 @@ def main_report(
         visualization_length_unit="cm",
         confidence_score_thr=0.0,
         oa_bbox_linecolor=[0,255,128],
+        cut_frames:list=[],
 ):
     """
 
@@ -645,6 +704,7 @@ def main_report(
     :param object_colors:
     :param object_names:
     :param concat_axis: axis of original video and graph concatenation. 0 for vertical, 1 for horizontal
+    :param cut_frames: list of frames where the stitch cut is detected.
     :return:
     """
     filename = str(filename)
@@ -679,40 +739,13 @@ def main_report(
         videoWriter = cv2.VideoWriter(str(output_video_fn_tmp), fourcc, fps, size_output_video)
 
 
-        #input object tracking data
-        json_data = load_json('{}/tracks.json'.format(outputdir))
-        sort_data = json_data['tracks'] if 'tracks' in json_data else []
 
         #input hand poses data
         json_data = load_json('{}/hand_poses.json'.format(outputdir))
         hand_poses = json_data['hand_poses'] if 'hand_poses' in json_data else []
 
-        data_pixels = [[],[],[],[]]
-        frame_ids = [[],[],[],[]]
-        N = len(sort_data)
         M = len(hand_poses)
-        logger.debug('Sort data N=', N,' MMpose data M=', M)
-
-        for i, sort_data_i in enumerate(sort_data): #co snimek to jedna polozka, i prazdna []
-            frame = sort_data_i
-            #print(frame)
-            for track_object in frame:
-                if len(track_object) >= 4:
-                    box = np.array(track_object[0:4])
-                    position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-
-                    if (len(track_object) == 6):
-                        class_id = track_object[5]
-                        confidence_score = track_object[4]
-                    else:
-                        class_id = 0
-                        confidence_score = 1.0
-
-                    if (class_id >= 0) and (class_id < 4) and (confidence_score > confidence_score_thr):
-                        data_pixels[class_id].append(position)
-                        frame_ids[class_id].append(i)
-
-
+        logger.debug('MMpose data M=', M)
 
         # input QR data
         # if meta is None:
@@ -722,19 +755,11 @@ def main_report(
         bboxes = np.asarray(meta["incision_bboxes"])
         relative_presence = RelativePresenceInOperatingArea()
         relative_presence.set_operation_area_based_on_bboxes(bboxes)
+        frame_ids, data_pixels, sort_data = bboxes_to_points(outputdir, confidence_score_thr)
+        cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
 
-        frame_ids_list = np.asarray(frame_ids).tolist()
-        json_metadata = save_json(
-            {
-                "frame_ids": frame_ids_list, 
-                "data_pixels_0": np.asarray(data_pixels[0]).tolist(),
-                "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
-                "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
-                "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
-            }, '{}/tracks_points.json'.format(outputdir), update=False)
-        
         fig, ax, ds_max = create_video_report_figure(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
-                                                     object_names, size_output_fig, dpi=300, scissors_frames=scissors_frames)
+                                                     object_names, size_output_fig, dpi=300, cut_frames=cut_frames)
 
 
         img_first = None
@@ -763,7 +788,7 @@ def main_report(
 
 
             #object tracking
-            if i < N:
+            if i < len(sort_data):
 
                 for track_object in sort_data[i]:
                     # TODO Zdeněk - vykreslovat bboxy rukou, zatím nevykreslovat bbox nástroje a myslet na to, že to může být mikrochirurgie
@@ -866,6 +891,7 @@ def main_report(
         # graph report
 
         #plot graphs and store statistic
+        # TODO Zdeněk - použít cut_frames pro výpočet individuálních statistik pro každý steh zvlášť.
         data_results = {}
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
             simplename = object_name.lower().strip().replace(' ', '_')
