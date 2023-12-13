@@ -755,7 +755,7 @@ def main_report(
                 oa_bbox_resized = oa_bbox_resized * resize_factor
                 img = draw_bbox(img, oa_bbox_resized, linecolor=oa_bbox_linecolor)
 
-            if not(i % 10):
+            if not(i % 50):
                 logger.debug(f'Frame {i} processed!')
 
             #if i > 1050:
@@ -766,6 +766,7 @@ def main_report(
             if i < N:
 
                 for track_object in sort_data[i]:
+                    # TODO Zdeněk - vykreslovat bboxy rukou, zatím nevykreslovat bbox nástroje a myslet na to, že to může být mikrochirurgie
 
                     if len(track_object) >= 4:
                         box = np.array(track_object[0:4])

@@ -62,7 +62,7 @@ class DoComputerVision():
         self.filename:Path = Path(filename)
         self.filename_original:Path = Path(filename)
         self.outputdir:Path = Path(outputdir)
-        self.meta: dict = meta
+        self.meta: dict = meta if meta is not None else {}
         self.logger_id = None
         self.frame: Optional[np.ndarray] = None
         self.filename_cropped: Optional[Path] = None
@@ -71,6 +71,7 @@ class DoComputerVision():
         self.is_microsurgery = is_microsurgery
         self.device = device
         self.n_stitches = n_stitches
+        self.results = None
 
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
@@ -128,6 +129,35 @@ class DoComputerVision():
         logger.debug("Perpendicular finished.")
         
         
+    def _run_tracking(self):
+        from mmtrack.apis import init_model
+        if self.is_microsurgery:
+            models = [
+                init_model(
+                    "./resources/tracker_model_bytetrack_microsurgery/bytetrack_pigleg.py",
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth"),
+                    device=self.device
+                )
+            ]
+        else:
+            models = [
+                init_model(
+                    "./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth"),
+                    device=self.device
+                )
+                ,
+                init_model(
+                    "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"),
+                    device=self.device
+                )
+            ]
+        main_tracker_bytetrack(
+            trackers=models,
+            filename=self.filename,
+            output_file_path=self.outputdir / "tracks.json",
+        )
     
     def run_video_processing(self):
 
@@ -159,34 +189,7 @@ class DoComputerVision():
         logger.debug(f"Image processing finished in {time.time() - s}s.")
 
         s = time.time()
-        from mmtrack.apis import init_model
-        if self.is_microsurgery:
-            models = [
-                init_model(
-                    "./resources/tracker_model_bytetrack_microsurgery/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth"),
-                    device=self.device
-                )
-            ]
-        else:
-            models = [
-                init_model(
-                    "./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth"),
-                    device=self.device
-                )
-                ,
-                init_model(
-                    "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"),
-                    device=self.device
-                )
-            ]
-        main_tracker_bytetrack(
-            trackers=models,
-            filename=self.filename,
-            output_file_path=self.outputdir / "tracks.json",
-        )
+        self._run_tracking()
         self.meta["duration_s_tracking"] = float(time.time() - s)
         logger.debug(f"Tracker finished in {time.time() - s}s.")
         set_progress(50)
@@ -195,7 +198,7 @@ class DoComputerVision():
         logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
 
         s = time.time()
-        data_results = main_report(self.filename, self.outputdir, self.meta)
+        data_results = self._make_report(self.filename, self.outputdir, self.meta)
         set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
@@ -204,7 +207,8 @@ class DoComputerVision():
         #save statistic to file
         
         self.meta["duration_s_report"] = float(time.time() - s)
-        save_json(data_results, self.outputdir / "results.json")
+        self._save_results()
+        
         set_progress(99)
 
         logger.debug(f"Report finished in {time.time() - s}s.")
@@ -316,6 +320,14 @@ class DoComputerVision():
         
         split_frames = find_stitch_ends_in_tracks(self.outputdir, n_clusters=n_clusters, tool_index=tool_index, time_axis=time_axis, weight_of_later=weight_of_later, metadata=self.meta )
         self.meta["qr_data"]["stitch_split_frames"] = split_frames
+        
+        
+    def _make_report(self):
+        self.results = main_report(self.filename, self.outputdir, self.meta)
+        return self.results
+    
+    def _save_results(self):
+        save_json(self.results, self.outputdir / "results.json")
 
 
 

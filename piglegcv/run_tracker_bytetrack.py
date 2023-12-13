@@ -57,9 +57,11 @@ def main_tracker_bytetrack(
             result = inference_mot(tracker, img[crop[0]:crop[1], crop[2]:crop[3], :], frame_id=i)
 
             # if result != None:
+            logger.debug(f"{j=}, {result=}")
             for k, tr in enumerate(result['track_bboxes']):
                 if len(tr) > 0:
-                    frame_tr.append(tr[0].tolist()[1:] + [i+j*10])
+                    frame_tr.append(tr[0].tolist()[1:] + [k+(j*10)])
+        logger.debug(f"track_bboxes per frame {frame_tr}")
         tracking_results['tracks'].append(frame_tr)
 
         # add_tracking_results(tracking_results, result)
