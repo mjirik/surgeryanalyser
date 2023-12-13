@@ -122,6 +122,13 @@
     {% endif %}
     <a class="btn btn-secondary" href='{{ serverfile.mediafile.url }}' download> Download original file </a>
     <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report </a>
+    {% if user.is_authenticated %}
+{#        <td><a class="btn btn-light"#}
+{#               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send#}
+{#            Email</a></td>#}
+{#        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>#}
+        <a class="btn btn-secondary" href='{% url 'uploader:show_logs' serverfile.hash %}' > Show log </a>
+    {% endif %}
 </div>
 
 <script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>

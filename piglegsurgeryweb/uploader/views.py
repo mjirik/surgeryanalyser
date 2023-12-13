@@ -119,11 +119,14 @@ def web_report(request, filename_hash:str):
     if not bool(serverfile.zip_file.name) or not Path(serverfile.zip_file.path).exists():
         logger.debug("Zip file name does not exist")
         # zip_file does not exists
+
         context = {
             "headline": "File not exists", "text": "Requested file is probably under processing now.",
             "next": request.GET['next'] if "next" in request.GET else "/uploader/upload/",
             "next_text": "Back"
         }
+        if request.user.is_authenticated:
+            context["key_value"] = _get_logs_as_html(serverfile)
         logger.debug(context)
         logger.debug(request)
         logger.debug(request.path)
@@ -217,7 +220,7 @@ def web_report(request, filename_hash:str):
         'videofiles_url': videofiles_url,
         "results": results
     }
-    return render(request,'uploader/web_report.html', context)
+    return render(request, 'uploader/web_report.html', context)
 
 def _filter_images(serverfile:UploadedFile):
     allowed_image_patterns = [
@@ -377,21 +380,28 @@ def test(request):
     return render(request, "uploader/test.html", {})
 
 
-# def show_logs(request, filename_hash:str):
-#     # fn = get_outputdir_from_hash(hash)
-#     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
-#     outputdir = Path(serverfile.outputdir)
-#     key_value = {}
-#     for file in outputdir.glob("*_log.txt"):
-#         with open(file) as f:
-#             lines = f.readlines()
-#         # lines = [_set_loglevel_color(line) for line in lines]
-#         key_value.update({
-#             str(file.stem): '<p class="text-monospace">' + "<br>".join(lines) + '</p>'
-#         })
-#     logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
-#     return render(request,'uploader/show_logs.html', {"key_value": key_value, "logpath": logpath})
+def show_logs(request, filename_hash:str):
+    serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    key_value = _get_logs_as_html(serverfile)
+    return render(request, "uploader/message.html", {
+        "headline": "Logs",
+        "key_value": key_value,
+        "next": request.GET['next'] if "next" in request.GET else "/uploader/upload/",
+    })
 
+def _get_logs_as_html(serverfile:UploadedFile) -> dict:
+    outputdir = Path(serverfile.outputdir)
+    key_value = {}
+    for file in outputdir.glob("*_log.txt"):
+        with open(file) as f:
+            lines = f.readlines()
+        # lines = [_set_loglevel_color(line) for line in lines]
+        key_value.update({
+            str(file.stem): '<p class="text-monospace">' + "<br>".join(lines) + '</p>'
+        })
+    # logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
+    return key_value
+    # return render(_as_htmlrequest,'uploader/show_logs.html', {"key_value": key_value, "logpath": logpath})
 
 
 def _make_html_from_log(logpath: Path):
