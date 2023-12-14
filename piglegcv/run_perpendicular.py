@@ -147,7 +147,10 @@ def intersectLines( pt1, pt2, ptA, ptB ):
 #####################################
 
 
-def get_frame_to_process(filename, return_metadata:bool=False, n_tries=None):
+def get_frame_to_process(filename, return_metadata:bool=False, n_tries=None, reference_frame_position_from_end=0):
+    """Get last frame from video or image.
+    reference_frame_position_from_end: int we start with i-th frame position from the end
+    """
     if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
         img = cv2.imread(filename)
@@ -166,12 +169,12 @@ def get_frame_to_process(filename, return_metadata:bool=False, n_tries=None):
         totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         if n_tries is None:
             n_tries = totalframecount
-        i = 0
-        while (not ret) and (i < n_tries):
-            logger.debug('Last frame capture error, frame', last_frame - i)
-            cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - i - 1)
+        # i = 0
+        while (not ret) and (reference_frame_position_from_end < n_tries):
+            logger.debug('Last frame capture error, frame', last_frame - reference_frame_position_from_end)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - reference_frame_position_from_end - 1)
             ret, img = cap.read()
-            i += 1
+            reference_frame_position_from_end += 1
         cap.release()
         if not ret:
             logger.error('Last frame capture error')
@@ -181,7 +184,8 @@ def get_frame_to_process(filename, return_metadata:bool=False, n_tries=None):
         #plt.show()
         #exit()
         ###################
-        metadata = {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
+        metadata = {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount,
+                    "reference_frame_position_from_end": int(reference_frame_position_from_end)}
     if return_metadata:
         return np.asarray(img), metadata
     else:
