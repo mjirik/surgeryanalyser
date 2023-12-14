@@ -625,7 +625,7 @@ def insert_ruler_in_image(img, pixelsize, ruler_size=50, resize_factor=1., unit=
 
 #####################################
 
-def bboxes_to_points(outputdir:str, confidence_score_thr:float):
+def bboxes_to_points(outputdir:str, confidence_score_thr:float = 0.0):
     json_data = load_json('{}/tracks.json'.format(outputdir))
     sort_data = json_data['tracks'] if 'tracks' in json_data else []
 
@@ -662,7 +662,7 @@ def bboxes_to_points(outputdir:str, confidence_score_thr:float):
             "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
             "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
             "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
-            "data_pixels": np.asarray(data_pixels).tolist(),
+            # "data_pixels": np.asarray(data_pixels).tolist(),
         }, '{}/tracks_points.json'.format(outputdir), update=False)
     return frame_ids, data_pixels, sort_data
 

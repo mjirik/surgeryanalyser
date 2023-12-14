@@ -24,7 +24,7 @@ from run_tracker_bytetrack import main_tracker_bytetrack
 #from run_mmpose import main_mmpose
 from run_qr import main_qr
 import run_qr
-from run_report import main_report
+from run_report import main_report, bboxes_to_points
 from run_perpendicular import main_perpendicular, get_frame_to_process
 from tools import save_json, draw_bboxes
 import numpy as np
@@ -53,7 +53,7 @@ def set_progress(progress=None, progress_max=None):
         PROGRESS_MAX = progress_max
 
 class DoComputerVision():
-    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, n_stitches=None, is_microsurgery=False, test_first_seconds:bool=False, device:Optional[str]=None):
+    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, n_stitches=0, is_microsurgery=False, test_first_seconds:bool=False, device:Optional[str]=None):
         
         if device is None:
             import torch
@@ -196,6 +196,11 @@ class DoComputerVision():
 
         logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
         logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
+        
+        s = time.time()
+        self._find_stitch_ends_in_tracks(n_clusters=self.n_stitches)
+        self.meta["duration_s_stitch_ends"] = float(time.time() - s)
+        logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
         s = time.time()
         data_results = self._make_report(self.filename, self.outputdir, self.meta)
@@ -316,10 +321,23 @@ class DoComputerVision():
         cap.release()
         self.meta.update({"filename_full": str(filename), "fps": fps, "frame_count": totalframecount})
         
-    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9):
         
-        split_frames = find_stitch_ends_in_tracks(self.outputdir, n_clusters=n_clusters, tool_index=tool_index, time_axis=time_axis, weight_of_later=weight_of_later, metadata=self.meta )
-        self.meta["qr_data"]["stitch_split_frames"] = split_frames
+    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9) -> List:
+        
+        # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
+        if n_clusters > 1:
+            bboxes_to_points(str(self.outputdir))
+            # split_frames = []
+            split_s, split_frames = find_stitch_ends_in_tracks(
+                self.outputdir, n_clusters=n_clusters, 
+                tool_index=tool_index, time_axis=time_axis, 
+                weight_of_later=weight_of_later, metadata=self.meta )
+            # self.meta["qr_data"]["stitch_split_frames"] = split_frames
+            self.meta["stitch_split_frames"] = split_frames
+            self.meta["stitch_split_s"] = split_s
+            return split_frames
+        else:
+            return []
         
         
     def _make_report(self):
@@ -328,6 +346,13 @@ class DoComputerVision():
     
     def _save_results(self):
         save_json(self.results, self.outputdir / "results.json")
+        
+    def _load_meta(self):
+            # if metadata is None:
+        meta_path = self.outputdir / "meta.json"
+        assert meta_path.exists()
+        with open(meta_path, "r") as f:
+            self.meta = json.load(f)  
 
 
 
@@ -335,8 +360,7 @@ def do_computer_vision(filename, outputdir, meta=None, is_microsurgery:bool=Fals
     return DoComputerVision(filename, outputdir, meta, is_microsurgery=is_microsurgery, n_stitches=n_stitches, device=device).run()
 
 
-
-def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9, metadata=None) -> List:
+def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axis:int=2, weight_of_later=0.9, metadata=None):
     points_path = outputdir / "tracks_points.json"
     assert points_path.exists()
     time_axis = int(time_axis)
@@ -348,7 +372,7 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index:int=1, time
         assert points_path.exists()
         with open(meta_path, "r") as f:
             metadata = json.load(f)  
-        
+    logger.debug(f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}")
     # pix_size is in [m] to normaliza data a bit we use [mm]
     X = np.asarray(data[f"data_pixels_{tool_index}"]) * metadata["qr_data"]["pix_size"] * 1000
 
@@ -373,15 +397,16 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index:int=1, time
     cluster_centers = ms.cluster_centers_
     
     prev = labels[0]
-    split_frames = []
+    splits_s = []
+    splits_frames = []
     for frame_i, label in enumerate(labels):
         if label != prev:
-            time_s = ((1-weight_of_later)*X[frame_i - 1,time_axis]) + (weight_of_later * X[frame_i,time_axis])
-            frame_i = time_s * metadata["fps"]
-            split_frames.append(int(frame_i))
+            time = ((1-weight_of_later)*X[frame_i - 1,time_axis]) + (weight_of_later * X[frame_i,time_axis])
+            splits_s.append(time)
+            splits_frames.append(frame_i)
         prev = label
         
-    return split_frames
+    return splits_s, splits_frames
 
 # def do_computer_vision_2(filename, outputdir, meta):
 #     log_format = loguru._defaults.LOGURU_FORMAT
