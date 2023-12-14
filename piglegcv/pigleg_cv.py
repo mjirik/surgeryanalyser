@@ -325,7 +325,7 @@ class DoComputerVision():
         self.meta.update({"filename_full": str(filename), "fps": fps, "frame_count": totalframecount})
         
         
-    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9) -> List:
+    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9, plot_clusters=False) -> List:
         
         # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
         if n_clusters > 1:
@@ -334,7 +334,10 @@ class DoComputerVision():
             split_s, split_frames = find_stitch_ends_in_tracks(
                 self.outputdir, n_clusters=n_clusters, 
                 tool_index=tool_index, time_axis=time_axis, 
-                weight_of_later=weight_of_later, metadata=self.meta )
+                weight_of_later=weight_of_later, metadata=self.meta ,
+            
+                plot_clusters=plot_clusters
+            )
             # self.meta["qr_data"]["stitch_split_frames"] = split_frames
             self.meta["stitch_split_frames"] = split_frames
             self.meta["stitch_split_s"] = split_s
@@ -365,7 +368,7 @@ def do_computer_vision(filename, outputdir, meta=None, is_microsurgery:bool=Fals
     return DoComputerVision(filename, outputdir, meta, is_microsurgery=is_microsurgery, n_stitches=n_stitches, device=device).run()
 
 
-def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axis:int=2, weight_of_later=0.9, metadata=None):
+def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axis:int=2, weight_of_later=0.9, metadata=None, plot_clusters=False):
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
     points_path = outputdir / "tracks_points.json"
     assert points_path.exists()
@@ -411,8 +414,52 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
             splits_s.append(time)
             splits_frames.append(frame_i)
         prev = label
-        
+    if plot_clusters:
+        plot_track_clusters(X, labels, cluster_centers)
     return splits_s, splits_frames
+
+
+def plot_track_clusters(X, labels, cluster_centers):
+    from matplotlib import pyplot as plt
+    labels_unique = np.unique(labels)
+    n_clusters_ = len(labels_unique)
+    plt.subplot(121)
+    # plt.figure(1)
+    # plt.clf()
+
+    colors = ["#dede00", "#377eb8", "#f781bf", "#81bf37", "#bf3781", "#f3781b"]
+    markers = ["x", "o", "^", "x", "o", "^",]
+
+    for k, col in zip(range(n_clusters_), colors):
+        my_members = labels == k
+        cluster_center = cluster_centers[k]
+        plt.plot(X[my_members, 0], X[my_members, 1], markers[k], color=col)
+        plt.plot(
+            cluster_center[0],
+            cluster_center[1],
+            markers[k],
+            markerfacecolor=col,
+            markeredgecolor="k",
+            markersize=14,
+        )
+    # plt.title("Estimated number of clusters: %d" % n_clusters_)
+
+    plt.subplot(122)
+    colors = ["#dede00", "#377eb8", "#f781bf", "#81bf37", "#bf3781", "#f3781b", "#eb88b1", "#1bff78"]
+    markers = ["x", "o", "^", "s" , "x", "o", "^", "x", "o", "^", "x", "o", "^",]
+
+    for k, col in zip(range(n_clusters_), colors):
+        my_members = labels == k
+        cluster_center = cluster_centers[k]
+        plt.plot(X[my_members, 0], X[my_members, 2], markers[k], color=col)
+        plt.plot(
+            cluster_center[0],
+            cluster_center[2],
+            markers[k],
+            markerfacecolor=col,
+            markeredgecolor="k",
+            markersize=14,
+        )
 
 # def do_computer_vision_2(filename, outputdir, meta):
 #     log_format = loguru._defaults.LOGURU_FORMAT
