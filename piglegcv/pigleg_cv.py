@@ -203,7 +203,7 @@ class DoComputerVision():
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
         s = time.time()
-        data_results = self._make_report(self.filename, self.outputdir, self.meta)
+        data_results = self._make_report()
         set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
