@@ -125,6 +125,7 @@ class DoComputerVision():
             self.meta = {}
         self._make_sure_media_is_cropped()
         logger.debug("Running image processing...")
+        self.frame = self._get_frame_to_process_ideally_with_incision(self.filename_cropped)
         self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame, device=self.device)
         qr_data['qr_scissors_frames'] = []
@@ -230,7 +231,7 @@ class DoComputerVision():
         logger.debug("Report based on video is finished.")
         logger.debug("Video processing finished")
 
-    def _get_frame_to_process_ideally_with_incision(self, filename):
+    def _get_frame_to_process_ideally_with_incision(self, filename, return_qrdata=False):
         frame_from_end = 0
         for i in range(5):
             frame, local_meta = get_frame_to_process(str(filename), n_tries=None, return_metadata=True, reference_frame_position_from_end=frame_from_end)
@@ -241,11 +242,14 @@ class DoComputerVision():
             else:
                 frame_from_end = local_meta["reference_frame_position_from_end"] + 10
         logger.debug(f"Incision bbox not found. Using in frame {frame_from_end} frame from the end.")
-        return frame, qr_data
+        if return_qrdata:
+            return frame, qr_data
+        else:
+            return frame
 
     def get_parameters_for_crop_rotate_rescale(self):
         logger.debug(f"device={self.device}")
-        self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(self.filename_original)
+        self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(self.filename_original, return_qrdata=True)
         qr_data['qr_scissors_frames'] = []
         imgs, bboxes = run_incision_detection(self.frame, device=self.device)
         qr_data["incision_bboxes_old"] = bboxes.tolist()
