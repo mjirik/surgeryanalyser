@@ -707,6 +707,25 @@ def main_report(
     :param cut_frames: list of frames where the stitch cut is detected.
     :return:
     """
+    # normální tracking
+    # 0: Needle holder
+    # 1: Forceps
+    # 2: Scissors
+    # 10: Needle holder bbox
+    # 11: Forceps bbox
+    # 12: Scissors bbox
+    # 13: Left hand bbox
+    # 14: Right hand bbox
+    # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+
+    # microsurgery
+    # 0: Needle holder
+    # 1: Forceps
+    # 2: Forceps curved
+    # 3: Scissors
+    # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+
+
     filename = str(filename)
     outputdir = str(outputdir)
 

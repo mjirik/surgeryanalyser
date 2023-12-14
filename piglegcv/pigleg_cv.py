@@ -188,6 +188,8 @@ class DoComputerVision():
         self.meta["duration_s_run_image_processing"] = float(time.time() - s)
         logger.debug(f"Image processing finished in {time.time() - s}s.")
 
+        self.meta["is_microsurgery"] = self.is_microsurgery
+
         s = time.time()
         self._run_tracking()
         self.meta["duration_s_tracking"] = float(time.time() - s)
