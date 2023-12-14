@@ -239,7 +239,7 @@ class DoComputerVision():
                 logger.debug(f"Found incision bbox in frame {frame_from_end} from the end.")
                 break
             else:
-                frame_from_end = qr_data["reference_frame_position_from_end"] + 10
+                frame_from_end = local_meta["reference_frame_position_from_end"] + 10
         logger.debug(f"Incision bbox not found. Using in frame {frame_from_end} frame from the end.")
         return frame, qr_data
 
