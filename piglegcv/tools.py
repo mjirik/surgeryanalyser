@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 from PIL import Image
+import cv2
 
 
  
@@ -98,6 +99,65 @@ def remove_empty_lists(dct:dict) -> dict:
     :return: dictionary without empty lists
     """
     return {k: v for k, v in dct.items() if v != []}
+
+def draw_bbox_into_image(img:np.ndarray, bbox, linecolor=(255, 0, 0), linewidth=2) -> np.ndarray:
+    if bbox is not None:
+        bbox=np.asarray(bbox)
+        x1, y1, x2, y2, confidence = bbox.astype(int).tolist()
+        cv2.rectangle(img, (x1, y1), (x2, y2), linecolor, linewidth)
+    return img
+
+
+def _find_largest_incision_bbox(bboxes):
+    max_area = 0
+    max_bbox = None
+    for bbox in bboxes:
+        area = (bbox[3] - bbox[1]) * (bbox[2] - bbox[0])
+        print(area)
+        # area = bbox[2] * bbox[3]
+        if area > max_area:
+            max_area = area
+            max_bbox = bbox
+    return max_bbox
+
+
+def _count_points_in_bbox(points, bbox):
+    """ Count points in bounding box.
+    points: np.ndarray with shape [i,2]
+    bbox: np.ndarray with values, [x1,y1,x2,y2, confidence]
+    """
+    count = 0
+    for point in points:
+        if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
+            count += 1
+    return count
+
+
+def _make_bbox_square_and_larger(bbox, multiplicator=1.):
+    size = np.max(np.asarray([(bbox[3]) - (bbox[1]), (bbox[2]) - (bbox[0])]) * multiplicator)
+    center = ((bbox[3] + bbox[1]) / 2., (bbox[2] + bbox[0]) / 2.)
+    newbbox = [
+        center[1] - (size / 2.), center[0] - (size / 2.),
+        center[1] + (size / 2.), center[0] + (size / 2.),
+        bbox[4]
+    ]
+    return newbbox
+
+
+def _make_bbox_larger(bbox, multiplicator=2.):
+    size = np.asarray([(bbox[3]) - (bbox[1]), (bbox[2]) - (bbox[0])]) * multiplicator
+    center = ((bbox[3] + bbox[1]) / 2., (bbox[2] + bbox[0]) / 2.)
+    newbbox = [
+        center[1] - (size[1] / 2.), center[0] - (size[0] / 2.),
+        center[1] + (size[1] / 2.), center[0] + (size[0] / 2.),
+        bbox[4]
+    ]
+    return newbbox
+
+
+def crop_image(img, bbox):
+    imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+    return imcr
 
 
 def draw_bboxes(img, bboxes, color="r") -> plt.Figure:

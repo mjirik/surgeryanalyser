@@ -17,13 +17,14 @@ import seaborn as sns
 from pathlib import Path
 import scipy
 import scipy.signal
+from tools import draw_bbox_into_image
 
 
 
 try:
-    from tools import load_json, save_json, unit_conversion
+    from tools import load_json, save_json, unit_conversion,_find_largest_incision_bbox, _make_bbox_square_and_larger, _count_points_in_bbox
 except ImportError as e:
-    from .tools import load_json, save_json, unit_conversion
+    from .tools import load_json, save_json, unit_conversion,_find_largest_incision_bbox, _make_bbox_square_and_larger, _count_points_in_bbox
 
 
 def plot_finger(img, joints, threshold, thickness):
@@ -49,13 +50,7 @@ def plot_skeleton(img, joints, threshold, thickness):
     #plt.imshow(img)
     #plt.show()
     
-def draw_bbox(img, bbox, linecolor=(255,0,0), linewidth=2):
-    if bbox is not None:
-        bbox=np.asarray(bbox)
-        x1, y1, x2, y2, confidence = bbox.astype(int).tolist()
-        cv2.rectangle(img, (x1, y1), (x2, y2), linecolor, linewidth)
-    return img
-    
+
 
 def calculate_operation_zone_presence(points:np.ndarray, bbox:np.ndarray):
 
@@ -91,7 +86,7 @@ class RelativePresenceInOperatingArea(object):
             return 0
         
     def draw_image(self, img:np.ndarray, points:np.ndarray, bbox_linecolor=(0,255,128)):
-        img = draw_bbox(img, self.operating_area_bbox, linecolor=bbox_linecolor)
+        img = draw_bbox_into_image(img, self.operating_area_bbox, linecolor=bbox_linecolor)
         points = np.asarray(points)
         bbox = np.asarray(self.operating_area_bbox)
     #     x, y = points[:, 0], points[:, 1]
@@ -108,49 +103,7 @@ class RelativePresenceInOperatingArea(object):
         else:
             return img
 
-def _find_largest_incision_bbox(bboxes):
-    max_area = 0
-    max_bbox = None
-    for bbox in bboxes:
-        area = (bbox[3]-bbox[1]) * (bbox[2] - bbox[0])
-        print(area)
-        # area = bbox[2] * bbox[3]
-        if area > max_area:
-            max_area = area
-            max_bbox = bbox
-    return max_bbox
 
-def _count_points_in_bbox(points, bbox):
-    count = 0
-    for point in points:
-        if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
-            count += 1
-    return count
-
-def _make_bbox_square_and_larger(bbox, multiplicator=1.):
-    size = np.max(np.asarray([(bbox[3])-(bbox[1]), (bbox[2])-(bbox[0])]) * multiplicator)
-    center = ((bbox[3]+bbox[1])/2., (bbox[2]+bbox[0])/2.)
-    newbbox = [
-        center[1] - (size / 2.), center[0] - (size / 2.),
-        center[1] + (size / 2.), center[0] + (size / 2.),
-        bbox[4]
-    ]
-    return newbbox
-    
-def _make_bbox_larger(bbox, multiplicator=2.):
-    size = np.asarray([(bbox[3])-(bbox[1]), (bbox[2])-(bbox[0])]) * multiplicator
-    center = ((bbox[3]+bbox[1])/2., (bbox[2]+bbox[0])/2.)
-    newbbox = [
-        center[1] - (size[1] / 2.), center[0] - (size[0] / 2.),
-        center[1] + (size[1] / 2.), center[0] + (size[0] / 2.),
-        bbox[4]
-    ]
-    return newbbox
-    
-def crop_image(img, bbox):
-    imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
-    return imcr
-    
     
 
 def create_heatmap_report_plt(points:np.ndarray, image:Optional[np.ndarray]=None, filename:Optional[Path]=None, bbox:Optional[np.ndarray]=None, bbox_linecolor=(128,255,0)):
@@ -178,7 +131,7 @@ def create_heatmap_report_plt(points:np.ndarray, image:Optional[np.ndarray]=None
         if bbox is not None:
             print("bbox")
             print(bbox)
-            im_gray = draw_bbox(im_gray, bbox, linecolor=bbox_linecolor)
+            im_gray = draw_bbox_into_image(im_gray, bbox, linecolor=bbox_linecolor)
         plt.imshow(im_gray, cmap="gray")
     plt.axis("off")
 
@@ -798,7 +751,7 @@ def main_report(
                 oa_bbox_resized = np.asarray(relative_presence.operating_area_bbox.copy())
 #                 print(oa_bbox_resized)
                 oa_bbox_resized = oa_bbox_resized * resize_factor
-                img = draw_bbox(img, oa_bbox_resized, linecolor=oa_bbox_linecolor)
+                img = draw_bbox_into_image(img, oa_bbox_resized, linecolor=oa_bbox_linecolor)
 
             if not(i % 50):
                 logger.debug(f'Frame {i} processed!')
