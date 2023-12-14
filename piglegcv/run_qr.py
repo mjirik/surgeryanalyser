@@ -11,6 +11,7 @@ import math
 from mmdet.apis import inference_detector
 import torch
 import pprint
+import tools
 
 
 def get_bboxes(img, device='cpu'):
@@ -21,10 +22,13 @@ def get_bboxes(img, device='cpu'):
 
     bboxes, masks = inference_detector(single_image_model, img)
 
-    bboxes_inicision_area = bboxes[0]
+    bboxes_incision_area = bboxes[0]
+    bboxes_incision_area = tools.sort_bboxes(bboxes_incision_area)
     
     scene_area_threshold = 0.35
-    if bboxes[1].shape[0] > 0:
+    scene_area_bboxes = bboxes[1]
+    scene_area_bboxes = tools.sort_bboxes(scene_area_bboxes)
+    if scene_area_bboxes[1].shape[0] > 0:
         bbox_scene_area = bboxes[1][0]
         if bbox_scene_area[-1] < scene_area_threshold:
             bbox_scene_area = None
@@ -47,13 +51,10 @@ def get_bboxes(img, device='cpu'):
 #     bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
 
     ia_threshold = 0.8
-    ia_filter = bboxes_inicision_area[:, -1] > ia_threshold
-    bboxes_inicision_area = bboxes_inicision_area[ia_filter]
+    ia_filter = bboxes_incision_area[:, -1] > ia_threshold
+    bboxes_incision_area = bboxes_incision_area[ia_filter]
 
- 
-
-
-    return bboxes_inicision_area, bbox_scene_area, bboxes_qr, side_length
+    return bboxes_incision_area, bbox_scene_area, bboxes_qr, side_length
 
 def bbox_info_extraction_from_frame(img, qreader=None, device='cpu'):
     img = np.asarray(img)

@@ -100,11 +100,13 @@ def remove_empty_lists(dct:dict) -> dict:
     """
     return {k: v for k, v in dct.items() if v != []}
 
-def draw_bbox_into_image(img:np.ndarray, bbox, linecolor=(255, 0, 0), linewidth=2) -> np.ndarray:
+def draw_bbox_into_image(img:np.ndarray, bbox, linecolor=(255, 0, 0), linewidth=2, show_confidence=False) -> np.ndarray:
     if bbox is not None:
         bbox=np.asarray(bbox)
         x1, y1, x2, y2, confidence = bbox.astype(int).tolist()
         cv2.rectangle(img, (x1, y1), (x2, y2), linecolor, linewidth)
+        if show_confidence:
+            cv2.putText(img, f"{confidence:.2f}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, linecolor, 2)
     return img
 
 
@@ -121,7 +123,7 @@ def _find_largest_incision_bbox(bboxes):
     return max_bbox
 
 
-def _count_points_in_bbox(points, bbox):
+def count_points_in_bbox(points, bbox):
     """ Count points in bounding box.
     points: np.ndarray with shape [i,2]
     bbox: np.ndarray with values, [x1,y1,x2,y2, confidence]
@@ -132,8 +134,20 @@ def _count_points_in_bbox(points, bbox):
             count += 1
     return count
 
+def filter_points_in_bbox(points, bbox):
+    """ Filter points in bounding box.
+    points: np.ndarray with shape [i,2]
+    bbox: np.ndarray with values, [x1,y1,x2,y2, confidence]
+    """
+    # count = 0
+    points_in_bbox = []
+    for point in points:
+        if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
+            points_in_bbox.append(point)
+    return np.asarray(points_in_bbox)
 
-def _make_bbox_square_and_larger(bbox, multiplicator=1.):
+
+def make_bbox_square_and_larger(bbox, multiplicator=1.):
     size = np.max(np.asarray([(bbox[3]) - (bbox[1]), (bbox[2]) - (bbox[0])]) * multiplicator)
     center = ((bbox[3] + bbox[1]) / 2., (bbox[2] + bbox[0]) / 2.)
     newbbox = [
@@ -143,8 +157,12 @@ def _make_bbox_square_and_larger(bbox, multiplicator=1.):
     ]
     return newbbox
 
+def sort_bboxes(bboxes):
+    """Sort bboxes by their confidence score."""
+    return bboxes[bboxes[:, 4].argsort()[::-1]]
 
-def _make_bbox_larger(bbox, multiplicator=2.):
+
+def make_bbox_larger(bbox, multiplicator=2.):
     size = np.asarray([(bbox[3]) - (bbox[1]), (bbox[2]) - (bbox[0])]) * multiplicator
     center = ((bbox[3] + bbox[1]) / 2., (bbox[2] + bbox[0]) / 2.)
     newbbox = [
@@ -160,7 +178,7 @@ def crop_image(img, bbox):
     return imcr
 
 
-def draw_bboxes(img, bboxes, color="r") -> plt.Figure:
+def draw_bboxes_plt(img, bboxes, color="r") -> plt.Figure:
     """
     Draw bounding boxes and their confidence scores on an image.
     

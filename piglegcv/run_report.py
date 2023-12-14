@@ -22,9 +22,9 @@ from tools import draw_bbox_into_image
 
 
 try:
-    from tools import load_json, save_json, unit_conversion,_find_largest_incision_bbox, _make_bbox_square_and_larger, _count_points_in_bbox
+    from tools import load_json, save_json, unit_conversion,_find_largest_incision_bbox, make_bbox_square_and_larger, count_points_in_bbox, make_bbox_larger
 except ImportError as e:
-    from .tools import load_json, save_json, unit_conversion,_find_largest_incision_bbox, _make_bbox_square_and_larger, _count_points_in_bbox
+    from .tools import load_json, save_json, unit_conversion,_find_largest_incision_bbox, make_bbox_square_and_larger, count_points_in_bbox, make_bbox_larger
 
 
 def plot_finger(img, joints, threshold, thickness):
@@ -58,7 +58,7 @@ def calculate_operation_zone_presence(points:np.ndarray, bbox:np.ndarray):
     bbox = np.asarray(bbox)
 #     x, y = points[:, 0], points[:, 1]
     if len(points) > 0:
-        return _count_points_in_bbox(points, bbox) / float(len(points))
+        return count_points_in_bbox(points, bbox) / float(len(points))
     else:
         return 0
 
@@ -77,7 +77,8 @@ class RelativePresenceInOperatingArea(object):
         self.operating_area_bbox = None
         if len(bboxes) > 0:
  
-            self.operating_area_bbox = _make_bbox_square_and_larger(_find_largest_incision_bbox(bboxes), multiplicator=1.)
+            # self.operating_area_bbox = _make_bbox_square_and_larger(_find_largest_incision_bbox(bboxes), multiplicator=1.)
+            self.operating_area_bbox = make_bbox_larger(_find_largest_incision_bbox(bboxes), multiplicator=2.)
 
     def calculate_presence(self, points):
         if self.operating_area_bbox is not None:
@@ -608,6 +609,7 @@ def bboxes_to_points(outputdir:str, confidence_score_thr:float = 0.0):
 
 
     frame_ids_list = np.asarray(frame_ids).tolist()
+    data_pixels_list = [np.asarray(data_pixels[i]).tolist() for i in range(len(data_pixels))]
     json_metadata = save_json(
         {
             "frame_ids": frame_ids_list,
@@ -615,7 +617,7 @@ def bboxes_to_points(outputdir:str, confidence_score_thr:float = 0.0):
             "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
             "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
             "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
-            # "data_pixels": np.asarray(data_pixels).tolist(),
+            "data_pixels": data_pixels_list,
         }, '{}/tracks_points.json'.format(outputdir), update=False)
     return frame_ids, data_pixels, sort_data
 
