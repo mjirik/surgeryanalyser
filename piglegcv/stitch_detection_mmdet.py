@@ -161,7 +161,7 @@ def run_stitch_analyser(img, bboxes, labels, expected_stitch_line, output_filena
         score2 = res2.rvalue**2
         
         r_score = (score1+score2)/2.0  
-        s_score = abs(res1.slope - res2.slope)
+        s_score = 1.0 - ( abs(np.arctan(res1.slope) - np.arctan(res2.slope)) / np.pi )   #np.arctan [-pi/2, pi/2]
 
         logger.debug(f"R-squared upper line: {score1:.3f}")
         logger.debug(f"R-squared lower line: {score2:.3f}")
