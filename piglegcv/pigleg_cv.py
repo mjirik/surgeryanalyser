@@ -232,7 +232,7 @@ class DoComputerVision():
 
     def _get_frame_to_process_ideally_with_incision(self, filename):
         frame_from_end = 0
-        for i in range(5):
+        for i in range(10):
             frame, local_meta = get_frame_to_process(str(filename), n_tries=None, return_metadata=True, reference_frame_position_from_end=frame_from_end)
             qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
             if len(qr_data["incision_bboxes"]) > 0:
