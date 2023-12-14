@@ -136,10 +136,11 @@ def run_stitch_analyser(img, bboxes, labels, expected_stitch_line, output_filena
     #show_result_pyplot(model, args.img, result, score_thr=0.0)
     _, cols, _ = img.shape
     
+    ########
     r_score = 0.
     s_score = 1.
-    ########
-    if len(bboxes)>1:
+    N = len(bboxes)
+    if N>1:
         
         w = np.abs(bboxes[:,0] - bboxes[:,2])
         h = np.abs(bboxes[:,1] - bboxes[:,3])
@@ -181,7 +182,7 @@ def run_stitch_analyser(img, bboxes, labels, expected_stitch_line, output_filena
     plt.savefig(output_filename, bbox_inches='tight', dpi=300) # save image with result
     plt.close(fig)
     
-    return({'r_score':r_score, 's_score':s_score})
+    return({'r_score':r_score, 's_score':s_score, 'N':N})
 
 if __name__ == '__main__':
 
