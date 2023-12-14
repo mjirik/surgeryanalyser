@@ -189,6 +189,7 @@ class DoComputerVision():
         logger.debug(f"Image processing finished in {time.time() - s}s.")
 
         self.meta["is_microsurgery"] = self.is_microsurgery
+        self.meta["n_stitches_by_user"] = self.n_stitches
 
         s = time.time()
         self._run_tracking()
@@ -343,7 +344,9 @@ class DoComputerVision():
         
         
     def _make_report(self):
-        self.results = main_report(self.filename, self.outputdir, self.meta)
+        self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
+                                   cut_frames=self.meta["stitch_split_frames"]
+                                   )
         return self.results
     
     def _save_results(self):

@@ -696,6 +696,7 @@ def main_report(
         confidence_score_thr=0.0,
         oa_bbox_linecolor=[0,255,128],
         cut_frames:list=[],
+        is_microsurgery:bool=False
 ):
     """
 
