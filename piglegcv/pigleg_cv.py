@@ -106,7 +106,7 @@ class DoComputerVision():
             s = time.time()
             qr_data = self.get_parameters_for_crop_rotate_rescale()
             if qr_data["bbox_scene_area"] is not None:
-                tools.draw_bbox_into_image(self.frame, qr_data["bbox_scene_area"], color=(0, 255, 0), show_confidence=True)
+                tools.draw_bbox_into_image(self.frame, qr_data["bbox_scene_area"], linecolor=(0, 255, 0), show_confidence=True)
                 cv2.imwrite(str(self.outputdir / "_bbox_scene_area.jpg"), self.frame)
 
 
