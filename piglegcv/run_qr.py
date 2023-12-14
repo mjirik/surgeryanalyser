@@ -146,7 +146,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device='cpu'):
     qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
     qr_data["qr_bboxes_SFD"] = np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
 
-    logger.debug(pprint.pformat(qr_data))
+    logger.debug(qr_data)
 
     return qr_data
     #pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area

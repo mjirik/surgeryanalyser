@@ -409,10 +409,17 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
     else:
         # backward compatibility
         X_px = np.asarray(data[f"data_pixels_{tool_index}"])
-    if "incision_bboxes" in metadata and len(metadata["incision_bboxes"]) > 0:
-
-        X_px_tmp = tools.filter_points_in_bbox(X_px, metadata["incision_bboxes"][0])
+    incision_bboxes = []
+    if ("incision_bboxes" in metadata) and (len(metadata["incision_bboxes"]) > 0):
+        incision_bboxes = metadata["incision_bboxes"]
+    elif "incision_bboxes" in metadata["qr_data"]:
+        incision_bboxes = metadata["qr_data"]["incision_bboxes"]
+    logger.debug(f"{incision_bboxes=}")   
+    if len(incision_bboxes) > 0:
+        
+        X_px_tmp = tools.filter_points_in_bbox(X_px, incision_bboxes[0])
         logger.debug(f"{X_px.shape=}, {X_px_tmp.shape=}")
+    
         X_px = X_px_tmp
 
 

@@ -140,6 +140,8 @@ def filter_points_in_bbox(points, bbox):
     bbox: np.ndarray with values, [x1,y1,x2,y2, confidence]
     """
     # count = 0
+    logger.debug(f"{bbox}")
+    logger.debug(f"{points}")
     points_in_bbox = []
     for point in points:
         if point[0] >= bbox[0] and point[0] <= bbox[2] and point[1] >= bbox[1] and point[1] <= bbox[3]:
