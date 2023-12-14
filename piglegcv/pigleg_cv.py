@@ -9,6 +9,7 @@ import traceback
 import time
 import subprocess
 import pprint
+import tools
 #try:
 #    from .run_tracker_lite import main_tracker
 #    from .run_tracker_bytetrack import main_tracker_bytetrack
@@ -26,7 +27,7 @@ from run_qr import main_qr
 import run_qr
 from run_report import main_report, bboxes_to_points
 from run_perpendicular import main_perpendicular, get_frame_to_process
-from tools import save_json, draw_bboxes
+from tools import save_json, draw_bboxes_plt
 import numpy as np
 from incision_detection_mmdet import run_incision_detection
 from media_tools import make_images_from_video
@@ -104,6 +105,11 @@ class DoComputerVision():
         if self.filename_cropped is None:
             s = time.time()
             qr_data = self.get_parameters_for_crop_rotate_rescale()
+            if qr_data["bbox_scene_area"] is not None:
+                tools.draw_bbox_into_image(self.frame, qr_data["bbox_scene_area"], color=(0, 255, 0), show_confidence=True)
+                cv2.imwrite(str(self.outputdir / "_bbox_scene_area.jpg"), self.frame)
+
+
             logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")
             self.meta["duration_s_get_parameters_for_crop_rotate_rescale"] = float(time.time() - s)
             # video_preprocessing - rotate, rescale and crop -> file
@@ -382,8 +388,20 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
         with open(meta_path, "r") as f:
             metadata = json.load(f)  
     logger.debug(f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}")
+    if 'data_pixels' in data:
+        X_px = np.asarray(data['data_pixels'][tool_index])
+    else:
+        # backward compatibility
+        X_px = np.asarray(data[f"data_pixels_{tool_index}"])
+    if "incision_bboxes" in metadata and len(metadata["incision_bboxes"]) > 0:
+
+        X_px_tmp = tools.filter_points_in_bbox(X_px, metadata["incision_bboxes"][0])
+        logger.debug(f"{X_px.shape=}, {X_px_tmp.shape=}")
+        X_px = X_px_tmp
+
+
     # pix_size is in [m] to normaliza data a bit we use [mm]
-    X = np.asarray(data[f"data_pixels_{tool_index}"]) * metadata["qr_data"]["pix_size"] * 1000
+    X = X_px * metadata["qr_data"]["pix_size"] * 1000
 
     # time =  np.asarray(list(range(X.shape[0]))).reshape(-1,1)
     time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
