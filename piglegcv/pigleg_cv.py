@@ -236,9 +236,11 @@ class DoComputerVision():
             frame, local_meta = get_frame_to_process(str(filename), n_tries=None, return_frame=True, reference_frame_position_from_end=frame_from_end)
             qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
             if len(qr_data["incision_bboxes"]) > 0:
+                logger.debug(f"Found incision bbox in frame {frame_from_end} from the end.")
                 break
             else:
                 frame_from_end = qr_data["reference_frame_position_from_end"] + 10
+        logger.debug(f"Incision bbox not found. Using in frame {frame_from_end} frame from the end.")
         return frame, qr_data
 
     def get_parameters_for_crop_rotate_rescale(self):
