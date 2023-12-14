@@ -125,8 +125,8 @@ class DoComputerVision():
             self.meta = {}
         self._make_sure_media_is_cropped()
         logger.debug("Running image processing...")
-        self.frame = self._get_frame_to_process_ideally_with_incision(self.filename_cropped)
-        self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
+        self.frame = self._get_frame_to_process_ideally_with_incision(self.filename_cropped, n_tries=None)
+        # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame, device=self.device)
         qr_data['qr_scissors_frames'] = []
         self.meta["qr_data"] = qr_data
@@ -231,10 +231,10 @@ class DoComputerVision():
         logger.debug("Report based on video is finished.")
         logger.debug("Video processing finished")
 
-    def _get_frame_to_process_ideally_with_incision(self, filename, return_qrdata=False):
+    def _get_frame_to_process_ideally_with_incision(self, filename, return_qrdata=False, n_tries=None):
         frame_from_end = 0
         for i in range(10):
-            frame, local_meta = get_frame_to_process(str(filename), n_tries=None, return_metadata=True, reference_frame_position_from_end=frame_from_end)
+            frame, local_meta = get_frame_to_process(str(filename), n_tries=n_tries, return_metadata=True, reference_frame_position_from_end=frame_from_end)
             qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
             if len(qr_data["incision_bboxes"]) > 0:
                 logger.debug(f"Found incision bbox in frame {frame_from_end} from the end.")
