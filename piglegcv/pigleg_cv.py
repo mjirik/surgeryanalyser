@@ -361,6 +361,7 @@ def do_computer_vision(filename, outputdir, meta=None, is_microsurgery:bool=Fals
 
 
 def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axis:int=2, weight_of_later=0.9, metadata=None):
+    logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
     points_path = outputdir / "tracks_points.json"
     assert points_path.exists()
     time_axis = int(time_axis)
