@@ -583,8 +583,8 @@ def bboxes_to_points(outputdir:str, confidence_score_thr:float = 0.0):
     json_data = load_json('{}/tracks.json'.format(outputdir))
     sort_data = json_data['tracks'] if 'tracks' in json_data else []
 
-    data_pixels = [[] for i in range(14)]
-    frame_ids = [[] for i in range(14)]
+    data_pixels = [[] for i in range(15)]
+    frame_ids = [[] for i in range(15)]
     N = len(sort_data)
     logger.debug(f'Sort data N={N}')
 

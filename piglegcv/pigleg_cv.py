@@ -369,9 +369,12 @@ class DoComputerVision():
         
         
     def _make_report(self):
+        # self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
+        #                            cut_frames=self.meta["stitch_split_frames"]
+        #                            )
         self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
-                                   cut_frames=self.meta["stitch_split_frames"]
-                                   )
+                                    cut_frames=[]
+                                    )
         return self.results
     
     def _save_results(self):
@@ -414,22 +417,31 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
         incision_bboxes = metadata["incision_bboxes"]
     elif "incision_bboxes" in metadata["qr_data"]:
         incision_bboxes = metadata["qr_data"]["incision_bboxes"]
-    logger.debug(f"{incision_bboxes=}")   
+    logger.debug(f"{incision_bboxes=}")
+    
+    time_fr =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1)
+    X_px_fr = np.concatenate([X_px, time_fr], axis=1)
+    
     if len(incision_bboxes) > 0:
         
-        X_px_tmp = tools.filter_points_in_bbox(X_px, incision_bboxes[0])
-        logger.debug(f"{X_px.shape=}, {X_px_tmp.shape=}")
-    
-        X_px = X_px_tmp
+        X_px_fr_tmp = tools.filter_points_in_bbox(X_px_fr, incision_bboxes[0])
+        logger.debug(f"{X_px_fr.shape=}, {X_px_fr_tmp.shape=}")  
+        X_px_fr = X_px_fr_tmp
 
 
     # pix_size is in [m] to normaliza data a bit we use [mm]
-    X = X_px * metadata["qr_data"]["pix_size"] * 1000
+    axis_normalization = np.asarray([
+        metadata["qr_data"]["pix_size"] * 1000, 
+        metadata["qr_data"]["pix_size"] * 1000,
+        1/metadata["fps"]
+    ])
+    
+    X = X_px_fr * axis_normalization
 
     # time =  np.asarray(list(range(X.shape[0]))).reshape(-1,1)
-    time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
+    # time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
 
-    X = np.concatenate([X, time], axis=1)
+    # X = np.concatenate([X, time], axis=1)
     # X = X * axis_normalization
     
     # bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
@@ -453,14 +465,15 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
         if label != prev:
             time = ((1-weight_of_later)*X[frame_i - 1,time_axis]) + (weight_of_later * X[frame_i,time_axis])
             splits_s.append(time)
+            # TODO opravit Míra
             splits_frames.append(frame_i)
         prev = label
     if plot_clusters:
-        plot_track_clusters(X, labels, cluster_centers)
+        plot_track_clusters(X, labels, cluster_centers, splits_s)
     return splits_s, splits_frames
 
 
-def plot_track_clusters(X, labels, cluster_centers):
+def plot_track_clusters(X, labels, cluster_centers, splits_s):
     from matplotlib import pyplot as plt
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
@@ -501,6 +514,8 @@ def plot_track_clusters(X, labels, cluster_centers):
             markeredgecolor="k",
             markersize=14,
         )
+    for yline in splits_s:
+        plt.axhline(y=yline, c='r')
 
 # def do_computer_vision_2(filename, outputdir, meta):
 #     log_format = loguru._defaults.LOGURU_FORMAT
