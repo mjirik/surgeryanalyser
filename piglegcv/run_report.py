@@ -583,8 +583,8 @@ def bboxes_to_points(outputdir:str, confidence_score_thr:float = 0.0):
     json_data = load_json('{}/tracks.json'.format(outputdir))
     sort_data = json_data['tracks'] if 'tracks' in json_data else []
 
-    data_pixels = [[], [], [], []]
-    frame_ids = [[], [], [], []]
+    data_pixels = [[] for i in range(14)]
+    frame_ids = [[] for i in range(14)]
     N = len(sort_data)
     logger.debug(f'Sort data N={N}')
 
@@ -592,18 +592,14 @@ def bboxes_to_points(outputdir:str, confidence_score_thr:float = 0.0):
         frame = sort_data_i
         # print(frame)
         for track_object in frame:
-            if len(track_object) >= 4:
+            if len(track_object) >= 6:
                 box = np.array(track_object[0:4])
                 position = np.array([np.mean([box[0], box[2]]), np.mean([box[1], box[3]])])
 
-                if (len(track_object) == 6):
-                    class_id = track_object[5]
-                    confidence_score = track_object[4]
-                else:
-                    class_id = 0
-                    confidence_score = 1.0
+                class_id = track_object[5]
+                confidence_score = track_object[4]
 
-                if (class_id >= 0) and (class_id < 4) and (confidence_score > confidence_score_thr):
+                if confidence_score > confidence_score_thr:
                     data_pixels[class_id].append(position)
                     frame_ids[class_id].append(i)
 
@@ -637,11 +633,71 @@ def merge_cut_frames(scissors_frames:list, cut_frames:list, fps:float) -> list:
                 merged_frames.append(frame)
     return merged_frames
 
+
+
+def draw_track_object(img, box, object_name, object_color, font_scale=.5, thickness=2, circle_radius=5):
+
+    # 0: Needle holder
+    # 1: Forceps
+    # 2: Scissors
+    # 10: Needle holder bbox
+    # 11: Forceps bbox
+    # 12: Scissors bbox
+    # 13: Left hand bbox
+    # 14: Right hand bbox
+
+    ## color
+    if object_color == "b":
+        color = (255, 0, 0)
+    if object_color == "r":
+        color = (0, 0, 255)
+    if object_color == "g":
+        color = (0, 255, 0)
+    if object_color == "m":
+        color = (255, 0, 255)
+    if object_color == "w":
+        color = (255, 255, 255)
+
+    color_text = color
+    #if confidence_score < confidence_score_thr:
+        #color_text = (180, 180, 180)
+
+    # draw detection
+    if class_id < 10:
+        position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
+        cv2.circle(
+            img,
+            (int(position[0]), int(position[1])),
+            int(circle_radius),
+            color,
+            thickness=thickness,
+        )
+        text_position = (int(position[0]+(circle_radius*2.5)), int(position[1]-circle_radius))
+    else:
+        cv2.rectangle(img,(int(box[0]), int(box[1])),(int(box[2]), int(box[3])), color, thickness)
+        text_position = (int(box[0]), int(box[1]))
+
+    # draw track ID, coordinates: bottom-left
+    cv2.putText(
+        img,
+        str(object_name),
+        text_position,
+        cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=font_scale,
+        color=color_text,
+        thickness=thickness,
+    )
+
+    return(img)
+
+
+
 def main_report(
         filename, outputdir,
         meta:dict,
-        object_colors=["b","r","g","m"],
-        object_names=["Needle holder","Forceps","Scissors","None"],
+        object_colors=["b","r","g","g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
+        #class ID         0               1         2           3        4   5   6  7   8   9     10                   11                12             13                  14
+        object_names=["Needle holder","Forceps","Scissors", "Scissors", "", "", "", "", "", "", "Needle holder bbox", "Forceps bbox", "Scissors bbox", "Left hand bbox", "Right hand bbox"],
         concat_axis=1,
         resize_factor=.5,
         circle_radius=16.,
@@ -680,6 +736,9 @@ def main_report(
     # 2: Forceps curved
     # 3: Scissors
     # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+    if is_microsurgery: #udelat lepe, ale jak
+        object_names[2] = "Forceps curved"
+        object_colors[2] = "m"
 
 
     filename = str(filename)
@@ -768,55 +827,16 @@ def main_report(
                 for track_object in sort_data[i]:
                     # TODO Zdeněk - vykreslovat bboxy rukou, zatím nevykreslovat bbox nástroje a myslet na to, že to může být mikrochirurgie
 
-                    if len(track_object) >= 4:
-                        box = np.array(track_object[0:4])
-                        position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
-                        position *= resize_factor #to size uniform video frame
+                    if len(track_object) >= 6:
+                        # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+                        box = np.array(track_object[0:4]) * resize_factor #to size uniform video frame
+                        confidence_score = track_object[4]
+                        class_id = track_object[5]
+                        object_name = object_names[class_id]
+                        object_color = object_colors[class_id]
 
-                        if (len(track_object) == 6):
-                            class_id = track_object[5]
-                            confidence_score = track_object[4]
-                        else:
-                            class_id = 0
-                            confidence_score = 1.0
+                        img = draw_track_object(img, box, object_name, object_color, font_scale=.5/resize_factor, thickness=int(2./resize_factor), circle_radius=int(circle_radius/resize_factor))
 
-                        if (class_id >= 0) and (class_id < 4):
-                            ## color
-                            color = (128, 128, 128)
-                            if object_colors[class_id] == "b":
-                                color = (255, 0, 0)
-                            if object_colors[class_id] == "r":
-                                color = (0, 0, 255)
-                            if object_colors[class_id] == "g":
-                                color = (0, 255, 0)
-                            if object_colors[class_id] == "m":
-                                color = (255, 0, 255)
-                            color_text = color
-                            if confidence_score < confidence_score_thr:
-                                color_text = (180, 180, 180)
-
-                            # draw detection
-                            cv2.circle(
-                                img,
-                                (int(position[0]), int(position[1])),
-                                int(circle_radius/resize_factor),
-                                color,
-                                thickness=int(2./resize_factor),
-                            )
-
-                            # draw track ID, coordinates: bottom-left
-                            cv2.putText(
-                                img,
-                                str(object_names[class_id]),
-                                (int(position[0]+(circle_radius*2.5)), int(position[1]-circle_radius*1.)),
-                                cv2.FONT_HERSHEY_SIMPLEX,
-                                fontScale=.5/resize_factor,
-                                color=color_text,
-                                thickness=int(2./resize_factor),
-                            )
-
-                #else:
-                #break
 
             #hand pose tracking
             if i < M:
