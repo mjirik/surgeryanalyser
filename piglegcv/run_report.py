@@ -635,7 +635,7 @@ def merge_cut_frames(scissors_frames:list, cut_frames:list, fps:float) -> list:
 
 
 
-def draw_track_object(img, box, object_name, object_color, font_scale=.5, thickness=2, circle_radius=5):
+def draw_track_object(img, box, class_id, object_name, object_color, font_scale=.5, thickness=2, circle_radius=5):
 
     # 0: Needle holder
     # 1: Forceps
@@ -663,7 +663,7 @@ def draw_track_object(img, box, object_name, object_color, font_scale=.5, thickn
         #color_text = (180, 180, 180)
 
     # draw detection
-    if class_id < 10:
+    if class_id < 10: #tips like circles
         position = np.array([np.mean([box[0],box[2]]), np.mean([box[1],box[3]])])
         cv2.circle(
             img,
@@ -673,20 +673,32 @@ def draw_track_object(img, box, object_name, object_color, font_scale=.5, thickn
             thickness=thickness,
         )
         text_position = (int(position[0]+(circle_radius*2.5)), int(position[1]-circle_radius))
-    else:
+        
+        # draw track ID, coordinates: bottom-left
+        cv2.putText(
+            img,
+            str(object_name),
+            text_position,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=font_scale,
+            color=color_text,
+            thickness=thickness,
+        
+    
+    if class_id > 12: #just right and left hand bbbox
         cv2.rectangle(img,(int(box[0]), int(box[1])),(int(box[2]), int(box[3])), color, thickness)
         text_position = (int(box[0]), int(box[1]))
 
-    # draw track ID, coordinates: bottom-left
-    cv2.putText(
-        img,
-        str(object_name),
-        text_position,
-        cv2.FONT_HERSHEY_SIMPLEX,
-        fontScale=font_scale,
-        color=color_text,
-        thickness=thickness,
-    )
+        # draw track ID, coordinates: bottom-left
+        cv2.putText(
+            img,
+            str(object_name),
+            text_position,
+            cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=font_scale,
+            color=color_text,
+            thickness=thickness,
+        )
 
     return(img)
 
@@ -792,8 +804,8 @@ def main_report(
         frame_ids, data_pixels, sort_data = bboxes_to_points(outputdir, confidence_score_thr)
         cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
 
-        fig, ax, ds_max = create_video_report_figure(frame_ids, data_pixels, fps, pix_size, is_qr_detected, object_colors,
-                                                     object_names, size_output_fig, dpi=300, cut_frames=cut_frames)
+        fig, ax, ds_max = create_video_report_figure(frame_ids[:4], data_pixels[:4], fps, pix_size, is_qr_detected, object_colors[:4],
+                                                     object_names[:4], size_output_fig, dpi=300, cut_frames=cut_frames)
 
 
         img_first = None
@@ -835,7 +847,7 @@ def main_report(
                         object_name = object_names[class_id]
                         object_color = object_colors[class_id]
 
-                        img = draw_track_object(img, box, object_name, object_color, font_scale=.5/resize_factor, thickness=int(2./resize_factor), circle_radius=int(circle_radius/resize_factor))
+                        img = draw_track_object(img, box, class_id, object_name, object_color, font_scale=.5/resize_factor, thickness=int(2./resize_factor), circle_radius=int(circle_radius/resize_factor))
 
 
             #hand pose tracking
