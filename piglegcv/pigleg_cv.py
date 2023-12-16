@@ -436,7 +436,7 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
         incision_bboxes = metadata["qr_data"]["incision_bboxes"]
     logger.debug(f"{incision_bboxes=}")
     
-    time_fr =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1)
+    time_fr =  np.asarray(data["frame_ids"][tool_index]).reshape(-1, 1)
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
     
     if len(incision_bboxes) > 0:
