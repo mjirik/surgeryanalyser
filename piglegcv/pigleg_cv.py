@@ -140,30 +140,47 @@ class DoComputerVision():
         from mmtrack.apis import init_model
         if self.is_microsurgery:
             models = [
-                init_model(
+                (
                     "./resources/tracker_model_bytetrack_microsurgery/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth"),
-                    device=self.device
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth")
                 )
             ]
+            # microsurgery
+            # 0: Needle holder
+            # 1: Forceps
+            # 2: Forceps curved
+            # 3: Scissors
+            class_names = {
+                0: "Needle holder",
+                1: "Forceps",
+                2: "Forceps curved",
+                3: "Scissors",
+            }
         else:
             models = [
-                init_model(
+                (
                     "./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth"),
-                    device=self.device
-                )
-                ,
-                init_model(
+                    str(Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth")
+                ), (
                     "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
                     str(Path(__file__).parent / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"),
-                    device=self.device
                 )
             ]
+            class_names = {
+                0: "Needle holder",
+                1: "Forceps",
+                2: "Scissors",
+                10: "Needle holder bbox",
+                11: "Forceps bbox",
+                12: "Scissors bbox",
+                13: "Left hand bbox",
+                14: "Right hand bbox",
+            }
         main_tracker_bytetrack(
-            trackers=models,
+            trackers_config_and_checkpoints=models,
             filename=self.filename,
             output_file_path=self.outputdir / "tracks.json",
+            class_names=class_names
         )
     
     def run_video_processing(self):

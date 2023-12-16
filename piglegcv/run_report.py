@@ -683,6 +683,7 @@ def draw_track_object(img, box, class_id, object_name, object_color, font_scale=
             fontScale=font_scale,
             color=color_text,
             thickness=thickness,
+        )
         
     
     if class_id > 12: #just right and left hand bbbox

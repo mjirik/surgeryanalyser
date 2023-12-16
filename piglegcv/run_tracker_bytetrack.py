@@ -25,18 +25,37 @@ def add_tracking_results(tracking_results, result):
         tracking_results['tracks'].append(frame_tr)
 
 
-
+def make_hash_from_model(model_file:Path):
+    import hashlib
+    hash_md5 = hashlib.md5()
+    with open(model_file, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 def main_tracker_bytetrack(
-        trackers: list,
+        trackers_config_and_checkpoints: list,
         # config_file,
         filename,
         # checkpoint,
         output_file_path: Path,
-        # device=None,
+        device=None,
         # score_thr=0.5,
-        crop: list=[None, None, None, None]):
-    
+        crop: list=[None, None, None, None],
+        class_names = None,
+):
+    """Run tracking on a video.
+    trackers: is list of tuples (config_file, checkpoint)
+    """
+
+    hash = ""
+    models = []
+    for tracker_config, tracker_checkpoint in trackers_config_and_checkpoints:
+        # build the model from a config file and a checkpoint file
+        model = init_model(tracker_config, str(tracker_checkpoint), device=device)
+        models.append(model)
+        hash += make_hash_from_model(tracker_checkpoint)
+
     # nemělo by tady být spíš device="cuda" ? To ale nefunguje protože: RuntimeError: nms_impl: implementation for device cuda:0 not found.
 
     imgs = mmcv.VideoReader(str(filename))
@@ -47,12 +66,21 @@ def main_tracker_bytetrack(
     #print(model)
 
     # test and show/save the images
-    tracking_results = {'tracks': []}
+    run_tracking = True
+    if output_file_path.exists():
+        data = json.load(open(output_file_path, 'r'))
+        if ("hash" in data) and (data['hash'] == hash):
+            run_tracking = False
+            logger.debug("Tracking results already exists. Skipping tracking.")
+
+
+
+    tracking_results = {'tracks': [], "hash": hash, "class_names": class_names}
     for i, img in enumerate(imgs):
         frame_tr = []
         if not (i % 50):
             logger.debug(f'Processing frame {i} by tracker')
-        for j, tracker in enumerate(trackers):
+        for j, tracker in enumerate(trackers_config_and_checkpoints):
 
             result = inference_mot(tracker, img[crop[0]:crop[1], crop[2]:crop[3], :], frame_id=i)
 
