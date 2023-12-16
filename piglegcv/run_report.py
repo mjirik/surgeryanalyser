@@ -720,7 +720,8 @@ def main_report(
         confidence_score_thr=0.0,
         oa_bbox_linecolor=[0,255,128],
         cut_frames:list=[],
-        is_microsurgery:bool=False
+        is_microsurgery:bool=False,
+        test_first_seconds:bool=False
 ):
     """
 
@@ -753,13 +754,11 @@ def main_report(
         object_names[2] = "Forceps curved"
         object_colors[2] = "m"
 
-
     filename = str(filename)
     outputdir = str(outputdir)
 
     cap = cv2.VideoCapture(filename)
     assert cap.isOpened(), f'Failed to load video file {filename}'
-
 
     if cap.isOpened():
 
@@ -785,8 +784,6 @@ def main_report(
         output_video_fn = Path(outputdir+'/pigleg_results.mp4')
         videoWriter = cv2.VideoWriter(str(output_video_fn_tmp), fourcc, fps, size_output_video)
 
-
-
         #input hand poses data
         json_data = load_json('{}/hand_poses.json'.format(outputdir))
         hand_poses = json_data['hand_poses'] if 'hand_poses' in json_data else []
@@ -802,13 +799,13 @@ def main_report(
         bboxes = np.asarray(meta["incision_bboxes"])
         relative_presence = RelativePresenceInOperatingArea()
         relative_presence.set_operation_area_based_on_bboxes(bboxes)
+
         frame_ids, data_pixels, sort_data = bboxes_to_points(outputdir, confidence_score_thr)
         cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
 
         #just for 4 first objects
         fig, ax, ds_max = create_video_report_figure(frame_ids[:4], data_pixels[:4], fps, pix_size, is_qr_detected, object_colors[:4],
                                                      object_names[:4], size_output_fig, dpi=300, cut_frames=cut_frames)
-
 
         img_first = None
         video_frame_first = None
@@ -830,10 +827,10 @@ def main_report(
 
             if not(i % 50):
                 logger.debug(f'Frame {i} processed!')
-
-            #if i > 1050:
-               #break
-
+            
+            if test_first_seconds:
+                if i > 100:
+                    break
 
             #object tracking
             if i < len(sort_data):
@@ -849,7 +846,8 @@ def main_report(
                         object_name = object_names[class_id]
                         object_color = object_colors[class_id]
 
-                        img = draw_track_object(img, box, class_id, object_name, object_color, font_scale=.5/resize_factor, thickness=int(2./resize_factor), circle_radius=int(circle_radius/resize_factor))
+                        img = draw_track_object(img, box, class_id, object_name, object_color,
+                                                font_scale=.5/resize_factor, thickness=int(2./resize_factor), circle_radius=int(circle_radius/resize_factor))
 
 
             #hand pose tracking
@@ -896,51 +894,65 @@ def main_report(
         cmd = f"ffmpeg -i {str(output_video_fn_tmp)} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {str(output_video_fn)}"
         os.system(cmd)
 
+        
+        
         #############
         # graph report
 
         #plot graphs and store statistic
-        # TODO Zdeněk - použít cut_frames pro výpočet individuálních statistik pro každý steh zvlášť.
         data_results = {}
         for i, (frame_id, data_pixel, object_color, object_name) in enumerate(zip(frame_ids, data_pixels, object_colors, object_names)):
-            simplename = object_name.lower().strip().replace(' ', '_')
+            if frame_id != []:
+                simplename = object_name.lower().strip().replace(' ', '_')
+                # print(cut_frames)
 
-            cut_frames.append(0)
-            for cut_id, cut_frame in enumerate(cut_frames):
-                
-                if cut_id != 0:
-                    object_full_name = f'{object_name} {cut_id}'
-                else:
-                    object_full_name = f'{object_name}'
-            
-                res = create_pdf_report(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color,
-                                        object_name,
-                                        os.path.join(outputdir, f"graph_{i}c_trajectory.jpg"),
-                                        os.path.join(outputdir, f"fig_{i}a_{simplename}_graph.jpg"))
+                frame_idx_start = 0
+                frame_idx_stop = len(frame_id)
+                object_full_name = f'{object_name}'
+                stitch_name = "all"
+                j_before = 0
+                for cut_id, cut_frame in enumerate([0] + cut_frames):     
 
-                oz_presence = relative_presence.calculate_presence(data_pixel)
-                image_presence = relative_presence.draw_image(img_first.copy(), data_pixel, bbox_linecolor=oa_bbox_linecolor)
-                cv2.imwrite(str(Path(outputdir)/ f"{simplename}_area_presence.jpg"), image_presence)
-                # obj_name = object_name.lower().replace(" ", "_")
-                # 
-                #
-                if len(res) > 0:
-                    [T, L, V, unit] = res
-                    # data_results[object_name] = {}
-                    data_results[f'{object_full_name} length [{unit}]'] = L
-                    data_results[f'{object_full_name} visibility [s]'] = T
-                    data_results[f'{object_full_name} velocity'] = V
-                    data_results[f'{object_full_name} unit'] = unit
-                    data_results[f'{object_full_name} visibility [%]'] = float(100 * T/video_duration_s)
-                    data_results[f'{object_full_name} area presence [%]'] = float(100 * oz_presence)
+                    if cut_id > 0:  
+                        object_full_name = f'{object_name} stitch {cut_id}'
+                        stitch_name = f"stitch_{cut_id}"
+                        for j, frame in enumerate(frame_id):
+                            if frame > cut_frame:
+                                frame_idx_start = j_before
+                                frame_idx_stop = j
+                                j_before = j
+                                break
+                    print(object_full_name, " frame_idx_start:frame_idx_stop", frame_idx_start, frame_idx_stop)
 
-                oa_bbox = None
-                if simplename == "needle_holder":
-                    logger.debug("adding operating area to the heatmap")
-                    oa_bbox = relative_presence.operating_area_bbox
+                    res = create_pdf_report(frame_id[frame_idx_start:frame_idx_stop], data_pixel[frame_idx_start:frame_idx_stop],
+                                            img_first, fps, pix_size, is_qr_detected, object_color, object_name,
+                                            os.path.join(outputdir, f"graph_{i}c_{simplename}_trajectory_{stitch_name}.jpg"),
+                                            os.path.join(outputdir, f"fig_{i}a_{simplename}_graph_{stitch_name}.jpg"))
 
-                create_heatmap_report_plt(data_pixel, image=img_first, filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap.jpg", 
-                                          bbox=oa_bbox, bbox_linecolor=oa_bbox_linecolor)
+                    oz_presence = relative_presence.calculate_presence(data_pixel[frame_idx_start:frame_idx_stop])
+                    image_presence = relative_presence.draw_image(img_first.copy(), data_pixel[frame_idx_start:frame_idx_stop], bbox_linecolor=oa_bbox_linecolor)
+                    cv2.imwrite(str(Path(outputdir)/ f"{simplename}_area_presence.jpg"), image_presence)
+                    # obj_name = object_name.lower().replace(" ", "_")
+                    # 
+                    #
+                    if len(res) > 0:
+                        [T, L, V, unit] = res
+                        # data_results[object_name] = {}
+                        data_results[f'{object_full_name} length [{unit}]'] = L
+                        data_results[f'{object_full_name} visibility [s]'] = T
+                        data_results[f'{object_full_name} velocity'] = V
+                        data_results[f'{object_full_name} unit'] = unit
+                        data_results[f'{object_full_name} visibility [%]'] = float(100 * T/video_duration_s)
+                        data_results[f'{object_full_name} area presence [%]'] = float(100 * oz_presence)
+
+                    oa_bbox = None
+                    if simplename == "needle_holder":
+                        logger.debug("adding operating area to the heatmap")
+                        oa_bbox = relative_presence.operating_area_bbox
+
+                    create_heatmap_report_plt(data_pixel[frame_idx_start:frame_idx_stop], image=img_first,
+                                              filename=Path(outputdir) / f"fig_{i}b_{simplename}_heatmap_{stitch_name}.jpg", 
+                                              bbox=oa_bbox, bbox_linecolor=oa_bbox_linecolor)
 
         #save statistic to file
         # save_json(data_results, os.path.join(outputdir, "results.json"))
