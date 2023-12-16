@@ -369,18 +369,22 @@ class DoComputerVision():
         # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
         if n_clusters > 1:
             bboxes_to_points(str(self.outputdir))
-            # split_frames = []
-            split_s, split_frames = find_stitch_ends_in_tracks(
-                self.outputdir, n_clusters=n_clusters, 
-                tool_index=tool_index, time_axis=time_axis, 
-                weight_of_later=weight_of_later, metadata=self.meta ,
-            
-                plot_clusters=plot_clusters
-            )
-            # self.meta["qr_data"]["stitch_split_frames"] = split_frames
-            self.meta["stitch_split_frames"] = split_frames
-            self.meta["stitch_split_s"] = split_s
-            return split_frames
+            try:
+                # split_frames = []
+                split_s, split_frames = find_stitch_ends_in_tracks(
+                    self.outputdir, n_clusters=n_clusters,
+                    tool_index=tool_index, time_axis=time_axis,
+                    weight_of_later=weight_of_later, metadata=self.meta ,
+
+                    plot_clusters=plot_clusters
+                )
+                # self.meta["qr_data"]["stitch_split_frames"] = split_frames
+                self.meta["stitch_split_frames"] = split_frames
+                self.meta["stitch_split_s"] = split_s
+                return split_frames
+            except Exception as e:
+                logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
+                return []
         else:
             return []
         
