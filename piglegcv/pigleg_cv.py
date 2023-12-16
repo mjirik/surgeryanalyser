@@ -385,12 +385,12 @@ class DoComputerVision():
             return []
         
         
-    def _make_report(self):
+    def _make_report(self, cut_frames=[]):
         # self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
         #                            cut_frames=self.meta["stitch_split_frames"]
         #                            )
         self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
-                                    cut_frames=[]
+                                    cut_frames=cut_frames, test_first_seconds=self.test_first_seconds
                                     )
         return self.results
     

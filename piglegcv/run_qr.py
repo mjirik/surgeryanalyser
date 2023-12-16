@@ -28,8 +28,8 @@ def get_bboxes(img, device='cpu'):
     scene_area_threshold = 0.35
     scene_area_bboxes = bboxes[1]
     scene_area_bboxes = tools.sort_bboxes(scene_area_bboxes)
-    if scene_area_bboxes[1].shape[0] > 0:
-        bbox_scene_area = bboxes[1][0]
+    if scene_area_bboxes.shape[0] > 0:
+        bbox_scene_area = scene_area_bboxes[0]
         if bbox_scene_area[-1] < scene_area_threshold:
             bbox_scene_area = None
         
