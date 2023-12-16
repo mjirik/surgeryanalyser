@@ -440,8 +440,10 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
     
     if len(incision_bboxes) > 0:
-        
-        X_px_fr_tmp = tools.filter_points_in_bbox(X_px_fr, incision_bboxes[0])
+
+        X_px_fr_tmp = tools.filter_points_in_bbox(
+            X_px_fr,
+            tools.make_bbox_larger(incision_bboxes[0], 2.0))
         logger.debug(f"{X_px_fr.shape=}, {X_px_fr_tmp.shape=}")  
         X_px_fr = X_px_fr_tmp
 
@@ -450,7 +452,7 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
     axis_normalization = np.asarray([
         metadata["qr_data"]["pix_size"] * 1000, 
         metadata["qr_data"]["pix_size"] * 1000,
-        1/metadata["fps"]
+        1./metadata["fps"]
     ])
     
     X = X_px_fr * axis_normalization
@@ -482,8 +484,7 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
         if label != prev:
             time = ((1-weight_of_later)*X[frame_i - 1,time_axis]) + (weight_of_later * X[frame_i,time_axis])
             splits_s.append(time)
-            # TODO opravit Míra
-            splits_frames.append(frame_i)
+            splits_frames.append(int(time/float(metadata['fps'])))
         prev = label
     if plot_clusters:
         plot_track_clusters(X, labels, cluster_centers, splits_s)
