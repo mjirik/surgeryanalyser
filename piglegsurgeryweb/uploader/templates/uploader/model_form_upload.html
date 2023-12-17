@@ -56,12 +56,13 @@
             {% csrf_token %}
             {{ form.as_p }}
         <button class="btn btn-primary has-spinner" id="btnUpload" type="submit">
-            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+{#            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>#}
+            <i class="fas fa-upload"></i>
             {{ button }}
         </button>
-            {% if request.user.is_authenticated %}
-            <a href="{% url 'uploader:web_reports' %}" class="btn btn-secondary">Go to list of reports</a>
-            {% endif %}
+{#            {% if request.user.is_authenticated %}#}
+{#            <a href="{% url 'uploader:web_reports' %}" class="btn btn-secondary">Go to list of reports</a>#}
+{#            {% endif %}#}
 
         </form>
     </div>
