@@ -3,6 +3,7 @@ services:
   dev_piglegweb:
     container_name: "${PIGLEG_IMAGE_PREFIX}piglegweb"
     image: "${PIGLEG_IMAGE_PREFIX}piglegweb:latest"
+    build: docker
     ports:
       - '${PIGLEG_PORT}:8000'
       # outer:inner

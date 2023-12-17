@@ -55,7 +55,8 @@ ENV PATH="/opt/conda/condabin:${PATH}"
 ARG PATH="/opt/conda/condabin:${PATH}"
 
 RUN conda update conda
-RUN conda update conda-build
+RUN conda update --name base conda
+# RUN #conda update conda-build
 #RUN conda install -n base conda-libmamba-solver
 #RUN conda config --set solver libmamba
 
@@ -133,7 +134,9 @@ RUN sudo rm /etc/apt/sources.list.d/nvidia-ml.list
 RUN sudo apt-get update --yes
 RUN sudo apt-get install --yes apache2-utils
 
+RUN conda install -n piglegsurgery --yes -c conda-forge plotly statsmodels
 
+RUN sudo mkdir -p /webapps/piglegsurgery/piglegsurgeryweb/static/
 RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/
 # RUN sudo chmod a+w /webapps/piglegsurgery/piglegsurgeryweb/private/db.sqlite3
 #ls -l /webapps/piglegsurgery/piglegsurgeryweb/private/
@@ -143,6 +146,7 @@ RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/
 #CMD cd /webapps/piglegsurgery/piglegsurgeryweb && conda run -n piglegsurgery --no-capture-output python manage.py qcluster
 #CMD service redis-server start && tail -F /var/log/redis/error.log
 #CMD tail -f /dev/null
+
 
 #ENV PIGLEGCV_HOSTNAME "PIGLEGCV_HOSTNAME"
 CMD cd /webapps/piglegsurgery/docker && \

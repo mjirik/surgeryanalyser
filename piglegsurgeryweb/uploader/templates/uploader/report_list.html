@@ -8,7 +8,19 @@
                 class="container"
             {% endif %}
     >
-        <H2> List of reports </H2>
+        {% if owner %}
+            <H2> Reports for {{ owner.email }} </H2>
+        {% else %}
+            <H2> List of reports </H2>
+        {% endif %}
+{#        <H2> List of reports </H2>#}
+        {% if myhtml %}
+            Graph
+
+        {% autoescape off %}
+            {{ myhtml }}
+        {% endautoescape %}
+        {% endif %}
         <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
         <table class="table">
             <thead>

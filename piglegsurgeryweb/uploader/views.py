@@ -140,6 +140,51 @@ def show_report_list(request):
     return render(request, "uploader/report_list.html", context)
 
 
+def _get_graph_path(owner:Optional[Owner]=None):
+    if owner:
+        html_path = Path(settings.MEDIA_ROOT) / "generated" / owner.hash / "graph.html"
+    else:
+        html_path = Path(settings.MEDIA_ROOT) / "generated/graph.html"
+    return html_path
+
+def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Owner]=None):
+    import plotly.express as px
+    import pandas as pd
+    from django.utils import timezone
+
+    html_path = _get_graph_path(owner)
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+
+
+    rows = []
+
+    for i, uploaded_file in enumerate(uploaded_file_set):
+
+
+        results_path = Path(uploaded_file.outputdir) / "results.json"
+        #read results.json
+        if results_path.exists():
+            with open(results_path) as f:
+                loaded_results = json.load(f)
+
+            loaded_results["Uploaded at"] = uploaded_file.uploaded_at
+            loaded_results["i"] = i
+            rows.append(loaded_results)
+
+    df = pd.DataFrame(rows)
+
+    y = ["Needle holder visibility [%]", "Needle holder area presence [%]"]
+    # x = list(df.keys())
+    #
+    # x = [el for el in x if el != 'Uploaded at']
+
+    x = "Uploaded at"
+    import plotly.express as px
+    fig = px.scatter(df, x=x, y=y, marginal_x="box", marginal_y="box")
+    fig.write_html(html_path, full_html=False)
+    return html_path
+
+
 def owners_reports_list(request, owner_hash: str):
     owner = get_object_or_404(Owner, hash=owner_hash)
     order_by = request.GET.get("order_by", "-uploaded_at")
@@ -157,11 +202,20 @@ def owners_reports_list(request, owner_hash: str):
         )
 
     qs_json = json.dumps(qs_data)
+
+    html_path = make_graph(files, owner)
+
+    html = html_path.read_text()
+    # logger.debug(html)
+
+
     context = {
         "uploadedfiles": files,
         "queue_size": queue_size(),
         "qs_json": qs_json,
         "page_reference": "owners_reports_list",
+        "owner": owner,
+        "myhtml": html,
     }
 
     return render(request, "uploader/report_list.html", context)
