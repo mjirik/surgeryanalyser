@@ -24,9 +24,24 @@ def get_bboxes(img, device="cpu"):
     single_image_model.cfg = _model["my_params"]
 
     bboxes, masks = inference_detector(single_image_model, img)
+    
+    # -1: incision area
+    # 0: scene area
+    # 1: ?
+    # 2: QR code
+    # 3: ?
+    # 4: ?
+    # 5: micro qr code
+    for cls_id, bboxes_class in enumerate(bboxes):
+        logger.debug(f"{cls_id=}, {bboxes_class=}")
 
     bboxes_incision_area = bboxes[0]
     bboxes_incision_area = tools.sort_bboxes(bboxes_incision_area)
+    
+    ia_threshold = 0.8
+    ia_filter = bboxes_incision_area[:, -1] > ia_threshold
+    bboxes_incision_area = bboxes_incision_area[ia_filter]
+    
 
     scene_area_threshold = 0.35
     scene_area_bboxes = bboxes[1]
@@ -51,19 +66,17 @@ def get_bboxes(img, device="cpu"):
     else:
         bboxes_qr = None
         side_length = None
-    if bboxes[4].shape[0] > 0:
+    if bboxes[5].shape[0] > 0:
         logger.debug(f"micro calibration detected")
-        bboxes_calibration_micro = bboxes[4][:2]
-        calibration_micro_mask = masks[4][0]
-        micro_side_length = 2.0 * math.sqrt(np.count_nonzero(calibration_micro_mask == True) / np.pi)
+        bboxes_calibration_micro, masks_calibration_micro = tools.sort_bboxes_and_masks_by_confidence(bboxes[5], masks[5])
+
+        micro_side_length = 2.0 * math.sqrt(np.count_nonzero(masks_calibration_micro[0] == True) / np.pi)
     else:
         bboxes_calibration_micro = []
         micro_side_length = None
     #     bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
 
-    ia_threshold = 0.8
-    ia_filter = bboxes_incision_area[:, -1] > ia_threshold
-    bboxes_incision_area = bboxes_incision_area[ia_filter]
+
 
     return bboxes_incision_area, bbox_scene_area, bboxes_qr, side_length, bboxes_calibration_micro, micro_side_length
 
@@ -170,6 +183,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
     qr_data["bbox_scene_area"] = (
         np.asarray(bbox_scene_area).tolist() if bbox_scene_area is not None else None
     )
+    qr_data["bbox_micro_calibration"] = np.asarray(bboxes_calibration_micro).tolist()
     qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
     qr_data["qr_bboxes_SID"] = (
         np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
