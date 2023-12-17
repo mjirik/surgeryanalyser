@@ -41,7 +41,8 @@ from sklearn.cluster import KMeans
 PROGRESS = 0
 PROGRESS_MAX = 100
 
-DEVICE = os.getenv("DEVICE", default="cpu")
+DEVICE = os.getenv("PIGLEG_DEVICE", default="cpu")
+logger.debug(f"DEVICE={DEVICE}")
 
 
 def set_progress(progress=None, progress_max=None):
@@ -59,6 +60,7 @@ class DoComputerVision():
         if device is None:
             import torch
             device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.debug(f"device={device}")
 
         self.filename:Path = Path(filename)
         self.filename_original:Path = Path(filename)
