@@ -16,7 +16,8 @@ import tools
 
 def get_bboxes(img, device="cpu"):
     single_model_path = (
-        Path(__file__).parent / "resources/single_image_detector/mdl.pth"
+        Path(__file__).parent / "resources/single_image_detector/mdl_sid_2.pth"
+        # Path(__file__).parent / "resources/single_image_detector/mdl.pth"
     )
     _model = torch.load(single_model_path, map_location=torch.device(device))
     single_image_model = _model["model"]
@@ -50,20 +51,27 @@ def get_bboxes(img, device="cpu"):
     else:
         bboxes_qr = None
         side_length = None
+    if bboxes[4].shape[0] > 0:
+        bboxes_calibration_micro = bboxes[4][:2]
+        qr_mask = masks[3][0]
+        micro_side_length = 2.0 * math.sqrt(np.count_nonzero(qr_mask == True) / np.pi)
+    else:
+        bboxes_calibration_micro = []
+        micro_side_length = None
     #     bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
 
     ia_threshold = 0.8
     ia_filter = bboxes_incision_area[:, -1] > ia_threshold
     bboxes_incision_area = bboxes_incision_area[ia_filter]
 
-    return bboxes_incision_area, bbox_scene_area, bboxes_qr, side_length
+    return bboxes_incision_area, bbox_scene_area, bboxes_qr, side_length, bboxes_calibration_micro, micro_side_length
 
 
 def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
     img = np.asarray(img)
     width = img.shape[1]
     # Todo Viktora
-    bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length = get_bboxes(
+    bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length, bboxes_calibration_micro, micro_side_length = get_bboxes(
         img, device=device
     )
 
@@ -72,7 +80,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
         qreader = QReader()
 
     detected_qr_codes = qreader.detect_and_decode(image=img, return_bboxes=True)
-    pix_size_best = 1.0
+    pix_size_best = None
     qr_size = 0.027
     is_detected = False
     qr_bbox = []
@@ -129,11 +137,17 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
         qr_size / qr_side_length if qr_side_length else None
     )
 
-    qr_data = {}
+    qr_data = {
+        "is_microsurgery": False
+    }
 
     pix_size_method = "video size estimation"
     if is_detected:
         pix_size_method = "QR"
+    elif len(bboxes_calibration_micro) > 0:
+        pix_size_method = "micro calibration"
+        pix_size_best = 0.005 / micro_side_length
+        qr_data["is_microsurgery"] = True
     elif len(bboxes_qr) > 0:
         pix_size_method = "pix_size_single_frame_detector_m"
         pix_size_best = pix_size_single_frame_detector_m

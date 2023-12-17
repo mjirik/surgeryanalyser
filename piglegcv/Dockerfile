@@ -120,7 +120,7 @@ RUN mkdir -p ./resources/tracker_model_bytetrack_microsurgery
 RUN mkdir -p ./resources/yolov7_qrdet
 #
 COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
-COPY ./resources/single_image_detector/mdl.pth ./resources/single_image_detector
+COPY ./resources/single_image_detector/mdl_sid_2.pth ./resources/single_image_detector
 COPY ./resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
 COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
