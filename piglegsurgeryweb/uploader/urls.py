@@ -1,4 +1,5 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 
 from . import views
 
@@ -24,5 +25,6 @@ urlpatterns = [
     # path("about_ev_cs/", views.about_ev_cs, name="about_ev_cs"),
     path("test/", views.test, name="test"),
     path("show_logs/<str:filename_hash>", views.show_logs, name="show_logs"),
+    path('login/', auth_views.LoginView.as_view(), name='login')
     # path("about_ev_en/", views.about_ev_en, name="about_ev_en"),
 ]

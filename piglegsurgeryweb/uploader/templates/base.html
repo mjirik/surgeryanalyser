@@ -165,10 +165,9 @@
 
         </ul><!-- End Profile Dropdown Items -->
         {% else %}
-        <a  class="nav-link" href="{% url 'admin:index' %}">
-            Login
+        <a  class="nav-link"
+            href="{% url 'uploader:login' %}?next=/"> Login
         </a>
-
         {% endif %}
     </div>
 
