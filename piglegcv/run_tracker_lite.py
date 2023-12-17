@@ -20,6 +20,7 @@ from detectron2.modeling import build_model
 from detectron2.checkpoint import DetectionCheckpointer
 from typing import Union
 from pathlib import Path
+
 try:
     from tools import save_json
 except Exception as e:
@@ -32,114 +33,125 @@ CFG = {
     "TRACKING": {
         "THRESHOLD": {
             "thr_of_score_1": 0.95,  # upper threshold defined as "a minimal score of detection to be used, when the
-                                     # maximal score is equal to 1"
+            # maximal score is equal to 1"
             "the_of_score_x": 0.20,  # lower threshold defined as "a minimal score of detection to be used, when the
-                                     # maximal score is equal to x" -> all detections with score lower than this value
-                                     # are newer used
-            "x": 0.50   # when maximal score of detection is equal to this value (in current frame), "t_of_score_x"
-                        # defines its minimal score for all others detections that are required to be used for tracking
+            # maximal score is equal to x" -> all detections with score lower than this value
+            # are newer used
+            "x": 0.50  # when maximal score of detection is equal to this value (in current frame), "t_of_score_x"
+            # defines its minimal score for all others detections that are required to be used for tracking
         }
-    }
+    },
 }
 FLOAT_EPSILON = 1e-5
 
 
 def custom_img_preprocessing_test(image):
     # init the local variables
-    domain_adapt = CFG['R-CNN']['INPUT']['AUGMENTATIONS']['DOMAIN_ADAPT']
-    augm_type = str(domain_adapt['type']).upper()
+    domain_adapt = CFG["R-CNN"]["INPUT"]["AUGMENTATIONS"]["DOMAIN_ADAPT"]
+    augm_type = str(domain_adapt["type"]).upper()
     transforms_alb = list()
 
     # domain augmentations
-    if (augm_type not in ["NONE", ""]) and (domain_adapt[augm_type]['prob'] >= 1.0 - FLOAT_EPSILON):
-        if domain_adapt['type'] == "FDA":
+    if (augm_type not in ["NONE", ""]) and (
+        domain_adapt[augm_type]["prob"] >= 1.0 - FLOAT_EPSILON
+    ):
+        if domain_adapt["type"] == "FDA":
             transforms_alb.append(
                 A.FDA(
-                    domain_adapt['ref_img'],
-                    beta_limit=domain_adapt['FDA']['beta_limit'],
-                    p=1.0
+                    domain_adapt["ref_img"],
+                    beta_limit=domain_adapt["FDA"]["beta_limit"],
+                    p=1.0,
                 )
             )
-        elif domain_adapt['type'] == "histogram_matching":
-            blend_ratio = sum(domain_adapt['HISTOGRAM_MATCHING']['blend_ratio']) / 2
+        elif domain_adapt["type"] == "histogram_matching":
+            blend_ratio = sum(domain_adapt["HISTOGRAM_MATCHING"]["blend_ratio"]) / 2
 
             transforms_alb.append(
                 A.HistogramMatching(
-                    domain_adapt['ref_img'],
+                    domain_adapt["ref_img"],
                     blend_ratio=(blend_ratio, blend_ratio),
-                    p=1.0
+                    p=1.0,
                 )
             )
-        elif domain_adapt['type'] == "pixel_distribution_adapt":
-            blend_ratio = sum(domain_adapt['PIXEL_DISTRIBUTION_ADAPT']['blend_ratio']) / 2
+        elif domain_adapt["type"] == "pixel_distribution_adapt":
+            blend_ratio = (
+                sum(domain_adapt["PIXEL_DISTRIBUTION_ADAPT"]["blend_ratio"]) / 2
+            )
 
             transforms_alb.append(
                 A.PixelDistributionAdaptation(
-                    domain_adapt['ref_img'],
+                    domain_adapt["ref_img"],
                     blend_ratio=(blend_ratio, blend_ratio),
-                    transform_type=domain_adapt['PIXEL_DISTRIBUTION_ADAPT']['transform_type'],
-                    p=1.0
+                    transform_type=domain_adapt["PIXEL_DISTRIBUTION_ADAPT"][
+                        "transform_type"
+                    ],
+                    p=1.0,
                 )
             )
 
     # resize an image and apply the transforms
     new_width, new_height = 0, 0
-    if CFG['R-CNN']['INPUT']['RESIZE']['type'].lower() == "relative":
-        new_height = int(image.shape[0] * CFG['R-CNN']['INPUT']['RESIZE']['RELATIVE']['ratio'])
-        new_width = int(image.shape[1] * CFG['R-CNN']['INPUT']['RESIZE']['RELATIVE']['ratio'])
-    elif CFG['R-CNN']['INPUT']['RESIZE']['type'].lower() == "img_edge":
-        resize_base = CFG['R-CNN']['INPUT']['RESIZE']['IMG_EDGE']
+    if CFG["R-CNN"]["INPUT"]["RESIZE"]["type"].lower() == "relative":
+        new_height = int(
+            image.shape[0] * CFG["R-CNN"]["INPUT"]["RESIZE"]["RELATIVE"]["ratio"]
+        )
+        new_width = int(
+            image.shape[1] * CFG["R-CNN"]["INPUT"]["RESIZE"]["RELATIVE"]["ratio"]
+        )
+    elif CFG["R-CNN"]["INPUT"]["RESIZE"]["type"].lower() == "img_edge":
+        resize_base = CFG["R-CNN"]["INPUT"]["RESIZE"]["IMG_EDGE"]
 
         # check shortest edge of the input image and resize it if it is higher than maximum of sizes, or lower than
         # minimum of sizes
-        if resize_base['type'] == "shortest":
+        if resize_base["type"] == "shortest":
             if image.shape[0] < image.shape[1]:
-                if image.shape[0] > max(resize_base['sizes']):
-                    new_height = max(resize_base['sizes'])
-                elif image.shape[0] < min(resize_base['sizes']):
-                    new_height = min(resize_base['sizes'])
+                if image.shape[0] > max(resize_base["sizes"]):
+                    new_height = max(resize_base["sizes"])
+                elif image.shape[0] < min(resize_base["sizes"]):
+                    new_height = min(resize_base["sizes"])
                 else:
                     new_height = 0
                 new_width = new_height * image.shape[1] / image.shape[0]
             else:
-                if image.shape[1] > max(resize_base['sizes']):
-                    new_width = max(resize_base['sizes'])
-                elif image.shape[1] < min(resize_base['sizes']):
-                    new_width = min(resize_base['sizes'])
+                if image.shape[1] > max(resize_base["sizes"]):
+                    new_width = max(resize_base["sizes"])
+                elif image.shape[1] < min(resize_base["sizes"]):
+                    new_width = min(resize_base["sizes"])
                 else:
                     new_width = 0
                 new_height = new_width * image.shape[0] / image.shape[1]
-        elif resize_base['type'] == "height":
-            if image.shape[0] > max(resize_base['sizes']):
-                new_height = max(resize_base['sizes'])
-            elif image.shape[0] < min(resize_base['sizes']):
-                new_height = min(resize_base['sizes'])
+        elif resize_base["type"] == "height":
+            if image.shape[0] > max(resize_base["sizes"]):
+                new_height = max(resize_base["sizes"])
+            elif image.shape[0] < min(resize_base["sizes"]):
+                new_height = min(resize_base["sizes"])
             else:
                 new_height = 0
             new_width = new_height * image.shape[1] / image.shape[0]
-        elif resize_base['type'] == "width":
-            if image.shape[1] > max(resize_base['sizes']):
-                new_width = max(resize_base['sizes'])
-            elif image.shape[1] < min(resize_base['sizes']):
-                new_width = min(resize_base['sizes'])
+        elif resize_base["type"] == "width":
+            if image.shape[1] > max(resize_base["sizes"]):
+                new_width = max(resize_base["sizes"])
+            elif image.shape[1] < min(resize_base["sizes"]):
+                new_width = min(resize_base["sizes"])
             else:
                 new_width = 0
             new_height = new_width * image.shape[0] / image.shape[1]
         else:
-            raise Exception(f"Wrong type of resizing image for IMG_EDGE. You have {resize_base['type']}")
+            raise Exception(
+                f"Wrong type of resizing image for IMG_EDGE. You have {resize_base['type']}"
+            )
     else:
-        raise Exception(f"Wrong type of resizing image. You have {CFG['R-CNN']['INPUT']['RESIZE']['type']}")
+        raise Exception(
+            f"Wrong type of resizing image. You have {CFG['R-CNN']['INPUT']['RESIZE']['type']}"
+        )
 
     # resize an image
     transforms = []
     if int(new_height) != 0:
         # the image needs to be resized
-        image, transforms = T.apply_transform_gens([
-            T.Resize((
-                int(new_height),
-                int(new_width)
-            ))
-        ], image)
+        image, transforms = T.apply_transform_gens(
+            [T.Resize((int(new_height), int(new_width)))], image
+        )
 
     if len(transforms_alb) != 0:
         # albumentation transforms
@@ -152,7 +164,7 @@ class CustomPredictor(DefaultPredictor):
     def __init__(self, cfg):
         self.cfg = cfg.clone()  # cfg can be modified by model
         if not torch.cuda.is_available():
-            cfg.MODEL.DEVICE = 'cpu'
+            cfg.MODEL.DEVICE = "cpu"
             logger.warning("No GPU available. Running on CPU.")
             # device = "cuda"
 
@@ -180,7 +192,9 @@ class CustomPredictor(DefaultPredictor):
             if self.input_format == "RGB":
                 # whether the model expects BGR inputs or RGB
                 original_image = original_image[:, :, ::-1]
-            height, width = original_image.shape[:2]  # needed for recomputing the boxes positions
+            height, width = original_image.shape[
+                :2
+            ]  # needed for recomputing the boxes positions
 
             # preprocess an image
             image, _ = custom_img_preprocessing_test(original_image)
@@ -242,18 +256,18 @@ def get_detectron_cfg() -> CfgNode:
 
     ## output path
     cfg.OUTPUT_DIR = CFG["output_dir"]
-    #prefix = "" if (CFG["OUTPUT"]["prefix"] == "") else f"{CFG['OUTPUT']['prefix']}_"
-    #suffix = "" if (CFG["OUTPUT"]["suffix"] == "") else f"_{CFG['OUTPUT']['suffix']}"
-    #cfg.OUTPUT_DIR = os.path.join(
-        #CFG["output_dir"], "tracker", f"{prefix}{CFG['R-CNN']['model']}{suffix}"
-    #)
+    # prefix = "" if (CFG["OUTPUT"]["prefix"] == "") else f"{CFG['OUTPUT']['prefix']}_"
+    # suffix = "" if (CFG["OUTPUT"]["suffix"] == "") else f"_{CFG['OUTPUT']['suffix']}"
+    # cfg.OUTPUT_DIR = os.path.join(
+    # CFG["output_dir"], "tracker", f"{prefix}{CFG['R-CNN']['model']}{suffix}"
+    # )
 
     ## check if output path exists
-    #output_orig = cfg.OUTPUT_DIR
-    #idx = 1
-    #while os.path.exists(cfg.OUTPUT_DIR):
-        #cfg.OUTPUT_DIR = f"{output_orig}__{idx}"
-        #idx += 1
+    # output_orig = cfg.OUTPUT_DIR
+    # idx = 1
+    # while os.path.exists(cfg.OUTPUT_DIR):
+    # cfg.OUTPUT_DIR = f"{output_orig}__{idx}"
+    # idx += 1
 
     return cfg
 
@@ -269,6 +283,7 @@ def read_img(img_name: str):
 
     return img
 
+
 class NumpyArrayEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.integer):
@@ -281,21 +296,17 @@ class NumpyArrayEncoder(json.JSONEncoder):
             return super(NumpyArrayEncoder, self).default(obj)
 
 
-
-
 def tracking_sort(
     predictor: CustomPredictor, tracker: [sort.Sort], filename: str, output_dir: str
 ):
     track_id_last = [1 for _ in range(CFG["DATA"]["num_classes"])]
     final_tracks = list()
-    additional_data = {
-        "boxes": [],
-        "scores": [],
-        "classes": []
-    }
+    additional_data = {"boxes": [], "scores": [], "classes": []}
 
-    thr_a = (CFG["TRACKING"]["THRESHOLD"]["thr_of_score_1"] - CFG["TRACKING"]["THRESHOLD"]["the_of_score_x"]) / \
-            (1 - CFG["TRACKING"]["THRESHOLD"]["x"])
+    thr_a = (
+        CFG["TRACKING"]["THRESHOLD"]["thr_of_score_1"]
+        - CFG["TRACKING"]["THRESHOLD"]["the_of_score_x"]
+    ) / (1 - CFG["TRACKING"]["THRESHOLD"]["x"])
     thr_b = CFG["TRACKING"]["THRESHOLD"]["thr_of_score_1"] - thr_a
 
     cap = cv2.VideoCapture(str(filename))
@@ -306,7 +317,7 @@ def tracking_sort(
             break
         frame_id += 1
 
-        #predict
+        # predict
         outputs = predictor(img)
         outputs = outputs["instances"].to("cpu")
 
@@ -320,8 +331,10 @@ def tracking_sort(
         additional_data["classes"].append(list(classes))
 
         # divide outputs by its predicted class
-        split_dets = [list() for _ in range(CFG["DATA"]["num_classes"])]     # [[]] * CFG["DATA"]["num_classes"] is not
-        split_scores = [list() for _ in range(CFG["DATA"]["num_classes"])]   # working...
+        split_dets = [
+            list() for _ in range(CFG["DATA"]["num_classes"])
+        ]  # [[]] * CFG["DATA"]["num_classes"] is not
+        split_scores = [list() for _ in range(CFG["DATA"]["num_classes"])]  # working...
         for i, cat in enumerate(classes):
             split_dets[cat].append(dets[i])
             split_scores[cat].append(scores[i])
@@ -338,7 +351,10 @@ def tracking_sort(
             if len(split_dets[cat]) > 0:
                 det = []
                 for s, d in zip(split_scores[cat], split_dets[cat]):
-                    if s >= round(thr_a * max_score + thr_b, 3) and s >= CFG["TRACKING"]["THRESHOLD"]["the_of_score_x"]:
+                    if (
+                        s >= round(thr_a * max_score + thr_b, 3)
+                        and s >= CFG["TRACKING"]["THRESHOLD"]["the_of_score_x"]
+                    ):
                         det.append(d)
 
                 dets = np.array(det)
@@ -347,7 +363,9 @@ def tracking_sort(
             tracks = tracker[cat].update(dets if len(dets) > 0 else np.empty((0, 5)))
 
             # check if the last track id is in the list of all tracks for current image
-            skip_wrong_tracks = True if track_id_last[cat] in [t[4] for t in tracks] else False
+            skip_wrong_tracks = (
+                True if track_id_last[cat] in [t[4] for t in tracks] else False
+            )
 
             # actualize the track id when it was lost with Kalman Filter
             if (len(tracks) == 1) and skip_wrong_tracks is False:
@@ -366,16 +384,18 @@ def tracking_sort(
         for cat in range(len(filtered_tracks)):
             all_tracks += filtered_tracks[cat]
         final_tracks.append(all_tracks)
-        
-        if not(frame_id % 10):
-            logger.debug(f'Frame {frame_id} processed!')
+
+        if not (frame_id % 10):
+            logger.debug(f"Frame {frame_id} processed!")
 
     # save the final tracks to the json file
-    save_json({"tracks": final_tracks, "additional_data": additional_data}, os.path.join(output_dir, "tracks.json"))
+    save_json(
+        {"tracks": final_tracks, "additional_data": additional_data},
+        os.path.join(output_dir, "tracks.json"),
+    )
 
 
-
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 def main_tracker(commandline):
     print("main_tracker: initiated")
     # Parse commandline
@@ -417,8 +437,10 @@ def main_tracker(commandline):
                 args.model_dir, checkpoint_file.readline()
             )
 
-    CFG['R-CNN']['INPUT']['AUGMENTATIONS']['DOMAIN_ADAPT']['ref_img'] = \
-        [os.path.join(args.model_dir, i) for i in CFG['R-CNN']['INPUT']['AUGMENTATIONS']['DOMAIN_ADAPT']['ref_img']]
+    CFG["R-CNN"]["INPUT"]["AUGMENTATIONS"]["DOMAIN_ADAPT"]["ref_img"] = [
+        os.path.join(args.model_dir, i)
+        for i in CFG["R-CNN"]["INPUT"]["AUGMENTATIONS"]["DOMAIN_ADAPT"]["ref_img"]
+    ]
 
     # update the optional arguments
     if args.prefix != "":
@@ -433,8 +455,7 @@ def main_tracker(commandline):
     # get the detectron2 configuration and create an output directory
     cfg = get_detectron_cfg()
 
-
-    #os.makedirs(cfg.OUTPUT_DIR)
+    # os.makedirs(cfg.OUTPUT_DIR)
 
     # save the used configuration (for training, testing...)
     save_json(CFG, os.path.join(cfg.OUTPUT_DIR, "config.json"))
@@ -443,11 +464,14 @@ def main_tracker(commandline):
     predictor = CustomPredictor(cfg)
 
     # use the SORT method for tracking the objects
-    mot_tracker = [sort.Sort(
-        max_age=CFG["SORT"]["max_age"],
-        min_hits=CFG["SORT"]["min_hits"],
-        iou_threshold=CFG["SORT"]["iou_threshold"],
-    ) for _ in range(CFG["DATA"]["num_classes"])]
+    mot_tracker = [
+        sort.Sort(
+            max_age=CFG["SORT"]["max_age"],
+            min_hits=CFG["SORT"]["min_hits"],
+            iou_threshold=CFG["SORT"]["iou_threshold"],
+        )
+        for _ in range(CFG["DATA"]["num_classes"])
+    ]
 
     # get tracks
     tracking_sort(predictor, mot_tracker, args.filename, cfg.OUTPUT_DIR)

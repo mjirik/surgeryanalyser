@@ -9,19 +9,50 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='UploadedFile',
+            name="UploadedFile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('email', models.EmailField(max_length=200)),
-                ('uploaded_at', models.DateTimeField(default=datetime.datetime.now, verbose_name='Uploaded at')),
-                ('mediafile', models.FileField(blank=True, max_length=500, null=True, upload_to=uploader.models_tools.upload_to_unqiue_folder, verbose_name='Media File')),
-                ('outputdir', models.CharField(blank=True, default=uploader.models_tools.get_output_dir, max_length=255)),
-                ('zip_file', models.FileField(blank=True, null=True, upload_to='cellimage/')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("email", models.EmailField(max_length=200)),
+                (
+                    "uploaded_at",
+                    models.DateTimeField(
+                        default=datetime.datetime.now, verbose_name="Uploaded at"
+                    ),
+                ),
+                (
+                    "mediafile",
+                    models.FileField(
+                        blank=True,
+                        max_length=500,
+                        null=True,
+                        upload_to=uploader.models_tools.upload_to_unqiue_folder,
+                        verbose_name="Media File",
+                    ),
+                ),
+                (
+                    "outputdir",
+                    models.CharField(
+                        blank=True,
+                        default=uploader.models_tools.get_output_dir,
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "zip_file",
+                    models.FileField(blank=True, null=True, upload_to="cellimage/"),
+                ),
             ],
         ),
     ]

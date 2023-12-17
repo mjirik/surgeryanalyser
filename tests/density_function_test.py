@@ -17,11 +17,12 @@ def test_density():
     print(data.shape)
 
     plt.plot(data[:, 0], data[:, 1], "*")
-    df = pd.DataFrame(data, columns=['x', 'y'])
+    df = pd.DataFrame(data, columns=["x", "y"])
 
-    sns.kdeplot(data=df, x='x', y='y', fill=True)
+    sns.kdeplot(data=df, x="x", y="y", fill=True)
 
     # plt.show()
+
 
 def test_heatmap():
     astro = skimage.data.astronaut()
@@ -39,4 +40,3 @@ def test_heatmap():
     # if there is any filename the figure is closed after savefig
     # plt.show()
     assert fn.exists()
-

@@ -17,6 +17,7 @@ from django.core.mail import EmailMessage
 from django_q.tasks import async_task, schedule, queue_size
 from django_q.models import Schedule
 from django.utils.html import strip_tags
+
 # from .pigleg_cv import run_media_processing
 from datetime import datetime
 import django.utils
@@ -28,12 +29,24 @@ import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
-from .data_tools import google_spreadsheet_append, flatten_dict, remove_empty_lists, remove_iterables_from_dict
+from .data_tools import (
+    google_spreadsheet_append,
+    flatten_dict,
+    remove_empty_lists,
+    remove_iterables_from_dict,
+)
 from .visualization_tools import crop_square
 from .media_tools import make_images_from_video, rescale, convert_avi_to_mp4
 
 
-def _run_media_processing_rest_api(input_file:Path, outputdir:Path, is_microsurgery:bool, n_stitches:int, hostname="127.0.0.1", port=5000):
+def _run_media_processing_rest_api(
+    input_file: Path,
+    outputdir: Path,
+    is_microsurgery: bool,
+    n_stitches: int,
+    hostname="127.0.0.1",
+    port=5000,
+):
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
     logger.debug("Creating request for processing")
@@ -42,9 +55,9 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, is_microsurg
         "filename": str(input_file),
         "outputdir": str(outputdir),
         "is_microsurgery": is_microsurgery,
-        "n_stitches": n_stitches
+        "n_stitches": n_stitches,
     }
-    url = f'http://{hostname}:{port}/run'
+    url = f"http://{hostname}:{port}/run"
     try:
         response = requests.post(url, params=query)
     except Exception as e:
@@ -58,19 +71,24 @@ def _run_media_processing_rest_api(input_file:Path, outputdir:Path, is_microsurg
     tm = 0
     time_to_sleep = 4
     while not is_finished:
-        time_to_sleep = time_to_sleep*2 if time_to_sleep < 128 else 128
+        time_to_sleep = time_to_sleep * 2 if time_to_sleep < 128 else 128
         time_step = 4
         tm += time_to_sleep
-        for i in range(int(time_to_sleep/time_step)):
+        for i in range(int(time_to_sleep / time_step)):
             time.sleep(time_step)
-        response = requests.get(f'http://{hostname}:{port}/is_finished/{hash}',
-                                # params=query
-                                )
+        response = requests.get(
+            f"http://{hostname}:{port}/is_finished/{hash}",
+            # params=query
+        )
         is_finished = response.json()
-        logger.debug(f".    is_finished={is_finished}  input_file={input_file.name}  time[s]={tm} queue_size={queue_size()}")
+        logger.debug(
+            f".    is_finished={is_finished}  input_file={input_file.name}  time[s]={tm} queue_size={queue_size()}"
+        )
 
     if type(is_finished) == str:
-        logger.warning(f"REST API processing failed. input_file={input_file.name}  time[s]={tm}")
+        logger.warning(
+            f"REST API processing failed. input_file={input_file.name}  time[s]={tm}"
+        )
     else:
         logger.debug(f"REST API processing finished.")
 
@@ -98,7 +116,14 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     outputdir = Path(serverfile.outputdir)
     logger.debug(f"outputdir={outputdir}")
 
-    _run_media_processing_rest_api(input_file, outputdir, serverfile.is_microsurgery, int(serverfile.stitch_count), hostname, port)
+    _run_media_processing_rest_api(
+        input_file,
+        outputdir,
+        serverfile.is_microsurgery,
+        int(serverfile.stitch_count),
+        hostname,
+        port,
+    )
 
     # (outputdir / "empty.txt").touch(exist_ok=True)
 
@@ -122,43 +147,51 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
-def _add_row_to_spreadsheet(serverfile, absolute_uri):
 
+def _add_row_to_spreadsheet(serverfile, absolute_uri):
 
     creds_file = Path(settings.CREDS_JSON_FILE)  # 'piglegsurgery-1987db83b363.json'
     if not creds_file.exists():
         logger.error(f"Credetials file does not exist. Expected path: {creds_file}")
         return
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ]
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
 
-    novy = {
-    }
+    novy = {}
 
     filename = Path(serverfile.outputdir) / "meta.json"
     if os.path.isfile(filename):
-        with open(filename, 'r') as fr:
+        with open(filename, "r") as fr:
             data = json.load(fr)
             novy.update(data)
 
     # filename = Path(serverfile.outputdir) / "evaluation.json"
     filename = Path(serverfile.outputdir) / "results.json"
     if os.path.isfile(filename):
-        with open(filename, 'r') as fr:
+        with open(filename, "r") as fr:
             data = json.load(fr)
             novy.update(data)
 
-    novy.update({
-        "email": serverfile.email,
-        # return str(Path(self.mediafile.name).name)
-        "filename": str(Path(serverfile.mediafile.name).name),
-        # "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
-        # "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
-        "uploaded_at": None if serverfile.uploaded_at is None else defaultfilters.date(serverfile.uploaded_at, 'Y-m-d H:i'),
-        "finished_at": None if serverfile.finished_at is None else defaultfilters.date(serverfile.finished_at, 'Y-m-d H:i'),
-        "filename_full": serverfile.mediafile.name,
-        "report_url": f"{absolute_uri}/uploader/web_report/{serverfile.hash}"
-    })
+    novy.update(
+        {
+            "email": serverfile.email,
+            # return str(Path(self.mediafile.name).name)
+            "filename": str(Path(serverfile.mediafile.name).name),
+            # "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
+            # "finished_at": None if serverfile.finished_at is None else serverfile.finished_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "uploaded_at": None
+            if serverfile.uploaded_at is None
+            else defaultfilters.date(serverfile.uploaded_at, "Y-m-d H:i"),
+            "finished_at": None
+            if serverfile.finished_at is None
+            else defaultfilters.date(serverfile.finished_at, "Y-m-d H:i"),
+            "filename_full": serverfile.mediafile.name,
+            "report_url": f"{absolute_uri}/uploader/web_report/{serverfile.hash}",
+        }
+    )
 
     pop_from_dict(novy, "incision_bboxes")
     pop_from_dict(novy, "filename_full")
@@ -169,11 +202,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
     logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
 
-    google_spreadsheet_append(
-        title="Pigleg Surgery Stats",
-        creds=creds,
-        data=df_novy
-    )
+    google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
 
 
 def pop_from_dict(d, key):
@@ -181,7 +210,9 @@ def pop_from_dict(d, key):
         d.pop(key)
 
 
-def make_preview(serverfile: UploadedFile, force:bool=False, height=100, make_square:bool=True) -> Path:
+def make_preview(
+    serverfile: UploadedFile, force: bool = False, height=100, make_square: bool = True
+) -> Path:
     if serverfile.mediafile:
         input_file = Path(serverfile.mediafile.path)
         # if not input_file.exists():
@@ -194,15 +225,25 @@ def make_preview(serverfile: UploadedFile, force:bool=False, height=100, make_sq
         if (not filename.exists()) or force:
             if input_file.suffix.lower() in (".mp4", ".avi", ".mov", ".webm"):
                 fn = serverfile.mediafile
-                make_images_from_video(input_file, outputdir=input_file.parent, n_frames=1,
-                                       # filemask="{outputdir}/preview.jpg",
-                                       filemask=str(filename),
-                                       # scale=0.125,
-                                       height=height,
-                                       make_square=make_square
-                                       )
-            elif input_file.suffix.lower() in (".jpg", ".jpeg", ".tiff", ".tif", ".png"):
+                make_images_from_video(
+                    input_file,
+                    outputdir=input_file.parent,
+                    n_frames=1,
+                    # filemask="{outputdir}/preview.jpg",
+                    filemask=str(filename),
+                    # scale=0.125,
+                    height=height,
+                    make_square=make_square,
+                )
+            elif input_file.suffix.lower() in (
+                ".jpg",
+                ".jpeg",
+                ".tiff",
+                ".tif",
+                ".png",
+            ):
                 import cv2
+
                 # print(input_file)
                 frame = cv2.imread(str(input_file))
                 scale = height / frame.shape[0]
@@ -211,12 +252,13 @@ def make_preview(serverfile: UploadedFile, force:bool=False, height=100, make_sq
                     frame = crop_square(frame)
                 cv2.imwrite(str(filename), frame)
             else:
-                logger.warning(f"Preview generation skipped. Unknown file type. filename={str(input_file.name)}")
+                logger.warning(
+                    f"Preview generation skipped. Unknown file type. filename={str(input_file.name)}"
+                )
                 return
 
             serverfile.preview.name = str(filename_rel)
             serverfile.save()
-
 
 
 def email_report_from_task(task):
@@ -227,6 +269,7 @@ def email_report_from_task(task):
     absolute_uri = task.args[1][:-1]
     # logger.debug(dir(task))
     email_report(serverfile, absolute_uri)
+
 
 def email_report(serverfile: UploadedFile, absolute_uri: str):
     logger.debug("Sending email report...")
@@ -240,15 +283,15 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         "</head>"
         f"<body>"
         f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {serverfile.mediafile}</p>"
-        f'<p></p>'
+        f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
-        f'<p></p>'
-        f'<p></p>'
+        f"<p></p>"
+        f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
-        f'<p></p>'
-        f'<p>Best regards</p>\n'
-        f'<p>Miroslav Jirik</p>\n'
-        f'<p></p>'
+        f"<p></p>"
+        f"<p>Best regards</p>\n"
+        f"<p>Miroslav Jirik</p>\n"
+        f"<p></p>"
         "<p>Faculty of Applied Sciences</p\n"
         "<p>University of West Bohemia</p>\n"
         "<p>Pilsen, Czech Republic</p>\n"
@@ -286,6 +329,7 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
     #     fail_silently=False,
     # )
 
+
 def email_media_recived(serverfile: UploadedFile):
     # async_task('django.core.mail.send_mail',
     send_mail(
@@ -295,15 +339,14 @@ def email_media_recived(serverfile: UploadedFile):
         + " The outputs of the analysis will be introduced in few weeks. "
         + "We will let you know when the processing will be finished. \n\n"
         + "Best regards,\n"
-          "Miroslav Jirik, Ph.D.\n\n"
-          "Faculty of Applied Sciences\n"
-          "University of West Bohemia\n"
-          "Pilsen, Czech Republic",
+        "Miroslav Jirik, Ph.D.\n\n"
+        "Faculty of Applied Sciences\n"
+        "University of West Bohemia\n"
+        "Pilsen, Czech Republic",
         "mjirik@kky.zcu.cz",
         [serverfile.email],
         fail_silently=False,
-        )
-
+    )
 
 
 def run_processing2(serverfile: UploadedFile):
@@ -364,7 +407,8 @@ def get_zip_fn(serverfile: UploadedFile):
     pth_zip = serverfile.outputdir + nm + ".zip"
     return pth_zip
 
-def add_generated_images(serverfile:UploadedFile):
+
+def add_generated_images(serverfile: UploadedFile):
     # serverfile.bitmap_image_set.all().delete()
     od = Path(serverfile.outputdir)
     logger.debug(od)
@@ -388,6 +432,7 @@ def add_generated_images(serverfile:UploadedFile):
         bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)
         bi.save()
 
+
 def make_zip(serverfile: UploadedFile):
     pth_zip = get_zip_fn(serverfile)
     if pth_zip:
@@ -400,6 +445,3 @@ def make_zip(serverfile: UploadedFile):
         pth_rel = op.relpath(pth_zip, settings.MEDIA_ROOT)
         serverfile.zip_file = pth_rel
         serverfile.save()
-
-
-

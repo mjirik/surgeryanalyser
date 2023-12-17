@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('uploader', '0010_uploadedfile_is_microscopy'),
+        ("uploader", "0010_uploadedfile_is_microscopy"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='bitmapimage',
-            name='title',
-            field=models.CharField(blank=True, default='', max_length=255),
+            model_name="bitmapimage",
+            name="title",
+            field=models.CharField(blank=True, default="", max_length=255),
         ),
     ]

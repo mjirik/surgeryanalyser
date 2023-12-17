@@ -7,13 +7,15 @@ import uploader.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('uploader', '0003_auto_20211109_0924'),
+        ("uploader", "0003_auto_20211109_0924"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='uploadedfile',
-            name='hash',
-            field=models.CharField(blank=True, default=uploader.models._hash, max_length=255),
+            model_name="uploadedfile",
+            name="hash",
+            field=models.CharField(
+                blank=True, default=uploader.models._hash, max_length=255
+            ),
         ),
     ]

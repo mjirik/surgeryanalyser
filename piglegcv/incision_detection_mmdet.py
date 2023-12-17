@@ -5,31 +5,42 @@ import logging
 
 import cv2
 import mmcv.utils
+
 logger = mmcv.utils.get_logger(name=__file__, log_level=logging.DEBUG)
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 # Check Pytorch installation
 import torch, torchvision
+
 print(torch.__version__, torch.cuda.is_available())
 
 # Check MMDetection installation
 import mmdet
-logger.debug(f'mmdet.version={mmdet.__version__}')
+
+logger.debug(f"mmdet.version={mmdet.__version__}")
 
 # Check mmcv installation
 from mmcv.ops import get_compiling_cuda_version, get_compiler_version
+
 logger.debug(get_compiling_cuda_version())
 logger.debug(get_compiler_version())
 from pprint import pprint, pformat
 from mmcv import Config
 from mmdet.apis import set_random_seed
 from mmdet.datasets import build_dataset
-from mmdet.apis import train_detector, init_detector, inference_detector, show_result_pyplot
+from mmdet.apis import (
+    train_detector,
+    init_detector,
+    inference_detector,
+    show_result_pyplot,
+)
 import os.path as osp
 from typing import Optional
 
 from pathlib import Path
+
 mmdetection_path = Path(mmdet.__file__).parent.parent
 
 import mmcv
@@ -43,34 +54,38 @@ from tools import load_json, save_json
 
 from pathlib import Path
 import os
-scratchdir = Path(os.getenv('SCRATCHDIR', "."))
-logname = Path(os.getenv('LOGNAME', "."))
+
+scratchdir = Path(os.getenv("SCRATCHDIR", "."))
+logname = Path(os.getenv("LOGNAME", "."))
 
 # from loguru import logger
 
-local_input_data_dir = Path(scratchdir) / 'data/orig/'
-local_output_data_dir = Path(scratchdir) / 'data/processed/'
+local_input_data_dir = Path(scratchdir) / "data/orig/"
+local_output_data_dir = Path(scratchdir) / "data/processed/"
 
 
 def prepare_cfg(
-        local_input_data_dir:Path,
-        local_output_data_dir:Path,
-        checkpoint_pth:Optional[Path]=None,
-        work_dir:Optional[Path]=None,
-        skip_data=False
+    local_input_data_dir: Path,
+    local_output_data_dir: Path,
+    checkpoint_pth: Optional[Path] = None,
+    work_dir: Optional[Path] = None,
+    skip_data=False,
 ):
     if checkpoint_pth == None:
-        checkpoint_pth = scratchdir / 'checkpoints/faster_rcnn_r50_caffe_fpn_mstrain_3x_coco_20210526_095054-1f77628b.pth'
+        checkpoint_pth = (
+            scratchdir
+            / "checkpoints/faster_rcnn_r50_caffe_fpn_mstrain_3x_coco_20210526_095054-1f77628b.pth"
+        )
     checkpoint_pth = str(checkpoint_pth)
 
-    work_dir = str(work_dir) if work_dir else str(local_output_data_dir / 'tutorial_exps')
+    work_dir = (
+        str(work_dir) if work_dir else str(local_output_data_dir / "tutorial_exps")
+    )
 
     logger.debug(f"outputdir={local_output_data_dir}")
     logger.debug(f"input_data_dir={local_input_data_dir}")
     logger.debug(f"input_data_dir exists={local_input_data_dir.exists()}")
     logger.debug(f'input_data_dir glob={str(list(local_input_data_dir.glob("**/*")))}')
-
-
 
     # # Choose to use a config and initialize the detector
     # config = mmdetection_path / 'configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_3x_coco.py'
@@ -109,32 +124,34 @@ def prepare_cfg(
     # result = inference_detector(model, img)
     # model.show_result(img, result, out_file=local_output_data_dir / 'demo_output.jpg')# save image with result
 
-
     # My dataset training
-    cfg = Config.fromfile(mmdetection_path / 'configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py')
+    cfg = Config.fromfile(
+        mmdetection_path
+        / "configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py"
+    )
 
-    cfg.dataset_type = 'CocoDataset'
+    cfg.dataset_type = "CocoDataset"
     cfg.data_root = str(local_input_data_dir)
-    cfg.classes = ('incision',)
+    cfg.classes = ("incision",)
     if not skip_data:
         # Modify dataset type and path
 
-        cfg.data.test.type = 'CocoDataset'
+        cfg.data.test.type = "CocoDataset"
         cfg.data.test.data_root = str(local_input_data_dir)
-        cfg.data.test.ann_file = 'annotations/instances_default.json'
-        cfg.data.test.img_prefix = 'images/'
+        cfg.data.test.ann_file = "annotations/instances_default.json"
+        cfg.data.test.img_prefix = "images/"
         cfg.data.test.classes = cfg.classes
 
-        cfg.data.train.type = 'CocoDataset'
+        cfg.data.train.type = "CocoDataset"
         cfg.data.train.data_root = str(local_input_data_dir)
-        cfg.data.train.ann_file = 'annotations/instances_default.json'
-        cfg.data.train.img_prefix = 'images/'
+        cfg.data.train.ann_file = "annotations/instances_default.json"
+        cfg.data.train.img_prefix = "images/"
         cfg.data.train.classes = cfg.classes
 
-        cfg.data.val.type = 'CocoDataset'
+        cfg.data.val.type = "CocoDataset"
         cfg.data.val.data_root = str(local_input_data_dir)
-        cfg.data.val.ann_file = 'annotations/instances_default.json'
-        cfg.data.val.img_prefix = 'images/'
+        cfg.data.val.ann_file = "annotations/instances_default.json"
+        cfg.data.val.img_prefix = "images/"
         cfg.data.val.classes = cfg.classes
 
     # modify num classes of the model in box head
@@ -166,16 +183,15 @@ def prepare_cfg(
 
     # We can also use tensorboard to log the training process
     cfg.log_config.hooks = [
-        dict(type='TextLoggerHook'),
-        dict(type='TensorboardLoggerHook')]
-
+        dict(type="TextLoggerHook"),
+        dict(type="TensorboardLoggerHook"),
+    ]
 
     # We can initialize the logger for training and have a look
     # at the final config used for training
     # print(f'Config:\n{cfg.pretty_text}') # does not work for paths beginning '/' because of bug in lib2to3
 
     logger.debug(f"cfg=\n{pformat(cfg)}")
-
 
     return cfg
 
@@ -186,12 +202,10 @@ def train(cfg):
 
     logger.debug(f"classes={datasets[0].CLASSES}")
 
-
     # Build the detector
     model = build_detector(cfg.model)
     # Add an attribute for visualization convenience
     model.CLASSES = datasets[0].CLASSES
-
 
     # Create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
@@ -199,14 +213,24 @@ def train(cfg):
     train_detector(model, datasets, cfg, distributed=False, validate=True)
     return model
 
-def run_incision_detection(img, local_output_data_dir:Optional[Path]=None, meta:Optional[dict]=None, expected_incision_size_mm=70, device="cuda"):
+
+def run_incision_detection(
+    img,
+    local_output_data_dir: Optional[Path] = None,
+    meta: Optional[dict] = None,
+    expected_incision_size_mm=70,
+    device="cuda",
+):
     # todo J. Viktora
     # nemělo by tady být spíš device="cuda" ? To ale nefunguje protože: RuntimeError: nms_impl: implementation for device cuda:0 not found.
     # img = mmcv.imread(str(img_fn))
-    
+
     if meta is None:
         meta = {}
-    checkpoint_path = Path(__file__).parent / "resources/incision_detection_models/220326_234659_mmdet.pth"
+    checkpoint_path = (
+        Path(__file__).parent
+        / "resources/incision_detection_models/220326_234659_mmdet.pth"
+    )
     logger.debug(f"checkpoint_path.exists={checkpoint_path.exists()}")
     logger.debug(f"img.shape={img.shape}, max(img)={np.max(img)}")
     # logger.debug(f"img_fn={img_fn}")
@@ -216,22 +240,29 @@ def run_incision_detection(img, local_output_data_dir:Optional[Path]=None, meta:
         local_output_data_dir = Path(local_output_data_dir)
 
     # My dataset training
-    cfg = Config.fromfile(mmdetection_path / 'configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py')
+    cfg = Config.fromfile(
+        mmdetection_path
+        / "configs/faster_rcnn/faster_rcnn_r50_caffe_fpn_mstrain_1x_coco.py"
+    )
 
-    cfg.dataset_type = 'CocoDataset'
+    cfg.dataset_type = "CocoDataset"
     # cfg.data_root = str(local_input_data_dir)
-    cfg.classes = ('incision',)
+    cfg.classes = ("incision",)
     # modify num classes of the model in box head
     cfg.model.roi_head.bbox_head.num_classes = 1
 
-    model = init_detector(cfg, str(checkpoint_path),
-                          device=device
-                          # device='cuda:0'
-                          )
+    model = init_detector(
+        cfg,
+        str(checkpoint_path),
+        device=device
+        # device='cuda:0'
+    )
     # logger.debug(f"cfg=\n{pformat(cfg)}")
     result = inference_detector(model, img)
     if local_output_data_dir is not None:
-        model.show_result(img, result, out_file=local_output_data_dir / f'incision_full.jpg')  # save image with result
+        model.show_result(
+            img, result, out_file=local_output_data_dir / f"incision_full.jpg"
+        )  # save image with result
 
     # get cropped incision
     class_id = 0
@@ -239,15 +270,15 @@ def run_incision_detection(img, local_output_data_dir:Optional[Path]=None, meta:
     bboxes = result[class_id]
     logger.debug(f"number of detected incisions = {len(bboxes)}")
     imgs = []
-    bbox_sizes = [] # used for resolution evaluation
+    bbox_sizes = []  # used for resolution evaluation
     for i, bbox in enumerate(bboxes):
 
-        imcr = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+        imcr = img[int(bbox[1]) : int(bbox[3]), int(bbox[0]) : int(bbox[2])]
 
-        sz = sorted([int(bbox[3])-int(bbox[1]), int(bbox[2])-int(bbox[0])])
+        sz = sorted([int(bbox[3]) - int(bbox[1]), int(bbox[2]) - int(bbox[0])])
         bbox_sizes.append(sz)
         if local_output_data_dir is not None:
-            cv2.imwrite(str(local_output_data_dir / f'incision_crop_{i}.jpg'), imcr)
+            cv2.imwrite(str(local_output_data_dir / f"incision_crop_{i}.jpg"), imcr)
         imgs.append(imcr)
         # plt.imshow(imcr[:, :, ::-1])
     # predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)
@@ -258,11 +289,15 @@ def run_incision_detection(img, local_output_data_dir:Optional[Path]=None, meta:
     else:
         pixelsize_m = None
     # json_file = Path(local_output_data_dir) / "meta.json"
-    meta.update({"pixelsize_m_by_incision_size": pixelsize_m,
-               "incision_bboxes": bboxes.tolist()
-              })
+    meta.update(
+        {
+            "pixelsize_m_by_incision_size": pixelsize_m,
+            "incision_bboxes": bboxes.tolist(),
+        }
+    )
 
     return imgs, bboxes
+
 
 def predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir):
     # img_fn = local_input_data_dir / '/images/10.jpg'
@@ -271,16 +306,17 @@ def predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir):
     model.cfg = cfg
     result = inference_detector(model, img)
     # show_result_pyplot(model, img, result)
-    model.show_result(img, result,
-                      out_file=local_output_data_dir / f'output_{img_fn.stem}.jpg')  # save image with result
+    model.show_result(
+        img, result, out_file=local_output_data_dir / f"output_{img_fn.stem}.jpg"
+    )  # save image with result
     return result
 
 
-def predict_images(cfg, model, local_input_data_dir:Path, local_output_data_dir):
+def predict_images(cfg, model, local_input_data_dir: Path, local_output_data_dir):
 
     filelist = []
     if local_input_data_dir.is_dir():
-        filelist =  list(local_input_data_dir.glob("*.jpg"))
+        filelist = list(local_input_data_dir.glob("*.jpg"))
         filelist.extend(list(local_input_data_dir.glob("*.png")))
     else:
         filelist = [local_input_data_dir]
@@ -294,11 +330,7 @@ def predict_images(cfg, model, local_input_data_dir:Path, local_output_data_dir)
     logger.debug(str(list(Path(local_output_data_dir).glob("**/*"))))
     return results
 
+
 if __name__ == "__main__":
     cfg = prepare_cfg(local_input_data_dir, local_output_data_dir)
-    predict_images(local_input_data_dir/"images")
-
-
-
-
-
+    predict_images(local_input_data_dir / "images")

@@ -13,9 +13,11 @@ import requests
 import tqdm
 from yolov7_package import Yolov7Detector
 
-#_WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), '.yolov7_qrdet', 'qrdet-yolov7.pt')
-_WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), 'resources', 'yolov7_qrdet', 'qrdet-yolov7.pt')
-_WEIGHTS_URL = 'https://github.com/Eric-Canas/qrdet/releases/download/first_qrdet_yolov7/qrdet-yolov7.pt'
+# _WEIGHTS_PATH = os.path.join(os.path.dirname(__file__), '.yolov7_qrdet', 'qrdet-yolov7.pt')
+_WEIGHTS_PATH = os.path.join(
+    os.path.dirname(__file__), "resources", "yolov7_qrdet", "qrdet-yolov7.pt"
+)
+_WEIGHTS_URL = "https://github.com/Eric-Canas/qrdet/releases/download/first_qrdet_yolov7/qrdet-yolov7.pt"
 
 
 class QRDetector:
@@ -25,10 +27,19 @@ class QRDetector:
         """
         if not os.path.exists(_WEIGHTS_PATH):
             self.__download_weights(url=_WEIGHTS_URL, path=_WEIGHTS_PATH)
-        self.model = Yolov7Detector(weights=_WEIGHTS_PATH, img_size=(640, 640), agnostic_nms=True, traced=False)
+        self.model = Yolov7Detector(
+            weights=_WEIGHTS_PATH, img_size=(640, 640), agnostic_nms=True, traced=False
+        )
 
-    def detect(self, image, return_confidences: bool = True, as_float: bool = False, is_bgr: bool = False) \
-            -> tuple[tuple[list[float, float, float, float], float], ...] | tuple[list[float, float, float, float], ...]:
+    def detect(
+        self,
+        image,
+        return_confidences: bool = True,
+        as_float: bool = False,
+        is_bgr: bool = False,
+    ) -> tuple[tuple[list[float, float, float, float], float], ...] | tuple[
+        list[float, float, float, float], ...
+    ]:
         """
         Detect QR codes in the given image.
         :param image: np.ndarray. The image to detect QR codes in, in RGB format.
@@ -41,28 +52,43 @@ class QRDetector:
                     the tuple contains the confidence of the detection as well (((x1, y1, x2, y2), confidence),...).
         """
         # Check the image is in the correct format.
-        assert 'ndarray' in str(type(image)), f'Expected image to be a numpy array. Got {type(image)}.'
-        assert 'uint8' in image.dtype.name, f'Expected image to be of type np.uint8. Got {image.dtype}.'
-        assert len(image.shape) == 3, f'Expected image to have 3 dimensions (H, W, RGB). Got {image.shape}.'
-        assert image.shape[2] == 3, f'Expected image to have 3 channels (RGB). Got {image.shape[2]}.'
+        assert "ndarray" in str(
+            type(image)
+        ), f"Expected image to be a numpy array. Got {type(image)}."
+        assert (
+            "uint8" in image.dtype.name
+        ), f"Expected image to be of type np.uint8. Got {image.dtype}."
+        assert (
+            len(image.shape) == 3
+        ), f"Expected image to have 3 dimensions (H, W, RGB). Got {image.shape}."
+        assert (
+            image.shape[2] == 3
+        ), f"Expected image to have 3 channels (RGB). Got {image.shape[2]}."
         # Transform the image from RGB to BGR (that's the format that yolov7_package expects).
         if not is_bgr:
             image = image[:, :, ::-1]
         dets = self.model.detect(image)
         # Check the detections return what it was expected (can be deleted after enough testing)
-        assert all(len(detection) == 1 for detection in dets), 'Expected all detections to have 1 element.'
-        assert all(detection == 0 for detection in dets[0][0]), 'Expected all detections to be of class 0 (QR code).'
+        assert all(
+            len(detection) == 1 for detection in dets
+        ), "Expected all detections to have 1 element."
+        assert all(
+            detection == 0 for detection in dets[0][0]
+        ), "Expected all detections to be of class 0 (QR code)."
         # Clip the bboxes to the image size and round them to int.
         h, w = image.shape[:2]
-        bboxes = tuple(_clip_bbox(bbox=bbox, h=h, w=w, as_float=as_float) for bbox in dets[1][0])
+        bboxes = tuple(
+            _clip_bbox(bbox=bbox, h=h, w=w, as_float=as_float) for bbox in dets[1][0]
+        )
         # Return the detections with or without the confidences.
         if return_confidences:
             return tuple((bbox, conf) for bbox, conf in zip(bboxes, dets[2][0]))
         else:
             return bboxes
 
-    def __download_weights(self, url: str, path: str = _WEIGHTS_PATH,
-                           desc: str = 'Downloading weights...') -> None:
+    def __download_weights(
+        self, url: str, path: str = _WEIGHTS_PATH, desc: str = "Downloading weights..."
+    ) -> None:
         """
         Download the weights of the YOLOv7 model.
         :param url: str. The url of the weights.
@@ -70,16 +96,20 @@ class QRDetector:
         :param desc: str. The description of the download. Default: 'Downloading YOLOv7 QRDetector weights...'.
         """
         self.downloading_model = True
-        assert not os.path.isfile(path), f'Expected the weights to not exist. Found them at {path}.'
+        assert not os.path.isfile(
+            path
+        ), f"Expected the weights to not exist. Found them at {path}."
         # Create the directory to save the weights.
         if not os.path.exists(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
 
         # Download the weights.
         response = requests.get(url, stream=True)
-        total_size_in_bytes = int(response.headers.get('content-length', 0))
-        with tqdm.tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True, desc=desc) as progress_bar:
-            with open(path, 'wb') as file:
+        total_size_in_bytes = int(response.headers.get("content-length", 0))
+        with tqdm.tqdm(
+            total=total_size_in_bytes, unit="iB", unit_scale=True, desc=desc
+        ) as progress_bar:
+            with open(path, "wb") as file:
                 for data in response.iter_content(chunk_size=1024):
                     progress_bar.update(len(data))
                     file.write(data)
@@ -88,12 +118,16 @@ class QRDetector:
         if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
             # Delete the weights if the download failed.
             os.remove(path)
-            raise EOFError('Error, something went wrong while downloading the weights.')
+            raise EOFError("Error, something went wrong while downloading the weights.")
         self.downloading_model = False
 
     def __del__(self):
         # If the weights didn't finish downloading, delete them.
-        if hasattr(self, 'downloading_model') and self.downloading_model and os.path.isfile(_WEIGHTS_PATH):
+        if (
+            hasattr(self, "downloading_model")
+            and self.downloading_model
+            and os.path.isfile(_WEIGHTS_PATH)
+        ):
             os.remove(_WEIGHTS_PATH)
             # Also remove the directory (just in case something became corrupted).
             _dir = os.path.dirname(_WEIGHTS_PATH)
@@ -101,8 +135,9 @@ class QRDetector:
                 os.rmdir(_dir)
 
 
-def _clip_bbox(bbox: list[float, float, float, float], h: int, w: int, as_float:bool = False) -> \
-                list[int | float, int | float, int | float, int | float]:
+def _clip_bbox(
+    bbox: list[float, float, float, float], h: int, w: int, as_float: bool = False
+) -> list[int | float, int | float, int | float, int | float]:
     """
     Clip the detected bbox to the image size. If as_float is False, round the bbox to int.
 
@@ -116,12 +151,24 @@ def _clip_bbox(bbox: list[float, float, float, float], h: int, w: int, as_float:
                 floats if as_float is True, as ints if as_float is False.
     """
 
-    assert all(type(coord) is float for coord in bbox), 'Expected bbox to be a list of floats.'
-    assert len(bbox) == 4, f'Expected bbox to have 4 elements. Got {len(bbox)}.'
+    assert all(
+        type(coord) is float for coord in bbox
+    ), "Expected bbox to be a list of floats."
+    assert len(bbox) == 4, f"Expected bbox to have 4 elements. Got {len(bbox)}."
 
     x1, y1, x2, y2 = bbox
     if as_float:
-        x1, y1, x2, y2 = max(0., x1), max(0., y1), min(float(w), x2), min(float(h), y2)
+        x1, y1, x2, y2 = (
+            max(0.0, x1),
+            max(0.0, y1),
+            min(float(w), x2),
+            min(float(h), y2),
+        )
     else:
-        x1, y1, x2, y2 = max(0, round(x1)), max(0, round(y1)), min(w, round(x2)), min(h, round(y2))
+        x1, y1, x2, y2 = (
+            max(0, round(x1)),
+            max(0, round(y1)),
+            min(w, round(x2)),
+            min(h, round(y2)),
+        )
     return [x1, y1, x2, y2]

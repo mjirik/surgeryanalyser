@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('uploader', '0005_uploadedfile_started_at'),
+        ("uploader", "0005_uploadedfile_started_at"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='uploadedfile',
-            name='finished_at',
-            field=models.DateTimeField(blank=True, null=True, verbose_name='Finished at'),
+            model_name="uploadedfile",
+            name="finished_at",
+            field=models.DateTimeField(
+                blank=True, null=True, verbose_name="Finished at"
+            ),
         ),
     ]

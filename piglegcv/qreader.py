@@ -16,7 +16,11 @@ from pyzbar.pyzbar import decode as decodeQR, ZBarSymbol
 import cv2
 
 from qrdet import QRDetector
-_SHARPEN_KERNEL = np.array(((-1., -1., -1.), (-1., 9., -1.), (-1., -1., -1.)), dtype=np.float32)
+
+_SHARPEN_KERNEL = np.array(
+    ((-1.0, -1.0, -1.0), (-1.0, 9.0, -1.0), (-1.0, -1.0, -1.0)), dtype=np.float32
+)
+
 
 class QReader:
     def __init__(self):
@@ -25,7 +29,9 @@ class QReader:
         """
         self.detector = QRDetector()
 
-    def detect(self, image: np.ndarray, min_confidence=0.6) -> tuple[tuple[int, int, int, int], ...]:
+    def detect(
+        self, image: np.ndarray, min_confidence=0.6
+    ) -> tuple[tuple[int, int, int, int], ...]:
         """
         This method will detect the QRs in the image and return the bounding boxes of the QR codes. If the QR code is
         not detected, it will return an empty tuple.
@@ -36,12 +42,20 @@ class QReader:
 
         """
 
-        detections = self.detector.detect(image=image, return_confidences=True, as_float=False)
-        detections = tuple(tuple(detection) for detection, confidence in detections if confidence >= min_confidence)
+        detections = self.detector.detect(
+            image=image, return_confidences=True, as_float=False
+        )
+        detections = tuple(
+            tuple(detection)
+            for detection, confidence in detections
+            if confidence >= min_confidence
+        )
 
         return detections
 
-    def decode(self, image: np.ndarray, bbox: tuple[int, int, int, int] | None = None) -> str | None:
+    def decode(
+        self, image: np.ndarray, bbox: tuple[int, int, int, int] | None = None
+    ) -> str | None:
         """
         This method is just a wrapper of pyzbar decodeQR method, that will try to apply image pre-processing when the
         QR code is not readed for the first time.
@@ -60,33 +74,58 @@ class QReader:
 
         for resize_factor in (1, 0.5, 2, 0.33, 3, 0.25, 4):
             # Don't exceed 1024 image size limit (Nothing will be better decoded beyond this size)
-            if resize_factor > 1 and (image.shape[0] * resize_factor > 1024 or image.shape[1] * resize_factor > 1024):
+            if resize_factor > 1 and (
+                image.shape[0] * resize_factor > 1024
+                or image.shape[1] * resize_factor > 1024
+            ):
                 continue
-            resized_image = cv2.resize(image, dsize=None, fx=resize_factor, fy=resize_factor, interpolation=cv2.INTER_CUBIC)
+            resized_image = cv2.resize(
+                image,
+                dsize=None,
+                fx=resize_factor,
+                fy=resize_factor,
+                interpolation=cv2.INTER_CUBIC,
+            )
             # Try to decode the QR code just with pyzbar
             decodedQR = decodeQR(image=resized_image, symbols=[ZBarSymbol.QRCODE])
             if len(decodedQR) == 0:
                 # Let's try some desperate postprocessing
-                sharpened_img = cv2.cvtColor(cv2.filter2D(src=resized_image, ddepth=-1, kernel=_SHARPEN_KERNEL), cv2.COLOR_RGB2GRAY)
-                _, binary_img = cv2.threshold(sharpened_img, thresh=0, maxval=255, type=cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                sharpened_img = cv2.cvtColor(
+                    cv2.filter2D(src=resized_image, ddepth=-1, kernel=_SHARPEN_KERNEL),
+                    cv2.COLOR_RGB2GRAY,
+                )
+                _, binary_img = cv2.threshold(
+                    sharpened_img,
+                    thresh=0,
+                    maxval=255,
+                    type=cv2.THRESH_BINARY + cv2.THRESH_OTSU,
+                )
                 decodedQR = decodeQR(image=binary_img, symbols=[ZBarSymbol.QRCODE])
                 if len(decodedQR) == 0:
                     # Blurring the sharpened image just a bit, works sometimes
-                    decodedQR = decodeQR(image=cv2.GaussianBlur(src=sharpened_img, ksize=(3, 3), sigmaX=0), symbols=[ZBarSymbol.QRCODE])
+                    decodedQR = decodeQR(
+                        image=cv2.GaussianBlur(
+                            src=sharpened_img, ksize=(3, 3), sigmaX=0
+                        ),
+                        symbols=[ZBarSymbol.QRCODE],
+                    )
             if len(decodedQR) > 0:
-                '''
+                """
                 try:
                     return decodedQR[0].data.decode('utf-8').encode('shift-jis').decode('utf-8')
                 except UnicodeDecodeError:
                     # When double decoding fails, just return the decoded string assuming it could have weird characters
                     return decodedQR[0].data.decode('utf-8')
-                '''
+                """
                 decodedQR.append(resize_factor)
                 return decodedQR
         return None
 
-    def detect_and_decode(self, image: np.ndarray, return_bboxes: bool = False) -> \
-            tuple[tuple[tuple[int, int, int, int], str | None], ...] | tuple[str|None, ...]:
+    def detect_and_decode(
+        self, image: np.ndarray, return_bboxes: bool = False
+    ) -> tuple[tuple[tuple[int, int, int, int], str | None], ...] | tuple[
+        str | None, ...
+    ]:
         """
         This method will decode all the QR codes in the image and return the decoded results (or None if there is
         a QR but can not be decoded).

@@ -5,20 +5,22 @@ from argparse import ArgumentParser
 
 import cv2
 
-from mmpose.apis import (inference_top_down_pose_model, init_pose_model,
-                         vis_pose_result)
+from mmpose.apis import inference_top_down_pose_model, init_pose_model, vis_pose_result
 
 try:
     from mmdet.apis import inference_detector, init_detector
+
     has_mmdet = True
 except (ImportError, ModuleNotFoundError):
     has_mmdet = False
 
 from loguru import logger
+
 try:
     from tools import save_json
 except ImportError as e:
     from .tools import save_json
+
 
 def process_mmdet_results(mmdet_results, cat_id=1):
     """Process mmdet results, and return a list of bboxes.
@@ -36,20 +38,22 @@ def process_mmdet_results(mmdet_results, cat_id=1):
     person_results = []
     for bbox in bboxes:
         person = {}
-        person['bbox'] = bbox
+        person["bbox"] = bbox
         person_results.append(person)
 
     return person_results
 
+
 def printKeypoints(pose_results, _file):
     if len(pose_results) > 0:
         all_points = []
-        for keyp in pose_results[0]['keypoints']:
-            points = ' '.join(['{}'.format(x) for x in keyp])
+        for keyp in pose_results[0]["keypoints"]:
+            points = " ".join(["{}".format(x) for x in keyp])
             all_points.append(points)
-        _file.write('{}\n'.format(','.join(all_points)))
+        _file.write("{}\n".format(",".join(all_points)))
     else:
-        _file.write('None\n')
+        _file.write("None\n")
+
 
 # def save_json(data: dict, output_json: str):
 #     os.makedirs(os.path.dirname(output_json), exist_ok=True)
@@ -57,35 +61,32 @@ def printKeypoints(pose_results, _file):
 #         json.dump(data, output_file)
 
 
-
-
 ###############################
 def main_mmpose(filename, outputdir, device=None):
-    
-    det_config = 'cascade_rcnn_x101_64x4d_fpn_1class.py'
-    det_checkpoint = 'https://download.openmmlab.com/mmpose/mmdet_pretrained/cascade_rcnn_x101_64x4d_fpn_20e_onehand10k-dac19597_20201030.pth'
-    device = 'cuda:0' if device is None else device
-    det_model = init_detector(
-        det_config, det_checkpoint, device=device)
-    # build the pose model from a config file and a checkpoint file
-    pose_config = 'res50_onehand10k_256x256.py'
-    pose_checkpoint = 'https://download.openmmlab.com/mmpose/top_down/resnet/res50_onehand10k_256x256-e67998f6_20200813.pth'
-    pose_model = init_pose_model(
-        pose_config, pose_checkpoint, device=device)
 
-    dataset = pose_model.cfg.data['test']['type']
+    det_config = "cascade_rcnn_x101_64x4d_fpn_1class.py"
+    det_checkpoint = "https://download.openmmlab.com/mmpose/mmdet_pretrained/cascade_rcnn_x101_64x4d_fpn_20e_onehand10k-dac19597_20201030.pth"
+    device = "cuda:0" if device is None else device
+    det_model = init_detector(det_config, det_checkpoint, device=device)
+    # build the pose model from a config file and a checkpoint file
+    pose_config = "res50_onehand10k_256x256.py"
+    pose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/resnet/res50_onehand10k_256x256-e67998f6_20200813.pth"
+    pose_model = init_pose_model(pose_config, pose_checkpoint, device=device)
+
+    dataset = pose_model.cfg.data["test"]["type"]
 
     cap = cv2.VideoCapture(filename)
-    #assert cap.isOpened(), f'Faild to load video file {args.video_path}'
-
+    # assert cap.isOpened(), f'Faild to load video file {args.video_path}'
 
     save_out_video = False
-    video_name = '{}/hand_poses.mp4'.format(outputdir)
+    video_name = "{}/hand_poses.mp4".format(outputdir)
     if save_out_video:
         fps = cap.get(cv2.CAP_PROP_FPS)
-        size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-                int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        size = (
+            int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         videoWriter = cv2.VideoWriter(video_name, fourcc, fps, size)
 
     # optional
@@ -102,11 +103,11 @@ def main_mmpose(filename, outputdir, device=None):
     radius = 5
     thickness = 3
     cv2.setNumThreads(2)
-    #out_file = open('{}/hand_poses.txt'.format(outputdir), 'w')
+    # out_file = open('{}/hand_poses.txt'.format(outputdir), 'w')
     hand_poses = []
-    
+
     frame_id = -1
-    while (cap.isOpened()):
+    while cap.isOpened():
         flag, img = cap.read()
         if not flag:
             break
@@ -121,26 +122,30 @@ def main_mmpose(filename, outputdir, device=None):
         pose_data = []
         pose_results = None
 
-        if (len(person_results) > 0) and (person_results[0]['bbox'][4] > 0.5):
-            #print(person_results)
+        if (len(person_results) > 0) and (person_results[0]["bbox"][4] > 0.5):
+            # print(person_results)
             # test a single image, with a list of bboxes.
             pose_results, returned_outputs = inference_top_down_pose_model(
                 pose_model,
                 img,
                 person_results,
                 bbox_thr=bbox_thr,
-                format='xyxy',
+                format="xyxy",
                 dataset=dataset,
                 return_heatmap=return_heatmap,
-                outputs=output_layer_names)
-            
-            #printKeypoints(pose_results, out_file)
+                outputs=output_layer_names,
+            )
+
+            # printKeypoints(pose_results, out_file)
             if len(pose_results) > 1:
-                pose_data = [pose_results[0]['keypoints'].tolist(), pose_results[1]['keypoints'].tolist()]
+                pose_data = [
+                    pose_results[0]["keypoints"].tolist(),
+                    pose_results[1]["keypoints"].tolist(),
+                ]
         hand_poses.append(pose_data)
-        
-        if not(frame_id % 10):
-            logger.debug(f'Frame {frame_id} processed!')
+
+        if not (frame_id % 10):
+            logger.debug(f"Frame {frame_id} processed!")
 
         if save_out_video and pose_results:
             vis_img = vis_pose_result(
@@ -151,7 +156,8 @@ def main_mmpose(filename, outputdir, device=None):
                 kpt_score_thr=kpt_thr,
                 radius=radius,
                 thickness=thickness,
-                show=False)
+                show=False,
+            )
 
             videoWriter.write(vis_img)
 
@@ -160,6 +166,7 @@ def main_mmpose(filename, outputdir, device=None):
         videoWriter.release()
 
     save_json({"hand_poses": hand_poses}, os.path.join(outputdir, "hand_poses.json"))
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     pass

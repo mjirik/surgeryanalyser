@@ -8,21 +8,37 @@ import uploader.models_tools
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('uploader', '0002_alter_uploadedfile_mediafile'),
+        ("uploader", "0002_alter_uploadedfile_mediafile"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='uploadedfile',
-            name='hash',
-            field=models.CharField(blank=True, default=uploader.models_tools.randomString, max_length=255),
+            model_name="uploadedfile",
+            name="hash",
+            field=models.CharField(
+                blank=True, default=uploader.models_tools.randomString, max_length=255
+            ),
         ),
         migrations.CreateModel(
-            name='BitmapImage',
+            name="BitmapImage",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('bitmap_image', models.ImageField(upload_to='')),
-                ('server_datafile', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='uploader.uploadedfile')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("bitmap_image", models.ImageField(upload_to="")),
+                (
+                    "server_datafile",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="uploader.uploadedfile",
+                    ),
+                ),
             ],
         ),
     ]

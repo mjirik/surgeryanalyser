@@ -10,7 +10,8 @@ import time
 import subprocess
 import pprint
 import tools
-#try:
+
+# try:
 #    from .run_tracker_lite import main_tracker
 #    from .run_tracker_bytetrack import main_tracker_bytetrack
 #    from .run_mmpose import main_mmpose
@@ -18,11 +19,12 @@ import tools
 #    from .run_report import main_report
 #    from .run_perpendicular import main_perpendicular, get_frame_to_process
 #    from .incision_detection_mmdet import run_incision_detection
-#except ImportError as e:
+# except ImportError as e:
 #    logger.debug(e)
 #    from run_tracker_lite import main_tracker
 from run_tracker_bytetrack import main_tracker_bytetrack
-#from run_mmpose import main_mmpose
+
+# from run_mmpose import main_mmpose
 from run_qr import main_qr
 import run_qr
 from run_report import main_report, bboxes_to_points
@@ -31,10 +33,13 @@ from tools import save_json, draw_bboxes_plt
 import numpy as np
 from incision_detection_mmdet import run_incision_detection
 from media_tools import make_images_from_video
+
 # from run_qr import bbox_info_extraction_from_frame
 import os
+
 # from sklearn.cluster import MeanShift, estimate_bandwidth, SpectralClustering, KMeans, DBSCAN
 from sklearn.cluster import KMeans
+
 # from sklearn.mixture import GaussianMixture
 
 
@@ -54,26 +59,37 @@ def set_progress(progress=None, progress_max=None):
     if progress_max:
         PROGRESS_MAX = progress_max
 
-class DoComputerVision():
-    def __init__(self, filename: Path, outputdir: Path, meta: Optional[dict] = None, n_stitches=0, is_microsurgery=False, test_first_seconds:bool=False, device:Optional[str]=None):
-        
+
+class DoComputerVision:
+    def __init__(
+        self,
+        filename: Path,
+        outputdir: Path,
+        meta: Optional[dict] = None,
+        n_stitches=0,
+        is_microsurgery=False,
+        test_first_seconds: bool = False,
+        device: Optional[str] = None,
+    ):
+
         if device is None:
             import torch
+
             device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.debug(f"device={device}")
 
-        self.filename:Path = Path(filename)
-        self.filename_original:Path = Path(filename)
-        self.outputdir:Path = Path(outputdir)
+        self.filename: Path = Path(filename)
+        self.filename_original: Path = Path(filename)
+        self.outputdir: Path = Path(outputdir)
         self.meta: dict = meta if meta is not None else {}
         self.logger_id = None
         self.frame: Optional[np.ndarray] = None
         self.filename_cropped: Optional[Path] = None
         self.test_first_seconds = test_first_seconds
         self.debug_images = {}
-        self.is_microsurgery:bool = bool(is_microsurgery)
+        self.is_microsurgery: bool = bool(is_microsurgery)
         self.device = device
-        self.n_stitches:int = int(n_stitches)
+        self.n_stitches: int = int(n_stitches)
         self.results = None
 
         log_format = loguru._defaults.LOGURU_FORMAT
@@ -88,13 +104,21 @@ class DoComputerVision():
 
     def run(self):
         self.meta = {}
-        logger.info(f"CV processing started on {self.filename}, outputdir={self.outputdir}")
+        logger.info(
+            f"CV processing started on {self.filename}, outputdir={self.outputdir}"
+        )
 
         try:
-            if Path(self.filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tiff", ".tif"):
+            if Path(self.filename).suffix.lower() in (
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".tiff",
+                ".tif",
+            ):
                 self.run_image_processing()
             else:
-                #run_video_processing(filename, outputdir)
+                # run_video_processing(filename, outputdir)
                 self.run_video_processing()
             save_json(self.meta, Path(self.outputdir) / "meta.json", update=False)
 
@@ -102,48 +126,61 @@ class DoComputerVision():
         except Exception as e:
             logger.error(traceback.format_exc())
         logger.remove(self.logger_id)
-        
+
     def _make_sure_media_is_cropped(self):
         if self.filename_cropped is None:
             s = time.time()
             qr_data = self.get_parameters_for_crop_rotate_rescale()
             if qr_data["bbox_scene_area"] is not None:
-                tools.draw_bbox_into_image(self.frame, qr_data["bbox_scene_area"], linecolor=(0, 255, 0), show_confidence=True)
+                tools.draw_bbox_into_image(
+                    self.frame,
+                    qr_data["bbox_scene_area"],
+                    linecolor=(0, 255, 0),
+                    show_confidence=True,
+                )
                 cv2.imwrite(str(self.outputdir / "_bbox_scene_area.jpg"), self.frame)
 
-
-            logger.debug(f"Single frame processing on original mediafile finished in {time.time() - s}s.")
-            self.meta["duration_s_get_parameters_for_crop_rotate_rescale"] = float(time.time() - s)
+            logger.debug(
+                f"Single frame processing on original mediafile finished in {time.time() - s}s."
+            )
+            self.meta["duration_s_get_parameters_for_crop_rotate_rescale"] = float(
+                time.time() - s
+            )
             # video_preprocessing - rotate, rescale and crop -> file
             s = time.time()
-            self.filename = self.do_crop_rotate_rescale(qr_data["bbox_scene_area"], qr_data["incision_bboxes"])
+            self.filename = self.do_crop_rotate_rescale(
+                qr_data["bbox_scene_area"], qr_data["incision_bboxes"]
+            )
             self.meta["duration_s_do_crop_rotate_rescale"] = time.time() - s
             logger.debug(f"Cropping done in {time.time() - s}s.")
             self.update_meta()
-
 
     def run_image_processing(self):
         if self.meta is None:
             self.meta = {}
         self._make_sure_media_is_cropped()
         logger.debug("Running image processing...")
-        self.frame = self._get_frame_to_process_ideally_with_incision(self.filename_cropped, n_tries=None)
+        self.frame = self._get_frame_to_process_ideally_with_incision(
+            self.filename_cropped, n_tries=None
+        )
         # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(self.frame, device=self.device)
-        qr_data['qr_scissors_frames'] = []
+        qr_data["qr_scissors_frames"] = []
         self.meta["qr_data"] = qr_data
         logger.debug(self.meta)
 
         main_perpendicular(self.filename, self.outputdir, self.meta, device=self.device)
         logger.debug("Perpendicular finished.")
-        
-        
+
     def _run_tracking(self):
         if self.is_microsurgery:
             models = [
                 (
                     "./resources/tracker_model_bytetrack_microsurgery/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth")
+                    str(
+                        Path(__file__).parent
+                        / "resources/tracker_model_bytetrack_microsurgery/epoch_15.pth"
+                    ),
                 )
             ]
             # microsurgery
@@ -161,11 +198,18 @@ class DoComputerVision():
             models = [
                 (
                     "./resources/tracker_model_bytetrack/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack/epoch.pth")
-                ), (
+                    str(
+                        Path(__file__).parent
+                        / "resources/tracker_model_bytetrack/epoch.pth"
+                    ),
+                ),
+                (
                     "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
-                    str(Path(__file__).parent / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"),
-                )
+                    str(
+                        Path(__file__).parent
+                        / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"
+                    ),
+                ),
             ]
             class_names = {
                 0: "Needle holder",
@@ -182,9 +226,9 @@ class DoComputerVision():
             filename=self.filename,
             output_file_path=self.outputdir / "tracks.json",
             class_names=class_names,
-            device=self.device
+            device=self.device,
         )
-    
+
     def run_video_processing(self):
 
         """
@@ -210,7 +254,9 @@ class DoComputerVision():
 
         s = time.time()
         self.run_image_processing()
-        logger.debug(f"Single frame processing on cropped mediafile finished in {time.time() - s}s.")
+        logger.debug(
+            f"Single frame processing on cropped mediafile finished in {time.time() - s}s."
+        )
         self.meta["duration_s_run_image_processing"] = float(time.time() - s)
         logger.debug(f"Image processing finished in {time.time() - s}s.")
 
@@ -224,10 +270,16 @@ class DoComputerVision():
         set_progress(50)
 
         logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
-        logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
-        
+        logger.debug(
+            f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}"
+        )
+
         s = time.time()
-        self._find_stitch_ends_in_tracks(n_clusters=self.n_stitches, plot_clusters=True, clusters_image_path=self.outputdir / "_stitch_clusters.jpg")
+        self._find_stitch_ends_in_tracks(
+            n_clusters=self.n_stitches,
+            plot_clusters=True,
+            clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
+        )
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
@@ -236,13 +288,17 @@ class DoComputerVision():
         set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
-                data_results["Stichtes linearity score"] = self.meta["stitch_scores"][0]["r_score"]
-                data_results["Stitches parallelism score"] = self.meta["stitch_scores"][0]["s_score"]
-        #save statistic to file
-        
+                data_results["Stichtes linearity score"] = self.meta["stitch_scores"][
+                    0
+                ]["r_score"]
+                data_results["Stitches parallelism score"] = self.meta["stitch_scores"][
+                    0
+                ]["s_score"]
+        # save statistic to file
+
         self.meta["duration_s_report"] = float(time.time() - s)
         self._save_results()
-        
+
         set_progress(99)
 
         logger.debug(f"Report finished in {time.time() - s}s.")
@@ -250,17 +306,28 @@ class DoComputerVision():
         logger.debug("Report based on video is finished.")
         logger.debug("Video processing finished")
 
-    def _get_frame_to_process_ideally_with_incision(self, filename, return_qrdata=False, n_tries=None):
+    def _get_frame_to_process_ideally_with_incision(
+        self, filename, return_qrdata=False, n_tries=None
+    ):
         frame_from_end = 0
         for i in range(10):
-            frame, local_meta = get_frame_to_process(str(filename), n_tries=n_tries, return_metadata=True, reference_frame_position_from_end=frame_from_end)
+            frame, local_meta = get_frame_to_process(
+                str(filename),
+                n_tries=n_tries,
+                return_metadata=True,
+                reference_frame_position_from_end=frame_from_end,
+            )
             qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
             if len(qr_data["incision_bboxes"]) > 0:
-                logger.debug(f"Found incision bbox in frame {frame_from_end} from the end.")
+                logger.debug(
+                    f"Found incision bbox in frame {frame_from_end} from the end."
+                )
                 break
             else:
                 frame_from_end = local_meta["reference_frame_position_from_end"] + 10
-        logger.debug(f"Incision bbox not found. Using in frame {frame_from_end} frame from the end.")
+        logger.debug(
+            f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
+        )
         if return_qrdata:
             return frame, qr_data
         else:
@@ -268,33 +335,38 @@ class DoComputerVision():
 
     def get_parameters_for_crop_rotate_rescale(self):
         logger.debug(f"device={self.device}")
-        self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(self.filename_original, return_qrdata=True)
-        qr_data['qr_scissors_frames'] = []
+        self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
+            self.filename_original, return_qrdata=True
+        )
+        qr_data["qr_scissors_frames"] = []
         imgs, bboxes = run_incision_detection(self.frame, device=self.device)
         qr_data["incision_bboxes_old"] = bboxes.tolist()
-#         print(qr_data)
-#         fig = draw_bboxes(self.frame[:,:,::-1], qr_data["incision_bboxes"])
-#         fig = draw_bboxes(self.frame[:,:,::-1], qr_data["bbox_scene_area"])
-#         from matplotlib import pyplot as plt
-#         plt.show()
-#         self.debug_images["crop_rotate_rescale_parameters":img]
+        #         print(qr_data)
+        #         fig = draw_bboxes(self.frame[:,:,::-1], qr_data["incision_bboxes"])
+        #         fig = draw_bboxes(self.frame[:,:,::-1], qr_data["bbox_scene_area"])
+        #         from matplotlib import pyplot as plt
+        #         plt.show()
+        #         self.debug_images["crop_rotate_rescale_parameters":img]
         logger.debug(pprint.pformat(qr_data))
         return qr_data
 
-    def do_crop_rotate_rescale(self, crop_bbox:Optional[list]=None,
-                              incision_bboxes:Optional[list]=None,
-                              crop_bbox_score_threshold=0.5) -> Path:
+    def do_crop_rotate_rescale(
+        self,
+        crop_bbox: Optional[list] = None,
+        incision_bboxes: Optional[list] = None,
+        crop_bbox_score_threshold=0.5,
+    ) -> Path:
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
         transpose = False
         if incision_bboxes is not None and len(incision_bboxes) > 0:
             width = int(incision_bboxes[0][2] - incision_bboxes[0][0])
             height = int(incision_bboxes[0][3] - incision_bboxes[0][1])
-            
+
             if width > height:
-                transpose=False
+                transpose = False
             else:
-                transpose=True
+                transpose = True
         elif self.frame.shape[0] > self.frame.shape[1]:
             transpose = True
         self.filename_cropped = self.outputdir / "__cropped.mp4"
@@ -315,7 +387,7 @@ class DoComputerVision():
         #     }
         # }
 
-        filter_str = ''
+        filter_str = ""
 
         if crop_bbox is not None:
             if crop_bbox[4] > crop_bbox_score_threshold:
@@ -327,35 +399,47 @@ class DoComputerVision():
         if transpose:
             filter_str += "transpose=1,"
 
-        filter_str += 'scale=720:trunc(ow/a/2)*2'
-        
+        filter_str += "scale=720:trunc(ow/a/2)*2"
+
         additional_params = []
-        
+
         if self.test_first_seconds:
             additional_params.extend(["-t", "3"])
 
         logger.debug(f"filename={self.filename}, {self.filename.exists()}")
-        s = ["ffmpeg", '-i', str(self.filename)] + additional_params +\
-             ['-filter:v', filter_str, "-an", "-y", "-b:v", "1000k",
-             str(self.filename_cropped)
-             ]
+        s = (
+            ["ffmpeg", "-i", str(self.filename)]
+            + additional_params
+            + [
+                "-filter:v",
+                filter_str,
+                "-an",
+                "-y",
+                "-b:v",
+                "1000k",
+                str(self.filename_cropped),
+            ]
+        )
         logger.debug(f"{' '.join(s)}")
         # p = subprocess.Popen(s)
         # p.wait()
         subprocess.check_output(s)
 
-        logger.debug(f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}")
+        logger.debug(
+            f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}"
+        )
         make_images_from_video(
             self.filename_cropped,
             outputdir=self.outputdir,
-            filemask=str(self.filename_cropped.with_suffix(self.filename_cropped.suffix + ".jpg")),
+            filemask=str(
+                self.filename_cropped.with_suffix(self.filename_cropped.suffix + ".jpg")
+            ),
             n_frames=1,
-            create_meta_json=False
+            create_meta_json=False,
         )
         return self.filename_cropped
         # return self.filename
-        
-        
+
     def update_meta(self, filename=None):
         if filename is None:
             filename = self.filename
@@ -363,26 +447,35 @@ class DoComputerVision():
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()
-        self.meta.update({"filename_full": str(filename), "fps": fps, "frame_count": totalframecount})
-        
-        
-    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9,
-                                    plot_clusters=False,
-                                    clusters_image_path:Optional[Path]=None
-                                    ) -> List:
+        self.meta.update(
+            {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
+        )
+
+    def _find_stitch_ends_in_tracks(
+        self,
+        n_clusters: int,
+        tool_index: int = 1,
+        time_axis: int = 2,
+        weight_of_later=0.9,
+        plot_clusters=False,
+        clusters_image_path: Optional[Path] = None,
+    ) -> List:
         try:
             n_clusters = int(n_clusters)
-        
+
             # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
             if n_clusters > 1:
                 bboxes_to_points(str(self.outputdir))
                 # split_frames = []
                 split_s, split_frames = find_stitch_ends_in_tracks(
-                    self.outputdir, n_clusters=n_clusters,
-                    tool_index=tool_index, time_axis=time_axis,
-                    weight_of_later=weight_of_later, metadata=self.meta ,
+                    self.outputdir,
+                    n_clusters=n_clusters,
+                    tool_index=tool_index,
+                    time_axis=time_axis,
+                    weight_of_later=weight_of_later,
+                    metadata=self.meta,
                     plot_clusters=plot_clusters,
-                    clusters_image_path=clusters_image_path
+                    clusters_image_path=clusters_image_path,
                 )
                 # self.meta["qr_data"]["stitch_split_frames"] = split_frames
                 self.meta["stitch_split_frames"] = split_frames
@@ -398,46 +491,72 @@ class DoComputerVision():
         # self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
         #                            cut_frames=self.meta["stitch_split_frames"]
         #                            )
-        self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
-                                    cut_frames=cut_frames, test_first_seconds=self.test_first_seconds
-                                    )
+        self.results = main_report(
+            self.filename,
+            self.outputdir,
+            meta=self.meta,
+            is_microsurgery=self.is_microsurgery,
+            cut_frames=cut_frames,
+            test_first_seconds=self.test_first_seconds,
+        )
         return self.results
-    
+
     def _save_results(self):
         save_json(self.results, self.outputdir / "results.json")
-        
+
     def _load_meta(self):
-            # if metadata is None:
+        # if metadata is None:
         meta_path = self.outputdir / "meta.json"
         assert meta_path.exists()
         with open(meta_path, "r") as f:
-            self.meta = json.load(f)  
+            self.meta = json.load(f)
 
 
-
-def do_computer_vision(filename, outputdir, meta=None, is_microsurgery:bool=False, n_stitches:Optional[int]=None, device=DEVICE):
-    return DoComputerVision(filename, outputdir, meta, is_microsurgery=is_microsurgery, n_stitches=n_stitches, device=device).run()
+def do_computer_vision(
+    filename,
+    outputdir,
+    meta=None,
+    is_microsurgery: bool = False,
+    n_stitches: Optional[int] = None,
+    device=DEVICE,
+):
+    return DoComputerVision(
+        filename,
+        outputdir,
+        meta,
+        is_microsurgery=is_microsurgery,
+        n_stitches=n_stitches,
+        device=device,
+    ).run()
 
 
 def find_stitch_ends_in_tracks(
-        outputdir, n_clusters:int, tool_index=1, time_axis:int=2, weight_of_later=0.9,
-        metadata=None, plot_clusters=False,
-        clusters_image_path:Optional[Path]=None):
+    outputdir,
+    n_clusters: int,
+    tool_index=1,
+    time_axis: int = 2,
+    weight_of_later=0.9,
+    metadata=None,
+    plot_clusters=False,
+    clusters_image_path: Optional[Path] = None,
+):
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
     points_path = outputdir / "tracks_points.json"
     assert points_path.exists()
     time_axis = int(time_axis)
     with open(points_path, "r") as f:
         data = json.load(f)
-    
+
     if metadata is None:
         meta_path = outputdir / "meta.json"
         assert points_path.exists()
         with open(meta_path, "r") as f:
-            metadata = json.load(f)  
-    logger.debug(f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}")
-    if 'data_pixels' in data:
-        X_px = np.asarray(data['data_pixels'][tool_index])
+            metadata = json.load(f)
+    logger.debug(
+        f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}"
+    )
+    if "data_pixels" in data:
+        X_px = np.asarray(data["data_pixels"][tool_index])
     else:
         # backward compatibility
         X_px = np.asarray(data[f"data_pixels_{tool_index}"])
@@ -447,26 +566,27 @@ def find_stitch_ends_in_tracks(
     elif "incision_bboxes" in metadata["qr_data"]:
         incision_bboxes = metadata["qr_data"]["incision_bboxes"]
     logger.debug(f"{incision_bboxes=}")
-    
-    time_fr =  np.asarray(data["frame_ids"][tool_index]).reshape(-1, 1)
+
+    time_fr = np.asarray(data["frame_ids"][tool_index]).reshape(-1, 1)
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
-    
+
     if len(incision_bboxes) > 0:
 
         X_px_fr_tmp = tools.filter_points_in_bbox(
-            X_px_fr,
-            tools.make_bbox_larger(incision_bboxes[0], 2.0))
-        logger.debug(f"{X_px_fr.shape=}, {X_px_fr_tmp.shape=}")  
+            X_px_fr, tools.make_bbox_larger(incision_bboxes[0], 2.0)
+        )
+        logger.debug(f"{X_px_fr.shape=}, {X_px_fr_tmp.shape=}")
         X_px_fr = X_px_fr_tmp
 
-
     # pix_size is in [m] to normaliza data a bit we use [mm]
-    axis_normalization = np.asarray([
-        metadata["qr_data"]["pix_size"] * 1000, 
-        metadata["qr_data"]["pix_size"] * 1000,
-        1./metadata["fps"]
-    ])
-    
+    axis_normalization = np.asarray(
+        [
+            metadata["qr_data"]["pix_size"] * 1000,
+            metadata["qr_data"]["pix_size"] * 1000,
+            1.0 / metadata["fps"],
+        ]
+    )
+
     X = X_px_fr * axis_normalization
 
     # time =  np.asarray(list(range(X.shape[0]))).reshape(-1,1)
@@ -474,10 +594,10 @@ def find_stitch_ends_in_tracks(
 
     # X = np.concatenate([X, time], axis=1)
     # X = X * axis_normalization
-    
+
     # bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
     # ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
-    
+
     ms = KMeans(n_clusters=n_clusters)
     # ms = DBSCAN()
     # ms = SpectralClustering()
@@ -488,23 +608,34 @@ def find_stitch_ends_in_tracks(
     labels = ms.labels_
     # labels = ms.predict(X)
     cluster_centers = ms.cluster_centers_
-    
+
     prev = labels[0]
     splits_s = []
     splits_frames = []
     for frame_i, label in enumerate(labels):
         if label != prev:
-            time = ((1-weight_of_later)*X[frame_i - 1,time_axis]) + (weight_of_later * X[frame_i,time_axis])
+            time = ((1 - weight_of_later) * X[frame_i - 1, time_axis]) + (
+                weight_of_later * X[frame_i, time_axis]
+            )
             splits_s.append(time)
-            splits_frames.append(int(time/float(metadata['fps'])))
+            splits_frames.append(int(time / float(metadata["fps"])))
         prev = label
     if plot_clusters:
-        plot_track_clusters(X, labels, cluster_centers, splits_s, clusters_image_path=clusters_image_path)
+        plot_track_clusters(
+            X,
+            labels,
+            cluster_centers,
+            splits_s,
+            clusters_image_path=clusters_image_path,
+        )
     return splits_s, splits_frames
 
 
-def plot_track_clusters(X, labels, cluster_centers, splits_s, clusters_image_path:Optional[Path]=None):
+def plot_track_clusters(
+    X, labels, cluster_centers, splits_s, clusters_image_path: Optional[Path] = None
+):
     from matplotlib import pyplot as plt
+
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
     fig = plt.figure()
@@ -512,7 +643,14 @@ def plot_track_clusters(X, labels, cluster_centers, splits_s, clusters_image_pat
     # plt.clf()
 
     colors = ["#dede00", "#377eb8", "#f781bf", "#81bf37", "#bf3781", "#f3781b"]
-    markers = ["x", "o", "^", "x", "o", "^",]
+    markers = [
+        "x",
+        "o",
+        "^",
+        "x",
+        "o",
+        "^",
+    ]
 
     for k, col in zip(range(n_clusters_), colors):
         my_members = labels == k
@@ -529,8 +667,31 @@ def plot_track_clusters(X, labels, cluster_centers, splits_s, clusters_image_pat
     # plt.title("Estimated number of clusters: %d" % n_clusters_)
 
     plt.subplot(122)
-    colors = ["#dede00", "#377eb8", "#f781bf", "#81bf37", "#bf3781", "#f3781b", "#eb88b1", "#1bff78"]
-    markers = ["x", "o", "^", "s" , "x", "o", "^", "x", "o", "^", "x", "o", "^",]
+    colors = [
+        "#dede00",
+        "#377eb8",
+        "#f781bf",
+        "#81bf37",
+        "#bf3781",
+        "#f3781b",
+        "#eb88b1",
+        "#1bff78",
+    ]
+    markers = [
+        "x",
+        "o",
+        "^",
+        "s",
+        "x",
+        "o",
+        "^",
+        "x",
+        "o",
+        "^",
+        "x",
+        "o",
+        "^",
+    ]
 
     for k, col in zip(range(n_clusters_), colors):
         my_members = labels == k
@@ -545,11 +706,12 @@ def plot_track_clusters(X, labels, cluster_centers, splits_s, clusters_image_pat
             markersize=14,
         )
     for yline in splits_s:
-        plt.axhline(y=yline, c='r')
+        plt.axhline(y=yline, c="r")
 
     if clusters_image_path is not None:
         plt.savefig(clusters_image_path)
         plt.close(fig)
+
 
 # def do_computer_vision_2(filename, outputdir, meta):
 #     log_format = loguru._defaults.LOGURU_FORMAT
@@ -689,10 +851,13 @@ def _make_images_from_video(filename: Path, outputdir: Path) -> Path:
             logger.trace(file_name)
     cap.release()
 
-    metadata = {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
+    metadata = {
+        "filename_full": str(filename),
+        "fps": fps,
+        "frame_count": totalframecount,
+    }
     json_file = outputdir / "meta.json"
     save_json(metadata, json_file)
-
 
 
 if __name__ == "__main__":

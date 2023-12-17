@@ -6,8 +6,7 @@ from typing import Optional, Union
 from loguru import logger
 
 
-
-def flatten_dict(dct:dict, parent_key:str='', sep:str='_') -> dict:
+def flatten_dict(dct: dict, parent_key: str = "", sep: str = "_") -> dict:
     """
     Flatten nested dictionary
     :param dct: nested dictionary
@@ -28,7 +27,7 @@ def flatten_dict(dct:dict, parent_key:str='', sep:str='_') -> dict:
     return dict(items)
 
 
-def remove_empty_lists(dct:dict) -> dict:
+def remove_empty_lists(dct: dict) -> dict:
     """
     Remove empty lists from dictionary
     :param dct: dictionary
@@ -37,7 +36,9 @@ def remove_empty_lists(dct:dict) -> dict:
     return {k: v for k, v in dct.items() if v != []}
 
 
-def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict], scope=None, sheet_index=0) -> pd.DataFrame:
+def google_spreadsheet_append(
+    title: str, creds, data: Union[pd.DataFrame, dict], scope=None, sheet_index=0
+) -> pd.DataFrame:
     # define the scope
 
     # https://www.analyticsvidhya.com/blog/2020/07/read-and-update-google-spreadsheets-with-python/
@@ -47,7 +48,10 @@ def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict],
     else:
         df_novy = data
     if scope is None:
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        scope = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ]
 
     # add credentials to the account
     if type(creds) in (str, Path):
@@ -81,14 +85,16 @@ def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict],
 
     # remove NaN
     df_out2 = df_out.where(pd.notnull(df_out), None)
-    df_out2 = df_out2.fillna('')
+    df_out2 = df_out2.fillna("")
     logger.debug(f"appended keys={list(df_out2.keys())}")
     logger.debug(f"appended row={df_out2.values.tolist()}")
     sheet_instance.append_rows(df_out2.values.tolist())
 
     # update  header
     cell_list = sheet_instance.range(1, 1, 1, len(df_out2.keys()))
-    sheet_instance.update_cells(cell_list, )
+    sheet_instance.update_cells(
+        cell_list,
+    )
 
     for i, key in enumerate(df_out2.keys()):
         val = cell_list[i].value
@@ -102,10 +108,10 @@ def google_spreadsheet_append(title: str, creds, data:Union[pd.DataFrame, dict],
     return df_out2
 
 
-def remove_iterables_from_dict(dct:dict) -> dict:
+def remove_iterables_from_dict(dct: dict) -> dict:
     """
     Remove iterables from dictionary
     :param dct: dictionary
     :return: dictionary without iterables
     """
-    return {k: v for k, v in dct.items() if not hasattr(v, '__iter__')}
+    return {k: v for k, v in dct.items() if not hasattr(v, "__iter__")}

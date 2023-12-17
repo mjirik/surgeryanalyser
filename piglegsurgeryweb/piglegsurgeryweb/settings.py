@@ -111,11 +111,11 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": PRIVATE_DIR / "db.sqlite3",
-        'OPTIONS': {
-            'timeout': 20,  # in seconds
+        "OPTIONS": {
+            "timeout": 20,  # in seconds
             # see also
             # https://docs.python.org/3.7/library/sqlite3.html#sqlite3.connect
-        }
+        },
     }
 }
 
@@ -173,7 +173,7 @@ UPLOAD_RELATIVE_PATH = "upload"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-PIGLEGCV_TIMEOUT = 10*3600
+PIGLEGCV_TIMEOUT = 10 * 3600
 
 Q_CLUSTER = {
     "workers": 3,
@@ -192,6 +192,6 @@ Q_CLUSTER = {
     "retry": PIGLEGCV_TIMEOUT + 1000,
 }
 
-TIME_ZONE = 'Europe/Prague'
+TIME_ZONE = "Europe/Prague"
 
-CREDS_JSON_FILE = Path(PRIVATE_DIR) / 'piglegsurgery-creds.json'
+CREDS_JSON_FILE = Path(PRIVATE_DIR) / "piglegsurgery-creds.json"

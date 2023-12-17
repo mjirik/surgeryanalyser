@@ -6,6 +6,7 @@ from pathlib import Path
 import os
 
 from loguru import logger
+
 # Create your views here.
 
 from django.http import HttpResponse
@@ -13,6 +14,7 @@ from .models import UploadedFile, _hash, Owner
 from .forms import UploadedFileForm
 from .models_tools import randomString
 from .tasks import email_media_recived, make_preview
+
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 from django_q.tasks import async_task, schedule, queue_size
 from datetime import datetime
@@ -21,7 +23,9 @@ import json
 import re
 from django.contrib.auth import logout
 from typing import Optional
+
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
+
 
 def logout_view(request):
     """Logout from the application."""
@@ -33,29 +37,34 @@ def logout_view(request):
 def index(request):
     return HttpResponse("Hello, world. You're at piglegsurgeryweb. HAHA")
 
+
 def message(request, headline=None, text=None, next_text=None, next=None):
     context = {
-        'headline': "Thank You" if headline is None else headline,
-        'text': "Thank you for uploading media file. We will let you know when the processing will be finished." if text is None else text,
-        'next_text': 'Forward' if next_text is None else next_text,
-        'next': "uploader/upload" if next is None else next
+        "headline": "Thank You" if headline is None else headline,
+        "text": "Thank you for uploading media file. We will let you know when the processing will be finished."
+        if text is None
+        else text,
+        "next_text": "Forward" if next_text is None else next_text,
+        "next": "uploader/upload" if next is None else next
         # 'next': "uploader:model_form_upload"
         # 'next': "uploader:model_form_upload"
     }
     return render(request, "uploader/message.html", context)
 
+
 def thanks(request):
     context = {
-        'headline': "Thank You",
-        'text': "Thank you for uploading media file. We will let you know when the processing will be finished.",
-        'next_text': 'Upload next',
-        'next': None
+        "headline": "Thank You",
+        "text": "Thank you for uploading media file. We will let you know when the processing will be finished.",
+        "next_text": "Upload next",
+        "next": None
         # 'next': "uploader:model_form_upload"
         # 'next': "uploader:model_form_upload"
     }
     return render(request, "uploader/thanks.html", context)
 
-@login_required(login_url='/admin/')
+
+@login_required(login_url="/admin/")
 def reset_hashes(request):
     files = UploadedFile.objects.all()
     for file in files:
@@ -63,7 +72,8 @@ def reset_hashes(request):
         file.save()
     return redirect("/uploader/thanks/")
 
-@login_required(login_url='/admin/')
+
+@login_required(login_url="/admin/")
 def update_all_uploaded_files(request):
     files = UploadedFile.objects.all()
     logger.info("update all uploaded files")
@@ -73,9 +83,11 @@ def update_all_uploaded_files(request):
         update_owner(file)
     return redirect("/uploader/thanks/")
 
+
 def resend_report_email(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
     from django_q.tasks import async_task
+
     async_task(
         "uploader.tasks.email_report",
         serverfile,
@@ -83,64 +95,95 @@ def resend_report_email(request, filename_id):
     )
     return redirect("/uploader/thanks/")
 
+
 # def set_order_by(request, order_by, next_page:str):
 #     request.session["order_by"] = order_by
 #     request.session.modified = True
 #     return redirect(next_page)
 
-@login_required(login_url='/admin/')
-def swap_is_microsurgery(request, filename_id:int):
+
+@login_required(login_url="/admin/")
+def swap_is_microsurgery(request, filename_id: int):
     uploadedfile = get_object_or_404(UploadedFile, pk=filename_id)
     uploadedfile.is_microsurgery = not uploadedfile.is_microsurgery
     uploadedfile.save()
     next_anchor = request.GET.get("next_anchor", None)
-    return redirect(reverse('uploader:web_reports', kwargs={}) + f'#{next_anchor}')
+    return redirect(reverse("uploader:web_reports", kwargs={}) + f"#{next_anchor}")
 
 
 # @login_required(login_url='/admin/')
 def show_report_list(request):
     # order_by = request.session.get("order_by", '-uploaded_at')
-    order_by = request.GET.get("order_by", '-uploaded_at')
+    order_by = request.GET.get("order_by", "-uploaded_at")
     files = UploadedFile.objects.all().order_by(order_by)
     qs_data = {}
     for e in files:
-        qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
+        qs_data[e.id] = (
+            str(e.email)
+            + " "
+            + str(e)
+            + " "
+            + str(e.uploaded_at)
+            + " "
+            + str(e.finished_at)
+        )
 
     qs_json = json.dumps(qs_data)
     # logger.debug(qs_data)
     context = {
-        "uploadedfiles": files, 'queue_size': queue_size(), 'qs_json': qs_json, "page_reference": "web_reports",
+        "uploadedfiles": files,
+        "queue_size": queue_size(),
+        "qs_json": qs_json,
+        "page_reference": "web_reports",
     }
 
     return render(request, "uploader/report_list.html", context)
 
-def owners_reports_list(request, owner_hash:str):
+
+def owners_reports_list(request, owner_hash: str):
     owner = get_object_or_404(Owner, hash=owner_hash)
-    order_by = request.GET.get("order_by", '-uploaded_at')
+    order_by = request.GET.get("order_by", "-uploaded_at")
     files = UploadedFile.objects.filter(owner=owner).order_by(order_by)
     qs_data = {}
     for e in files:
-        qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
+        qs_data[e.id] = (
+            str(e.email)
+            + " "
+            + str(e)
+            + " "
+            + str(e.uploaded_at)
+            + " "
+            + str(e.finished_at)
+        )
 
     qs_json = json.dumps(qs_data)
     context = {
-        "uploadedfiles": files, 'queue_size': queue_size(), "qs_json": qs_json, "page_reference": "owners_reports_list",
+        "uploadedfiles": files,
+        "queue_size": queue_size(),
+        "qs_json": qs_json,
+        "page_reference": "owners_reports_list",
     }
 
     return render(request, "uploader/report_list.html", context)
 
 
-def web_report(request, filename_hash:str):
+def web_report(request, filename_hash: str):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
-    if not bool(serverfile.zip_file.name) or not Path(serverfile.zip_file.path).exists():
+    if (
+        not bool(serverfile.zip_file.name)
+        or not Path(serverfile.zip_file.path).exists()
+    ):
         logger.debug("Zip file name does not exist")
         # zip_file does not exists
 
         context = {
-            "headline": "File not exists", "text": "Requested file is probably under processing now.",
-            "next": request.GET['next'] if "next" in request.GET else "/uploader/upload/",
-            "next_text": "Back"
+            "headline": "File not exists",
+            "text": "Requested file is probably under processing now.",
+            "next": request.GET["next"]
+            if "next" in request.GET
+            else "/uploader/upload/",
+            "next_text": "Back",
         }
         if request.user.is_authenticated:
             context["key_value"] = _get_logs_as_html(serverfile)
@@ -172,28 +215,32 @@ def web_report(request, filename_hash:str):
             for key in loaded_results:
                 new_value = loaded_results[key]
                 # backward compatibility
-                new_key = key.replace("Tweezes", "Forceps").replace("Tweezers", "Forceps").replace("duration", "visibility")
+                new_key = (
+                    key.replace("Tweezes", "Forceps")
+                    .replace("Tweezers", "Forceps")
+                    .replace("duration", "visibility")
+                )
                 new_key = re.sub("visibility$", "visibility [s]", new_key)
                 new_key = re.sub("length$", "length [m]", new_key)
                 if new_key in (
-                        "Needle holder length [pix]",
-                        "Needle holder length [m]",
-                        "Needle holder visibility [s]",
-                        "Needle holder visibility [%]",
-                        "Forceps length [pix]",
-                        "Forceps length [m]",
-                        "Forceps visibility [s]",
-                        "Forceps visibility [%]",
-                        "Scissors length [pix]",
-                        "Scissors length [m]",
-                        "Scissors visibility [s]",
-                        "Scissors visibility [%]",
-                        "Needle holder area presence [%]",
-                        # "Tweezes length", "Tweezes duration" # typo in some older processings
-                        # "Tweezers length", "Tweezers duration", # backward compatibility
-                        # "Scissors length", "Scissors duration", # backward compatibility
-                        # "Needle holder length", "Needle holder duration", # backward compatibility
-                       ):
+                    "Needle holder length [pix]",
+                    "Needle holder length [m]",
+                    "Needle holder visibility [s]",
+                    "Needle holder visibility [%]",
+                    "Forceps length [pix]",
+                    "Forceps length [m]",
+                    "Forceps visibility [s]",
+                    "Forceps visibility [%]",
+                    "Scissors length [pix]",
+                    "Scissors length [m]",
+                    "Scissors visibility [s]",
+                    "Scissors visibility [%]",
+                    "Needle holder area presence [%]",
+                    # "Tweezes length", "Tweezes duration" # typo in some older processings
+                    # "Tweezers length", "Tweezers duration", # backward compatibility
+                    # "Scissors length", "Scissors duration", # backward compatibility
+                    # "Needle holder length", "Needle holder duration", # backward compatibility
+                ):
                     # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
 
                     if new_key.find("[m]") > 0:
@@ -222,27 +269,31 @@ def web_report(request, filename_hash:str):
                 logger.debug(f"Skipping video file {videofile.name}")
                 continue
             s = str(serverfile.bitmapimage_set.all()[0].bitmap_image.url)[:-4]
-            videofile_url = s[:s.rfind("/")] + "/" + videofile.name
+            videofile_url = s[: s.rfind("/")] + "/" + videofile.name
             videofiles_url.append(videofile_url)
-
 
     image_list_in, image_list_out = _filter_images(serverfile)
 
     context = {
-        'serverfile': serverfile,
-        'mediafile': Path(serverfile.mediafile.name).name,
-        'image_list': image_list_in,
-        'image_list_out': image_list_out,
-        "next": request.GET['next'] if "next" in request.GET else None,
-        'videofiles_url': videofiles_url,
-        "results": results
+        "serverfile": serverfile,
+        "mediafile": Path(serverfile.mediafile.name).name,
+        "image_list": image_list_in,
+        "image_list_out": image_list_out,
+        "next": request.GET["next"] if "next" in request.GET else None,
+        "videofiles_url": videofiles_url,
+        "results": results,
     }
-    return render(request, 'uploader/web_report.html', context)
+    return render(request, "uploader/web_report.html", context)
 
-def _filter_images(serverfile:UploadedFile):
+
+def _filter_images(serverfile: UploadedFile):
     allowed_image_patterns = [
         "heatmap",
-        "needle_holder_area_presence", "stitch_detection", "jpeg", "gif"]
+        "needle_holder_area_presence",
+        "stitch_detection",
+        "jpeg",
+        "gif",
+    ]
     filtered_in = []
     filtered_out = []
 
@@ -261,7 +312,6 @@ def _filter_images(serverfile:UploadedFile):
     return filtered_in, filtered_out
 
 
-
 def redirect_to_spreadsheet(request):
     # read env variable PIGLEGCV_SPREADSHEET_URL
     pigleg_spreadsheet_url = os.getenv("PIGLEG_SPREADSHEET_URL", default=None)
@@ -273,10 +323,12 @@ def redirect_to_spreadsheet(request):
         logger.debug(f"piglegcv_spreadsheet_url={pigleg_spreadsheet_url}")
         return redirect(pigleg_spreadsheet_url)
 
+
 def run(request, filename_id):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
     return _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+
 
 # def run_development(request, filename_id):
 #     PIGLEGCV_HOSTNAME_DEVEL = os.getenv("PIGLEGCV_HOSTNAME_DEVEL", default="127.0.0.1")
@@ -288,11 +340,11 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
 
     from django_q.tasks import async_task
+
     serverfile.started_at = django.utils.timezone.now()
     serverfile.finished_at = None
     serverfile.save()
     logger.debug(f"hostname={hostname}, port={port}")
-
 
     async_task(
         "uploader.tasks.run_processing",
@@ -305,34 +357,38 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     )
     next_url = None
     if "next" in request.GET:
-        next_url = request.GET['next'] + "#" + request.GET['next_anchor']
+        next_url = request.GET["next"] + "#" + request.GET["next_anchor"]
     context = {
-        'headline': "Processing started",
-        'text': f"We are processing file {str(Path(serverfile.mediafile.name).name)}. " +
-        "We will let you know by email as soon as it is finished.",  # The output will be stored in {serverfile.outputdir}.",
+        "headline": "Processing started",
+        "text": f"We are processing file {str(Path(serverfile.mediafile.name).name)}. "
+        + "We will let you know by email as soon as it is finished.",  # The output will be stored in {serverfile.outputdir}.",
         "next": next_url,
-        "next_text": "Back"
+        "next_text": "Back",
     }
     return render(request, "uploader/thanks.html", context)
     # return redirect("/uploader/upload/")
 
+
 def about_ev_cs(request):
     return render(request, "uploader/about_ev_cs.html", {})
+
+
 def about_ev_en(request):
     return render(request, "uploader/about_ev_en.html", {})
+
 
 class DetailView(generic.DetailView):
     model = UploadedFile
     template_name = "uploader/model_form_upload.html"
 
 
-def update_owner(uploadedfile:UploadedFile) -> Owner:
+def update_owner(uploadedfile: UploadedFile) -> Owner:
     if not uploadedfile.owner:
         owners = Owner.objects.filter(email=uploadedfile.email)
         if len(owners) == 0:
             owner = Owner(email=uploadedfile.email, hash=_hash())
             owner.save()
-            #create one
+            # create one
         else:
             owner = owners[0]
     else:
@@ -344,6 +400,7 @@ def update_owner(uploadedfile:UploadedFile) -> Owner:
         uploadedfile.save()
 
     return owner
+
 
 def model_form_upload(request):
     if request.method == "POST":
@@ -374,7 +431,7 @@ def model_form_upload(request):
             serverfile.started_at = django.utils.timezone.now()
             serverfile.save()
             PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
-            PIGLEGCV_PORT= os.getenv("PIGLEGCV_PORT", default="5000")
+            PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
             make_preview(serverfile)
             update_owner(serverfile)
             async_task(
@@ -400,25 +457,32 @@ def test(request):
     return render(request, "uploader/test.html", {})
 
 
-def show_logs(request, filename_hash:str):
+def show_logs(request, filename_hash: str):
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     key_value = _get_logs_as_html(serverfile)
-    return render(request, "uploader/message.html", {
-        "headline": "Logs",
-        "key_value": key_value,
-        "next": request.GET['next'] if "next" in request.GET else "/uploader/upload/",
-    })
+    return render(
+        request,
+        "uploader/message.html",
+        {
+            "headline": "Logs",
+            "key_value": key_value,
+            "next": request.GET["next"]
+            if "next" in request.GET
+            else "/uploader/upload/",
+        },
+    )
 
-def _get_logs_as_html(serverfile:UploadedFile) -> dict:
+
+def _get_logs_as_html(serverfile: UploadedFile) -> dict:
     outputdir = Path(serverfile.outputdir)
     key_value = {}
     for file in outputdir.glob("*_log.txt"):
         with open(file) as f:
             lines = f.readlines()
         # lines = [_set_loglevel_color(line) for line in lines]
-        key_value.update({
-            str(file.stem): '<p class="text-monospace">' + "<br>".join(lines) + '</p>'
-        })
+        key_value.update(
+            {str(file.stem): '<p class="text-monospace">' + "<br>".join(lines) + "</p>"}
+        )
     # logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
     return key_value
     # return render(_as_htmlrequest,'uploader/show_logs.html', {"key_value": key_value, "logpath": logpath})
@@ -431,6 +495,6 @@ def _make_html_from_log(logpath: Path):
             lines = f.readlines()
 
         lines = [_set_loglevel_color(line) for line in lines]
-        key_value.update({
-            "Log": '<p class="text-monospace">' + "<br>".join(lines) + '</p>'
-        })
+        key_value.update(
+            {"Log": '<p class="text-monospace">' + "<br>".join(lines) + "</p>"}
+        )

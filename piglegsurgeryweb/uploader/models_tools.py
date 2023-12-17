@@ -55,6 +55,7 @@ def randomString(stringLength=16):
     # alphabet = string.ascii_letters + string.digits
     return "".join(secrets.choice(alphabet) for i in range(stringLength))
 
+
 # def get_outputdir_from_hash(hash:str):
 #     OUTPUT_DIRECTORY_PATH = settings.MEDIA_ROOT
 #

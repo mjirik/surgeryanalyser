@@ -11,18 +11,21 @@ import loguru
 from loguru import logger
 import flask
 from flask import request, jsonify, render_template
+
 # from pigleg_cv import run_media_processing
-#try:
+# try:
 from pigleg_cv import do_computer_vision
 import pigleg_cv
-#except ImportError:
+
+# except ImportError:
 #    from .pigleg_cv import do_computer_vision
 import requests
 import time
 
-PIGLEGCV_TIMEOUT = 10*3600
+PIGLEGCV_TIMEOUT = 10 * 3600
 app = flask.Flask(__name__)
 q = Queue(connection=conn)
+
 
 @app.route("/run", methods=["GET", "POST"])
 def index():
@@ -50,7 +53,9 @@ def index():
 
         meta = {}
         job = q.enqueue_call(
-            func=do_computer_vision, args=(filename, outputdir, meta, is_microsurgery, n_stitches), result_ttl=5000,
+            func=do_computer_vision,
+            args=(filename, outputdir, meta, is_microsurgery, n_stitches),
+            result_ttl=5000,
             timeout=PIGLEGCV_TIMEOUT,
         )
         job_id = job.get_id()
@@ -62,6 +67,7 @@ def index():
     # return render_template('index.html', results=results)
     # return
     # yield promise
+
 
 @app.route("/exists", methods=["GET", "POST"])
 def exists():
@@ -83,7 +89,9 @@ def get_results(job_key):
     except rq.exceptions.NoSuchJobError as e:
         logger.debug(f"Job not found. Job ID={job_key}")
         return jsonify(f"Job not found.")
-    logger.debug(f"   job.is_finished={job.is_finished}, len(q)={len(q)}, progress={pigleg_cv.PROGRESS}")
+    logger.debug(
+        f"   job.is_finished={job.is_finished}, len(q)={len(q)}, progress={pigleg_cv.PROGRESS}"
+    )
 
     return jsonify(job.is_finished)
     # if job.is_finished:

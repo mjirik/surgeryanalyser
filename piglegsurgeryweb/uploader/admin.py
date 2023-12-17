@@ -9,7 +9,6 @@ admin.site.register(BitmapImage)
 admin.site.register(Owner)
 
 
-
 # @admin.register(UploadedFile)
 # class UploadedFileeeAdmin(admin.ModelAdmin):
 #     fields = ('email', 'mediafile')
