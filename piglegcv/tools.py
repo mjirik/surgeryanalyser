@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 import cv2
 import scipy
+import time
 
 
  
@@ -246,6 +247,21 @@ def phash_image(img:np.ndarray):
     dct_block[dct_block != 0] = 1.0
     # store hash value
     return hash_array_to_hash_hex(dct_block.flatten())
+
+
+class ProgressPrinter:
+    def __init__(self, total:float):
+        self.total = float(total)
+        self.t0 = time.time()
+
+
+    def get_progress_string(self, current:float) -> str:
+        """Get progress string."""
+        progress = current / self.total
+        t1 = time.time()
+        elapsed = t1 - self.t0
+        remaining = elapsed / progress - elapsed
+        return f"{progress*100:.2f}% ({elapsed:.2f}s elapsed, {remaining:.2f}s remaining)"
 
 def phash_distance(hash1, hash2):
     """Calculate perceptual hash distance."""

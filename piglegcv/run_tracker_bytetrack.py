@@ -34,6 +34,7 @@ def make_hash_from_model(model_file:Path):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+
 def main_tracker_bytetrack(
         trackers_config_and_checkpoints: list,
         # config_file,
@@ -51,6 +52,7 @@ def main_tracker_bytetrack(
 
     # make peceptual hash of first video frame
     imgs = mmcv.VideoReader(str(filename))
+    frame_cnt = imgs.frame_cnt
     first_frame = next(imgs)
     logger.debug(f"{first_frame.shape=}")
     phash = tools.phash_image(first_frame)
@@ -87,11 +89,12 @@ def main_tracker_bytetrack(
     imgs = mmcv.VideoReader(str(filename))
 
     if run_tracking:
+        progress = tools.ProgressPrinter(frame_cnt)
         tracking_results = {'tracks': [], "hash": hash_hex, "class_names": class_names}
         for i, img in enumerate(imgs):
             frame_tr = []
             if not (i % 50):
-                logger.debug(f'Processing frame {i} by tracker')
+                logger.debug(f'Tracking on frame {i}, {progress.get_progress_string(float(i))}')
             for j, tracker in enumerate(models):
 
                 result = inference_mot(tracker, img[crop[0]:crop[1], crop[2]:crop[3], :], frame_id=i)

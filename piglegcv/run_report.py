@@ -18,6 +18,7 @@ from pathlib import Path
 import scipy
 import scipy.signal
 from tools import draw_bbox_into_image
+import tools
 
 
 
@@ -758,8 +759,10 @@ def main_report(
     outputdir = str(outputdir)
 
     cap = cv2.VideoCapture(filename)
+    frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     assert cap.isOpened(), f'Failed to load video file {filename}'
 
+    progress = tools.ProgressPrinter(frame_cnt)
     if cap.isOpened():
 
         #output video
@@ -826,7 +829,7 @@ def main_report(
                 img = draw_bbox_into_image(img, oa_bbox_resized, linecolor=oa_bbox_linecolor)
 
             if not(i % 50):
-                logger.debug(f'Frame {i} processed!')
+                logger.debug(f'Report on frame {i} done, {progress.get_progress_string(float(i))}')
             
             if test_first_seconds:
                 if i > 100:
