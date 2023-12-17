@@ -227,7 +227,7 @@ class DoComputerVision():
         logger.debug(f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}")
         
         s = time.time()
-        self._find_stitch_ends_in_tracks(n_clusters=self.n_stitches)
+        self._find_stitch_ends_in_tracks(n_clusters=self.n_stitches, plot_clusters=True, clusters_image_path=self.outputdir / "_stitch_clusters.jpg")
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
@@ -366,7 +366,10 @@ class DoComputerVision():
         self.meta.update({"filename_full": str(filename), "fps": fps, "frame_count": totalframecount})
         
         
-    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9, plot_clusters=False) -> List:
+    def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9,
+                                    plot_clusters=False,
+                                    clusters_image_path:Optional[Path]=None
+                                    ) -> List:
         try:
             n_clusters = int(n_clusters)
         
@@ -378,8 +381,8 @@ class DoComputerVision():
                     self.outputdir, n_clusters=n_clusters,
                     tool_index=tool_index, time_axis=time_axis,
                     weight_of_later=weight_of_later, metadata=self.meta ,
-
-                    plot_clusters=plot_clusters
+                    plot_clusters=plot_clusters,
+                    clusters_image_path=clusters_image_path
                 )
                 # self.meta["qr_data"]["stitch_split_frames"] = split_frames
                 self.meta["stitch_split_frames"] = split_frames
@@ -416,7 +419,10 @@ def do_computer_vision(filename, outputdir, meta=None, is_microsurgery:bool=Fals
     return DoComputerVision(filename, outputdir, meta, is_microsurgery=is_microsurgery, n_stitches=n_stitches, device=device).run()
 
 
-def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axis:int=2, weight_of_later=0.9, metadata=None, plot_clusters=False):
+def find_stitch_ends_in_tracks(
+        outputdir, n_clusters:int, tool_index=1, time_axis:int=2, weight_of_later=0.9,
+        metadata=None, plot_clusters=False,
+        clusters_image_path:Optional[Path]=None):
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
     points_path = outputdir / "tracks_points.json"
     assert points_path.exists()
@@ -493,16 +499,16 @@ def find_stitch_ends_in_tracks(outputdir, n_clusters:int, tool_index=1, time_axi
             splits_frames.append(int(time/float(metadata['fps'])))
         prev = label
     if plot_clusters:
-        plot_track_clusters(X, labels, cluster_centers, splits_s)
+        plot_track_clusters(X, labels, cluster_centers, splits_s, clusters_image_path=clusters_image_path)
     return splits_s, splits_frames
 
 
-def plot_track_clusters(X, labels, cluster_centers, splits_s):
+def plot_track_clusters(X, labels, cluster_centers, splits_s, clusters_image_path:Optional[Path]=None):
     from matplotlib import pyplot as plt
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
+    fig = plt.figure()
     plt.subplot(121)
-    # plt.figure(1)
     # plt.clf()
 
     colors = ["#dede00", "#377eb8", "#f781bf", "#81bf37", "#bf3781", "#f3781b"]
@@ -540,6 +546,10 @@ def plot_track_clusters(X, labels, cluster_centers, splits_s):
         )
     for yline in splits_s:
         plt.axhline(y=yline, c='r')
+
+    if clusters_image_path is not None:
+        plt.savefig(clusters_image_path)
+        plt.close(fig)
 
 # def do_computer_vision_2(filename, outputdir, meta):
 #     log_format = loguru._defaults.LOGURU_FORMAT
