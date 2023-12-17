@@ -52,7 +52,7 @@
                        alt="thumbnail with the processed video" style="min-width: 66px; max-width: 80px;"></image>
                 {% endif %}
             </td>
-            <td scope="row"><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
+            <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}">
                 {{ uploadedfile.email }} </a></td>
             <td><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}"
                    style="word-break: break-all;"
@@ -62,12 +62,17 @@
                 {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
             {% if user.is_authenticated %}
             <td>
-                {% if uploadedfile.is_microsurgery %}
-                <i class="fa-solid fa-microscope"></i>
-                {% endif %}
+                <a class="btn btn-light"
+                   href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{uploadedfile.id}}">
+                    {% if uploadedfile.is_microsurgery %}
+                        <i class="fa-solid fa-microscope"></i>
+                        {% else %}
+                        <i class="fa-regular fa-eye"></i>
+                    {% endif %}
+                </a></td>
             </td>
             <td><a class="btn btn-light"
-                   href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}">Run</a></td>
+                   href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{uploadedfile.id}}">Run</a></td>
             <td><a class="btn btn-light"
                    href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send
                 Email</a></td>

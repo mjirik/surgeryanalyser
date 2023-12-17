@@ -1,2 +1,14 @@
 .box {
 }
+
+.icon-container {
+  position: relative
+}
+
+.icon-nested {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  font-size: 200%;
+  color: rgba(217, 83, 79, 0.7);
+}

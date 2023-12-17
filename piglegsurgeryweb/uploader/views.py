@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.views import generic
 from django.contrib.auth.decorators import login_required
 import django.utils
@@ -87,6 +87,14 @@ def resend_report_email(request, filename_id):
 #     request.session["order_by"] = order_by
 #     request.session.modified = True
 #     return redirect(next_page)
+
+@login_required(login_url='/admin/')
+def swap_is_microsurgery(request, filename_id:int):
+    uploadedfile = get_object_or_404(UploadedFile, pk=filename_id)
+    uploadedfile.is_microsurgery = not uploadedfile.is_microsurgery
+    uploadedfile.save()
+    next_anchor = request.GET.get("next_anchor", None)
+    return redirect(reverse('uploader:web_reports', kwargs={}) + f'#{next_anchor}')
 
 
 # @login_required(login_url='/admin/')
@@ -295,11 +303,14 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
         timeout=settings.PIGLEGCV_TIMEOUT,
         # hook="uploader.tasks.email_report_from_task",
     )
+    next_url = None
+    if "next" in request.GET:
+        next_url = request.GET['next'] + "#" + request.GET['next_anchor']
     context = {
         'headline': "Processing started",
         'text': f"We are processing file {str(Path(serverfile.mediafile.name).name)}. " +
         "We will let you know by email as soon as it is finished.",  # The output will be stored in {serverfile.outputdir}.",
-        "next": request.GET['next'] if "next" in request.GET else None,
+        "next": next_url,
         "next_text": "Back"
     }
     return render(request, "uploader/thanks.html", context)
