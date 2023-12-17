@@ -96,7 +96,7 @@ def main_tracker_bytetrack(
 
     if run_tracking:
         progress = tools.ProgressPrinter(frame_cnt)
-        tracking_results = {"tracks": [], "hash": hash_hex, "class_names": class_names}
+        tracking_results = {"tracks": [None]*int(frame_cnt), "hash": hash_hex, "class_names": class_names}
         for i, img in enumerate(imgs):
             frame_tr = []
             if not (i % 50):
@@ -115,8 +115,10 @@ def main_tracker_bytetrack(
                         if len(tr) > 0:
                             frame_tr.append(tr[0].tolist()[1:] + [k + (j * 10)])
             # logger.debug(f"track_bboxes per frame {frame_tr}")
-            tracking_results["tracks"].append(frame_tr)
+            # tracking_results["tracks"].append(frame_tr)
+            tracking_results["tracks"][i]=frame_tr
 
-            # add_tracking_results(tracking_results, result)
+        #kick all nones
+        tracking_results["tracks"]=[x for x in tracking_results["tracks"] if x is not None]
 
         json.dump(tracking_results, open(output_file_path, "w"))
