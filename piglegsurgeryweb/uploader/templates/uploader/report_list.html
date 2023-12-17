@@ -1,110 +1,113 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div
-        {% if user.is_authenticated %}
-        class="container-xxl"
-        {% else %}
-        class="container"
-        {% endif %}
->
-    <H2> List of reports </H2>
-    <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
-    <table class="table">
-        <thead>
-        <tr>
-            <th scope="col"></th>
-            </th>
-
-            <th scope="col"><a class="link-secondary" href="?order_by=email">
-                {% if request.GET.order_by == "email" %} ▼ {% endif %} Email </a>
-            </th>
-
-            <th scope="col"><a class="link-secondary" href="?order_by=mediafile">
-                {% if request.GET.order_by == "mediafile" %} ▼ {% endif %} File name </a>
-            </th>
-
-            <th scope="col">
-                <a class="link-secondary" href="?order_by=-uploaded_at">
-                    {% if request.GET.order_by == "-uploaded_at" or not request.GET.order_by %} ▼ {% endif %} Uploaded At
-                </a>
-
-            </th>
+    <div
             {% if user.is_authenticated %}
-            <th scope="col" colspan="3"></th>
-<!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
-            <th scope="col"><a href="?order_by=-started_at">
-                    {% if request.GET.order_by == "-started_at" %} ▼ {% endif %} Started At </a>
-            </th>
-            <th scope="col"><a href="?order_by=-finished_at">
-                {% if request.GET.order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
+                class="container-xxl"
+            {% else %}
+                class="container"
             {% endif %}
-        </tr>
-        </thead>
-        <tbody>
-        {% for uploadedfile in uploadedfiles %}
-        <tr class="align-middle" id="row{{uploadedfile.id}}">
-            <td scope="col" class="p-1">
-                {% if uploadedfile.preview %}
-                <!--                {{ uploadedfile.preview }}-->
-                <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
-                <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
-                       alt="thumbnail with the processed video" style="min-width: 66px; max-width: 80px;"></image>
+    >
+        <H2> List of reports </H2>
+        <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col"></th>
+                </th>
+
+                <th scope="col"><a class="link-secondary" href="?order_by=email">
+                    {% if request.GET.order_by == "email" %} ▼ {% endif %} Email </a>
+                </th>
+
+                <th scope="col"><a class="link-secondary" href="?order_by=mediafile">
+                    {% if request.GET.order_by == "mediafile" %} ▼ {% endif %} File name </a>
+                </th>
+
+                <th scope="col">
+                    <a class="link-secondary" href="?order_by=-uploaded_at">
+                        {% if request.GET.order_by == "-uploaded_at" or not request.GET.order_by %} ▼ {% endif %}
+                        Uploaded At
+                    </a>
+
+                </th>
+                {% if user.is_authenticated %}
+                    <th scope="col" colspan="3"></th>
+                    <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
+                    <th scope="col"><a href="?order_by=-started_at">
+                        {% if request.GET.order_by == "-started_at" %} ▼ {% endif %} Started At </a>
+                    </th>
+                    <th scope="col"><a href="?order_by=-finished_at">
+                    {% if request.GET.order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
                 {% endif %}
-            </td>
-            <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}">
-                {{ uploadedfile.email }} </a></td>
-            <td><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}"
-                   style="word-break: break-all;"
-            >
-                {{ uploadedfile }}</a></td>
-            <td><a href="/uploader/web_report/{{uploadedfile.hash}}?next={{ request.path|urlencode }}">
-                {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
-            {% if user.is_authenticated %}
-            <td>
-                <a class="btn btn-light"
-                   href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{uploadedfile.id}}">
-                    {% if uploadedfile.is_microsurgery %}
-                        <i class="fa-solid fa-microscope"></i>
-                        {% else %}
-                        <i class="fa-regular fa-eye"></i>
+            </tr>
+            </thead>
+            <tbody>
+            {% for uploadedfile in uploadedfiles %}
+                <tr class="align-middle" id="row{{ uploadedfile.id }}">
+                    <td scope="col" class="p-1">
+                        {% if uploadedfile.preview %}
+                            <!--                {{ uploadedfile.preview }}-->
+                            <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
+                            <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
+                                   alt="thumbnail with the processed video"
+                                   style="min-width: 66px; max-width: 80px;"></image>
+                        {% endif %}
+                    </td>
+                    <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}">
+                        {{ uploadedfile.email }} </a></td>
+                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}?next={{ request.path|urlencode }}"
+                           style="word-break: break-all;"
+                    >
+                        {{ uploadedfile }}</a></td>
+                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}?next={{ request.path|urlencode }}">
+                        {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
+                    {% if user.is_authenticated %}
+                        <td>
+                            <a class="btn btn-light"
+                               href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}">
+                                {% if uploadedfile.is_microsurgery %}
+                                    <i class="fa-solid fa-microscope"></i>
+                                {% else %}
+                                    <i class="fa-regular fa-eye"></i>
+                                {% endif %}
+                            </a></td>
+                        </td>
+                        <td><a class="btn btn-light"
+                               href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}">Run</a>
+                        </td>
+                        <td><a class="btn btn-light"
+                               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send
+                            Email</a></td>
+                        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
+                        <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
                     {% endif %}
-                </a></td>
-            </td>
-            <td><a class="btn btn-light"
-                   href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{uploadedfile.id}}">Run</a></td>
-            <td><a class="btn btn-light"
-                   href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send
-                Email</a></td>
-            <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
-            <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
-            {% endif %}
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
-    <script>
-        const data = '{{qs_json}}'
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+        <script>
+            const data = '{{qs_json}}'
 
-        const rdata = JSON.parse(data.replace(/&quot;/g, '"'))
+            const rdata = JSON.parse(data.replace(/&quot;/g, '"'))
 
-        const input = document.getElementById('search_here');
+            const input = document.getElementById('search_here');
 
-        let filteredArr = []
+            let filteredArr = []
 
-        input.addEventListener('keyup', (e) => {
-            for (const element_id in rdata) {
-                if (rdata[element_id].includes(e.target.value)) {
-                    const el = document.getElementById("row" + element_id);
-                    el.classList.remove("d-none");
-                } else {
-                    document.getElementById("row" + element_id).classList.add('d-none');
+            input.addEventListener('keyup', (e) => {
+                for (const element_id in rdata) {
+                    if (rdata[element_id].includes(e.target.value)) {
+                        const el = document.getElementById("row" + element_id);
+                        el.classList.remove("d-none");
+                    } else {
+                        document.getElementById("row" + element_id).classList.add('d-none');
 
+                    }
                 }
-            }
-        })
+            })
 
-    </script>
-</div>
+        </script>
+    </div>
 {% endblock %}

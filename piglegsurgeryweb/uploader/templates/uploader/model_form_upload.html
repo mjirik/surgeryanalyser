@@ -1,70 +1,69 @@
 {% extends 'base.html' %}
 
-{% block body%}
-<div class="container">
+{% block body %}
+    <div class="container">
 
-    <h2> How it works</h2>
-    <div class="jumbotron">
-        <div class="container">
-            <div class="row justify-content-md-center align-items-center">
-                <div class="col">
-                    <p class="text-center">
-                        <i class="fas fa-upload fa-6x"></i>
-                        <br>
-                        <br>
-                        Upload image or video of surgery
+        <h2> How it works</h2>
+        <div class="jumbotron">
+            <div class="container">
+                <div class="row justify-content-md-center align-items-center">
+                    <div class="col">
+                        <p class="text-center">
+                            <i class="fas fa-upload fa-6x"></i>
+                            <br>
+                            <br>
+                            Upload image or video of surgery
 
-                    </p>
-                </div>
-                <div class="col">
-                    <p class="text-center">
-                        <i class="fas fa-long-arrow-alt-right fa-4x"></i>
-                    </p>
-                </div>
-                <div class="col">
-                    <p class="text-center">
-                        <i class="fas fa-chart-line fa-6x"></i>
-                        <br>
-                        <br>
-                        Image processing analysis is performed automatically
-                    </p>
-                </div>
-                <div class="col">
-                    <p class="text-center">
-                        <i class="fas fa-long-arrow-alt-right fa-4x"></i>
-                    </p>
-                </div>
-                <div class="col">
-                    <p class="text-center">
-                        <i class="far fa-envelope fa-6x"></i>
-                        <br>
-                        <br>
-                        Wait for an email with the results
-                    </p>
+                        </p>
+                    </div>
+                    <div class="col">
+                        <p class="text-center">
+                            <i class="fas fa-long-arrow-alt-right fa-4x"></i>
+                        </p>
+                    </div>
+                    <div class="col">
+                        <p class="text-center">
+                            <i class="fas fa-chart-line fa-6x"></i>
+                            <br>
+                            <br>
+                            Image processing analysis is performed automatically
+                        </p>
+                    </div>
+                    <div class="col">
+                        <p class="text-center">
+                            <i class="fas fa-long-arrow-alt-right fa-4x"></i>
+                        </p>
+                    </div>
+                    <div class="col">
+                        <p class="text-center">
+                            <i class="far fa-envelope fa-6x"></i>
+                            <br>
+                            <br>
+                            Wait for an email with the results
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
+
+
+        <div class="container">
+            <h2>{{ headline }}</h2>
+            <p class="text-danger">{{ error_text }}</p>
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="btn btn-primary has-spinner" id="btnUpload" type="submit">
+                    {#            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>#}
+                    <i class="fas fa-upload"></i>
+                    {{ button }}
+                </button>
+                {#            {% if request.user.is_authenticated %}#}
+                {#            <a href="{% url 'uploader:web_reports' %}" class="btn btn-secondary">Go to list of reports</a>#}
+                {#            {% endif %}#}
+
+            </form>
+        </div>
     </div>
-
-
-
-    <div class="container">
-        <h2>{{ headline }}</h2>
-        <p class="text-danger">{{error_text}}</p>
-
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-        <button class="btn btn-primary has-spinner" id="btnUpload" type="submit">
-{#            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>#}
-            <i class="fas fa-upload"></i>
-            {{ button }}
-        </button>
-{#            {% if request.user.is_authenticated %}#}
-{#            <a href="{% url 'uploader:web_reports' %}" class="btn btn-secondary">Go to list of reports</a>#}
-{#            {% endif %}#}
-
-        </form>
-    </div>
-</div>
 {% endblock %}
