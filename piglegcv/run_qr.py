@@ -52,9 +52,10 @@ def get_bboxes(img, device="cpu"):
         bboxes_qr = None
         side_length = None
     if bboxes[4].shape[0] > 0:
+        logger.debug(f"micro calibration detected")
         bboxes_calibration_micro = bboxes[4][:2]
-        qr_mask = masks[3][0]
-        micro_side_length = 2.0 * math.sqrt(np.count_nonzero(qr_mask == True) / np.pi)
+        calibration_micro_mask = masks[4][0]
+        micro_side_length = 2.0 * math.sqrt(np.count_nonzero(calibration_micro_mask == True) / np.pi)
     else:
         bboxes_calibration_micro = []
         micro_side_length = None
