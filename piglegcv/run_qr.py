@@ -170,7 +170,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
         np.asarray(bbox_scene_area).tolist() if bbox_scene_area is not None else None
     )
     qr_data["qr_scissors_frame_detected"] = qr_scissors_frame_detected
-    qr_data["qr_bboxes_SFD"] = (
+    qr_data["qr_bboxes_SID"] = (
         np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
     )
 
