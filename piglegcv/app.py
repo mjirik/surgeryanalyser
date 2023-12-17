@@ -38,8 +38,8 @@ def index():
         filename = request.args.get("filename")
 
         outputdir = request.args.get("outputdir")
-        n_stitches = request.args.get("n_stitches")
-        is_microsurgery = request.args.get("is_microsurgery")
+        n_stitches = int(request.args.get("n_stitches"))
+        is_microsurgery = bool(request.args.get("is_microsurgery"))
         # if not url[:8].startswith(('https://', 'http://')):
         #     url = 'http://' + url
 

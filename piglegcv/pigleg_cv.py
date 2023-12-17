@@ -71,9 +71,9 @@ class DoComputerVision():
         self.filename_cropped: Optional[Path] = None
         self.test_first_seconds = test_first_seconds
         self.debug_images = {}
-        self.is_microsurgery = is_microsurgery
+        self.is_microsurgery:bool = bool(is_microsurgery)
         self.device = device
-        self.n_stitches = n_stitches
+        self.n_stitches:int = int(n_stitches)
         self.results = None
 
         log_format = loguru._defaults.LOGURU_FORMAT
@@ -139,7 +139,6 @@ class DoComputerVision():
         
         
     def _run_tracking(self):
-        from mmtrack.apis import init_model
         if self.is_microsurgery:
             models = [
                 (
@@ -368,11 +367,12 @@ class DoComputerVision():
         
         
     def _find_stitch_ends_in_tracks(self, n_clusters:int, tool_index:int=1, time_axis:int=2, weight_of_later=0.9, plot_clusters=False) -> List:
+        try:
+            n_clusters = int(n_clusters)
         
-        # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
-        if n_clusters > 1:
-            bboxes_to_points(str(self.outputdir))
-            try:
+            # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
+            if n_clusters > 1:
+                bboxes_to_points(str(self.outputdir))
                 # split_frames = []
                 split_s, split_frames = find_stitch_ends_in_tracks(
                     self.outputdir, n_clusters=n_clusters,
@@ -385,13 +385,12 @@ class DoComputerVision():
                 self.meta["stitch_split_frames"] = split_frames
                 self.meta["stitch_split_s"] = split_s
                 return split_frames
-            except Exception as e:
-                logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
+            else:
                 return []
-        else:
-            return []
-        
-        
+        except Exception as e:
+            logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
+        return []
+
     def _make_report(self, cut_frames=[]):
         # self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
         #                            cut_frames=self.meta["stitch_split_frames"]
