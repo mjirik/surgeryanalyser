@@ -190,6 +190,11 @@ def sort_bboxes(bboxes):
     """Sort bboxes by their confidence score."""
     return bboxes[bboxes[:, 4].argsort()[::-1]]
 
+def sort_bboxes_and_masks_by_confidence(bboxes, masks):
+    """Sort bboxes by their confidence score."""
+    sorted_indices = bboxes[:, 4].argsort()[::-1]
+    return bboxes[sorted_indices], masks[sorted_indices]
+
 
 def make_bbox_larger(bbox, multiplicator=2.0):
     size = np.asarray([(bbox[3]) - (bbox[1]), (bbox[2]) - (bbox[0])]) * multiplicator
