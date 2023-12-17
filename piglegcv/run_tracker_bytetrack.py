@@ -79,7 +79,7 @@ def main_tracker_bytetrack(
                     hash_hex[:hash_length], data["hash"][:hash_length]
                 )
 
-                if (data["hash"][hash_length:] == hash_hex[hash_length:]) and ():
+                if (data["hash"][hash_length:] == hash_hex[hash_length:]) and (distance < 0.05):
                     run_tracking = False
                     logger.debug(
                         f"Tracking results already exists ({distance=}). Skipping tracking."

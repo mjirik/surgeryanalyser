@@ -32,8 +32,8 @@ def get_bboxes(img, device="cpu"):
     # 3: ?
     # 4: ?
     # 5: micro qr code
-    for cls_id, bboxes_class in enumerate(bboxes):
-        logger.debug(f"{cls_id=}, {bboxes_class=}")
+    # for cls_id, bboxes_class in enumerate(bboxes):
+    #     logger.debug(f"{cls_id=}, {bboxes_class=}")
 
     bboxes_incision_area = bboxes[0]
     bboxes_incision_area = tools.sort_bboxes(bboxes_incision_area)
