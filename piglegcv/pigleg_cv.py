@@ -180,7 +180,8 @@ class DoComputerVision():
             trackers_config_and_checkpoints=models,
             filename=self.filename,
             output_file_path=self.outputdir / "tracks.json",
-            class_names=class_names
+            class_names=class_names,
+            device=self.device
         )
     
     def run_video_processing(self):

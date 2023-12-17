@@ -94,10 +94,10 @@ Update repo, Stop, Build and Up again
 ```shell
 cd /webapps/piglegsurgery
 
-docker-compose --env-file .env down
-docker-compose --env-file .env up --build -d
+docker-compose --env-file .env.prod down
+docker-compose --env-file .env.prod up --build -d
 
-docker-compose --env-file .env logs -f
+docker-compose --env-file .env.prod logs -f
 ```
 
 ## Stop
