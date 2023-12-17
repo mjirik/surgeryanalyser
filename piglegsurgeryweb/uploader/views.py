@@ -93,8 +93,6 @@ def resend_report_email(request, filename_id):
 def show_report_list(request):
     # order_by = request.session.get("order_by", '-uploaded_at')
     order_by = request.GET.get("order_by", '-uploaded_at')
-    logger.debug(f"order_by={order_by}")
-
     files = UploadedFile.objects.all().order_by(order_by)
     qs_data = {}
     for e in files:
@@ -110,7 +108,8 @@ def show_report_list(request):
 
 def owners_reports_list(request, owner_hash:str):
     owner = get_object_or_404(Owner, hash=owner_hash)
-    files = UploadedFile.objects.filter(owner=owner).order_by('-uploaded_at')
+    order_by = request.GET.get("order_by", '-uploaded_at')
+    files = UploadedFile.objects.filter(owner=owner).order_by(order_by)
     qs_data = {}
     for e in files:
         qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
