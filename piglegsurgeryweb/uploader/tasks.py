@@ -71,7 +71,7 @@ def _run_media_processing_rest_api(
     tm = 0
     time_to_sleep = 4
     while not is_finished:
-        time_to_sleep = time_to_sleep * 2 if time_to_sleep < 128 else 128
+        time_to_sleep = time_to_sleep * 2 if time_to_sleep < 64 else 64
         time_step = 4
         tm += time_to_sleep
         for i in range(int(time_to_sleep / time_step)):
@@ -95,8 +95,17 @@ def _run_media_processing_rest_api(
 
 def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     outputdir = Path(serverfile.outputdir)
+
+    # delete outputdir but keep tracks.json
     if outputdir.exists() and outputdir.is_dir():
+        tracks_json_path = outputdir / "tracks.json"
+        tracks_json_tmp_path = outputdir.parent / "tracks.json.tmp"
+        tracks_json_tmp_path.unlink(missing_ok=True)
+        if tracks_json_path.exists():
+            shutil.move(tracks_json_path, tracks_json_tmp_path)
         shutil.rmtree(outputdir, ignore_errors=True)
+        if tracks_json_tmp_path.exists():
+            shutil.move(tracks_json_tmp_path, tracks_json_path)
     outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
     logger_id = logger.add(
