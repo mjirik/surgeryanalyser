@@ -260,7 +260,10 @@ class ProgressPrinter:
         progress = current / self.total
         t1 = time.time()
         elapsed = t1 - self.t0
-        remaining = elapsed / progress - elapsed
+        if progress > 0:
+            remaining = elapsed / progress - elapsed
+        else:
+            remaining = 1000
         return f"{progress*100:.2f}% ({elapsed:.2f}s elapsed, {remaining:.2f}s remaining)"
 
 def phash_distance(hash1, hash2):
