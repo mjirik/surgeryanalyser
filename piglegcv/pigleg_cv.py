@@ -41,7 +41,7 @@ from sklearn.cluster import KMeans
 PROGRESS = 0
 PROGRESS_MAX = 100
 
-DEVICE = os.getenv("PIGLEG_DEVICE", default="cpu")
+DEVICE = os.getenv("PIGLEG_DEVICE", default=None)
 logger.debug(f"DEVICE={DEVICE}")
 
 
