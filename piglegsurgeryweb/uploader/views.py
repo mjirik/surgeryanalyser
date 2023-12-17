@@ -20,6 +20,7 @@ from django.conf import settings
 import json
 import re
 from django.contrib.auth import logout
+from typing import Optional
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
 def logout_view(request):
@@ -82,10 +83,19 @@ def resend_report_email(request, filename_id):
     )
     return redirect("/uploader/thanks/")
 
+# def set_order_by(request, order_by, next_page:str):
+#     request.session["order_by"] = order_by
+#     request.session.modified = True
+#     return redirect(next_page)
+
 
 # @login_required(login_url='/admin/')
 def show_report_list(request):
-    files = UploadedFile.objects.all().order_by('-uploaded_at')
+    # order_by = request.session.get("order_by", '-uploaded_at')
+    order_by = request.GET.get("order_by", '-uploaded_at')
+    logger.debug(f"order_by={order_by}")
+
+    files = UploadedFile.objects.all().order_by(order_by)
     qs_data = {}
     for e in files:
         qs_data[e.id] = str(e.email) + " " + str(e) + " " + str(e.uploaded_at) + " " + str(e.finished_at)
@@ -93,7 +103,7 @@ def show_report_list(request):
     qs_json = json.dumps(qs_data)
     # logger.debug(qs_data)
     context = {
-        "uploadedfiles": files, 'queue_size': queue_size(), 'qs_json': qs_json
+        "uploadedfiles": files, 'queue_size': queue_size(), 'qs_json': qs_json, "page_reference": "web_reports",
     }
 
     return render(request, "uploader/report_list.html", context)
@@ -107,7 +117,7 @@ def owners_reports_list(request, owner_hash:str):
 
     qs_json = json.dumps(qs_data)
     context = {
-        "uploadedfiles": files, 'queue_size': queue_size(), "qs_json": qs_json
+        "uploadedfiles": files, 'queue_size': queue_size(), "qs_json": qs_json, "page_reference": "owners_reports_list",
     }
 
     return render(request, "uploader/report_list.html", context)

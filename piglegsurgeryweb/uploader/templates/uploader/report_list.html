@@ -26,14 +26,30 @@
         <thead>
         <tr>
             <th scope="col"></th>
-            <th scope="col">Email</th>
-            <th scope="col">File name</th>
-            <th scope="col">Uploaded At</th>
+            </th>
+
+            <th scope="col"><a class="link-secondary" href="?order_by=email">
+                {% if request.GET.order_by == "email" %} ▼ {% endif %} Email </a>
+            </th>
+
+            <th scope="col"><a class="link-secondary" href="?order_by=mediafile">
+                {% if request.GET.order_by == "mediafile" %} ▼ {% endif %} File name </a>
+            </th>
+
+            <th scope="col">
+                <a class="link-secondary" href="?order_by=-uploaded_at">
+                    {% if request.GET.order_by == "-uploaded_at" or not request.GET.order_by %} ▼ {% endif %} Uploaded At
+                </a>
+
+            </th>
             {% if user.is_authenticated %}
             <th scope="col" colspan="3"></th>
 <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
-            <th scope="col">Started At</th>
-            <th scope="col">Finished At</th>
+            <th scope="col"><a href="?order_by=-started_at">
+                    {% if request.GET.order_by == "-started_at" %} ▼ {% endif %} Started At </a>
+            </th>
+            <th scope="col"><a href="?order_by=-finished_at">
+                {% if request.GET.order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
             {% endif %}
         </tr>
         </thead>
