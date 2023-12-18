@@ -174,6 +174,9 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Own
     df = pd.DataFrame(rows)
 
     y = ["Needle holder visibility [%]", "Needle holder area presence [%]"]
+    y = [element for element in y if element in df.keys()]
+    if len(y) == 0:
+        return None
     # x = list(df.keys())
     #
     # x = [el for el in x if el != 'Uploaded at']
@@ -208,7 +211,8 @@ def owners_reports_list(request, owner_hash: str):
 
     html_path = make_graph(files, owner)
 
-    html = html_path.read_text()
+
+    html = html_path.read_text() if html_path else None
     # logger.debug(html)
 
 
