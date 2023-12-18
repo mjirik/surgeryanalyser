@@ -78,6 +78,7 @@ class DoComputerVision:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.debug(f"device={device}")
         logger.debug(f"{test_first_seconds=}")
+        logger.debug(f"{is_microsurgery=}")
 
         self.filename: Path = Path(filename)
         self.filename_original: Path = Path(filename)
@@ -92,6 +93,8 @@ class DoComputerVision:
         self.device = device
         self.n_stitches: int = int(n_stitches)
         self.results = None
+
+        logger.debug(f"{self.is_microsurgery=}")
 
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
