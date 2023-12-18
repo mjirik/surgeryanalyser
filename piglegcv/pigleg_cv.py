@@ -85,6 +85,7 @@ class DoComputerVision:
             import torch
 
             device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.debug("###############")
         logger.debug(f"device={device}")
         logger.debug(f"{test_first_seconds=}")
         logger.debug(f"{is_microsurgery=}")
