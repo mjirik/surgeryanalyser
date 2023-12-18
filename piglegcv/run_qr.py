@@ -15,7 +15,9 @@ import tools
 from typing import Optional
 
 
-def get_bboxes(img, device="cpu", image_file:Optional[Path]=None):
+def get_bboxes(img, device="cpu", image_file:Optional[Path]=None,
+               calibration_micro_thr:float=0.5
+              ):
     single_model_path = (
         Path(__file__).parent / "resources/single_image_detector/mdl_sid_2.pth"
         # Path(__file__).parent / "resources/single_image_detector/mdl.pth"
@@ -29,8 +31,8 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None):
         single_image_model.show_result(
             img,
             bboxes,
-            masks,
-            score_thr=0.3,
+            # masks,
+            # score_thr=0.3,
             show=False,
             out_file=str(image_file)
         )
@@ -63,7 +65,7 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None):
     else:
         bbox_scene_area = None
 
-    qr_threshold = 0.9
+    qr_threshold = 0.85
     if bboxes[3].shape[0] > 0:
         logger.debug(bboxes[3])
         bboxes_qr = bboxes[3][:2]
@@ -78,9 +80,13 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None):
     if bboxes[5].shape[0] > 0:
         logger.debug(f"micro calibration detected")
         bboxes_calibration_micro, masks_calibration_micro = tools.sort_bboxes_and_masks_by_confidence(bboxes[5], masks[5])
-
-        micro_side_length = 2.0 * math.sqrt(np.count_nonzero(masks_calibration_micro[0] == True) / np.pi)
-        logger.debug(f"{bboxes_calibration_micro=}, {micro_side_length=}")
+        if bboxes_calibration_micro[0][-1] > calibration_micro_thr:
+            micro_side_length = 2.0 * math.sqrt(np.count_nonzero(masks_calibration_micro[0] == True) / np.pi)
+            logger.debug(f"{bboxes_calibration_micro=}, {micro_side_length=}")
+        else:
+            bboxes_calibration_micro = []
+            micro_side_length = None
+            
     else:
         bboxes_calibration_micro = []
         micro_side_length = None
@@ -199,7 +205,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", image_file:
     qr_data["qr_bboxes_SID"] = (
         np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
     )
-    qr_data["scene_width_m"] = width * pix_size_best
+    qr_data["scene_width_m"] = None if pix_size_best is None else width * pix_size_best
 
     logger.debug(qr_data)
 
