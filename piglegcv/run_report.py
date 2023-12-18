@@ -530,6 +530,7 @@ def create_video_report_figure(
     if cut_frames is None:
         cut_frames = []
     ##################
+    logger.debug(f"{cut_frames=}")
     ## second graph
     # fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
     fig = plt.figure()
@@ -581,6 +582,7 @@ def create_video_report_figure(
             L = np.sum(ds)
             T = np.sum(dt)
             ds_cumsum = np.cumsum(ds)
+            logger.debug(f"{object_color=}, {object_name=}")
             if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
                 ds_max = ds_cumsum[-1]
             ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
@@ -1020,9 +1022,9 @@ def main_report(
             fps,
             pix_size,
             is_qr_detected,
-            object_colors[:4],
-            object_names[:4],
-            size_output_fig,
+            object_colors=object_colors[:4],
+            object_names=object_names[:4],
+            video_size=size_output_fig,
             dpi=300,
             cut_frames=cut_frames,
         )
