@@ -141,7 +141,7 @@ RUN sudo chmod a+rw -R ./resources
 # check permissions of folowing files before this docker file build!!!
 COPY ./worker.py .
 COPY ./app.py .
-COPY ./pigleg_cv.py .
+ADD ./pigleg_cv.py .
 COPY ./cascade_rcnn_x101_64x4d_fpn_1class.py .
 COPY ./res50_onehand10k_256x256.py .
 COPY ./run_qr.py .
