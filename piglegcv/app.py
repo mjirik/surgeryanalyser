@@ -27,6 +27,15 @@ app = flask.Flask(__name__)
 q = Queue(connection=conn)
 
 
+def make_bool_from_string(s: str) -> bool:
+    if type(s) == bool:
+        return s
+    else:
+        if s.lower() in ("true", "1"):
+            return True
+        else:
+            return False
+
 @app.route("/run", methods=["GET", "POST"])
 def index():
     logger.debug("index in progress")
@@ -42,10 +51,11 @@ def index():
 
         outputdir = request.args.get("outputdir")
         n_stitches = int(request.args.get("n_stitches"))
-        is_microsurgery = bool(request.args.get("is_microsurgery"))
+        is_microsurgery = make_bool_from_string(request.args.get("is_microsurgery"))
 
 
         logger.debug(f"{n_stitches=}")
+        logger.debug(f"{is_microsurgery=}, {type(is_microsurgery)=}")
 
         # if not url[:8].startswith(('https://', 'http://')):
         #     url = 'http://' + url

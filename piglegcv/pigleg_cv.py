@@ -124,6 +124,8 @@ class DoComputerVision:
         )
         logger.debug(f"{self.is_microsurgery=}")
         logger.debug(f"{self.is_microsurgery}, {type(self.is_microsurgery)}")
+        logger.debug(type(self.is_microsurgery))
+        logger.debug(self.is_microsurgery)
 
         try:
             if Path(self.filename).suffix.lower() in (
@@ -539,6 +541,7 @@ def do_computer_vision(
     n_stitches: Optional[int] = None,
     device=DEVICE,
 ):
+    logger.debug(f"{is_microsurgery=}")
     return DoComputerVision(
         filename,
         outputdir,
