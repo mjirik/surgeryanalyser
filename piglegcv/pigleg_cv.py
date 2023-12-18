@@ -247,6 +247,7 @@ class DoComputerVision:
             output_file_path=self.outputdir / "tracks.json",
             class_names=class_names,
             device=self.device,
+            additional_hash="s" if self.test_first_seconds else "f"
         )
 
     def run_video_processing(self):

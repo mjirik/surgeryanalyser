@@ -47,9 +47,11 @@ def main_tracker_bytetrack(
     # score_thr=0.5,
     crop: list = [None, None, None, None],
     class_names=[],
+    additional_hash="",
 ):
     """Run tracking on a video.
     trackers: is list of tuples (config_file, checkpoint)
+    additional_hash: is a string that will be added to the hash of the first frame
     """
 
     # make peceptual hash of first video frame
