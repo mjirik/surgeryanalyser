@@ -430,8 +430,6 @@ class DoComputerVision:
         if transpose:
             filter_str += "transpose=1,"
 
-        filter_str += "scale=719:trunc(ow/a/2)*2"
-
         orig_fps = self.meta["orig fps"]
         if orig_fps >= 30:
             new_fps= orig_fps / 2
