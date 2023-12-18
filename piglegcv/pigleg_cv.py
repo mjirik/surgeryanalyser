@@ -59,6 +59,15 @@ def set_progress(progress=None, progress_max=None):
     if progress_max:
         PROGRESS_MAX = progress_max
 
+def make_bool_from_string(s: str) -> bool:
+    if type(s) == bool:
+        return s
+    else:
+        if s.lower() in ("true", "1"):
+            return True
+        else:
+            return False
+
 
 class DoComputerVision:
     def __init__(
@@ -89,7 +98,7 @@ class DoComputerVision:
         self.filename_cropped: Optional[Path] = None
         self.test_first_seconds = test_first_seconds
         self.debug_images = {}
-        self.is_microsurgery: bool = bool(is_microsurgery)
+        self.is_microsurgery: bool = make_bool_from_string(is_microsurgery)
         self.device = device
         self.n_stitches: int = int(n_stitches)
         self.results = None
