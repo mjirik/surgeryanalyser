@@ -80,6 +80,15 @@ class DoComputerVision:
         test_first_seconds: bool = True,
         device: Optional[str] = None,
     ):
+        log_format = loguru._defaults.LOGURU_FORMAT
+        self.logger_id = logger.add(
+            str(Path(outputdir) / "piglegcv_log.txt"),
+            format=log_format,
+            level="DEBUG",
+            rotation="1 week",
+            backtrace=True,
+            diagnose=True,
+        )
 
         if device is None:
             import torch
@@ -106,15 +115,6 @@ class DoComputerVision:
 
         logger.debug(f"{self.is_microsurgery=}")
 
-        log_format = loguru._defaults.LOGURU_FORMAT
-        self.logger_id = logger.add(
-            str(Path(outputdir) / "piglegcv_log.txt"),
-            format=log_format,
-            level="DEBUG",
-            rotation="1 week",
-            backtrace=True,
-            diagnose=True,
-        )
 
     def run(self):
         self.meta = {}
@@ -122,6 +122,7 @@ class DoComputerVision:
             f"CV processing started on {self.filename}, outputdir={self.outputdir}"
         )
         logger.debug(f"{self.is_microsurgery=}")
+        logger.debug(f"{self.is_microsurgery}, {type(self.is_microsurgery)}")
 
         try:
             if Path(self.filename).suffix.lower() in (
