@@ -37,12 +37,16 @@ def index():
         # get url that the person has entered
         # url = request.form['filename']
         logger.debug(request.form)
-        logger.debug(request.args)
+        logger.debug(f"{request.args=}")
         filename = request.args.get("filename")
 
         outputdir = request.args.get("outputdir")
         n_stitches = int(request.args.get("n_stitches"))
         is_microsurgery = bool(request.args.get("is_microsurgery"))
+
+
+        logger.debug(f"{n_stitches=}")
+
         # if not url[:8].startswith(('https://', 'http://')):
         #     url = 'http://' + url
 

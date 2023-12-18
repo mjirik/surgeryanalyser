@@ -68,7 +68,7 @@ class DoComputerVision:
         meta: Optional[dict] = None,
         n_stitches=0,
         is_microsurgery=False,
-        test_first_seconds: bool = False,
+        test_first_seconds: bool = True,
         device: Optional[str] = None,
     ):
 
@@ -77,6 +77,7 @@ class DoComputerVision:
 
             device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.debug(f"device={device}")
+        logger.debug(f"{test_first_seconds=}")
 
         self.filename: Path = Path(filename)
         self.filename_original: Path = Path(filename)
