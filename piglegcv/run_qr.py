@@ -71,6 +71,7 @@ def get_bboxes(img, device="cpu"):
         bboxes_calibration_micro, masks_calibration_micro = tools.sort_bboxes_and_masks_by_confidence(bboxes[5], masks[5])
 
         micro_side_length = 2.0 * math.sqrt(np.count_nonzero(masks_calibration_micro[0] == True) / np.pi)
+        logger.debug(f"{bboxes_calibration_micro=}, {micro_side_length=}")
     else:
         bboxes_calibration_micro = []
         micro_side_length = None
@@ -160,7 +161,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
         pix_size_method = "QR"
     elif len(bboxes_calibration_micro) > 0:
         pix_size_method = "micro calibration"
-        pix_size_best = 0.005 / micro_side_length
+        pix_size_best = 0.006 / micro_side_length
         qr_data["is_microsurgery"] = True
     elif len(bboxes_qr) > 0:
         pix_size_method = "pix_size_single_frame_detector_m"
@@ -188,6 +189,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
     qr_data["qr_bboxes_SID"] = (
         np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
     )
+    qr_data["scene_width_m"] = width * pix_size_best
 
     logger.debug(qr_data)
 

@@ -849,25 +849,10 @@ def main_report(
     filename,
     outputdir,
     meta: dict,
-    object_colors=["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
+    object_colors=None,
+    # object_colors=["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
     # class ID         0               1         2           3        4   5   6  7   8   9     10                   11                12             13                  14
-    object_names=[
-        "Needle holder",
-        "Forceps",
-        "Scissors",
-        "Scissors",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "Needle holder bbox",
-        "Forceps bbox",
-        "Scissors bbox",
-        "Left hand bbox",
-        "Right hand bbox",
-    ],
+    object_names=None,
     concat_axis=1,
     resize_factor=0.5,
     circle_radius=16.0,
@@ -907,9 +892,47 @@ def main_report(
     # 2: Forceps curved
     # 3: Scissors
     # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
-    if is_microsurgery:  # udelat lepe, ale jak
-        object_names[2] = "Forceps curved"
-        object_colors[2] = "m"
+    if object_colors is None:
+        if is_microsurgery:  # udelat lepe, ale jak
+            # object_names[2] = "Forceps curved"
+            # object_colors[2] = "m"
+            object_colors = ["b", "r", "m", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
+            object_names = [
+                "Needle holder",
+                "Forceps",
+                "Forceps curved",
+                "Scissors",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Needle holder bbox",
+                "Forceps bbox",
+                "Scissors bbox",
+                "Left hand bbox",
+                "Right hand bbox",
+            ],
+        else:
+            object_colors = ["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
+            object_names = [
+                "Needle holder",
+                "Forceps",
+                "Scissors",
+                "Scissors",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Needle holder bbox",
+                "Forceps bbox",
+                "Scissors bbox",
+                "Left hand bbox",
+                "Right hand bbox",
+            ],
 
     filename = str(filename)
     outputdir = str(outputdir)
