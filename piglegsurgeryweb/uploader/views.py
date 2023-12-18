@@ -347,7 +347,7 @@ def _filter_images(serverfile: UploadedFile):
     allowed_image_patterns = [
         "heatmap",
         "needle_holder_area_presence",
-        "stitch_detection",
+        "stitch_detection_0",
         "jpeg",
         "gif",
     ]
