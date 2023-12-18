@@ -98,7 +98,6 @@ def test_main_report():
         object_colors=["b", "r", "g", "m"],
         object_names=["Needle holder", "Tweezers", "Scissors", "None"],
         concat_axis=1,
-        resize_factor=0.5,
     )
     assert expected_file.exists()
 

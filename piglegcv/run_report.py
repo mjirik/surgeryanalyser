@@ -846,24 +846,21 @@ def draw_track_object(
 
 
 def main_report(
-    filename,
-    outputdir,
-    meta: dict,
-    object_colors=None,
-    # object_colors=["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
-    # class ID         0               1         2           3        4   5   6  7   8   9     10                   11                12             13                  14
-    object_names=None,
-    concat_axis=1,
-    resize_factor=0.5,
-    circle_radius=16.0,
-    expected_video_width=1110,
-    expected_video_height=420,
-    visualization_length_unit="cm",
-    confidence_score_thr=0.0,
-    oa_bbox_linecolor=[0, 255, 128],
-    cut_frames: list = [],
-    is_microsurgery: bool = False,
-    test_first_seconds: bool = False,
+        filename,
+        outputdir,
+        meta: dict,
+        object_colors=None,
+        object_names=None,
+        concat_axis=1,
+        circle_radius=16.0,
+        expected_video_width=1110,
+        expected_video_height=420,
+        visualization_length_unit="cm",
+        confidence_score_thr=0.0,
+        oa_bbox_linecolor=[0, 255, 128],
+        cut_frames: list = [],
+        is_microsurgery: bool = False,
+        test_first_seconds: bool = False,
 ):
     """
 
@@ -892,6 +889,8 @@ def main_report(
     # 2: Forceps curved
     # 3: Scissors
     # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+
+    logger.debug(f"{is_microsurgery=}, {cut_frames=}")
     if object_colors is None:
         if is_microsurgery:  # udelat lepe, ale jak
             # object_names[2] = "Forceps curved"

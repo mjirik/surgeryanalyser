@@ -285,7 +285,7 @@ class DoComputerVision:
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
         s = time.time()
-        data_results = self._make_report()
+        data_results = self._make_report(cut_frames=self.meta["stitch_split_frames"])
         set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
@@ -489,7 +489,6 @@ class DoComputerVision:
         return []
 
     def _make_report(self, cut_frames=[]):
-        # self.results = main_report(self.filename, self.outputdir, meta=self.meta, is_microsurgery=self.is_microsurgery,
         #                            cut_frames=self.meta["stitch_split_frames"]
         #                            )
         self.results = main_report(
