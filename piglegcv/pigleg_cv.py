@@ -89,6 +89,7 @@ class DoComputerVision:
         logger.debug(f"device={device}")
         logger.debug(f"{test_first_seconds=}")
         logger.debug(f"{is_microsurgery=}")
+        logger.debug("dalsi radka")
 
         self.filename: Path = Path(filename)
         self.filename_original: Path = Path(filename)
