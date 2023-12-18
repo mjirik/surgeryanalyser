@@ -523,10 +523,12 @@ def create_video_report_figure(
     video_size,
     ds_threshold=0.1,
     dpi=300,
-    cut_frames=[],
+    cut_frames=None,
     visualization_unit="cm",
 ):
 
+    if cut_frames is None:
+        cut_frames = []
     ##################
     ## second graph
     # fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
@@ -593,7 +595,8 @@ def create_video_report_figure(
             print(object_color, object_name)
 
     # Draw vlines on scissors QR code visible
-    t = 1.0 / source_fps * np.array(cut_frames)
+    logger.debug(f"{cut_frames=}")
+    t = (1.0 / source_fps) * np.array(cut_frames)
     for frt in t:
         plt.axvline(frt, c="m")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -1165,12 +1168,7 @@ def main_report(
                                 frame_idx_stop = j
                                 j_before = j
                                 break
-                    print(
-                        object_full_name,
-                        " frame_idx_start:frame_idx_stop",
-                        frame_idx_start,
-                        frame_idx_stop,
-                    )
+                    logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
 
                     res = create_pdf_report(
                         frame_id[frame_idx_start:frame_idx_stop],
@@ -1199,7 +1197,7 @@ def main_report(
                         bbox_linecolor=oa_bbox_linecolor,
                     )
                     cv2.imwrite(
-                        str(Path(outputdir) / f"{simplename}_area_presence.jpg"),
+                        str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
                         image_presence,
                     )
                     # obj_name = object_name.lower().replace(" ", "_")
