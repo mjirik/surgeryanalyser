@@ -70,6 +70,8 @@ def main_tracker_bytetrack(
         models.append(model)
         hash_hex += make_hash_from_model(tracker_checkpoint)
 
+    hash_hex += additional_hash
+
     hash_length = len(hash_hex)
     run_tracking = True
     logger.debug(f"{hash_hex=}")
