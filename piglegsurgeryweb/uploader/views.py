@@ -172,15 +172,22 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Own
             rows.append(loaded_results)
 
     df = pd.DataFrame(rows)
+    # fix typo
+    df.rename(columns={"Stichtes linearity score": "Stitches linearity score"}, inplace=True)
 
     if "Stitches linearity score" in df.keys():
-        df["Stitches linearity score [%]"] = df["Stichtes linearity score"] * 100
+        df["Stitches linearity score [%]"] = df["Stitches linearity score"] * 100
+
 
     if "Stitches parallelism score" in df.keys():
         df["Stitches parallelism score [%]"] = df["Stitches parallelism score"] * 100
 
-    y = ["Needle holder visibility [%]", "Needle holder area presence [%]",
-         "Stitches linearity score [%]", "Stitches parallelism score [%]"]
+    y = [
+        "Needle holder visibility [%]", "Needle holder area presence [%]",
+        "Forceps visibility [%]", "Forceps area presence [%]",
+        "Stitches linearity score [%]", "Stitches parallelism score [%]"
+
+         ]
 
     y = [element for element in y if element in df.keys()]
     if len(y) == 0:

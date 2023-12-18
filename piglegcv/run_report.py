@@ -902,7 +902,7 @@ def main_report(
         if is_microsurgery:  # udelat lepe, ale jak
             # object_names[2] = "Forceps curved"
             # object_colors[2] = "m"
-            object_colors = ["b", "r", "m", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
+            object_colors = ["b", "r", "m", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"]
             object_names = [
                 "Needle holder",
                 "Forceps",
@@ -919,9 +919,9 @@ def main_report(
                 "Scissors bbox",
                 "Left hand bbox",
                 "Right hand bbox",
-            ],
+            ]
         else:
-            object_colors = ["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"],
+            object_colors = ["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"]
             object_names = [
                 "Needle holder",
                 "Forceps",
@@ -938,7 +938,7 @@ def main_report(
                 "Scissors bbox",
                 "Left hand bbox",
                 "Right hand bbox",
-            ],
+            ]
 
     filename = str(filename)
     outputdir = str(outputdir)

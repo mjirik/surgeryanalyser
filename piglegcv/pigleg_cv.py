@@ -290,7 +290,7 @@ class DoComputerVision:
         set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
-                data_results["Stichtes linearity score"] = self.meta["stitch_scores"][
+                data_results["Stitches linearity score"] = self.meta["stitch_scores"][
                     0
                 ]["r_score"]
                 data_results["Stitches parallelism score"] = self.meta["stitch_scores"][
