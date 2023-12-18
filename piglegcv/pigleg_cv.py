@@ -618,7 +618,7 @@ def find_stitch_ends_in_tracks(
                 weight_of_later * X[frame_i, time_axis]
             )
             splits_s.append(time)
-            splits_frames.append(int(time / float(metadata["fps"])))
+            splits_frames.append(int(time * float(metadata["fps"])))
         prev = label
     if plot_clusters:
         plot_track_clusters(

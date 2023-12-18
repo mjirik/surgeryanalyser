@@ -28,6 +28,7 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None,
 
     bboxes, masks = inference_detector(single_image_model, img)
     if image_file is not None:
+        logger.debug("saving single_image_detector result")
         single_image_model.show_result(
             img,
             bboxes,
