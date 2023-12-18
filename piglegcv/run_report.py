@@ -1106,11 +1106,12 @@ def main_report(
             # exit()
             im_graph = im_graph[:, :, :3]
             if is_qr_detected:
+                ruler_size_mm = 5 if meta["is_microsurgery"] else 50
                 img = insert_ruler_in_image(
                     img,
                     pixelsize=unit_conversion(pix_size, "m", visualization_length_unit),
                     ruler_size=int(
-                        unit_conversion(50, "mm", visualization_length_unit)
+                        unit_conversion(ruler_size_mm, "mm", visualization_length_unit)
                     ),
                     unit=visualization_length_unit,
                 )

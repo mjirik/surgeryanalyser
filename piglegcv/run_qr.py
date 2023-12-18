@@ -163,6 +163,7 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
         pix_size_method = "micro calibration"
         pix_size_best = 0.006 / micro_side_length
         qr_data["is_microsurgery"] = True
+        is_detected = True
     elif len(bboxes_qr) > 0:
         pix_size_method = "pix_size_single_frame_detector_m"
         pix_size_best = pix_size_single_frame_detector_m
