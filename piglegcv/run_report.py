@@ -531,6 +531,8 @@ def create_video_report_figure(
         cut_frames = []
     ##################
     logger.debug(f"{cut_frames=}")
+    logger.debug(f"{object_names=}")
+    logger.debug(f"{object_colors=}")
     ## second graph
     # fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
     fig = plt.figure()
