@@ -164,7 +164,8 @@ class DoComputerVision:
             self.filename_cropped, n_tries=None
         )
         # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
-        qr_data = run_qr.bbox_info_extraction_from_frame(self.frame, device=self.device)
+        qr_data = run_qr.bbox_info_extraction_from_frame(
+            self.frame, device=self.device, image_file=self.outputdir / "_single_image_detector_results.jpg")
         qr_data["qr_scissors_frames"] = []
         self.meta["qr_data"] = qr_data
         logger.debug(self.meta)

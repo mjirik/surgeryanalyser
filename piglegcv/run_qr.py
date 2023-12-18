@@ -12,9 +12,10 @@ from mmdet.apis import inference_detector
 import torch
 import pprint
 import tools
+from typing import Optional
 
 
-def get_bboxes(img, device="cpu"):
+def get_bboxes(img, device="cpu", image_file:Optional[Path]=None):
     single_model_path = (
         Path(__file__).parent / "resources/single_image_detector/mdl_sid_2.pth"
         # Path(__file__).parent / "resources/single_image_detector/mdl.pth"
@@ -24,7 +25,15 @@ def get_bboxes(img, device="cpu"):
     single_image_model.cfg = _model["my_params"]
 
     bboxes, masks = inference_detector(single_image_model, img)
-    
+    if image_file is not None:
+        single_image_model.show_result(
+            img,
+            bboxes,
+            masks,
+            score_thr=0.3,
+            show=False,
+            out_file=str(image_file)
+        )
     # -1: incision area
     # 0: scene area
     # 1: ?
@@ -82,12 +91,12 @@ def get_bboxes(img, device="cpu"):
     return bboxes_incision_area, bbox_scene_area, bboxes_qr, side_length, bboxes_calibration_micro, micro_side_length
 
 
-def bbox_info_extraction_from_frame(img, qreader=None, device="cpu"):
+def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", image_file:Optional[Path]=None):
     img = np.asarray(img)
     width = img.shape[1]
     # Todo Viktora
     bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length, bboxes_calibration_micro, micro_side_length = get_bboxes(
-        img, device=device
+        img, device=device, image_file=image_file
     )
 
     if qreader is None:
