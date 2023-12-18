@@ -425,7 +425,8 @@ class DoComputerVision:
         additional_params = []
 
         if self.test_first_seconds:
-            additional_params.extend(["-t", "3"])
+            # TODO change the limit
+            additional_params.extend(["-t", "50"])
 
         logger.debug(f"filename={self.filename}, {self.filename.exists()}")
         s = (
