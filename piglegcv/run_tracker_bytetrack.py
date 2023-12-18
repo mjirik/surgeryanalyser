@@ -113,8 +113,8 @@ def main_tracker_bytetrack(
                     # logger.debug(f"{j=}, {result=}")
                     for k, tr in enumerate(result["track_bboxes"]):
                         if len(tr) > 0:
-                            if j == 1:
-                                logger.debug(f"tracker[{j}], {result=}")
+                            # if j == 1:
+                                # logger.debug(f"tracker[{j}], {result['tracks_boxes']=}")
                             frame_tr.append(tr[0].tolist()[1:] + [k + (j * 10)])
             # logger.debug(f"track_bboxes per frame {frame_tr}")
             # tracking_results["tracks"].append(frame_tr)
