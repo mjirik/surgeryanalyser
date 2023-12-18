@@ -180,7 +180,10 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Own
 
     x = "Uploaded at"
     import plotly.express as px
-    fig = px.scatter(df, x=x, y=y, marginal_x="box", marginal_y="box")
+    fig = px.scatter(df, x=x, y=y,
+                     # marginal_x="box",
+                     # marginal_y="box"
+                     )
     fig.write_html(html_path, full_html=False)
     return html_path
 
