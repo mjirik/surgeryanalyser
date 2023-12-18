@@ -122,6 +122,7 @@ class DoComputerVision:
         logger.info(
             f"CV processing started on {self.filename}, outputdir={self.outputdir}"
         )
+        logger.debug(f"{self.is_microsurgery=}")
 
         try:
             if Path(self.filename).suffix.lower() in (
