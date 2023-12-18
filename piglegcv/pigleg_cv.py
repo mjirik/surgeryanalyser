@@ -482,6 +482,8 @@ class DoComputerVision:
         plot_clusters=False,
         clusters_image_path: Optional[Path] = None,
     ) -> List:
+        self.meta["stitch_split_frames"] = []
+        self.meta["stitch_split_s"] = []
         try:
             n_clusters = int(n_clusters)
 
