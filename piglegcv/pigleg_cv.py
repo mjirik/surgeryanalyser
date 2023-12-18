@@ -77,7 +77,7 @@ class DoComputerVision:
         meta: Optional[dict] = None,
         n_stitches=0,
         is_microsurgery=False,
-        test_first_seconds: bool = True,
+        test_first_seconds: bool = False,
         device: Optional[str] = None,
     ):
         log_format = loguru._defaults.LOGURU_FORMAT
@@ -377,6 +377,7 @@ class DoComputerVision:
         incision_bboxes: Optional[list] = None,
         crop_bbox_score_threshold=0.5,
     ) -> Path:
+
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
         transpose = False
@@ -407,8 +408,17 @@ class DoComputerVision:
         #         # xmin, ymin, xmax, ymax
         #     }
         # }
+        # get FPS, frame_count and frame size from original video
+        cap = cv2.VideoCapture(str(self.filename))
+        self.meta["orig fps"] = int(cap.get(cv2.CAP_PROP_FPS))
+        self.meta["orig totalframecount"] = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.meta["orig frame_width"] = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.meta["orig frame_height"] = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        cap.release()
 
         filter_str = ""
+
+
 
         if crop_bbox is not None:
             if crop_bbox[4] > crop_bbox_score_threshold:
@@ -420,13 +430,26 @@ class DoComputerVision:
         if transpose:
             filter_str += "transpose=1,"
 
-        filter_str += "scale=720:trunc(ow/a/2)*2"
+        filter_str += "scale=719:trunc(ow/a/2)*2"
+
+        orig_fps = self.meta["orig fps"]
+        if orig_fps >= 30:
+            new_fps= orig_fps / 2
+            filter_str += f"fps=fps={new_fps:0.2f},"
+            filter
+        elif orig_fps >= 60:
+            new_fps = orig_fps / 4
+            filter_str += f"fps=fps={new_fps:0.2f},"
+        elif orig_fps >= 120:
+            new_fps = orig_fps / 8
+            filter_str += f"fps=fps={new_fps:0.2f},"
+
+        filter_str += "scale=719:trunc(ow/a/2)*2"
 
         additional_params = []
 
         if self.test_first_seconds:
-            # TODO change the limit
-            additional_params.extend(["-t", "50"])
+            additional_params.extend(["-t", "5"])
 
         logger.debug(f"filename={self.filename}, {self.filename.exists()}")
         s = (
