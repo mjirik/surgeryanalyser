@@ -114,7 +114,15 @@ def swap_is_microsurgery(request, filename_id: int):
 # @login_required(login_url='/admin/')
 def show_report_list(request):
     # order_by = request.session.get("order_by", '-uploaded_at')
-    order_by = request.GET.get("order_by", "-uploaded_at")
+
+    if "order_by" in request.GET:
+        logger.debug(f"order_by={request.GET['order_by']}")
+        request.session["order_by"] = request.GET.get("order_by", "-uploaded_at")
+    # request.session["order_by"] = request.GET.get("order_by", "-uploaded_at")
+
+    order_by = request.session.get("order_by", "-uploaded_at")
+
+    # order_by = request.GET.get("order_by", "-uploaded_at")
     files = UploadedFile.objects.all().order_by(order_by)
     qs_data = {}
     for e in files:
