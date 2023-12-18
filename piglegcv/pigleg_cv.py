@@ -502,6 +502,7 @@ class DoComputerVision:
         return self.results
 
     def _save_results(self):
+        logger.debug("Saving results...")
         save_json(self.results, self.outputdir / "results.json")
 
     def _load_meta(self):
