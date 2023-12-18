@@ -466,7 +466,10 @@ class DoComputerVision:
         logger.debug(f"{' '.join(s)}")
         # p = subprocess.Popen(s)
         # p.wait()
-        subprocess.check_output(s)
+        try:
+            subprocess.check_output(s, shell=False, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
 
         logger.debug(
             f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}"
