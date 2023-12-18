@@ -282,6 +282,7 @@ class DoComputerVision:
             clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
         )
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
+        logger.debug(f"{self.meta['stitch_split_frames']=}")
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
         s = time.time()
