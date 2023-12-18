@@ -442,7 +442,7 @@ class DoComputerVision:
             new_fps = orig_fps / 8
             filter_str += f"fps=fps={new_fps:0.2f},"
 
-        filter_str += "scale=719:trunc(ow/a/2)*2"
+        filter_str += "scale=720:trunc(ow/a/2)*2"
 
         additional_params = []
 
