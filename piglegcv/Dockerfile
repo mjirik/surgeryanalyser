@@ -87,6 +87,7 @@ RUN sudo apt-get install -y ranger mc sshfs
 RUN pip install --user gspread
 RUN pip install --user --upgrade google-api-python-client oauth2client
 RUN pip install --user jupyterlab==3.6 protobuf==3.20
+RUN pip install --user rich
 # RUN pip install ipywidgets rise 
 # RUN pip install jupyterlab-vim
 
