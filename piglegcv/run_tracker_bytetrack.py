@@ -114,11 +114,14 @@ def main_tracker_bytetrack(
  
                 if result != None:
                     # logger.debug(f"{j=}, {result=}")
-                    for k, tr in enumerate(result["track_bboxes"]):
-                        if len(tr) > 0:
+                    for object_class_id, bboxes in enumerate(result["track_bboxes"]):
+                        if len(bboxes) > 0:
+                            # find the bbox with best confidence
+                            best_id = np.argmax(bboxes[:, -1])
+
                             # if j == 1:
                                 # logger.debug(f"tracker[{j}], {result['tracks_boxes']=}")
-                            frame_tr.append(tr[0].tolist()[1:] + [k + (j * 10)])
+                            frame_tr.append(bboxes[best_id].tolist()[1:] + [object_class_id + (j * 10)])
             # logger.debug(f"track_bboxes per frame {frame_tr}")
             # tracking_results["tracks"].append(frame_tr)
             tracking_results["tracks"][i]=frame_tr

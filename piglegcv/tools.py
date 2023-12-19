@@ -41,6 +41,14 @@ def load_json(filename: Union[str, Path]):
     else:
         return {}
 
+def remove_complex_types(d:dict):
+    # Define simple types
+    simple_types = (int, float, str, bool)
+
+    # Create a new dictionary with only simple types
+    new_dict = {k: v for k, v in d.items() if isinstance(v, simple_types)}
+
+    return new_dict
 
 def unit_conversion(value, input_unit: str, output_unit: str):
     in_kvantif = input_unit[-2] if len(input_unit) > 1 else ""

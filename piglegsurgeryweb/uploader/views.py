@@ -161,6 +161,7 @@ def _get_graph_path(owner: Optional[Owner] = None):
     return html_path
 
 
+
 def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Owner] = None):
     import plotly.express as px
     import pandas as pd
