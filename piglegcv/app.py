@@ -1,5 +1,6 @@
 import os
-import traceback
+from rich.traceback import install
+install(show_locals=True)
 
 import rq.exceptions
 from rq import Queue
@@ -21,6 +22,7 @@ import pigleg_cv
 #    from .pigleg_cv import do_computer_vision
 import requests
 import time
+from rich.trace import install
 
 PIGLEGCV_TIMEOUT = 10 * 3600
 app = flask.Flask(__name__)
