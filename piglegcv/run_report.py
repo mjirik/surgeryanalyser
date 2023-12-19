@@ -75,10 +75,13 @@ def plot_skeleton(img, joints, threshold, thickness):
 
 
 def calculate_operation_zone_presence(points: np.ndarray, bbox: np.ndarray):
+    """
+    Calculate presence of points in bbox.
+    points: x, y = points[:, 0], points[:, 1]
+    """
 
     points = np.asarray(points)
     bbox = np.asarray(bbox)
-    #     x, y = points[:, 0], points[:, 1]
     if len(points) > 0:
         return count_points_in_bbox(points, bbox) / float(len(points))
     else:
@@ -121,36 +124,23 @@ class RelativePresenceInOperatingArea(object):
         #     x, y = points[:, 0], points[:, 1]
         if len(points) > 0:
             for point in points:
-                if self.operating_area_bbox is None:
-                    img = cv2.circle(
-                        img,
-                        (int(point[0]), int(point[1])),
-                        radius=0,
-                        color=(0, 255, 0),
-                        thickness=2,
-                    )
+                if (
+                        self.operating_area_bbox is None
+                ) or (
+                        bbox[0] <= point[0] <= bbox[2]
+                        and
+                        bbox[1] <= point[1] <= bbox[3]
+                ):
+                    color = (0, 255, 0)
                 else:
-                    if (
-                        point[0] >= bbox[0]
-                        and point[0] <= bbox[2]
-                        and point[1] >= bbox[1]
-                        and point[1] <= bbox[3]
-                    ):
-                        img = cv2.circle(
-                            img,
-                            (int(point[0]), int(point[1])),
-                            radius=0,
-                            color=(0, 255, 0),
-                            thickness=2,
-                        )
-                    else:
-                        img = cv2.circle(
-                            img,
-                            (int(point[0]), int(point[1])),
-                            radius=0,
-                            color=(0, 0, 255),
-                            thickness=2,
-                        )
+                    color = (0, 0, 255)
+                img = cv2.circle(
+                    img,
+                    (int(point[0]), int(point[1])),
+                    radius=0,
+                    color=color,
+                    thickness=2,
+                )
             return img
         else:
             return img
@@ -227,7 +217,7 @@ def create_pdf_report(
     image,
     source_fps,
     pix_size,
-    QRinit,
+    qr_init,
     object_color,
     object_name,
     output_file_name,
@@ -243,7 +233,7 @@ def create_pdf_report(
     :param image:
     :param source_fps:
     :param pix_size:
-    :param QRinit:
+    :param qr_init:
     :param object_color:
     :param object_name:
     :param output_file_name:
@@ -259,7 +249,7 @@ def create_pdf_report(
         t = 1.0 / source_fps * np.array(frame_id)
         dxy = data[1:] - data[:-1]
         ds = np.sqrt(np.sum(dxy * dxy, axis=1))
-        if not QRinit:
+        if not qr_init:
             ds_threshold = 200.0
 
         ds[ds > ds_threshold] = 0.0
@@ -293,7 +283,7 @@ def create_pdf_report(
             ax.imshow(image[:, :, ::-1])
 
         # check unit
-        if QRinit:
+        if qr_init:
             unit = visualization_unit
         else:
             unit = "pix"
@@ -365,7 +355,7 @@ def create_pdf_report(
         plt.savefig(output_file_name2, dpi=dpi)
         logger.debug(f"main_report: figures {output_file_name2} is saved")
 
-        if QRinit:
+        if qr_init:
             L = unit_conversion(L, visualization_unit, "m")
             V = unit_conversion(V, visualization_unit, "m")
             unit = "m"
@@ -517,7 +507,7 @@ def create_video_report_figure(
     data_pixels,
     source_fps,
     pix_size,
-    QRinit: bool,
+    qr_init: bool,
     object_colors,
     object_names,
     video_size,
@@ -545,7 +535,7 @@ def create_video_report_figure(
     # ax.set_ylabel('Data')
     # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
     # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
-    if QRinit:
+    if qr_init:
         track_label = f"Track [{visualization_unit}]"
         vel_label = f"Velocity [{visualization_unit}/sec]"
     else:
@@ -566,7 +556,7 @@ def create_video_report_figure(
             # t_i = 1.0/source_fps * i
             dxy = data[1:] - data[:-1]
             ds = np.sqrt(np.sum(dxy * dxy, axis=1))
-            if not QRinit:
+            if not qr_init:
                 ds_threshold = 200.0
 
             ds[ds > ds_threshold] = 0.0
@@ -581,8 +571,8 @@ def create_video_report_figure(
             t = t[ind]
 
             # print(dt)
-            L = np.sum(ds)
-            T = np.sum(dt)
+            # L = np.sum(ds)
+            # T = np.sum(dt)
             ds_cumsum = np.cumsum(ds)
             logger.debug(f"{object_color=}, {object_name=}")
             if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
@@ -679,7 +669,7 @@ def insert_ruler_in_image(img, pixelsize, ruler_size=50, resize_factor=1.0, unit
         img, start_point.astype(int), end_point.astype(int), (255, 255, 255), thickness
     )
 
-    text_point = start_point.astype(np.int) - np.array(
+    text_point = start_point.astype(int) - np.array(
         [0, int(0.020 * img.shape[0]) / resize_factor]
     ).astype(int)
     # img[line]
@@ -707,8 +697,8 @@ def bboxes_to_points(outputdir: str, confidence_score_thr: float = 0.0):
     json_data = load_json("{}/tracks.json".format(outputdir))
     sort_data = json_data["tracks"] if "tracks" in json_data else []
 
-    data_pixels = [[] for i in range(15)]
-    frame_ids = [[] for i in range(15)]
+    data_pixels = [[]] * 15
+    frame_ids = [[]] * 15
     N = len(sort_data)
     logger.debug(f"Sort data N={N}")
 
@@ -829,7 +819,7 @@ def draw_track_object(
         )
 
     if class_id > 10:  # just right and left hand bbbox
-        scale = 1. if class_id > 12 else 1.
+        scale = 1. if class_id > 12 else 0.5
         cv2.rectangle(
             img,
             (int(box[0]), int(box[1])),
@@ -902,8 +892,6 @@ def main_report(
     logger.debug(f"{is_microsurgery=}, {cut_frames=}")
     if object_colors is None:
         if is_microsurgery:  # udelat lepe, ale jak
-            # object_names[2] = "Forceps curved"
-            # object_colors[2] = "m"
             object_colors = ["b", "r", "m", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"]
             object_names = [
                 "Needle holder",
@@ -994,7 +982,7 @@ def main_report(
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         output_video_fn_tmp = Path(f"{outputdir}/pigleg_results.avi")
         output_video_fn = Path(outputdir + "/pigleg_results.mp4")
-        videoWriter = cv2.VideoWriter(
+        video_writer = cv2.VideoWriter(
             str(output_video_fn_tmp), fourcc, fps, size_output_video
         )
 
@@ -1094,8 +1082,7 @@ def main_report(
                         )
 
             # hand pose tracking
-            if i < M:
-                if hand_poses[i] != []:
+            if (i < M) and (hand_poses[i] != []):
                     plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
 
             t_i = 1.0 / fps * i
@@ -1110,8 +1097,6 @@ def main_report(
                 im_graph, cv2.COLOR_RGB2BGR
             )  # matplotlib generate RGB channels but cv2 BGR
             ax.lines.pop(-1)
-            # print(lines)
-            # exit()
             im_graph = im_graph[:, :, :3]
             if is_qr_detected:
                 if ruler_size_mm is None:
@@ -1127,16 +1112,13 @@ def main_report(
                     unit=visualization_length_unit,
                 )
             im = np.concatenate((img, im_graph), axis=concat_axis)
-            # im = skimage.transform.resize(im, output_shape=[
-            # size_output_video[1], size_output_video[0], 3], preserve_range=True).astype(im.dtype)
-            # exit()
             if video_frame_first is None:
                 video_frame_first = im.copy()
                 jpg_pth = Path(outputdir) / "pigleg_results.mp4.jpg"
                 if jpg_pth.exists():
                     jpg_pth.unlink()
                 cv2.imwrite(str(jpg_pth), video_frame_first)
-            videoWriter.write(im)
+            video_writer.write(im)
 
             i += 1
 
@@ -1145,7 +1127,7 @@ def main_report(
         logger.debug(f"frameshape={im.shape}")
         logger.debug(f"confidence_score_thr={confidence_score_thr}")
         cap.release()
-        videoWriter.release()
+        video_writer.release()
         cmd = f"ffmpeg -i {str(output_video_fn_tmp)} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {str(output_video_fn)}"
         os.system(cmd)
 
@@ -1209,12 +1191,8 @@ def main_report(
                         str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
                         image_presence,
                     )
-                    # obj_name = object_name.lower().replace(" ", "_")
-                    #
-                    #
                     if len(res) > 0:
                         [T, L, V, unit] = res
-                        # data_results[object_name] = {}
                         data_results[f"{object_full_name} length [{unit}]"] = L
                         data_results[f"{object_full_name} visibility [s]"] = T
                         data_results[f"{object_full_name} velocity"] = V
@@ -1260,6 +1238,4 @@ def main_report(
 
 if __name__ == "__main__":
     # main_report('/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/output.mp4', '/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/')
-    # main_report_old(sys.argv[1], sys.argv[2])
-    # main_report(sys.argv[1], sys.argv[2])
-    main_report(sys.argv[1], sys.argv[2], concat_axis=1, confidence_score_thr=0.7)
+    main_report(sys.argv[1], sys.argv[2], meta={}, concat_axis=1, confidence_score_thr=0.7)
