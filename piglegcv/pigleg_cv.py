@@ -382,16 +382,15 @@ class DoComputerVision:
         # base_name, extension = str(self.filename).rsplit('.', 1)
 
         transpose = False
-        if incision_bboxes is not None and len(incision_bboxes) > 0:
-            width = int(incision_bboxes[0][2] - incision_bboxes[0][0])
-            height = int(incision_bboxes[0][3] - incision_bboxes[0][1])
+        if not self.is_microsurgery:
+            if incision_bboxes is not None and len(incision_bboxes) > 0:
+                width = int(incision_bboxes[0][2] - incision_bboxes[0][0])
+                height = int(incision_bboxes[0][3] - incision_bboxes[0][1])
 
-            if width > height:
-                transpose = False
-            else:
-                transpose = True
-        if self.is_microsurgery:
-            transpose = False
+                if width > height:
+                    transpose = False
+                else:
+                    transpose = True
         elif self.frame.shape[0] > self.frame.shape[1]:
             transpose = True
         self.filename_cropped = self.outputdir / "__cropped.mp4"
