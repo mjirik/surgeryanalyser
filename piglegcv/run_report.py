@@ -828,7 +828,8 @@ def draw_track_object(
             thickness=thickness,
         )
 
-    if class_id > 12:  # just right and left hand bbbox
+    if class_id > 10:  # just right and left hand bbbox
+        scale = 1. if class_id > 12 else 1.
         cv2.rectangle(
             img,
             (int(box[0]), int(box[1])),
@@ -844,9 +845,9 @@ def draw_track_object(
             str(object_name),
             text_position,
             cv2.FONT_HERSHEY_SIMPLEX,
-            fontScale=font_scale,
+            fontScale=scale * font_scale,
             color=color_text,
-            thickness=thickness,
+            thickness=int(thickness * scale),
         )
 
     return img
