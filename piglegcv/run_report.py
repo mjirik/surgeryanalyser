@@ -863,7 +863,8 @@ def main_report(
         circle_radius=16.0,
         expected_video_width=1110,
         expected_video_height=420,
-        visualization_length_unit="cm",
+        visualization_length_unit=None,
+        ruler_size_mm=None,
         confidence_score_thr=0.0,
         oa_bbox_linecolor=[0, 255, 128],
         cut_frames: list = [],
@@ -1113,7 +1114,10 @@ def main_report(
             # exit()
             im_graph = im_graph[:, :, :3]
             if is_qr_detected:
-                ruler_size_mm = 5 if meta["is_microsurgery"] else 50
+                if ruler_size_mm is None:
+                    ruler_size_mm = 5 if meta["is_microsurgery"] else 50
+                if visualization_length_unit is None:
+                    visualization_length_unit = "mm" if meta["is_microsurgery"] else "cm"
                 img = insert_ruler_in_image(
                     img,
                     pixelsize=unit_conversion(pix_size, "m", visualization_length_unit),
