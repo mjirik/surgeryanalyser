@@ -390,6 +390,8 @@ class DoComputerVision:
                 transpose = False
             else:
                 transpose = True
+        if self.is_microsurgery:
+            transpose = False
         elif self.frame.shape[0] > self.frame.shape[1]:
             transpose = True
         self.filename_cropped = self.outputdir / "__cropped.mp4"
