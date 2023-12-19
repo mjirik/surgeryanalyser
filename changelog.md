@@ -3,6 +3,13 @@
 Actual version: "0.0.0"
 
 
+## 2023-12
+
+* [added] Menu for logged users
+* [added] Hand tracking
+* [added] Microsurgery support
+* [added] Access to the admin page of object from from web report
+
 ## 2022-11
 
 * [added] Instrument duration in percent

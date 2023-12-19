@@ -29,16 +29,16 @@
                 </th>
 
                 <th scope="col"><a class="link-secondary" href="?order_by=email">
-                    {% if request.GET.order_by == "email" %} ▼ {% endif %} Email </a>
+                    {% if request.session.get.order_by == "email" %} ▼ {% endif %} Email </a>
                 </th>
 
                 <th scope="col"><a class="link-secondary" href="?order_by=mediafile">
-                    {% if request.GET.order_by == "mediafile" %} ▼ {% endif %} File name </a>
+                    {% if request.session.get.order_by == "mediafile" %} ▼ {% endif %} File name </a>
                 </th>
 
                 <th scope="col">
                     <a class="link-secondary" href="?order_by=-uploaded_at">
-                        {% if request.GET.order_by == "-uploaded_at" or not request.GET.order_by %} ▼ {% endif %}
+                        {% if request.session.get.order_by == "-uploaded_at"  %} ▼ {% endif %}
                         Uploaded At
                     </a>
 
@@ -47,10 +47,10 @@
                     <th scope="col" colspan="3"></th>
                     <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
                     <th scope="col"><a href="?order_by=-started_at">
-                        {% if request.GET.order_by == "-started_at" %} ▼ {% endif %} Started At </a>
+                        {% if request.session.get.order_by == "-started_at" %} ▼ {% endif %} Started At </a>
                     </th>
                     <th scope="col"><a href="?order_by=-finished_at">
-                    {% if request.GET.order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
+                    {% if request.session.get.order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
                 {% endif %}
             </tr>
             </thead>

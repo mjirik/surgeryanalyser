@@ -10,9 +10,24 @@
     });
 </script>
 {%  endblock %}
-{% block body%}
-<div class="container pb-4">
 
+{% block staffmenu %}
+    Ahoj
+    <li>
+{#        <a href="{% url 'admin:uploader_upload_change' upload.id %}">Admin Page for Upload</a>#}
+    <a class="dropdown-item d-flex align-items-center"
+       href="{% url 'admin:uploader_uploadedfile_change' serverfile.id %}">
+        <i class="bi bi-arrow-clockwise"></i> Edit in admin
+    </a>
+    </li>
+
+
+{% endblock %}
+
+
+{% block body %}
+<div class="container pb-4">
+ahoje
     <H2> Report: {{mediafile}} </H2>
     {% for videofile_url in videofiles_url %}
     <div class="pt-3">

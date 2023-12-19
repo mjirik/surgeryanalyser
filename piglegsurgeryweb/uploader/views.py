@@ -24,6 +24,7 @@ import re
 from django.contrib.auth import logout
 from typing import Optional
 
+
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
 
@@ -78,7 +79,6 @@ def update_all_uploaded_files(request):
     files = UploadedFile.objects.all()
     logger.info("update all uploaded files")
     for file in files:
-
         make_preview(file, force=True)
         update_owner(file)
     return redirect("/uploader/thanks/")
@@ -117,23 +117,24 @@ def show_report_list(request):
 
     if "order_by" in request.GET:
         logger.debug(f"order_by={request.GET['order_by']}")
-        request.session["order_by"] = request.GET.get("order_by", "-uploaded_at")
-    # request.session["order_by"] = request.GET.get("order_by", "-uploaded_at")
+        request.session["order_by"] = request.GET.get("order_by")
+        request.session.modified = True
 
     order_by = request.session.get("order_by", "-uploaded_at")
+    logger.debug(f"order_by={order_by}")
 
     # order_by = request.GET.get("order_by", "-uploaded_at")
     files = UploadedFile.objects.all().order_by(order_by)
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
-            str(e.email)
-            + " "
-            + str(e)
-            + " "
-            + str(e.uploaded_at)
-            + " "
-            + str(e.finished_at)
+                str(e.email)
+                + " "
+                + str(e)
+                + " "
+                + str(e.uploaded_at)
+                + " "
+                + str(e.finished_at)
         )
 
     qs_json = json.dumps(qs_data)
@@ -148,14 +149,15 @@ def show_report_list(request):
     return render(request, "uploader/report_list.html", context)
 
 
-def _get_graph_path(owner:Optional[Owner]=None):
+def _get_graph_path(owner: Optional[Owner] = None):
     if owner:
         html_path = Path(settings.MEDIA_ROOT) / "generated" / owner.hash / "graph.html"
     else:
         html_path = Path(settings.MEDIA_ROOT) / "generated/graph.html"
     return html_path
 
-def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Owner]=None):
+
+def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Owner] = None):
     import plotly.express as px
     import pandas as pd
     from django.utils import timezone
@@ -163,14 +165,12 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Own
     html_path = _get_graph_path(owner)
     html_path.parent.mkdir(parents=True, exist_ok=True)
 
-
     rows = []
 
     for i, uploaded_file in enumerate(uploaded_file_set):
 
-
         results_path = Path(uploaded_file.outputdir) / "results.json"
-        #read results.json
+        # read results.json
         if results_path.exists():
             with open(results_path) as f:
                 loaded_results = json.load(f)
@@ -186,7 +186,6 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Own
     if "Stitches linearity score" in df.keys():
         df["Stitches linearity score [%]"] = df["Stitches linearity score"] * 100
 
-
     if "Stitches parallelism score" in df.keys():
         df["Stitches parallelism score [%]"] = df["Stitches parallelism score"] * 100
 
@@ -195,7 +194,7 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner:Optional[Own
         "Forceps visibility [%]", "Forceps area presence [%]",
         "Stitches linearity score [%]", "Stitches parallelism score [%]"
 
-         ]
+    ]
 
     y = [element for element in y if element in df.keys()]
     if len(y) == 0:
@@ -221,23 +220,21 @@ def owners_reports_list(request, owner_hash: str):
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
-            str(e.email)
-            + " "
-            + str(e)
-            + " "
-            + str(e.uploaded_at)
-            + " "
-            + str(e.finished_at)
+                str(e.email)
+                + " "
+                + str(e)
+                + " "
+                + str(e.uploaded_at)
+                + " "
+                + str(e.finished_at)
         )
 
     qs_json = json.dumps(qs_data)
 
     html_path = make_graph(files, owner)
 
-
     html = html_path.read_text() if html_path else None
     # logger.debug(html)
-
 
     context = {
         "uploadedfiles": files,
@@ -255,8 +252,8 @@ def web_report(request, filename_hash: str):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     if (
-        not bool(serverfile.zip_file.name)
-        or not Path(serverfile.zip_file.path).exists()
+            not bool(serverfile.zip_file.name)
+            or not Path(serverfile.zip_file.path).exists()
     ):
         logger.debug("Zip file name does not exist")
         # zip_file does not exists
@@ -307,23 +304,23 @@ def web_report(request, filename_hash: str):
                 new_key = re.sub("visibility$", "visibility [s]", new_key)
                 new_key = re.sub("length$", "length [m]", new_key)
                 if new_key in (
-                    "Needle holder length [pix]",
-                    "Needle holder length [m]",
-                    "Needle holder visibility [s]",
-                    "Needle holder visibility [%]",
-                    "Forceps length [pix]",
-                    "Forceps length [m]",
-                    "Forceps visibility [s]",
-                    "Forceps visibility [%]",
-                    "Scissors length [pix]",
-                    "Scissors length [m]",
-                    "Scissors visibility [s]",
-                    "Scissors visibility [%]",
-                    "Needle holder area presence [%]",
-                    # "Tweezes length", "Tweezes duration" # typo in some older processings
-                    # "Tweezers length", "Tweezers duration", # backward compatibility
-                    # "Scissors length", "Scissors duration", # backward compatibility
-                    # "Needle holder length", "Needle holder duration", # backward compatibility
+                        "Needle holder length [pix]",
+                        "Needle holder length [m]",
+                        "Needle holder visibility [s]",
+                        "Needle holder visibility [%]",
+                        "Forceps length [pix]",
+                        "Forceps length [m]",
+                        "Forceps visibility [s]",
+                        "Forceps visibility [%]",
+                        "Scissors length [pix]",
+                        "Scissors length [m]",
+                        "Scissors visibility [s]",
+                        "Scissors visibility [%]",
+                        "Needle holder area presence [%]",
+                        # "Tweezes length", "Tweezes duration" # typo in some older processings
+                        # "Tweezers length", "Tweezers duration", # backward compatibility
+                        # "Scissors length", "Scissors duration", # backward compatibility
+                        # "Needle holder length", "Needle holder duration", # backward compatibility
                 ):
                     # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
 
@@ -445,7 +442,8 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     context = {
         "headline": "Processing started",
         "text": f"We are processing file {str(Path(serverfile.mediafile.name).name)}. "
-        + "We will let you know by email as soon as it is finished.",  # The output will be stored in {serverfile.outputdir}.",
+                + "We will let you know by email as soon as it is finished.",
+        # The output will be stored in {serverfile.outputdir}.",
         "next": next_url,
         "next_text": "Back",
     }
