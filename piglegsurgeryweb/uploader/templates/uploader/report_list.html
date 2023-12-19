@@ -22,6 +22,8 @@
         {% endautoescape %}
         {% endif %}
         <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
+        {{ request.session.get.order_by }}
+        {{ request.session }}
         <table class="table">
             <thead>
             <tr>
@@ -29,16 +31,16 @@
                 </th>
 
                 <th scope="col"><a class="link-secondary" href="?order_by=email">
-                    {% if request.session.get.order_by == "email" %} ▼ {% endif %} Email </a>
+                    {% if order_by == "email" %} ▼ {% endif %} Email </a>
                 </th>
 
-                <th scope="col"><a class="link-secondary" href="?order_by=mediafile">
-                    {% if request.session.get.order_by == "mediafile" %} ▼ {% endif %} File name </a>
+                <th scope="col"><a class="link-secondary" href="?order_by=filename">
+                    {% if order_by == "filename" %} ▼ {% endif %} File name </a>
                 </th>
 
                 <th scope="col">
                     <a class="link-secondary" href="?order_by=-uploaded_at">
-                        {% if request.session.get.order_by == "-uploaded_at"  %} ▼ {% endif %}
+                        {% if order_by == "-uploaded_at"  %} ▼ {% endif %}
                         Uploaded At
                     </a>
 
@@ -47,10 +49,11 @@
                     <th scope="col" colspan="3"></th>
                     <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
                     <th scope="col"><a href="?order_by=-started_at">
-                        {% if request.session.get.order_by == "-started_at" %} ▼ {% endif %} Started At </a>
+                        {% if order_by == "-started_at" %} ▼ {% endif %} Started At </a>
                     </th>
                     <th scope="col"><a href="?order_by=-finished_at">
-                    {% if request.session.get.order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
+                        {% if order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
+                    </th>
                 {% endif %}
             </tr>
             </thead>

@@ -112,7 +112,7 @@ def swap_is_microsurgery(request, filename_id: int):
 
 
 # @login_required(login_url='/admin/')
-def show_report_list(request):
+def report_list(request):
     # order_by = request.session.get("order_by", '-uploaded_at')
 
     if "order_by" in request.GET:
@@ -121,10 +121,13 @@ def show_report_list(request):
         request.session.modified = True
 
     order_by = request.session.get("order_by", "-uploaded_at")
-    logger.debug(f"order_by={order_by}")
+    # logger.debug(f"order_by={order_by}")
 
     # order_by = request.GET.get("order_by", "-uploaded_at")
-    files = UploadedFile.objects.all().order_by(order_by)
+    if order_by == "filename":
+        files = sorted(UploadedFile.objects.all(), key=str)
+    else:
+        files = UploadedFile.objects.all().order_by(order_by)
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
@@ -144,6 +147,7 @@ def show_report_list(request):
         "queue_size": queue_size(),
         "qs_json": qs_json,
         "page_reference": "web_reports",
+        "order_by": order_by,
     }
 
     return render(request, "uploader/report_list.html", context)

@@ -33,7 +33,7 @@ urlpatterns = [
     ),  # used for debugging purposes
     path(
         "ths6eei8sadfwebw7s8d6s5e4vs8eqpzmg4710awo/",
-        views.show_report_list,
+        views.report_list,
         name="web_reports",
     ),  # used for debugging purposes
     # path('set_order_by/<str:order_by>/<str:next_page>', views.set_order_by, name='set_order_by'),
