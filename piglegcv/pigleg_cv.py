@@ -391,8 +391,8 @@ class DoComputerVision:
                     transpose = False
                 else:
                     transpose = True
-        elif self.frame.shape[0] > self.frame.shape[1]:
-            transpose = True
+            elif self.frame.shape[0] > self.frame.shape[1]:
+                transpose = True
         self.filename_cropped = self.outputdir / "__cropped.mp4"
 
         # Recreate the modified file path
@@ -403,13 +403,6 @@ class DoComputerVision:
         #      "-vprofile", "high", "-bf", "0", "-strict", "experimental", "-f", "mp4", base_name]
 
         meta = self.meta
-        # meta = {
-        #     "qr_data": {
-        #         "bbox_scene_area":
-        #             [0, 923.24, 536.68, 0.38988]
-        #         # xmin, ymin, xmax, ymax
-        #     }
-        # }
         # get FPS, frame_count and frame size from original video
         cap = cv2.VideoCapture(str(self.filename))
         self.meta["orig fps"] = int(cap.get(cv2.CAP_PROP_FPS))
@@ -419,8 +412,6 @@ class DoComputerVision:
         cap.release()
 
         filter_str = ""
-
-
 
         if crop_bbox is not None:
             if crop_bbox[4] > crop_bbox_score_threshold:
@@ -467,8 +458,6 @@ class DoComputerVision:
             ]
         )
         logger.debug(f"{' '.join(s)}")
-        # p = subprocess.Popen(s)
-        # p.wait()
         try:
             subprocess.check_output(s, shell=False, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:

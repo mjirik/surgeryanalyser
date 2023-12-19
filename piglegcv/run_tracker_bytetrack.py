@@ -45,7 +45,6 @@ def main_tracker_bytetrack(
     output_file_path: Path,
     device=None,
     # score_thr=0.5,
-    crop: list = [None, None, None, None],
     class_names=[],
     additional_hash="",
 ):
@@ -110,7 +109,7 @@ def main_tracker_bytetrack(
             for j, tracker in enumerate(models):
 
                 result = inference_mot(
-                    tracker, img[crop[0] : crop[1], crop[2] : crop[3], :], frame_id=i
+                    tracker, img, frame_id=i
                 )
  
                 if result != None:
