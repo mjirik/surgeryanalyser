@@ -16,6 +16,7 @@ from loguru import logger
 
 from mmtrack.apis import inference_mot, init_model
 import tools
+import numpy as np
 
 
 def add_tracking_results(tracking_results, result):
