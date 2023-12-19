@@ -22,7 +22,6 @@ import pigleg_cv
 #    from .pigleg_cv import do_computer_vision
 import requests
 import time
-from rich.trace import install
 
 PIGLEGCV_TIMEOUT = 10 * 3600
 app = flask.Flask(__name__)
