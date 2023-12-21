@@ -106,7 +106,7 @@ def _should_do_tracking_based_on_hash(
         except Exception as e:
             logger.debug(f"Cannot read {Path(output_file_path).name}. Exception: {e}")
 
-    logger.debug(f"{hash_hex=}, {run_tracking=}")
+    logger.debug(f"{run_tracking=}, {hash_hex=}")
     return run_tracking, hash_hex
 
 
