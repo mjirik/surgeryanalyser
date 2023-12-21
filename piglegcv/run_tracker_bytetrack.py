@@ -17,6 +17,7 @@ from loguru import logger
 from mmtrack.apis import inference_mot, init_model
 import tools
 import numpy as np
+from typing import Optional, List
 
 
 def add_tracking_results(tracking_results, result):
@@ -38,6 +39,83 @@ def make_hash_from_model(model_file: Path):
     return hash_md5.hexdigest()
 
 
+def make_hash_from_video_and_models(video_file: Path, trackers_config_and_checkpoints: List, additional_hash=""):
+    """
+    Hash is composed of video-parameters and model weights.
+
+    It is concatenated hash of model weights and, size of frame, FPS, frame count, and perceptual
+    hash of the first frame of the video.
+    """
+    # make peceptual hash of first video frame
+    imgs = mmcv.VideoReader(str(video_file))
+    frame_cnt = imgs.frame_cnt
+    imgs.width
+    imgs.height
+    first_frame = next(imgs)
+    logger.debug(f"{first_frame.shape=}")
+    phash = tools.phash_image(first_frame)
+    del imgs
+    hash_hex = phash + "_"
+    hash_length = len(hash_hex)
+    hash_hex += "0x%0.4X" % imgs.width
+    hash_hex += "0x%0.4X" % imgs.height
+    hash_hex += "0x%0.4X" % frame_cnt
+    hash_hex += float(imgs.fps).hex()
+
+    models = []
+    hash_length = len(hash_hex)
+
+    for tracker_config, tracker_checkpoint in trackers_config_and_checkpoints:
+            hash_hex += make_hash_from_model(tracker_checkpoint)
+
+    hash_hex += additional_hash
+    return hash_hex
+
+def _compare_composed_hashes(hash1:str, hash2:str, phash_distance_threshold=0.05)->bool:
+    """Compare two hashes. Return True if they are equal.
+    The first part is preceptual hash of firs frame of the video. The maximum distance between hashes might be defined.
+    """
+
+    hash1split = hash1.split("_", maxsplit=1)
+    hash2split = hash2.split("_", maxsplit=1)
+    if len(hash1split) != 2:
+        return False
+    if len(hash2split) != 2:
+        return False
+
+    distance = tools.phash_distance(hash1split[0], hash2split[0])
+    logger.debug(f"{hash1=}, ({distance=})")
+
+    if distance > phash_distance_threshold:
+        return False
+
+    if hash1split[1] != hash2split[1]:
+        return False
+
+    return True
+
+
+def _should_do_tracking(
+        trackers_config_and_checkpoints:List, filename:Path, output_file_path:Path, additional_hash:str="") -> bool:
+
+    hash_hex = make_hash_from_video_and_models(filename, trackers_config_and_checkpoints,
+                                               additional_hash=additional_hash)
+    run_tracking = True
+    logger.debug(f"{hash_hex=}")
+    if output_file_path.exists():
+        try:
+            data = json.load(open(output_file_path, "r"))
+            if "hash" in data:
+                stored_hash = data["hash"]
+                if _compare_composed_hashes(hash_hex, stored_hash):
+                    run_tracking = False
+        except Exception as e:
+            logger.debug(f"Cannot read {Path(output_file_path).name}. Exception: {e}")
+
+    return run_tracking
+
+
+
 def main_tracker_bytetrack(
     trackers_config_and_checkpoints: list,
     # config_file,
@@ -54,63 +132,34 @@ def main_tracker_bytetrack(
     additional_hash: is a string that will be added to the hash of the first frame
     """
 
-    # make peceptual hash of first video frame
-    imgs = mmcv.VideoReader(str(filename))
-    frame_cnt = imgs.frame_cnt
-    first_frame = next(imgs)
-    logger.debug(f"{first_frame.shape=}")
-    phash = tools.phash_image(first_frame)
-    del imgs
+    run_tracking = _should_do_tracking(
+        trackers_config_and_checkpoints, filename,
+        output_file_path, additional_hash=additional_hash)
 
-    hash_hex = phash
     models = []
     for tracker_config, tracker_checkpoint in trackers_config_and_checkpoints:
         # build the model from a config file and a checkpoint file
         model = init_model(tracker_config, str(tracker_checkpoint), device=device)
         models.append(model)
-        hash_hex += make_hash_from_model(tracker_checkpoint)
 
-    hash_hex += additional_hash
 
-    hash_length = len(hash_hex)
-    run_tracking = True
-    logger.debug(f"{hash_hex=}")
-    if output_file_path.exists():
-        try:
-            data = json.load(open(output_file_path, "r"))
-            if "hash" in data:
-                distance = tools.phash_distance(
-                    hash_hex[:hash_length], data["hash"][:hash_length]
-                )
-
-                if (data["hash"][hash_length:] == hash_hex[hash_length:]) and (distance < 0.05):
-                    run_tracking = False
-                    logger.debug(
-                        f"Tracking results already exists ({distance=}). Skipping tracking."
-                    )
-                else:
-                    logger.debug(f"{data['hash']=}, ({distance=})")
-        except Exception as e:
-            logger.debug(f"Cannot read {Path(output_file_path).name}. Exception: {e}")
-
-        # else:
-        #     logger.debug(f"Hashes are different: {data['hash']} != {hash}")
 
     imgs = mmcv.VideoReader(str(filename))
+    frame_cnt = imgs.frame_cnt
 
     if run_tracking:
         progress = tools.ProgressPrinter(frame_cnt)
         tracking_results = {"tracks": [None]*int(frame_cnt), "hash": hash_hex, "class_names": class_names}
-        for i, img in enumerate(imgs):
+        for frame_id, img in enumerate(imgs):
             frame_tr = []
-            if not (i % 50):
+            if not (frame_id % 50):
                 logger.debug(
-                    f"Tracking on frame {i}, {progress.get_progress_string(float(i))}"
+                    f"Tracking on frame {frame_id}, {progress.get_progress_string(float(frame_id))}"
                 )
             for j, tracker in enumerate(models):
 
                 result = inference_mot(
-                    tracker, img, frame_id=i
+                    tracker, img, frame_id=frame_id
                 )
  
                 if result != None:
@@ -125,7 +174,7 @@ def main_tracker_bytetrack(
                             frame_tr.append(bboxes[best_id].tolist()[1:] + [object_class_id + (j * 10)])
             # logger.debug(f"track_bboxes per frame {frame_tr}")
             # tracking_results["tracks"].append(frame_tr)
-            tracking_results["tracks"][i]=frame_tr
+            tracking_results["tracks"][frame_id]=frame_tr
 
         #kick all nones
         tracking_results["tracks"]=[x for x in tracking_results["tracks"] if x is not None]
