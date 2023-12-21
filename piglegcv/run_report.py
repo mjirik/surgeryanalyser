@@ -825,7 +825,7 @@ def draw_track_object(
             (int(box[0]), int(box[1])),
             (int(box[2]), int(box[3])),
             color,
-            thickness,
+            int(thickness * scale),
         )
         text_position = (int(box[0]), int(box[1]))
 
