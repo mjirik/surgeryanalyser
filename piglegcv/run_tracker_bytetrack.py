@@ -17,7 +17,7 @@ from loguru import logger
 from mmtrack.apis import inference_mot, init_model
 import tools
 import numpy as np
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 
 def add_tracking_results(tracking_results, result):
@@ -49,21 +49,15 @@ def make_hash_from_video_and_models(video_file: Path, trackers_config_and_checkp
     # make peceptual hash of first video frame
     imgs = mmcv.VideoReader(str(video_file))
     frame_cnt = imgs.frame_cnt
-    imgs.width
-    imgs.height
     first_frame = next(imgs)
     logger.debug(f"{first_frame.shape=}")
     phash = tools.phash_image(first_frame)
-    del imgs
     hash_hex = phash + "_"
-    hash_length = len(hash_hex)
     hash_hex += "0x%0.4X" % imgs.width
     hash_hex += "0x%0.4X" % imgs.height
     hash_hex += "0x%0.4X" % frame_cnt
     hash_hex += float(imgs.fps).hex()
-
-    models = []
-    hash_length = len(hash_hex)
+    del imgs
 
     for tracker_config, tracker_checkpoint in trackers_config_and_checkpoints:
             hash_hex += make_hash_from_model(tracker_checkpoint)
@@ -95,8 +89,9 @@ def _compare_composed_hashes(hash1:str, hash2:str, phash_distance_threshold=0.05
     return True
 
 
-def _should_do_tracking(
-        trackers_config_and_checkpoints:List, filename:Path, output_file_path:Path, additional_hash:str="") -> bool:
+def _should_do_tracking_based_on_hash(
+        trackers_config_and_checkpoints:List, filename:Path, output_file_path:Path, additional_hash:str=""
+) -> (Tuple)[bool, str]:
 
     hash_hex = make_hash_from_video_and_models(filename, trackers_config_and_checkpoints,
                                                additional_hash=additional_hash)
@@ -112,7 +107,7 @@ def _should_do_tracking(
         except Exception as e:
             logger.debug(f"Cannot read {Path(output_file_path).name}. Exception: {e}")
 
-    return run_tracking
+    return run_tracking, hash_hex
 
 
 
@@ -123,7 +118,6 @@ def main_tracker_bytetrack(
     # checkpoint,
     output_file_path: Path,
     device=None,
-    # score_thr=0.5,
     class_names=[],
     additional_hash="",
 ):
@@ -132,7 +126,7 @@ def main_tracker_bytetrack(
     additional_hash: is a string that will be added to the hash of the first frame
     """
 
-    run_tracking = _should_do_tracking(
+    run_tracking, hash_hex = _should_do_tracking_based_on_hash(
         trackers_config_and_checkpoints, filename,
         output_file_path, additional_hash=additional_hash)
 
@@ -172,8 +166,6 @@ def main_tracker_bytetrack(
                             # if j == 1:
                                 # logger.debug(f"tracker[{j}], {result['tracks_boxes']=}")
                             frame_tr.append(bboxes[best_id].tolist()[1:] + [object_class_id + (j * 10)])
-            # logger.debug(f"track_bboxes per frame {frame_tr}")
-            # tracking_results["tracks"].append(frame_tr)
             tracking_results["tracks"][frame_id]=frame_tr
 
         #kick all nones
