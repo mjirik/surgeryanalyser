@@ -78,8 +78,8 @@ def _compare_composed_hashes(hash1:str, hash2:str, phash_distance_threshold=0.05
         return False
 
     distance = tools.phash_distance(hash1split[0], hash2split[0])
-    logger.debug(f"{hash1=}, ({distance=})")
-
+    logger.debug(f"hash {distance=}")
+    logger.debug(f"{hash1=}, {hash2=}")
     if distance > phash_distance_threshold:
         return False
 
@@ -96,7 +96,6 @@ def _should_do_tracking_based_on_hash(
     hash_hex = make_hash_from_video_and_models(filename, trackers_config_and_checkpoints,
                                                additional_hash=additional_hash)
     run_tracking = True
-    logger.debug(f"{hash_hex=}")
     if output_file_path.exists():
         try:
             data = json.load(open(output_file_path, "r"))
@@ -107,6 +106,7 @@ def _should_do_tracking_based_on_hash(
         except Exception as e:
             logger.debug(f"Cannot read {Path(output_file_path).name}. Exception: {e}")
 
+    logger.debug(f"{hash_hex=}, {run_tracking=}")
     return run_tracking, hash_hex
 
 
