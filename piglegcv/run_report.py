@@ -19,6 +19,7 @@ import scipy
 import scipy.signal
 from tools import draw_bbox_into_image
 import tools
+from typing import List
 
 
 try:
@@ -211,7 +212,7 @@ def create_heatmap_report_plt(
 
 
 # ds_threshold [m]
-def create_pdf_report(
+def create_pdf_report_for_one_tool(
     frame_id,
     data_pixel,
     image,
@@ -508,8 +509,8 @@ def create_video_report_figure(
     source_fps,
     pix_size,
     qr_init: bool,
-    object_colors,
-    object_names,
+    object_colors: List[str],
+    object_names: List[str],
     video_size,
     ds_threshold=0.1,
     dpi=300,
@@ -549,6 +550,7 @@ def create_video_report_figure(
     for frame_id, data_pixel, object_color, object_name in zip(
         frame_ids, data_pixels, object_colors, object_names
     ):
+        logger.debug(f"{object_name=}, {frame_id}")
         if frame_id != []:
             data_pixel = np.array(data_pixel)
             data = pix_size * data_pixel
@@ -586,7 +588,7 @@ def create_video_report_figure(
                 linewidth=0.2,
             )
 
-            print(object_color, object_name)
+            logger.debug(f"{object_color=}, {object_name=}")
 
     # Draw vlines on scissors QR code visible
     logger.debug(f"{cut_frames=}")
@@ -1161,7 +1163,7 @@ def main_report(
                                 break
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
 
-                    res = create_pdf_report(
+                    res = create_pdf_report_for_one_tool(
                         frame_id[frame_idx_start:frame_idx_stop],
                         data_pixel[frame_idx_start:frame_idx_stop],
                         img_first,
