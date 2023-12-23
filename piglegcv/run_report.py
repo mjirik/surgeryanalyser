@@ -743,11 +743,10 @@ def bboxes_to_points(outputdir: str, confidence_score_thr: float = 0.0):
     json_metadata = save_json(
         {
             "frame_ids": frame_ids_list,
-            # TODO remove data_pixels_0..3
-            "data_pixels_0": np.asarray(data_pixels[0]).tolist(),
-            "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
-            "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
-            "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
+            # "data_pixels_0": np.asarray(data_pixels[0]).tolist(),
+            # "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
+            # "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
+            # "data_pixels_3": np.asarray(data_pixels[3]).tolist(),
             "data_pixels": data_pixels_list,
         },
         "{}/tracks_points.json".format(outputdir),
