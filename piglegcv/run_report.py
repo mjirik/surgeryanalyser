@@ -17,7 +17,10 @@ import seaborn as sns
 from pathlib import Path
 import scipy
 import scipy.signal
-from tools import draw_bbox_into_image
+try:
+    from tools import draw_bbox_into_image
+except ImportError:
+    from .tools import draw_bbox_into_image
 import tools
 from typing import List
 
@@ -517,13 +520,19 @@ def create_video_report_figure(
     cut_frames=None,
     visualization_unit="cm",
 ):
+    # frame_ids[:4],
+    # data_pixels[:4],
+    # fps,
+    # pix_size,
+    # is_qr_detected,
 
     if cut_frames is None:
         cut_frames = []
-    ##################
     logger.debug(f"{cut_frames=}")
     logger.debug(f"{object_names=}")
     logger.debug(f"{object_colors=}")
+    # logger.debug(f"{frame_ids=}")
+    # logger.debug(f"{data_pixels=}")
     ## second graph
     # fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
     fig = plt.figure()
@@ -550,7 +559,7 @@ def create_video_report_figure(
     for frame_id, data_pixel, object_color, object_name in zip(
         frame_ids, data_pixels, object_colors, object_names
     ):
-        logger.debug(f"{object_name=}, {frame_id}")
+        logger.debug(f"{object_name=}, {frame_id=}, {data_pixel=}")
         if frame_id != []:
             data_pixel = np.array(data_pixel)
             data = pix_size * data_pixel
@@ -576,7 +585,6 @@ def create_video_report_figure(
             # L = np.sum(ds)
             # T = np.sum(dt)
             ds_cumsum = np.cumsum(ds)
-            logger.debug(f"{object_color=}, {object_name=}")
             if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
                 ds_max = ds_cumsum[-1]
             ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
@@ -589,9 +597,10 @@ def create_video_report_figure(
             )
 
             logger.debug(f"{object_color=}, {object_name=}")
+            # logger.debug(f"{t=}, {ds_cumsum=}")
 
     # Draw vlines on scissors QR code visible
-    logger.debug(f"{cut_frames=}")
+    # logger.debug(f"{cut_frames=}")
     t = (1.0 / source_fps) * np.array(cut_frames)
     for frt in t:
         plt.axvline(frt, c="m")
@@ -699,17 +708,18 @@ def bboxes_to_points(outputdir: str, confidence_score_thr: float = 0.0):
     json_data = load_json("{}/tracks.json".format(outputdir))
     sort_data = json_data["tracks"] if "tracks" in json_data else []
 
-    data_pixels = [[]] * 15
-    frame_ids = [[]] * 15
+    # there will be 15 classes. For each class there will be list of points and list of frame_ids
+    data_pixels = [[] for _ in range(15)]
+    frame_ids = [[] for _ in range(15)]
     N = len(sort_data)
     logger.debug(f"Sort data N={N}")
+    logger.debug(f"{data_pixels=}")
 
-    for i, sort_data_i in enumerate(
+    for i, bboxes_in_frame in enumerate(
         sort_data
     ):  # co snimek to jedna polozka, i prazdna []
-        frame = sort_data_i
         # print(frame)
-        for track_object in frame:
+        for track_object in bboxes_in_frame:
             if len(track_object) >= 6:
                 box = np.array(track_object[0:4])
                 position = np.array(
@@ -722,14 +732,18 @@ def bboxes_to_points(outputdir: str, confidence_score_thr: float = 0.0):
                 if confidence_score > confidence_score_thr:
                     data_pixels[class_id].append(position)
                     frame_ids[class_id].append(i)
+                    # logger.debug(f"new frame_id[{class_id}] = {i}")
+                    # logger.debug(f"{len(frame_ids)=}, {len(frame_ids[class_id])=}")
 
-    frame_ids_list = np.asarray(frame_ids).tolist()
+    # frame_ids_list = np.asarray(frame_ids).tolist()
+    frame_ids_list = frame_ids
     data_pixels_list = [
         np.asarray(data_pixels[i]).tolist() for i in range(len(data_pixels))
     ]
     json_metadata = save_json(
         {
             "frame_ids": frame_ids_list,
+            # TODO remove data_pixels_0..3
             "data_pixels_0": np.asarray(data_pixels[0]).tolist(),
             "data_pixels_1": np.asarray(data_pixels[1]).tolist(),
             "data_pixels_2": np.asarray(data_pixels[2]).tolist(),
