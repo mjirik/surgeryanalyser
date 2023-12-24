@@ -510,7 +510,7 @@ def create_video_report_figure(
     frame_ids,
     data_pixels,
     source_fps,
-    pix_size,
+    pix_size:Optional[float],
     qr_init: bool,
     object_colors: List[str],
     object_names: List[str],
@@ -525,6 +525,10 @@ def create_video_report_figure(
     # fps,
     # pix_size,
     # is_qr_detected,
+
+    if pix_size is None:
+        pix_size = 1.0
+        logger.debug("Variable pix_size is None. Setting pix_size=1.0")
 
     if cut_frames is None:
         cut_frames = []
@@ -556,14 +560,14 @@ def create_video_report_figure(
     ax2.set_ylabel(vel_label)
 
     ds_max = 0
-    for frame_id, data_pixel, object_color, object_name in zip(
+    for frame_ids_per_class, data_pixel_per_class, object_color, object_name in zip(
         frame_ids, data_pixels, object_colors, object_names
     ):
-        logger.debug(f"{object_name=}, {frame_id=}, {data_pixel=}")
-        if frame_id != []:
-            data_pixel = np.array(data_pixel)
-            data = pix_size * data_pixel
-            t = 1.0 / source_fps * np.array(frame_id)
+        logger.debug(f"{object_name=}, {len(frame_ids_per_class)=}, {len(data_pixel_per_class)=}")
+        if frame_ids_per_class != []:
+            data_pixel_per_class = np.array(data_pixel_per_class)
+            data = pix_size * data_pixel_per_class
+            t = 1.0 / source_fps * np.array(frame_ids_per_class)
             # t_i = 1.0/source_fps * i
             dxy = data[1:] - data[:-1]
             ds = np.sqrt(np.sum(dxy * dxy, axis=1))
