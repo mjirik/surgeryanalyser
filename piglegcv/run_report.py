@@ -670,7 +670,13 @@ def _scissors_frames(scissors_frames: dict, fps, peak_distance_s=10) -> list:
     return peaks.tolist()
 
 
-def insert_ruler_in_image(img, pixelsize, ruler_size=50, resize_factor=1.0, unit="mm"):
+def insert_ruler_in_image(img, pixelsize:float, ruler_size:float=50, resize_factor=1.0, unit:str="mm"):
+    """Add ruler in the image.
+    pixelsize: [lenght_unit/px]
+    ruler_size: [length_unit]
+    unit: length_unit text to be displayed
+
+    """
     image_size = np.asarray(img.shape[:2])
     # start_point = np.asarray(image_size) * 0.90
     # start_point = np.array([10,10])
@@ -1119,15 +1125,16 @@ def main_report(
             im_graph = im_graph[:, :, :3]
             if is_qr_detected:
                 if ruler_size_mm is None:
-                    ruler_size_mm = 5 if meta["is_microsurgery"] else 50
+                    ruler_size_mm = 10 if meta["is_microsurgery"] else 50
                 if visualization_length_unit is None:
                     visualization_length_unit = "mm" if meta["is_microsurgery"] else "cm"
+                pixelsize=unit_conversion(pix_size, "m", visualization_length_unit)
+                ruler_size = int(unit_conversion(ruler_size_mm, "mm", visualization_length_unit))
+                logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
                 img = insert_ruler_in_image(
                     img,
-                    pixelsize=unit_conversion(pix_size, "m", visualization_length_unit),
-                    ruler_size=int(
-                        unit_conversion(ruler_size_mm, "mm", visualization_length_unit)
-                    ),
+                    pixelsize=pixelsize,
+                    ruler_size=ruler_size,
                     unit=visualization_length_unit,
                 )
             im = np.concatenate((img, im_graph), axis=concat_axis)
