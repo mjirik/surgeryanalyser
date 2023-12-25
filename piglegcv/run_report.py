@@ -18,10 +18,11 @@ from pathlib import Path
 import scipy
 import scipy.signal
 try:
+    import tools
     from tools import draw_bbox_into_image
 except ImportError:
     from .tools import draw_bbox_into_image
-import tools
+    from . import tools
 from typing import List
 
 
@@ -868,6 +869,32 @@ def draw_track_object(
     return img
 
 
+class AddRulerInTheFrame(object):
+    def __init__(self, frame_shape, pix_size_m:float, ruler_size:float, unit:str, resize_factor=1.0):
+        self.frame_shape = frame_shape
+        # self.pix_size_m = pix_size_m
+        # self.ruler_size = ruler_size
+        self.resize_factor = resize_factor
+        self.unit = unit
+        self.mask = np.zeros(frame_shape, dtype=np.uint8)
+
+        pixelsize = tools.unit_conversion(pix_size_m, "m", unit)
+        # ruler_size = unit_conversion(ruler_size, "mm", unit)
+
+        self.mask = insert_ruler_in_image(
+            self.mask,
+            pixelsize=pixelsize,
+            ruler_size=ruler_size,
+            unit=unit,
+        )
+
+    def add_in_the_frame(self, frame:np.ndarray):
+        logger.debug(f"{frame.shape=}, {self.mask.shape=}")
+        frame[self.mask > 0] = self.mask[self.mask > 0]
+        return frame
+
+
+
 def main_report(
         filename,
         outputdir,
@@ -879,7 +906,7 @@ def main_report(
         expected_video_width=1110,
         expected_video_height=420,
         visualization_length_unit=None,
-        ruler_size_mm=None,
+        ruler_size_in_units=None,
         confidence_score_thr=0.0,
         oa_bbox_linecolor=[0, 255, 128],
         cut_frames: list = [],
@@ -971,6 +998,21 @@ def main_report(
             int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         ]
+
+        shape = (size_input_video[1], size_input_video[0], 3)
+
+        meta_qr = meta["qr_data"]
+        pix_size = meta_qr["pix_size"]
+
+        if ruler_size_in_units is None:
+            ruler_size_in_units = 10 if meta["is_microsurgery"] else 50
+        if visualization_length_unit is None:
+            visualization_length_unit = "mm" if meta_qr["is_microsurgery"] else "cm"
+        # logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
+
+        ruler_adder = AddRulerInTheFrame(shape, pix_size_m=pix_size,
+                                                    ruler_size=ruler_size_in_units,
+                                                    unit=visualization_length_unit)
 
         if concat_axis == 1:
             size_output_fig = [
@@ -1124,19 +1166,21 @@ def main_report(
             ax.lines.pop(-1)
             im_graph = im_graph[:, :, :3]
             if is_qr_detected:
-                if ruler_size_mm is None:
-                    ruler_size_mm = 10 if meta["is_microsurgery"] else 50
-                if visualization_length_unit is None:
-                    visualization_length_unit = "mm" if meta["is_microsurgery"] else "cm"
-                pixelsize=unit_conversion(pix_size, "m", visualization_length_unit)
-                ruler_size = int(unit_conversion(ruler_size_mm, "mm", visualization_length_unit))
-                logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
-                img = insert_ruler_in_image(
-                    img,
-                    pixelsize=pixelsize,
-                    ruler_size=ruler_size,
-                    unit=visualization_length_unit,
-                )
+
+                # if ruler_size_mm is None:
+                #     ruler_size_mm = 10 if meta["is_microsurgery"] else 50
+                # if visualization_length_unit is None:
+                #     visualization_length_unit = "mm" if meta["is_microsurgery"] else "cm"
+                # pixelsize=unit_conversion(pix_size, "m", visualization_length_unit)
+                # ruler_size = int(unit_conversion(ruler_size_mm, "mm", visualization_length_unit))
+                # logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
+                img = ruler_adder.add_in_the_frame(img)
+                # img = insert_ruler_in_image(
+                #     img,
+                #     pixelsize=pixelsize,
+                #     ruler_size=ruler_size,
+                #     unit=visualization_length_unit,
+                # )
             im = np.concatenate((img, im_graph), axis=concat_axis)
             if video_frame_first is None:
                 video_frame_first = im.copy()
