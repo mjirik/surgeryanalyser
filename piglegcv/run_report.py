@@ -23,7 +23,7 @@ try:
 except ImportError:
     from .tools import draw_bbox_into_image
     from . import tools
-from typing import List
+from typing import List, Optional, Tuple
 
 
 try:
@@ -870,27 +870,35 @@ def draw_track_object(
 
 
 class AddRulerInTheFrame(object):
-    def __init__(self, frame_shape, pix_size_m:float, ruler_size:float, unit:str, resize_factor=1.0):
+    """Add ruler in the image.
+    If pix_size_m is None, no ruler is added.
+    """
+    def __init__(self, frame_shape, pix_size_m:Optional[float], ruler_size:float, unit:str, resize_factor=1.0):
+        """
+
+        """
         self.frame_shape = frame_shape
-        # self.pix_size_m = pix_size_m
+        self.pix_size_m = pix_size_m
         # self.ruler_size = ruler_size
         self.resize_factor = resize_factor
         self.unit = unit
         self.mask = np.zeros(frame_shape, dtype=np.uint8)
 
-        pixelsize = tools.unit_conversion(pix_size_m, "m", unit)
-        # ruler_size = unit_conversion(ruler_size, "mm", unit)
+        if pix_size_m is not None:
+            pixelsize = tools.unit_conversion(pix_size_m, "m", unit)
+            # ruler_size = unit_conversion(ruler_size, "mm", unit)
 
-        self.mask = insert_ruler_in_image(
-            self.mask,
-            pixelsize=pixelsize,
-            ruler_size=ruler_size,
-            unit=unit,
-        )
+            self.mask = insert_ruler_in_image(
+                self.mask,
+                pixelsize=pixelsize,
+                ruler_size=ruler_size,
+                unit=unit,
+            )
 
     def add_in_the_frame(self, frame:np.ndarray):
-        logger.debug(f"{frame.shape=}, {self.mask.shape=}")
-        frame[self.mask > 0] = self.mask[self.mask > 0]
+        if self.pix_size_m is not None:
+            logger.debug(f"{frame.shape=}, {self.mask.shape=}")
+            frame[self.mask > 0] = self.mask[self.mask > 0]
         return frame
 
 
