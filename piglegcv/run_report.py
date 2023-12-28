@@ -1007,20 +1007,16 @@ def main_report(
             int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         ]
 
-        shape = (size_input_video[1], size_input_video[0], 3)
 
         meta_qr = meta["qr_data"]
         pix_size = meta_qr["pix_size"]
 
         if ruler_size_in_units is None:
-            ruler_size_in_units = 10 if meta["is_microsurgery"] else 50
+            ruler_size_in_units = 10 if meta["is_microsurgery"] else 5
         if visualization_length_unit is None:
             visualization_length_unit = "mm" if meta_qr["is_microsurgery"] else "cm"
         # logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
 
-        ruler_adder = AddRulerInTheFrame(shape, pix_size_m=pix_size,
-                                                    ruler_size=ruler_size_in_units,
-                                                    unit=visualization_length_unit)
 
         if concat_axis == 1:
             size_output_fig = [
@@ -1050,6 +1046,11 @@ def main_report(
                 int(expected_video_width),
                 size_output_img[1] + size_output_fig[1],
             ]
+
+        shape = (size_output_img[1], size_output_img[0], 3)
+        ruler_adder = AddRulerInTheFrame(shape, pix_size_m=pix_size * resize_factor,
+                                         ruler_size=ruler_size_in_units,
+                                         unit=visualization_length_unit)
 
         logger.debug(
             f"size_input_video: {size_input_video}, size_output_video: {size_output_video}, size_output_img: {size_output_img}, resize_factor: {resize_factor}"
