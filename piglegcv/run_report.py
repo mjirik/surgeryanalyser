@@ -897,7 +897,7 @@ class AddRulerInTheFrame(object):
 
     def add_in_the_frame(self, frame:np.ndarray):
         if self.pix_size_m is not None:
-            logger.debug(f"{frame.shape=}, {self.mask.shape=}")
+            # logger.trace(f"{frame.shape=}, {self.mask.shape=}")
             frame[self.mask > 0] = self.mask[self.mask > 0]
         return frame
 
@@ -1108,9 +1108,13 @@ def main_report(
             if img_first is None:
                 img_first = img.copy()
 
-            img = skimage.transform.resize(
-                img, size_output_img[::-1], preserve_range=True
-            ).astype(img.dtype)
+            # img_skimage = skimage.transform.resize(
+            #     img, size_output_img[::-1], preserve_range=True
+            # ).astype(img.dtype)
+            # resize with cv2
+            img = cv2.resize(img, size_output_img, interpolation=cv2.INTER_AREA)
+            # logger.debug(f"{img.shape=}, {img_skimage.shape=}")
+
             if relative_presence.operating_area_bbox is not None:
                 oa_bbox_resized = np.asarray(
                     relative_presence.operating_area_bbox.copy()
@@ -1166,9 +1170,12 @@ def main_report(
             im_graph = plot3(fig)
             # fix the video size if it is not correct
             # if not im_graph.shape[:2] == tuple(size_output_frame[::-1]):
-            im_graph = skimage.transform.resize(
-                im_graph, size_output_fig[::-1], preserve_range=True
-            ).astype(img.dtype)
+            # im_graph = skimage.transform.resize(
+            #     im_graph, size_output_fig[::-1], preserve_range=True
+            # ).astype(img.dtype)
+            im_graph = cv2.resize(
+                im_graph, size_output_fig, interpolation=cv2.INTER_AREA
+            )
             im_graph = cv2.cvtColor(
                 im_graph, cv2.COLOR_RGB2BGR
             )  # matplotlib generate RGB channels but cv2 BGR
