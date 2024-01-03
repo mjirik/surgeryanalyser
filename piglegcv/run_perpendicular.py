@@ -161,7 +161,7 @@ def get_frame_to_process(
     """
     if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
-        img = cv2.imread(filename)
+        img = cv2.imread(str(filename))
         if return_metadata:
             return np.asarray(img), {"filename_full": str(filename)}
 
