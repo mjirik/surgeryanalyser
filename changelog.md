@@ -2,6 +2,7 @@
 
 Actual version: "0.0.0"
 
+* [added] Annotation of the mediafile
 
 ## 2023-12
 

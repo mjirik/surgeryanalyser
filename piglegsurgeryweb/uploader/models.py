@@ -50,6 +50,18 @@ class UploadedFile(models.Model):
     def __str__(self):
         return str(Path(self.mediafile.name).name)
 
+class MediaFileAnnotation(models.Model):
+    uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
+    annotation = models.TextField()
+    # title = models.CharField(max_length=255, blank=True, default="")
+    created_at = models.DateTimeField("Created at", default=datetime.now)
+    updated_at = models.DateTimeField("Updated at", default=datetime.now)
+    annotator = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
+    stars = models.IntegerField(default=-1)
+
+    def __str__(self):
+        # return first line of annotation
+        return str(self.annotation.split("\n")[0]) + (": " + str(self.annotator)) if self.annotator else ""
 
 class BitmapImage(models.Model):
     server_datafile = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)

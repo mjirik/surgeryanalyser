@@ -1,6 +1,25 @@
 {% extends 'base.html' %}
 
 {%  block head %}
+    <style>
+        .star-rating {
+            direction: rtl; /* Reverse the order of the radio buttons */
+        }
+        .star-rating input[type="radio"] {
+            display: none; /* Hide the radio buttons */
+        }
+        .star-rating label {
+            color: #ccc; /* Default star color */
+            font-size: 24px;
+            padding: 0 5px;
+            cursor: pointer;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input[type="radio"]:checked ~ label {
+            color: gold; /* Highlighted and selected star color */
+        }
+    </style>
 <script>
     $(function () {
         $('.pop').on('click', function () {
@@ -29,20 +48,6 @@
     <H2> Report: {{mediafile}} </H2>
     {% for videofile_url in videofiles_url %}
     <div class="pt-3">
-        <!--        <video width="320" height="240" controls>-->
-
-        <!--                <div class="embed-responsive embed-responsive-16by9">-->
-        <!--                <video controls autoplay muted>-->
-        <!--                    <source src="{{ videofile_url }}" type="video/mp4">-->
-        <!--                    Your browser does not support the video tag.-->
-        <!--                </video>-->
-        <!--                </div>-->
-
-        <!--                        width="640"-->
-        <!--                        height="264"-->
-        <!--                <div class="embed-responsive embed-responsive-16by9">-->
-        <!--                <div class="embed-responsive">-->
-        <!--                        poster="{{ image_list.0.bitmap_image.url }}"-->
         <video
                 id="my-video"
                 class="video-js embed-responsive"
@@ -67,6 +72,27 @@
 
     </div>
     {% endfor %}
+
+    <!-- Button to add current time-position -->
+
+<!-- Text area to display time-positions -->
+{#<textarea id="time-positions" rows="4" cols="50"></textarea>#}
+
+    <div>
+        <h3>Annotation</h3>
+        <button id="add-time-btn" class="btn btn-secondary">Add Current Time</button>
+            <form method="post" >
+    {% csrf_token %}
+    {{ form.annotation }}
+    <div class="star-rating">
+        {% for choice in form.stars %}
+            {{ choice.tag }}
+            <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
+        {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    </div>
     <div>
         <h3>Statistics</h3>
         <ul>
@@ -144,5 +170,28 @@
     {% endif %}
 </div>
 
-<script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>
+{#<script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>#}
+    <script>
+
+
+        document.getElementById('add-time-btn').addEventListener('click', function() {
+            var video = document.getElementById('my-video');
+            var currentTime = video.currentTime; // Get current time in seconds
+
+            // Format the time correctly
+            var hours = Math.floor(currentTime / 3600);
+            var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+            var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+
+            var formattedTime =
+                (hours < 10 ? "0" + hours : hours) + ":" +
+                (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                (seconds < 10 ? "0" + seconds : seconds);
+
+            var textArea = document.getElementById('id_annotation');
+            textArea.value += (textArea.value ? "\n" : "") + formattedTime + " "; // Append formatted time to text area
+            textArea.focus(); // Set focus on the text area
+            textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
+        });
+    </script>
 {% endblock %}

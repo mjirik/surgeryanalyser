@@ -24,6 +24,9 @@ import re
 from django.contrib.auth import logout
 from typing import Optional
 
+from .forms import AnnotationForm
+from .models import MediaFileAnnotation
+
 
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
@@ -253,31 +256,8 @@ def owners_reports_list(request, owner_hash: str):
     return render(request, "uploader/report_list.html", context)
 
 
-def web_report(request, filename_hash: str):
-    # fn = get_outputdir_from_hash(hash)
-    serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
-    if (
-            not bool(serverfile.zip_file.name)
-            or not Path(serverfile.zip_file.path).exists()
-    ):
-        logger.debug("Zip file name does not exist")
-        # zip_file does not exists
 
-        context = {
-            "headline": "File not exists",
-            "text": "Requested file is probably under processing now.",
-            "next": request.GET["next"]
-            if "next" in request.GET
-            else "/uploader/upload/",
-            "next_text": "Back",
-        }
-        if request.user.is_authenticated:
-            context["key_value"] = _get_logs_as_html(serverfile)
-        logger.debug(context)
-        logger.debug(request)
-        logger.debug(request.path)
-        return render(request, "uploader/message.html", context)
-        # return redirect("uploader:message", next=request.path)
+def _prepare_context_for_web_report(request, serverfile:UploadedFile):
     fn = Path(serverfile.zip_file.path)
     logger.debug(fn)
     logger.debug(fn.exists())
@@ -369,6 +349,72 @@ def web_report(request, filename_hash: str):
         "videofiles_url": videofiles_url,
         "results": results,
     }
+
+    return context
+
+def _prepare_context_if_web_report_not_exists(request, serverfile:UploadedFile):
+    logger.debug("Zip file name does not exist")
+    # zip_file does not exists
+    context = {
+        "headline": "File not exists",
+        "text": "Requested file is probably under processing now.",
+        "next": request.GET["next"]
+        if "next" in request.GET
+        else "/uploader/upload/",
+        "next_text": "Back",
+    }
+    if request.user.is_authenticated:
+        context["key_value"] = _get_logs_as_html(serverfile)
+    logger.debug(context)
+    logger.debug(request)
+    logger.debug(request.path)
+    return context
+
+
+def web_report(request, filename_hash: str):
+    # fn = get_outputdir_from_hash(hash)
+    serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    if (
+            not bool(serverfile.zip_file.name)
+            or not Path(serverfile.zip_file.path).exists()
+    ):
+        context = _prepare_context_if_web_report_not_exists(request, serverfile)
+        return render(request, "uploader/message.html", context)
+        # return redirect("uploader:message", next=request.path)
+    context = _prepare_context_for_web_report(request, serverfile)
+
+    # evaluate annotation form
+    if request.method == "POST":
+
+        form = AnnotationForm(request.POST)
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            if request.user.is_authenticated:
+                annotator = _get_owner(request.user.email)
+            else:
+                annotator = None
+
+            annotation = MediaFileAnnotation(
+                uploaded_file=serverfile,
+                annotation=form.cleaned_data["annotation"],
+                stars=form.cleaned_data["stars"],
+                annotator=annotator,
+            )
+            annotation.save()
+            return redirect(request.path)
+    else:
+
+        uploaded_file_annotations = serverfile.mediafileannotation_set.first()
+        if uploaded_file_annotations :
+            form = AnnotationForm(instance=uploaded_file_annotations)
+        else:
+            form = AnnotationForm()
+        logger.debug("created empty form")
+    logger.debug(f"form={form}")
+    context["form"] = form
+
     return render(request, "uploader/web_report.html", context)
 
 
@@ -486,6 +532,16 @@ def update_owner(uploadedfile: UploadedFile) -> Owner:
         uploadedfile.owner = owner
         uploadedfile.save()
 
+    return owner
+
+def _get_owner(owner_email:str):
+    owners = Owner.objects.filter(email=owner_email)
+    if len(owners) == 0:
+        owner = Owner(email=owner_email, hash=_hash())
+        owner.save()
+        # create one
+    else:
+        owner = owners[0]
     return owner
 
 
