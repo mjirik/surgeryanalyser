@@ -16,7 +16,7 @@ from typing import Optional
 
 
 def get_bboxes(img, device="cpu", image_file:Optional[Path]=None,
-               calibration_micro_thr:float=0.5
+               
               ):
     single_model_path = (
         Path(__file__).parent / "resources/single_image_detector/mdl_sid_2.pth"
@@ -27,16 +27,26 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None,
     single_image_model.cfg = _model["my_params"]
 
     bboxes, masks = inference_detector(single_image_model, img)
-    if image_file is not None:
-        logger.debug("saving single_image_detector result")
-        single_image_model.show_result(
-            img,
-            bboxes,
-            # masks,
-            # score_thr=0.3,
-            show=False,
-            out_file=str(image_file)
-        )
+    img_results = None
+    # if image_file is not None:
+    logger.debug("saving single_image_detector result")
+    img_results = single_image_model.show_result(
+        img,
+        bboxes,
+        # masks,
+        # score_thr=0.3,
+        show=False,
+        out_file=str(image_file) if image_file is not None else None
+    )
+        
+    return bboxes, masks, img_results
+        
+def interpret_bboxes(
+    bboxes:list, masks,
+    calibration_micro_thr:float=0.5,
+    ia_threshold:float = 0.8,
+    scene_area_threshold:float = 0.35
+):
     # -1: incision area
     # 0: scene area
     # 1: ?
@@ -50,21 +60,23 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None,
     bboxes_incision_area = bboxes[0]
     bboxes_incision_area = tools.sort_bboxes(bboxes_incision_area)
     
-    ia_threshold = 0.8
-    ia_filter = bboxes_incision_area[:, -1] > ia_threshold
-    bboxes_incision_area = bboxes_incision_area[ia_filter]
+    bboxes_incision_area - tools.filter_bboxes_by_confidence(bboxes_incision_area, ia_threshold)
     
 
-    scene_area_threshold = 0.35
-    scene_area_bboxes = bboxes[1]
-    scene_area_bboxes = tools.sort_bboxes(scene_area_bboxes)
-    if scene_area_bboxes.shape[0] > 0:
-        bbox_scene_area = scene_area_bboxes[0]
-        if bbox_scene_area[-1] < scene_area_threshold:
-            bbox_scene_area = None
-
+    scene_area_bboxes = tools.filter_bboxes_by_confidence(bboxes[1], scene_area_threshold)
+    if len(scene_area_bboxes) > 0:
+        bbox_scene_area = tools.union_bboxes(scene_area_bboxes)
     else:
         bbox_scene_area = None
+    # scene_area_bboxes = bboxes[1]
+    # scene_area_bboxes = tools.sort_bboxes(scene_area_bboxes)
+#     if scene_area_bboxes.shape[0] > 0:
+#         bbox_scene_area = scene_area_bboxes[0]
+#         if bbox_scene_area[-1] < scene_area_threshold:
+#             bbox_scene_area = None
+
+#     else:
+#         bbox_scene_area = None
 
     qr_threshold = 0.85
     if bboxes[3].shape[0] > 0:
@@ -94,7 +106,6 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None,
     #     bboxes_qr = bboxes[3][:2] if bboxes[3].shape[0] > 0 else None
 
 
-
     return bboxes_incision_area, bbox_scene_area, bboxes_qr, side_length, bboxes_calibration_micro, micro_side_length
 
 
@@ -102,8 +113,14 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", image_file:
     img = np.asarray(img)
     width = img.shape[1]
     # Todo Viktora
-    bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length, bboxes_calibration_micro, micro_side_length = get_bboxes(
-        img, device=device, image_file=image_file
+    
+    bboxes, masks, _ = get_bboxes(
+            img, device=device, image_file=image_file
+        )
+    
+    bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length, bboxes_calibration_micro, micro_side_length = interpret_bboxes(
+        bboxes, masks
+        
     )
 
     if qreader is None:

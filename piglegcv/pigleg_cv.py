@@ -112,6 +112,13 @@ class DoComputerVision:
         self.device = device
         self.n_stitches: int = int(n_stitches)
         self.results = None
+        self.is_video:bool = False if Path(self.filename).suffix.lower() in (
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".tiff",
+                ".tif",
+            ) else True
 
         logger.debug(f"{self.is_microsurgery=}")
 
@@ -330,25 +337,32 @@ class DoComputerVision:
     def _get_frame_to_process_ideally_with_incision(
         self, filename, return_qrdata=False, n_tries=None
     ):
-        frame_from_end = 0
-        for i in range(10):
-            frame, local_meta = get_frame_to_process(
-                str(filename),
-                n_tries=n_tries,
-                return_metadata=True,
-                reference_frame_position_from_end=frame_from_end,
-            )
-            qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
-            if len(qr_data["incision_bboxes"]) > 0:
-                logger.debug(
-                    f"Found incision bbox in frame {frame_from_end} from the end."
+        if self.is_video:
+            frame_from_end = 0
+            for i in range(10):
+                frame, local_meta = get_frame_to_process(
+                    str(filename),
+                    n_tries=n_tries,
+                    return_metadata=True,
+                    reference_frame_position_from_end=frame_from_end,
                 )
-                break
-            else:
-                frame_from_end = local_meta["reference_frame_position_from_end"] + 10
-        logger.debug(
-            f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
-        )
+                qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
+                if len(qr_data["incision_bboxes"]) > 0:
+                    logger.debug(
+                        f"Found incision bbox in frame {frame_from_end} from the end."
+                    )
+                    break
+                else:
+                    frame_from_end = local_meta["reference_frame_position_from_end"] + 10
+            logger.debug(
+                f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
+            )
+        else:
+            frame, qr_data = get_frame_to_process(
+                    str(filename),
+                    n_tries=n_tries,
+                    return_metadata=True,
+            )
         if return_qrdata:
             return frame, qr_data
         else:
@@ -356,9 +370,12 @@ class DoComputerVision:
 
     def get_parameters_for_crop_rotate_rescale(self):
         logger.debug(f"device={self.device}")
-        self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
-            self.filename_original, return_qrdata=True
-        )
+        if self.is_video:
+            self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
+                self.filename_original, return_qrdata=True
+            )
+        else:
+            frame, local_meta = get_frame_to_process(self.filename_original)
         qr_data["qr_scissors_frames"] = []
         imgs, bboxes = run_incision_detection(self.frame, device=self.device)
         qr_data["incision_bboxes_old"] = bboxes.tolist()
