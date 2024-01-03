@@ -193,6 +193,19 @@ def make_bbox_square_and_larger(bbox, multiplicator=1.0):
     ]
     return newbbox
 
+def filter_bboxes_by_confidence(bboxes, confidence_threshold):
+    """Filter bboxes by confidence threshold."""
+    confidence_filter = bboxes[:, 4] > confidence_threshold
+    return bboxes[confidence_filter]
+
+def union_bboxes(bboxes):
+    """Make union of all bboxes."""
+    x1 = np.min(bboxes[:, 0])
+    y1 = np.min(bboxes[:, 1])
+    x2 = np.max(bboxes[:, 2])
+    y2 = np.max(bboxes[:, 3])
+    confidence = np.mean(bboxes[:, 4])
+    return np.asarray([x1, y1, x2, y2, confidence])
 
 def sort_bboxes(bboxes):
     """Sort bboxes by their confidence score."""
