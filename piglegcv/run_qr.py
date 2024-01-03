@@ -60,7 +60,7 @@ def interpret_bboxes(
     bboxes_incision_area = bboxes[0]
     bboxes_incision_area = tools.sort_bboxes(bboxes_incision_area)
     
-    bboxes_incision_area - tools.filter_bboxes_by_confidence(bboxes_incision_area, ia_threshold)
+    bboxes_incision_area = tools.filter_bboxes_by_confidence(bboxes_incision_area, ia_threshold)
     
 
     scene_area_bboxes = tools.filter_bboxes_by_confidence(bboxes[1], scene_area_threshold)
