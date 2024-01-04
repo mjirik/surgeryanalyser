@@ -3,7 +3,7 @@
 # Always prefer setuptools over distutils
 from os import path
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 setup(

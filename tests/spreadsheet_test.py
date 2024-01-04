@@ -1,11 +1,12 @@
-import pytest
+from pathlib import Path
+from typing import Union
 
 # importing the required libraries
 import gspread
 import pandas as pd
+import pytest
 from oauth2client.service_account import ServiceAccountCredentials
-from pathlib import Path
-from typing import Union
+
 from piglegsurgeryweb.uploader.data_tools import google_spreadsheet_append
 
 

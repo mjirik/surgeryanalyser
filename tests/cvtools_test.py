@@ -1,7 +1,9 @@
-import pytest
-from piglegcv import tools
 from pathlib import Path
+
 import numpy as np
+import pytest
+
+from piglegcv import tools
 
 
 def test_save_json():

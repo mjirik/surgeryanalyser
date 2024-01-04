@@ -2,6 +2,7 @@
 
 # import some common libraries
 import logging
+
 import mmcv.utils
 
 logger = mmcv.utils.get_logger(name=__file__, log_level=logging.DEBUG)
@@ -10,7 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Check Pytorch installation
-import torch, torchvision
+import torch
+import torchvision
 
 print(torch.__version__, torch.cuda.is_available())
 
@@ -20,19 +22,18 @@ import mmdet
 logger.debug(f"mmdet.version={mmdet.__version__}")
 
 # Check mmcv installation
-from mmcv.ops import get_compiling_cuda_version, get_compiler_version
+from mmcv.ops import get_compiler_version, get_compiling_cuda_version
 
 logger.debug(get_compiling_cuda_version())
 logger.debug(get_compiler_version())
-from pprint import pprint, pformat
-
 from pathlib import Path
+from pprint import pformat, pprint
 
 mmdetection_path = Path(mmdet.__file__).parent.parent
 
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 scratchdir = Path(os.getenv("SCRATCHDIR", "."))
 logname = Path(os.getenv("LOGNAME", "."))
@@ -48,10 +49,8 @@ logger.debug(f'input_data_dir glob={str(list(local_input_data_dir.glob("**/*")))
 
 import mmcv
 from mmcv.runner import load_checkpoint
-
 from mmdet.apis import inference_detector, show_result_pyplot
 from mmdet.models import build_detector
-
 
 # Choose to use a config and initialize the detector
 config = (
@@ -173,10 +172,9 @@ cfg.log_config.hooks = [dict(type="TextLoggerHook"), dict(type="TensorboardLogge
 logger.debug(f"cfg=\n{pformat(cfg)}")
 
 
+from mmdet.apis import train_detector
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
-from mmdet.apis import train_detector
-
 
 # Build dataset
 datasets = [build_dataset(cfg.data.train)]

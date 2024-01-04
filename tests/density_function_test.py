@@ -1,12 +1,13 @@
-import skimage.io
+from pathlib import Path
+
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import skimage.data
+import skimage.io
 
 from piglegcv import run_report
-import skimage.data
-from pathlib import Path
 
 
 def test_density():

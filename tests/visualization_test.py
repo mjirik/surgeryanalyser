@@ -1,7 +1,8 @@
 import pytest
-from piglegsurgeryweb.uploader import visualization_tools
 import skimage.data
 from matplotlib import pyplot as plt
+
+from piglegsurgeryweb.uploader import visualization_tools
 
 
 def test_crop_square():

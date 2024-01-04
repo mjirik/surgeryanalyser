@@ -1,27 +1,29 @@
 import os
+
 from rich.traceback import install
+
 install(show_locals=True)
 
-import rq.exceptions
-from rq import Queue
-from rq.job import Job
-
-from worker import conn
+import time
 from pathlib import Path
-import loguru
-from loguru import logger
-import flask
-from flask import request, jsonify, render_template
 
-# from pigleg_cv import run_media_processing
-# try:
-from pigleg_cv import do_computer_vision
+import flask
+import loguru
 import pigleg_cv
 
 # except ImportError:
 #    from .pigleg_cv import do_computer_vision
 import requests
-import time
+import rq.exceptions
+from flask import jsonify, render_template, request
+from loguru import logger
+
+# from pigleg_cv import run_media_processing
+# try:
+from pigleg_cv import do_computer_vision
+from rq import Queue
+from rq.job import Job
+from worker import conn
 
 PIGLEGCV_TIMEOUT = 10 * 3600
 app = flask.Flask(__name__)
@@ -36,6 +38,7 @@ def make_bool_from_string(s: str) -> bool:
             return True
         else:
             return False
+
 
 @app.route("/run", methods=["GET", "POST"])
 def index():
@@ -53,7 +56,6 @@ def index():
         outputdir = request.args.get("outputdir")
         n_stitches = int(request.args.get("n_stitches"))
         is_microsurgery = make_bool_from_string(request.args.get("is_microsurgery"))
-
 
         logger.debug(f"{n_stitches=}")
         logger.debug(f"{is_microsurgery=}, {type(is_microsurgery)=}")

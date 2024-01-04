@@ -11,10 +11,10 @@ Github: https://github.com/Eric-Canas
 
 from __future__ import annotations
 
-import numpy as np
-from pyzbar.pyzbar import decode as decodeQR, ZBarSymbol
 import cv2
-
+import numpy as np
+from pyzbar.pyzbar import ZBarSymbol
+from pyzbar.pyzbar import decode as decodeQR
 from qrdet import QRDetector
 
 _SHARPEN_KERNEL = np.array(

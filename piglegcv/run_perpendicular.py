@@ -1,40 +1,41 @@
-import os
-import sys
-import math
-import cv2
 import json
 import math
+import os
+import sys
+from pathlib import Path
+
+import cv2
+import matplotlib.pyplot as plt
 import numpy as np
+import scipy
+import skimage.color
+from loguru import logger
+from matplotlib import cm
+from skimage import filters
+from skimage.draw import line
+from skimage.exposure import histogram
+
+# from skimage.transform import hough_line, hough_line_peaks
+from skimage.feature import canny
+from skimage.filters import threshold_local, threshold_otsu
+from skimage.morphology import binary_dilation, skeletonize
+from skimage.transform import (
+    hough_line,
+    hough_line_peaks,
+    probabilistic_hough_line,
+    resize,
+)
 
 # from scipy.ndimage import gaussian_filter
 from sklearn.cluster import MeanShift
 
-# from skimage.transform import hough_line, hough_line_peaks
-from skimage.feature import canny
-from skimage.filters import threshold_otsu, threshold_local
-from skimage.morphology import skeletonize, binary_dilation
-from skimage.exposure import histogram
-import skimage.color
-from skimage.transform import probabilistic_hough_line, resize
-from pathlib import Path
-
-from skimage.draw import line
-from skimage.transform import hough_line, hough_line_peaks, probabilistic_hough_line
-from skimage.feature import canny
-from skimage import filters
-import scipy
-
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from loguru import logger
-
 try:
     #     from run_report import load_json, save_json
     from incision_detection_mmdet import run_incision_detection
-    from stitch_detection_mmdet import run_stitch_detection, run_stitch_analyser
+    from stitch_detection_mmdet import run_stitch_analyser, run_stitch_detection
 except ImportError:
     from .incision_detection_mmdet import run_incision_detection
-    from .stitch_detection_mmdet import run_stitch_detection, run_stitch_analyser
+    from .stitch_detection_mmdet import run_stitch_analyser, run_stitch_detection
 #     from .run_report import load_json, save_json
 
 from tools import load_json, save_json

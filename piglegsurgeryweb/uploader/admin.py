@@ -1,10 +1,9 @@
 from django.contrib import admin
+from django.db.migrations.recorder import MigrationRecorder
+
+from .models import BitmapImage, MediaFileAnnotation, Owner, UploadedFile
 
 # Register your models here.
-
-from .models import UploadedFile, BitmapImage, Owner, MediaFileAnnotation
-from django.db.migrations.recorder import MigrationRecorder
-from django.contrib import admin
 
 
 admin.site.register(UploadedFile)

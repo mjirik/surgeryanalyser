@@ -8,7 +8,9 @@ Date: 11-12-2022
 """
 
 from __future__ import annotations
+
 import os
+
 import requests
 import tqdm
 from yolov7_package import Yolov7Detector

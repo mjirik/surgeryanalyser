@@ -1,10 +1,11 @@
+import json
+import os
+import subprocess
 from pathlib import Path
 from typing import Optional, Union
-from loguru import logger
-import json
-import subprocess
-import os
+
 import numpy as np
+from loguru import logger
 
 
 def save_json(data: dict, output_json: Union[str, Path], update: bool = True):

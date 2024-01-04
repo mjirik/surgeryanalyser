@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Check Pytorch installation
-import torch, torchvision
+import torch
+import torchvision
 
 print(torch.__version__, torch.cuda.is_available())
 
@@ -22,38 +23,36 @@ import mmdet
 logger.debug(f"mmdet.version={mmdet.__version__}")
 
 # Check mmcv installation
-from mmcv.ops import get_compiling_cuda_version, get_compiler_version
+from mmcv.ops import get_compiler_version, get_compiling_cuda_version
 
 logger.debug(get_compiling_cuda_version())
 logger.debug(get_compiler_version())
-from pprint import pprint, pformat
-from mmcv import Config
-from mmdet.apis import set_random_seed
-from mmdet.datasets import build_dataset
-from mmdet.apis import (
-    train_detector,
-    init_detector,
-    inference_detector,
-    show_result_pyplot,
-)
 import os.path as osp
+from pathlib import Path
+from pprint import pformat, pprint
 from typing import Optional
 
-from pathlib import Path
+from mmcv import Config
+from mmdet.apis import (
+    inference_detector,
+    init_detector,
+    set_random_seed,
+    show_result_pyplot,
+    train_detector,
+)
+from mmdet.datasets import build_dataset
 
 mmdetection_path = Path(mmdet.__file__).parent.parent
 
-import mmcv
 import json
-from mmcv.runner import load_checkpoint
-
-from mmdet.models import build_detector
+import os
+from pathlib import Path
 from typing import Union
 
+import mmcv
+from mmcv.runner import load_checkpoint
+from mmdet.models import build_detector
 from tools import load_json, save_json
-
-from pathlib import Path
-import os
 
 scratchdir = Path(os.getenv("SCRATCHDIR", "."))
 logname = Path(os.getenv("LOGNAME", "."))
