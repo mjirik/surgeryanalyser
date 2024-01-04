@@ -1,25 +1,22 @@
-import os
-import cv2
-import json
-from loguru import logger
-
-import torch
 import argparse
-import numpy as np
-import albumentations as A
-
+import json
+import os
 import shlex
-from pyzbar.pyzbar import decode
+from pathlib import Path
+from typing import Union
 
-from detectron2.data import transforms as T
-
+import albumentations as A
+import cv2
+import numpy as np
+import torch
 from detectron2 import model_zoo
-from detectron2.config import get_cfg, CfgNode
+from detectron2.checkpoint import DetectionCheckpointer
+from detectron2.config import CfgNode, get_cfg
+from detectron2.data import transforms as T
 from detectron2.engine import DefaultPredictor
 from detectron2.modeling import build_model
-from detectron2.checkpoint import DetectionCheckpointer
-from typing import Union
-from pathlib import Path
+from loguru import logger
+from pyzbar.pyzbar import decode
 
 try:
     from tools import save_json

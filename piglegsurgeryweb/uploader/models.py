@@ -1,13 +1,15 @@
+import os.path as op
+from datetime import datetime
+from pathlib import Path
+
 from django.db import models
+
 from .models_tools import (
-    upload_to_unqiue_folder,
+    generate_sha1,
     get_output_dir,
     randomString,
-    generate_sha1,
+    upload_to_unqiue_folder,
 )
-from datetime import datetime
-import os.path as op
-from pathlib import Path
 
 # Create your models here.
 
@@ -50,18 +52,26 @@ class UploadedFile(models.Model):
     def __str__(self):
         return str(Path(self.mediafile.name).name)
 
+
 class MediaFileAnnotation(models.Model):
     uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
     annotation = models.TextField()
     # title = models.CharField(max_length=255, blank=True, default="")
     created_at = models.DateTimeField("Created at", default=datetime.now)
     updated_at = models.DateTimeField("Updated at", default=datetime.now)
-    annotator = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
+    annotator = models.ForeignKey(
+        Owner, on_delete=models.CASCADE, null=True, blank=True
+    )
     stars = models.IntegerField(default=-1)
 
     def __str__(self):
         # return first line of annotation
-        return str(self.annotation.split("\n")[0]) + (": " + str(self.annotator)) if self.annotator else ""
+        return (
+            str(self.annotation.split("\n")[0]) + (": " + str(self.annotator))
+            if self.annotator
+            else ""
+        )
+
 
 class BitmapImage(models.Model):
     server_datafile = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)

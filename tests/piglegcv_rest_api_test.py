@@ -1,7 +1,8 @@
+import time
+
 import pytest
 import requests
 from loguru import logger
-import time
 
 
 def test_pigleg_cv_rest_api_exists():

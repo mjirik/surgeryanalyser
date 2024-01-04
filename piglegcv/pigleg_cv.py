@@ -1,15 +1,28 @@
-from pathlib import Path
-import cv2
 import json
-import loguru
-from loguru import logger
-from typing import Optional, List
-import shutil
-import traceback
-import time
-import subprocess
+
+# from run_qr import bbox_info_extraction_from_frame
+import os
 import pprint
+import shutil
+import subprocess
+import time
+import traceback
+from pathlib import Path
+from typing import List, Optional
+
+import cv2
+import loguru
+import numpy as np
+import run_qr
 import tools
+from incision_detection_mmdet import run_incision_detection
+from loguru import logger
+from media_tools import make_images_from_video
+from run_perpendicular import get_frame_to_process, main_perpendicular
+
+# from run_mmpose import main_mmpose
+from run_qr import main_qr
+from run_report import bboxes_to_points, main_report
 
 # try:
 #    from .run_tracker_lite import main_tracker
@@ -24,21 +37,9 @@ import tools
 #    from run_tracker_lite import main_tracker
 from run_tracker_bytetrack import main_tracker_bytetrack, main_tracker_bytetrack_batch
 
-# from run_mmpose import main_mmpose
-from run_qr import main_qr
-import run_qr
-from run_report import main_report, bboxes_to_points
-from run_perpendicular import main_perpendicular, get_frame_to_process
-from tools import save_json, draw_bboxes_plt
-import numpy as np
-from incision_detection_mmdet import run_incision_detection
-from media_tools import make_images_from_video
-
-# from run_qr import bbox_info_extraction_from_frame
-import os
-
 # from sklearn.cluster import MeanShift, estimate_bandwidth, SpectralClustering, KMeans, DBSCAN
 from sklearn.cluster import KMeans
+from tools import draw_bboxes_plt, save_json
 
 # from sklearn.mixture import GaussianMixture
 
@@ -58,6 +59,7 @@ def set_progress(progress=None, progress_max=None):
         PROGRESS = progress
     if progress_max:
         PROGRESS_MAX = progress_max
+
 
 def make_bool_from_string(s: str) -> bool:
     if type(s) == bool:
@@ -112,16 +114,20 @@ class DoComputerVision:
         self.device = device
         self.n_stitches: int = int(n_stitches)
         self.results = None
-        self.is_video:bool = False if Path(self.filename).suffix.lower() in (
+        self.is_video: bool = (
+            False
+            if Path(self.filename).suffix.lower()
+            in (
                 ".png",
                 ".jpg",
                 ".jpeg",
                 ".tiff",
                 ".tif",
-            ) else True
+            )
+            else True
+        )
 
         logger.debug(f"{self.is_microsurgery=}")
-
 
     def run(self):
         self.meta = {}
@@ -190,7 +196,10 @@ class DoComputerVision:
         )
         # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(
-            self.frame, device=self.device, debug_image_file=self.outputdir / "_single_image_detector_results.jpg")
+            self.frame,
+            device=self.device,
+            debug_image_file=self.outputdir / "_single_image_detector_results.jpg",
+        )
         qr_data["qr_scissors_frames"] = []
         self.meta["qr_data"] = qr_data
         logger.debug(self.meta)
@@ -253,7 +262,7 @@ class DoComputerVision:
             output_file_path=self.outputdir / "tracks.json",
             class_names=class_names,
             device=self.device,
-            additional_hash="s" if self.test_first_seconds else "f"
+            additional_hash="s" if self.test_first_seconds else "f",
         )
 
     def run_video_processing(self):
@@ -335,7 +344,11 @@ class DoComputerVision:
         logger.debug("Video processing finished")
 
     def _get_frame_to_process_ideally_with_incision(
-        self, filename, return_qrdata=False, n_tries=None
+        self,
+        filename,
+        return_qrdata=False,
+        n_tries=None,
+        debug_image_file: Optional[Path] = None,
     ):
         if self.is_video:
             frame_from_end = 0
@@ -346,22 +359,26 @@ class DoComputerVision:
                     return_metadata=True,
                     reference_frame_position_from_end=frame_from_end,
                 )
-                qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
+                qr_data = run_qr.bbox_info_extraction_from_frame(
+                    frame, device=self.device, debug_image_file=debug_image_file
+                )
                 if len(qr_data["incision_bboxes"]) > 0:
                     logger.debug(
                         f"Found incision bbox in frame {frame_from_end} from the end."
                     )
                     break
                 else:
-                    frame_from_end = local_meta["reference_frame_position_from_end"] + 10
+                    frame_from_end = (
+                        local_meta["reference_frame_position_from_end"] + 10
+                    )
             logger.debug(
                 f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
             )
         else:
             frame, _ = get_frame_to_process(
-                    str(filename),
-                    n_tries=n_tries,
-                    return_metadata=True,
+                str(filename),
+                n_tries=n_tries,
+                return_metadata=True,
             )
             qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
         if return_qrdata:
@@ -373,7 +390,10 @@ class DoComputerVision:
         logger.debug(f"device={self.device}")
         if self.is_video:
             self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
-                self.filename_original, return_qrdata=True, debug_image_file=self.outputdir / "_single_image_detector_results_full_size.jpg"
+                self.filename_original,
+                return_qrdata=True,
+                debug_image_file=self.outputdir
+                / "_single_image_detector_results_full_size.jpg",
             )
         else:
             frame, local_meta = get_frame_to_process(self.filename_original)
@@ -478,7 +498,11 @@ class DoComputerVision:
         try:
             subprocess.check_output(s, shell=False, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
-            raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+            raise RuntimeError(
+                "command '{}' return with error (code {}): {}".format(
+                    e.cmd, e.returncode, e.output
+                )
+            )
 
         logger.debug(
             f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}"

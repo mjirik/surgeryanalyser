@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
+
 from rich.traceback import install
+
 install(show_locals=True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -73,7 +75,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_q",
-    'django.db.migrations' ,
+    "django.db.migrations",
 ]
 
 MIDDLEWARE = [

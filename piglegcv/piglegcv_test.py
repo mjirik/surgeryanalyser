@@ -1,9 +1,10 @@
-import pytest
+import shutil
 from pathlib import Path
-from skimage.io import imread
+
 import matplotlib.pyplot as plt
 import pigleg_cv
-import shutil
+import pytest
+from skimage.io import imread
 
 
 def test_empty_test():

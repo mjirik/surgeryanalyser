@@ -1,42 +1,41 @@
-from django.core.mail import send_mail
-from .models import UploadedFile, BitmapImage
-import loguru
-from django.conf import settings
-from loguru import logger
-from pathlib import Path
-import os.path as op
-import os
-import requests
-import time
 import glob
 import json
-import traceback
+import os
+import os.path as op
+import shutil
 import subprocess
-import numpy as np
-from django.core.mail import EmailMessage
-from django_q.tasks import async_task, schedule, queue_size
-from django_q.models import Schedule
-from django.utils.html import strip_tags
+import time
+import traceback
 
 # from .pigleg_cv import run_media_processing
 from datetime import datetime
-import django.utils
-import shutil
-from django.conf import settings
-from typing import Optional, Union
-from django.template import defaultfilters
-import gspread
-import pandas as pd
-from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
+from typing import Optional, Union
+
+import django.utils
+import gspread
+import loguru
+import numpy as np
+import pandas as pd
+import requests
+from django.conf import settings
+from django.core.mail import EmailMessage, send_mail
+from django.template import defaultfilters
+from django.utils.html import strip_tags
+from django_q.models import Schedule
+from django_q.tasks import async_task, queue_size, schedule
+from loguru import logger
+from oauth2client.service_account import ServiceAccountCredentials
+
 from .data_tools import (
-    google_spreadsheet_append,
     flatten_dict,
+    google_spreadsheet_append,
     remove_empty_lists,
     remove_iterables_from_dict,
 )
+from .media_tools import convert_avi_to_mp4, make_images_from_video, rescale
+from .models import BitmapImage, UploadedFile
 from .visualization_tools import crop_square
-from .media_tools import make_images_from_video, rescale, convert_avi_to_mp4
 
 
 def _run_media_processing_rest_api(

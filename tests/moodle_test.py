@@ -1,12 +1,13 @@
-import requests
-import time
 import glob
 import json
-import traceback
-import subprocess
-from loguru import logger
-from pathlib import Path
 import os
+import subprocess
+import time
+import traceback
+from pathlib import Path
+
+import requests
+from loguru import logger
 
 MOODLE_HOST = os.getenv("MOODLE_HOST", "localhost")
 MOODLE_HOST = os.getenv("MOODLE_HOST", "moodle")

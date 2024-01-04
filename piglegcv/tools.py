@@ -1,15 +1,16 @@
-from pathlib import Path
-from typing import Union
 import json
 import os
-from loguru import logger
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import numpy as np
-from PIL import Image
-import cv2
-import scipy
 import time
+from pathlib import Path
+from typing import Union
+
+import cv2
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy
+from loguru import logger
+from PIL import Image
 
 
 def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
@@ -26,7 +27,12 @@ def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
     dct.update(data)
     logger.debug(f"updated keys: {list(dct.keys())}")
     with open(output_json, "w") as output_file:
-        json.dump(dct, output_file, indent=4)
+        try:
+            json.dump(dct, output_file, indent=4)
+        except Exception as e:
+            logger.error(f"Error writing json file {output_json}: {e}")
+            logger.error(f"Data: {dct}")
+            raise e
 
 
 def load_json(filename: Union[str, Path]):
@@ -41,7 +47,8 @@ def load_json(filename: Union[str, Path]):
     else:
         return {}
 
-def remove_complex_types(d:dict):
+
+def remove_complex_types(d: dict):
     # Define simple types
     simple_types = (int, float, str, bool)
 
@@ -49,6 +56,7 @@ def remove_complex_types(d:dict):
     new_dict = {k: v for k, v in d.items() if isinstance(v, simple_types)}
 
     return new_dict
+
 
 def unit_conversion(value, input_unit: str, output_unit: str):
     in_kvantif = input_unit[-2] if len(input_unit) > 1 else ""
@@ -193,10 +201,12 @@ def make_bbox_square_and_larger(bbox, multiplicator=1.0):
     ]
     return newbbox
 
+
 def filter_bboxes_by_confidence(bboxes, confidence_threshold):
     """Filter bboxes by confidence threshold."""
     confidence_filter = bboxes[:, 4] > confidence_threshold
     return bboxes[confidence_filter]
+
 
 def weighted_average(values, weights):
     """Calculate weighted average."""
@@ -212,19 +222,20 @@ def union_bboxes(bboxes):
     confidence = np.mean(bboxes[:, 4])
     return np.asarray([x1, y1, x2, y2, confidence])
 
+
 def sort_bboxes(bboxes):
     """Sort bboxes by their confidence score."""
     return bboxes[bboxes[:, 4].argsort()[::-1]]
+
 
 def sort_bboxes_and_masks_by_confidence(bboxes, masks):
     """Sort bboxes by their confidence score."""
     sorted_indices = bboxes[:, 4].argsort()[::-1]
     logger.debug(f"{sorted_indices=}, {sorted_indices.dtype}")
-    
-    
+
     bboxes_out = bboxes[sorted_indices]
     masks_out = np.asarray(masks)[sorted_indices]
-    return bboxes_out, masks_out 
+    return bboxes_out, masks_out
 
 
 def make_bbox_larger(bbox, multiplicator=2.0):

@@ -2,20 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import os
-import zipfile
-from pathlib import Path
+import os.path as op
 import random
 import secrets
 import string
-from . import models_tools
+import zipfile
+from datetime import datetime
+from pathlib import Path
 
 from django.conf import settings
-from datetime import datetime
-import os.path as op
-
 from loguru import logger
 
-import random
+from . import models_tools
 
 try:
     from hashlib import sha1 as sha_constructor

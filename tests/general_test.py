@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 rootdir = Path(__file__).parent.parent
 import sys

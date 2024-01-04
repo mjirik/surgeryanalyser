@@ -5,20 +5,23 @@ from detectron2.utils.logger import setup_logger
 
 setup_logger()
 
+import os
+from pathlib import Path
+
+import cv2
+
 # import some common libraries
 import matplotlib.pyplot as plt
 import numpy as np
-import cv2
-
-# from google.colab.patches import cv2_imshow
+from detectron2.config import get_cfg
+from detectron2.data import DatasetCatalog, MetadataCatalog
 
 # import some common detectron2 utilities
 from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
-from detectron2.data import MetadataCatalog, DatasetCatalog
-from pathlib import Path
-import os
+
+# from google.colab.patches import cv2_imshow
+
 
 scratchdir = os.getenv("SCRATCHDIR", ".")
 logname = os.getenv("LOGNAME", ".")
@@ -59,9 +62,10 @@ for d in dataset_dicts:
     cv2.imwrite(str(file_path), vis.get_image()[:, :, ::-1])
 
 
-from detectron2.engine import DefaultTrainer
-from detectron2.config import get_cfg
 import os
+
+from detectron2.config import get_cfg
+from detectron2.engine import DefaultTrainer
 
 cfg = get_cfg()
 # cfg.merge_from_file(f"/storage/plzen1/home/{logname}/projects/detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")

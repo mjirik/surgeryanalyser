@@ -1,7 +1,7 @@
 import shutil
+from pathlib import Path
 
 from loguru import logger
-from pathlib import Path
 
 # from unittest import mock
 from piglegcv import pigleg_cv

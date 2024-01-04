@@ -1,9 +1,10 @@
-import gspread
-import pandas as pd
-from oauth2client.service_account import ServiceAccountCredentials
 from pathlib import Path
 from typing import Optional, Union
+
+import gspread
+import pandas as pd
 from loguru import logger
+from oauth2client.service_account import ServiceAccountCredentials
 
 
 def flatten_dict(dct: dict, parent_key: str = "", sep: str = "_") -> dict:

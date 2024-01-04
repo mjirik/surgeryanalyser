@@ -1,31 +1,28 @@
-from django.shortcuts import render, get_object_or_404, redirect, reverse
-from django.views import generic
-from django.contrib.auth.decorators import login_required
-import django.utils
-from pathlib import Path
+import json
 import os
+import re
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
+import django.utils
+from django.conf import settings
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.views import generic
+
+# from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
+from django_q.tasks import async_task, queue_size, schedule
 from loguru import logger
 
-# Create your views here.
-
-from django.http import HttpResponse
-from .models import UploadedFile, _hash, Owner
-from .forms import UploadedFileForm
+from .forms import AnnotationForm, UploadedFileForm
+from .models import MediaFileAnnotation, Owner, UploadedFile, _hash
 from .models_tools import randomString
 from .tasks import email_media_recived, make_preview
 
-# from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
-from django_q.tasks import async_task, schedule, queue_size
-from datetime import datetime
-from django.conf import settings
-import json
-import re
-from django.contrib.auth import logout
-from typing import Optional
-
-from .forms import AnnotationForm
-from .models import MediaFileAnnotation
+# Create your views here.
 
 
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
@@ -134,13 +131,13 @@ def report_list(request):
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
-                str(e.email)
-                + " "
-                + str(e)
-                + " "
-                + str(e.uploaded_at)
-                + " "
-                + str(e.finished_at)
+            str(e.email)
+            + " "
+            + str(e)
+            + " "
+            + str(e.uploaded_at)
+            + " "
+            + str(e.finished_at)
         )
 
     qs_json = json.dumps(qs_data)
@@ -164,10 +161,11 @@ def _get_graph_path(owner: Optional[Owner] = None):
     return html_path
 
 
-
-def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Owner] = None):
-    import plotly.express as px
+def make_graph(
+    uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Owner] = None
+):
     import pandas as pd
+    import plotly.express as px
     from django.utils import timezone
 
     html_path = _get_graph_path(owner)
@@ -189,7 +187,9 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Ow
 
     df = pd.DataFrame(rows)
     # fix typo
-    df.rename(columns={"Stichtes linearity score": "Stitches linearity score"}, inplace=True)
+    df.rename(
+        columns={"Stichtes linearity score": "Stitches linearity score"}, inplace=True
+    )
 
     if "Stitches linearity score" in df.keys():
         df["Stitches linearity score [%]"] = df["Stitches linearity score"] * 100
@@ -198,10 +198,12 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Ow
         df["Stitches parallelism score [%]"] = df["Stitches parallelism score"] * 100
 
     y = [
-        "Needle holder visibility [%]", "Needle holder area presence [%]",
-        "Forceps visibility [%]", "Forceps area presence [%]",
-        "Stitches linearity score [%]", "Stitches parallelism score [%]"
-
+        "Needle holder visibility [%]",
+        "Needle holder area presence [%]",
+        "Forceps visibility [%]",
+        "Forceps area presence [%]",
+        "Stitches linearity score [%]",
+        "Stitches parallelism score [%]",
     ]
 
     y = [element for element in y if element in df.keys()]
@@ -213,10 +215,14 @@ def make_graph(uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Ow
 
     x = "Uploaded at"
     import plotly.express as px
-    fig = px.scatter(df, x=x, y=y,
-                     # marginal_x="box",
-                     # marginal_y="box"
-                     )
+
+    fig = px.scatter(
+        df,
+        x=x,
+        y=y,
+        # marginal_x="box",
+        # marginal_y="box"
+    )
     fig.write_html(html_path, full_html=False)
     return html_path
 
@@ -228,13 +234,13 @@ def owners_reports_list(request, owner_hash: str):
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
-                str(e.email)
-                + " "
-                + str(e)
-                + " "
-                + str(e.uploaded_at)
-                + " "
-                + str(e.finished_at)
+            str(e.email)
+            + " "
+            + str(e)
+            + " "
+            + str(e.uploaded_at)
+            + " "
+            + str(e.finished_at)
         )
 
     qs_json = json.dumps(qs_data)
@@ -256,8 +262,7 @@ def owners_reports_list(request, owner_hash: str):
     return render(request, "uploader/report_list.html", context)
 
 
-
-def _prepare_context_for_web_report(request, serverfile:UploadedFile):
+def _prepare_context_for_web_report(request, serverfile: UploadedFile):
     fn = Path(serverfile.zip_file.path)
     logger.debug(fn)
     logger.debug(fn.exists())
@@ -289,23 +294,23 @@ def _prepare_context_for_web_report(request, serverfile:UploadedFile):
                 new_key = re.sub("visibility$", "visibility [s]", new_key)
                 new_key = re.sub("length$", "length [m]", new_key)
                 if new_key in (
-                        "Needle holder length [pix]",
-                        "Needle holder length [m]",
-                        "Needle holder visibility [s]",
-                        "Needle holder visibility [%]",
-                        "Forceps length [pix]",
-                        "Forceps length [m]",
-                        "Forceps visibility [s]",
-                        "Forceps visibility [%]",
-                        "Scissors length [pix]",
-                        "Scissors length [m]",
-                        "Scissors visibility [s]",
-                        "Scissors visibility [%]",
-                        "Needle holder area presence [%]",
-                        # "Tweezes length", "Tweezes duration" # typo in some older processings
-                        # "Tweezers length", "Tweezers duration", # backward compatibility
-                        # "Scissors length", "Scissors duration", # backward compatibility
-                        # "Needle holder length", "Needle holder duration", # backward compatibility
+                    "Needle holder length [pix]",
+                    "Needle holder length [m]",
+                    "Needle holder visibility [s]",
+                    "Needle holder visibility [%]",
+                    "Forceps length [pix]",
+                    "Forceps length [m]",
+                    "Forceps visibility [s]",
+                    "Forceps visibility [%]",
+                    "Scissors length [pix]",
+                    "Scissors length [m]",
+                    "Scissors visibility [s]",
+                    "Scissors visibility [%]",
+                    "Needle holder area presence [%]",
+                    # "Tweezes length", "Tweezes duration" # typo in some older processings
+                    # "Tweezers length", "Tweezers duration", # backward compatibility
+                    # "Scissors length", "Scissors duration", # backward compatibility
+                    # "Needle holder length", "Needle holder duration", # backward compatibility
                 ):
                     # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
 
@@ -352,15 +357,14 @@ def _prepare_context_for_web_report(request, serverfile:UploadedFile):
 
     return context
 
-def _prepare_context_if_web_report_not_exists(request, serverfile:UploadedFile):
+
+def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile):
     logger.debug("Zip file name does not exist")
     # zip_file does not exists
     context = {
         "headline": "File not exists",
         "text": "Requested file is probably under processing now.",
-        "next": request.GET["next"]
-        if "next" in request.GET
-        else "/uploader/upload/",
+        "next": request.GET["next"] if "next" in request.GET else "/uploader/upload/",
         "next_text": "Back",
     }
     if request.user.is_authenticated:
@@ -375,8 +379,8 @@ def web_report(request, filename_hash: str):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     if (
-            not bool(serverfile.zip_file.name)
-            or not Path(serverfile.zip_file.path).exists()
+        not bool(serverfile.zip_file.name)
+        or not Path(serverfile.zip_file.path).exists()
     ):
         context = _prepare_context_if_web_report_not_exists(request, serverfile)
         return render(request, "uploader/message.html", context)
@@ -407,7 +411,7 @@ def web_report(request, filename_hash: str):
     else:
 
         uploaded_file_annotations = serverfile.mediafileannotation_set.first()
-        if uploaded_file_annotations :
+        if uploaded_file_annotations:
             form = AnnotationForm(instance=uploaded_file_annotations)
         else:
             form = AnnotationForm()
@@ -493,7 +497,7 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     context = {
         "headline": "Processing started",
         "text": f"We are processing file {str(Path(serverfile.mediafile.name).name)}. "
-                + "We will let you know by email as soon as it is finished.",
+        + "We will let you know by email as soon as it is finished.",
         # The output will be stored in {serverfile.outputdir}.",
         "next": next_url,
         "next_text": "Back",
@@ -534,7 +538,8 @@ def update_owner(uploadedfile: UploadedFile) -> Owner:
 
     return owner
 
-def _get_owner(owner_email:str):
+
+def _get_owner(owner_email: str):
     owners = Owner.objects.filter(email=owner_email)
     if len(owners) == 0:
         owner = Owner(email=owner_email, hash=_hash())
