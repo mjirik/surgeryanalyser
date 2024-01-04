@@ -74,7 +74,7 @@ def _holes_pix_sizes(bboxes_holes, hole_size_m=0.008):
 
     logger.debug(f"{pix_sizes_holes=}")
     logger.debug(f"{pix_sizes_weights=}")
-    return pix_sizes_holes.tolist(), pix_sizes_weights.tolist(), names
+    return pix_sizes_holes.astype(float).tolist(), pix_sizes_weights.astype(float).tolist(), names
 
 
 def interpret_bboxes(

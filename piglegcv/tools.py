@@ -27,7 +27,12 @@ def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
     dct.update(data)
     logger.debug(f"updated keys: {list(dct.keys())}")
     with open(output_json, "w") as output_file:
-        json.dump(dct, output_file, indent=4)
+        try:
+            json.dump(dct, output_file, indent=4)
+        except Exception as e:
+            logger.error(f"Error writing json file {output_json}: {e}")
+            logger.error(f"Data: {dct}")
+            raise e
 
 
 def load_json(filename: Union[str, Path]):
