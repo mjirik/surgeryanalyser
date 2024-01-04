@@ -198,6 +198,11 @@ def filter_bboxes_by_confidence(bboxes, confidence_threshold):
     confidence_filter = bboxes[:, 4] > confidence_threshold
     return bboxes[confidence_filter]
 
+def weighted_average(values, weights):
+    """Calculate weighted average."""
+    return np.sum(values * weights) / np.sum(weights)
+
+
 def union_bboxes(bboxes):
     """Make union of all bboxes."""
     x1 = np.min(bboxes[:, 0])

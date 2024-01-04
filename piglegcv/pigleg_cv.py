@@ -190,7 +190,7 @@ class DoComputerVision:
         )
         # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(
-            self.frame, device=self.device, image_file=self.outputdir / "_single_image_detector_results.jpg")
+            self.frame, device=self.device, debug_image_file=self.outputdir / "_single_image_detector_results.jpg")
         qr_data["qr_scissors_frames"] = []
         self.meta["qr_data"] = qr_data
         logger.debug(self.meta)
@@ -358,11 +358,12 @@ class DoComputerVision:
                 f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
             )
         else:
-            frame, qr_data = get_frame_to_process(
+            frame, _ = get_frame_to_process(
                     str(filename),
                     n_tries=n_tries,
                     return_metadata=True,
             )
+            qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
         if return_qrdata:
             return frame, qr_data
         else:
@@ -372,7 +373,7 @@ class DoComputerVision:
         logger.debug(f"device={self.device}")
         if self.is_video:
             self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
-                self.filename_original, return_qrdata=True
+                self.filename_original, return_qrdata=True, debug_image_file=self.outputdir / "_single_image_detector_results_full_size.jpg"
             )
         else:
             frame, local_meta = get_frame_to_process(self.filename_original)
@@ -385,7 +386,7 @@ class DoComputerVision:
         #         from matplotlib import pyplot as plt
         #         plt.show()
         #         self.debug_images["crop_rotate_rescale_parameters":img]
-        logger.debug(pprint.pformat(qr_data))
+        logger.debug(f"{qr_data=}")
         return qr_data
 
     def do_crop_rotate_rescale(

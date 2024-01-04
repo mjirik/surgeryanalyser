@@ -49,10 +49,10 @@ def interpret_bboxes(
 ):
     # -1: incision area
     # 0: scene area
-    # 1: ?
+    # 1: pigleg holder
     # 2: QR code
     # 3: ?
-    # 4: ?
+    # 4: holes
     # 5: micro qr code
     # for cls_id, bboxes_class in enumerate(bboxes):
     #     logger.debug(f"{cls_id=}, {bboxes_class=}")
@@ -109,13 +109,13 @@ def interpret_bboxes(
     return bboxes_incision_area, bbox_scene_area, bboxes_qr, side_length, bboxes_calibration_micro, micro_side_length
 
 
-def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", image_file:Optional[Path]=None):
+def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", debug_image_file:Optional[Path]=None):
     img = np.asarray(img)
     width = img.shape[1]
     # Todo Viktora
     
     bboxes, masks, _ = get_bboxes(
-            img, device=device, image_file=image_file
+            img, device=device, image_file=debug_image_file
         )
     
     bboxes_incision_area, bbox_scene_area, bboxes_qr, qr_side_length, bboxes_calibration_micro, micro_side_length = interpret_bboxes(
