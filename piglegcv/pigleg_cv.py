@@ -335,7 +335,7 @@ class DoComputerVision:
         logger.debug("Video processing finished")
 
     def _get_frame_to_process_ideally_with_incision(
-        self, filename, return_qrdata=False, n_tries=None
+        self, filename, return_qrdata=False, n_tries=None, debug_image_file:Optional[Path]=None
     ):
         if self.is_video:
             frame_from_end = 0
@@ -346,7 +346,8 @@ class DoComputerVision:
                     return_metadata=True,
                     reference_frame_position_from_end=frame_from_end,
                 )
-                qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device)
+                qr_data = run_qr.bbox_info_extraction_from_frame(frame, device=self.device,
+                                                                 debug_image_file=debug_image_file)
                 if len(qr_data["incision_bboxes"]) > 0:
                     logger.debug(
                         f"Found incision bbox in frame {frame_from_end} from the end."
