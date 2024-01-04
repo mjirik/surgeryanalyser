@@ -22,7 +22,7 @@ import tools
 # except ImportError as e:
 #    logger.debug(e)
 #    from run_tracker_lite import main_tracker
-from run_tracker_bytetrack import main_tracker_bytetrack
+from run_tracker_bytetrack import main_tracker_bytetrack, main_tracker_bytetrack_batch
 
 # from run_mmpose import main_mmpose
 from run_qr import main_qr

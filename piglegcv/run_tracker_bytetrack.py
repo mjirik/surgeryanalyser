@@ -172,3 +172,70 @@ def main_tracker_bytetrack(
         tracking_results["tracks"]=[x for x in tracking_results["tracks"] if x is not None]
 
         json.dump(tracking_results, open(output_file_path, "w"))
+
+        
+def main_tracker_bytetrack_batch(
+    trackers_config_and_checkpoints: list,
+    # config_file,
+    filename,
+    # checkpoint,
+    output_file_path: Path,
+    device=None,
+    class_names=[],
+    additional_hash="",
+):
+    """Run tracking on a video.
+    trackers: is list of tuples (config_file, checkpoint)
+    additional_hash: is a string that will be added to the hash of the first frame
+    """
+
+    run_tracking, hash_hex = _should_do_tracking_based_on_hash(
+        trackers_config_and_checkpoints, filename,
+        output_file_path, additional_hash=additional_hash)
+
+    models = []
+    for tracker_config, tracker_checkpoint in trackers_config_and_checkpoints:
+        # build the model from a config file and a checkpoint file
+        model = init_model(tracker_config, str(tracker_checkpoint), device=device, verbose_init_params=False)
+        models.append(model)
+
+
+
+    imgs = mmcv.VideoReader(str(filename))
+    frame_cnt = imgs.frame_cnt
+
+    if run_tracking:
+        progress = tools.ProgressPrinter(frame_cnt)
+        tracking_results = {"tracks": [None]*int(frame_cnt), "hash": hash_hex, "class_names": class_names}
+        # for frame_id, img in enumerate(imgs):
+        N = len(imgs)
+        for i in range(0, N, 3):
+            img = imgs[i:i+3]
+            frame_id = [j for j in range(i, i+3)]
+            frame_tr = []
+            # if not (frame_id % 50):
+            #     logger.debug(
+            #         f"Tracking on frame {frame_id}, {progress.get_progress_string(float(frame_id))}"
+            #     )
+            for j, tracker in enumerate(models):
+
+                result = inference_mot(
+                    tracker, img, frame_id=frame_id
+                )
+ 
+                if result != None:
+                    # logger.debug(f"{j=}, {result=}")
+                    for object_class_id, bboxes in enumerate(result["track_bboxes"]):
+                        if len(bboxes) > 0:
+                            # find the bbox with best confidence
+                            best_id = np.argmax(bboxes[:, -1])
+
+                            # if j == 1:
+                                # logger.debug(f"tracker[{j}], {result['tracks_boxes']=}")
+                            frame_tr.append(bboxes[best_id].tolist()[1:] + [object_class_id + (j * 10)])
+            tracking_results["tracks"][frame_id]=frame_tr
+
+        #kick all nones
+        tracking_results["tracks"]=[x for x in tracking_results["tracks"] if x is not None]
+
+        json.dump(tracking_results, open(output_file_path, "w"))
