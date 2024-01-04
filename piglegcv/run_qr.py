@@ -40,7 +40,34 @@ def get_bboxes(img, device="cpu", image_file:Optional[Path]=None,
     )
         
     return bboxes, masks, img_results
-        
+
+
+def weighted_average(values, weights):
+    """Calculate weighted average."""
+    return np.sum(np.asarray(values) * np.asarray(weights)) / np.sum(weights)
+
+def _holes_pix_sizes(bboxes_holes, hole_size_m = 0.008):
+    bboxes_holes = tools.filter_bboxes_by_confidence(bboxes_holes, 0.95)
+    if len(bboxes_holes) > 4:
+        bboxes_holes = bboxes_holes[:4]
+    if len(bboxes_holes) < 1:
+        return [], [], []
+
+
+
+    pix_sizes_holes = hole_size_m / np.mean(np.array([
+    bboxes_holes[:,2] - bboxes_holes[:,0],
+    bboxes_holes[:,3] - bboxes_holes[:,1]]), axis=0)
+    
+    pix_sizes_weights = bboxes_holes[:,4]
+    
+    names = [f"hole_{i}" for i in range(len(bboxes_holes))]
+    
+    logger.debug(f"{pix_sizes_holes=}")
+    logger.debug(f"{pix_sizes_weights=}")
+    return pix_sizes_holes.tolist(), pix_sizes_weights.tolist(), names
+
+
 def interpret_bboxes(
     bboxes:list, masks,
     calibration_micro_thr:float=0.5,
@@ -79,11 +106,13 @@ def interpret_bboxes(
 #         bbox_scene_area = None
 
     qr_threshold = 0.85
-    if bboxes[3].shape[0] > 0:
-        logger.debug(bboxes[3])
-        bboxes_qr = bboxes[3][:2]
-        qr_filter = bboxes_qr[:, -1] > qr_threshold
-        bboxes_qr = bboxes_qr[qr_filter]
+    bboxes_qr = tools.filter_bboxes_by_confidence(bboxes[3], qr_threshold)
+    logger.debug(f"{bboxes[3]=}")
+    if bboxes_qr.shape[0] > 0:
+        
+        # bboxes_qr = bboxes[3][:2]
+        # qr_filter = bboxes_qr[:, -1] > qr_threshold
+        # bboxes_qr = bboxes_qr[qr_filter]
 
         qr_mask = masks[3][0]
         side_length = math.sqrt(np.count_nonzero(qr_mask == True))
@@ -122,6 +151,17 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", debug_image
         bboxes, masks
         
     )
+    
+    pix_sizes = []
+    pix_sizes_weights = []
+    pix_sizes_methods = []
+    
+    
+    bboxes_holes = bboxes[4]
+    ps_holes, ps_holes_weights, ps_holes_methods = _holes_pix_sizes(bboxes_holes)
+    pix_sizes.extend(ps_holes)
+    pix_sizes_weights.extend(ps_holes_weights)
+    pix_sizes_methods.extend(ps_holes_methods)
 
     if qreader is None:
 
@@ -179,33 +219,50 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", debug_image
                 a = np.array(qr_bbox[0])
                 b = np.array(qr_bbox[1])
                 pix_size_best = qr_size / np.linalg.norm(a - b)
+                w = bbox[-1]
+                pix_sizes.append(pix_size_best)
+                pix_sizes_weights.append(w)
+                pix_sizes_methods.append("QR bbox poly")
         output = {}
     # todo use the pigleg holder detection based estimator
     pix_size_single_frame_detector_m = (
         qr_size / qr_side_length if qr_side_length else None
     )
+    if pix_size_single_frame_detector_m:
+        pix_sizes.append(pix_size_single_frame_detector_m)
+        pix_sizes_weights.append(bboxes_qr[0,-1] if len(bboxes_qr) > 0 else 0.5)
+        pix_sizes_methods.append("pix_size_single_frame_detector_m")
 
     qr_data = {
         "is_microsurgery": False
     }
+    
+    # pigleg_holder_width [m] - usually it takes around half of the image width
+    scene_size = 0.300  # [m]
+    size_by_scene = scene_size / width
+    # if len(pix_sizes) == 0:
+    pix_sizes.append(size_by_scene)
+    pix_sizes_weights.append(0.1)
+    pix_sizes_methods.append("size_by_scene")
 
-    pix_size_method = "video size estimation"
-    if is_detected:
-        pix_size_method = "QR"
-    elif len(bboxes_calibration_micro) > 0:
-        pix_size_method = "micro calibration"
-        pix_size_best = 0.006 / micro_side_length
+    if len(bboxes_calibration_micro) > 0:
+        qr_data["pix_size_method"] = "micro calibration"
+        calibraton_micro_size_m = 0.006
+        pix_size_best = calibraton_micro_size_m / micro_side_length
         qr_data["is_microsurgery"] = True
         is_detected = True
-    elif len(bboxes_qr) > 0:
-        pix_size_method = "pix_size_single_frame_detector_m"
-        pix_size_best = pix_size_single_frame_detector_m
+    else:
+        pix_size_best = weighted_average(pix_sizes, pix_sizes_weights)
+        qr_data["pix_size_method"] = "weighted_average"
+        
+    # elif len(bboxes_qr) > 0:
+    #     pix_size_method = "pix_size_single_frame_detector_m"
+    #     pix_size_best = pix_size_single_frame_detector_m
 
-    qr_data["pix_size_method"] = pix_size_method
-    if True:
-        # pigleg_holder_width [m] - usually it takes around half of the image width
-        scene_size = 0.300  # [m]
-        size_by_scene = scene_size / width
+  
+    
+
+        
 
     qr_data["is_detected"] = is_detected
     qr_data["box"] = qr_bbox
@@ -224,6 +281,9 @@ def bbox_info_extraction_from_frame(img, qreader=None, device="cpu", debug_image
         np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
     )
     qr_data["scene_width_m"] = None if pix_size_best is None else width * pix_size_best
+    qr_data["pix_sizes"] = pix_sizes
+    qr_data["pix_sizes_weights"] = pix_sizes_weights
+    qr_data["pix_sizes_methods"] = pix_sizes_methods
 
     logger.debug(qr_data)
 
