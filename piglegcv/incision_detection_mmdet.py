@@ -6,7 +6,8 @@ import logging
 import cv2
 import mmcv.utils
 
-logger = mmcv.utils.get_logger(name=__file__, log_level=logging.DEBUG)
+# logger = mmcv.utils.get_logger(name=__file__, log_level=logging.DEBUG)
+from loguru import logger
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +16,7 @@ import numpy as np
 import torch
 import torchvision
 
-print(torch.__version__, torch.cuda.is_available())
+logger.debug(torch.__version__, torch.cuda.is_available())
 
 # Check MMDetection installation
 import mmdet

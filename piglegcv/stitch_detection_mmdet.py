@@ -24,7 +24,8 @@ from tools import load_json, save_json
 import logging
 import mmcv.utils
 
-logger = mmcv.utils.get_logger(name=__file__, log_level=logging.DEBUG)
+# logger = mmcv.utils.get_logger(name=__file__, log_level=logging.DEBUG)
+from loguru import logger
 
 # import mmdet
 # mmdetection_path = Path(mmdet.__file__).parent.parent
