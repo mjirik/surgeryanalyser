@@ -28,10 +28,12 @@ def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
     logger.debug(f"updated keys: {list(dct.keys())}")
     with open(output_json, "w") as output_file:
         try:
-            json.dump(dct, output_file, indent=4)
+            json.dump(dct, output_file, indent=4, cls=NumpyEncoder)
         except Exception as e:
             logger.error(f"Error writing json file {output_json}: {e}")
             logger.error(f"Data: {dct}")
+            print_nested_dict_with_types(dct, 4)
+            
             raise e
 
 
@@ -46,6 +48,26 @@ def load_json(filename: Union[str, Path]):
             return data
     else:
         return {}
+
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types """    
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)    
+
+
+def print_nested_dict_with_types(d: dict, indent: int = 0):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            logger.debug(f"{' ' * indent}{k}:")
+            print_nested_dict_with_types(v, indent + 2)
+        else:
+            logger.debug(f"{' ' * indent}{k}: {type(v)}")    
 
 
 def remove_complex_types(d: dict):

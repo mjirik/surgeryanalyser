@@ -301,11 +301,11 @@ def bbox_info_extraction_from_frame(
         np.asarray(bboxes_qr).tolist() if bboxes_qr is not None else None
     )
     qr_data["scene_width_m"] = None if pix_size_best is None else width * pix_size_best
-    qr_data["pix_sizes"] = pix_sizes
-    qr_data["pix_sizes_weights"] = pix_sizes_weights
-    qr_data["pix_sizes_methods"] = pix_sizes_methods
+    qr_data["pix_sizes"] = np.asarray(pix_sizes)
+    qr_data["pix_sizes_weights"] = np.asarray(pix_sizes_weights).tolist()
+    qr_data["pix_sizes_methods"] = np.asarray(pix_sizes_methods).tolist()
 
-    logger.debug(qr_data)
+    logger.debug(f"{qr_data=}")
 
     return qr_data
     # pix_size_best, qr_size, is_detected, qr_bbox, qr_text, qr_scissors_frame_detected #, bbox_scene_area, bboxes_incision_area

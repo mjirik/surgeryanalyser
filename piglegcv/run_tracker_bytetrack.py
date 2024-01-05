@@ -19,6 +19,8 @@ import tools
 import numpy as np
 from typing import Optional, List, Tuple
 
+from mmdet.datasets.pipelines import Compose
+
 
 def add_tracking_results(tracking_results, result):
     if result != None:
@@ -120,12 +122,13 @@ def main_tracker_bytetrack(
     device=None,
     class_names=[],
     additional_hash="",
+    force_run=False,
 ):
     """Run tracking on a video.
     trackers: is list of tuples (config_file, checkpoint)
     additional_hash: is a string that will be added to the hash of the first frame
     """
-
+    logger.debug("main_tracker")
     run_tracking, hash_hex = _should_do_tracking_based_on_hash(
         trackers_config_and_checkpoints, filename,
         output_file_path, additional_hash=additional_hash)
@@ -141,12 +144,14 @@ def main_tracker_bytetrack(
     imgs = mmcv.VideoReader(str(filename))
     frame_cnt = imgs.frame_cnt
 
-    if run_tracking:
+    if run_tracking or force_run:
         progress = tools.ProgressPrinter(frame_cnt)
         tracking_results = {"tracks": [None]*int(frame_cnt), "hash": hash_hex, "class_names": class_names}
+        prev_track_ids = 20 * [-1]
         for frame_id, img in enumerate(imgs):
             frame_tr = []
             if not (frame_id % 50):
+                
                 logger.debug(
                     f"Tracking on frame {frame_id}, {progress.get_progress_string(float(frame_id))}"
                 )
@@ -158,14 +163,22 @@ def main_tracker_bytetrack(
  
                 if result != None:
                     # logger.debug(f"{j=}, {result=}")
-                    for object_class_id, bboxes in enumerate(result["track_bboxes"]):
+                    for class_id, bboxes in enumerate(result["track_bboxes"]):
+                        model_class_id = class_id + (j * 10)
                         if len(bboxes) > 0:
+                            best_id = -1
+                            for _id, bbox in enumerate(bboxes):  
+                                if bbox[0] == prev_track_ids[model_class_id]:
+                                    best_id = _id
+                                    break
                             # find the bbox with best confidence
-                            best_id = np.argmax(bboxes[:, -1])
-
+                            if best_id < 0:
+                                best_id = np.argmax(bboxes[:, -1])
                             # if j == 1:
                                 # logger.debug(f"tracker[{j}], {result['tracks_boxes']=}")
-                            frame_tr.append(bboxes[best_id].tolist()[1:] + [object_class_id + (j * 10)])
+                            #frame_tr.append(bboxes[best_id].tolist()[1:] + [object_class_id + (j * 10)])
+                            frame_tr.append(bboxes[best_id].tolist()[1:] + [model_class_id])
+                            prev_track_ids[model_class_id] = bboxes[best_id][0]
             tracking_results["tracks"][frame_id]=frame_tr
 
         #kick all nones
@@ -209,9 +222,14 @@ def main_tracker_bytetrack_batch(
         tracking_results = {"tracks": [None]*int(frame_cnt), "hash": hash_hex, "class_names": class_names}
         # for frame_id, img in enumerate(imgs):
         N = len(imgs)
-        for i in range(0, N, 3):
-            img = imgs[i:i+3]
-            frame_id = [j for j in range(i, i+3)]
+        batch_size = 3
+        for i in range(0, N, batch_size):
+            start_idx = i
+            stop_idx = i + batch_size
+            if stop_idx > N:
+                stop_idx = N
+            img = np.array(imgs[start_idx:stop_idx])
+            frame_id = np.arange(start_idx,stop_idx,1)
             frame_tr = []
             # if not (frame_id % 50):
             #     logger.debug(
@@ -219,7 +237,7 @@ def main_tracker_bytetrack_batch(
             #     )
             for j, tracker in enumerate(models):
 
-                result = inference_mot(
+                result = inference_mot_batch(
                     tracker, img, frame_id=frame_id
                 )
  
@@ -239,3 +257,49 @@ def main_tracker_bytetrack_batch(
         tracking_results["tracks"]=[x for x in tracking_results["tracks"] if x is not None]
 
         json.dump(tracking_results, open(output_file_path, "w"))
+
+        
+def inference_mot_batch(model, img, frame_id):
+    """Inference image(s) with the mot model.
+
+    Args:
+        model (nn.Module): The loaded mot model.
+        img (str | ndarray): Either image name or loaded image.
+        frame_id (int): frame id.
+
+    Returns:
+        dict[str : ndarray]: The tracking results.
+    """
+    cfg = model.cfg
+    device = next(model.parameters()).device  # model device
+    # prepare data
+    if isinstance(img, np.ndarray):
+        # directly add img
+        data = dict(img=img, img_info=dict(frame_id=frame_id), img_prefix=None)
+        cfg = cfg.copy()
+        # set loading pipeline type
+        cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
+    else:
+        # add information into dict
+        data = dict(
+            img_info=dict(filename=img, frame_id=frame_id), img_prefix=None)
+    # build the data pipeline
+    cfg.samples_per_gpu = 3
+    
+    test_pipeline = Compose(cfg.data.test.pipeline)
+    data = test_pipeline(data)
+    data = collate([data], samples_per_gpu=1)
+    if next(model.parameters()).is_cuda:
+        # scatter to specified GPU
+        data = scatter(data, [device])[0]
+    else:
+        for m in model.modules():
+            assert not isinstance(
+                m, RoIPool
+            ), 'CPU inference with RoIPool is not supported currently.'
+        # just get the actual data from DataContainer
+        data['img_metas'] = data['img_metas'][0].data
+    # forward the model
+    with torch.no_grad():
+        result = model(return_loss=False, rescale=True, **data)
+    return result
