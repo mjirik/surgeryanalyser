@@ -69,11 +69,11 @@
                     </td>
                     <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}">
                         {{ uploadedfile.email }} </a></td>
-                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}?next={{ request.path|urlencode }}"
+                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}"
                            style="word-break: break-all;"
                     >
                         {{ uploadedfile }}</a></td>
-                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}?next={{ request.path|urlencode }}">
+                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}">
                         {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
                     {% if user.is_authenticated %}
                         <td>
