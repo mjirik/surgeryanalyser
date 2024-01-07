@@ -25,6 +25,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile
+from . import tasks
 
 # Create your views here.
 
@@ -88,6 +89,7 @@ def update_all_uploaded_files(request):
     for file in files:
         make_preview(file, force=True)
         update_owner(file)
+        tasks.add_status_to_uploaded_file(file)
     return redirect("/uploader/thanks/")
 
 
@@ -574,7 +576,10 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
 
     serverfile.started_at = django.utils.timezone.now()
     serverfile.finished_at = None
+    serverfile.processing_ok = False
+    serverfile.processing_message = "Not finished yet."
     serverfile.save()
+
     logger.debug(f"hostname={hostname}, port={port}")
 
     async_task(

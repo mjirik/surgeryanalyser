@@ -46,6 +46,8 @@ class UploadedFile(models.Model):
     hash = models.CharField(max_length=255, blank=True, default=_hash)
     started_at = models.DateTimeField("Started at", blank=True, null=True)
     finished_at = models.DateTimeField("Finished at", blank=True, null=True)
+    processing_ok = models.BooleanField(default=False)
+    processing_message = models.TextField(blank=True, default="")
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
     is_microsurgery = models.BooleanField(default=False)
     review_assigned_at = models.DateTimeField("Assigned at", null=True, blank=True, default=None)

@@ -43,11 +43,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     {% block head %}
     {% endblock %}
-    <script>
-        $(document).ready(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-    </script>
+{#    <script>#}
+{#        $(document).ready(function () {#}
+{#            $('[data-toggle="tooltip"]').tooltip();#}
+{#        });#}
+{#    </script>#}
 </head>
 
 <body>
@@ -249,5 +249,11 @@
         integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
         crossorigin="anonymous"></script>
 
+<script>
+    {# show tooltip #}
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
 </body>
 </html>
