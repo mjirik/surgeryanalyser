@@ -528,8 +528,9 @@ def go_to_video_for_annotation(request, email:Optional[str]=None):
 
 def _filter_images(serverfile: UploadedFile):
     allowed_image_patterns = [
-        "heatmap",
-        "needle_holder_area_presence",
+        "needle_holder_heatmap",
+        "needle_holder_all_area_presence",
+        "forceps_heatmap",
         "stitch_detection_0",
         "jpeg",
         "gif",
