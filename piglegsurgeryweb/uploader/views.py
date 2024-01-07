@@ -60,13 +60,16 @@ def message(request, headline=None, text=None, next_text=None, next=None):
 def thanks(request):
     context = {
         "headline": "Thank You",
-        "text": "Thank you for uploading media file. We will let you know when the processing will be finished.",
-        "next_text": "Upload next",
-        "next": None
+        "text": "Thank you for uploading media file. We will let you know when the processing will be finished. "+
+                "Meanwhile you can review other student's video.",
+        "next_text": "Review other student's video",
+        "next": reverse("uploader:go_to_video_for_annotation_random", ),
+        "next_text_secondary" : "Upload another video",
+        "next_secondary": reverse("uploader:model_form_upload")
         # 'next': "uploader:model_form_upload"
         # 'next': "uploader:model_form_upload"
     }
-    return render(request, "uploader/thanks.html", context)
+    return render(request, "uploader/message.html", context)
 
 
 @login_required(login_url="/admin/")
@@ -489,15 +492,15 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
 
     return video
 
-def go_to_video_for_annotation(request, student_email:Optional[str]=None):
+def go_to_video_for_annotation(request, email:Optional[str]=None):
     student_id = None
-    if student_email is None:
+    if email is None:
         if request.user.is_authenticated:
-            student_email = request.user.email
-            if student_email:
-                student_id = _get_owner(student_email).id
+            email = request.user.email
+            if email:
+                student_id = _get_owner(email).id
     else:
-        student_id = _get_owner(student_email).id
+        student_id = _get_owner(email).id
 
     video = _find_video_for_annotation(student_id)
 
@@ -683,7 +686,22 @@ def model_form_upload(request):
                 timeout=settings.PIGLEGCV_TIMEOUT,
                 hook="uploader.tasks.email_report_from_task",
             )
-            return redirect("/uploader/thanks/")
+            # url = reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email})
+            # logger.debug(f"{url=}")
+            # return redirect("/uploader/thanks/")
+
+            context = {
+                "headline": "Thank You",
+                "text": "Thank you for uploading media file. We will let you know when the processing will be finished. " +
+                        "Meanwhile you can review other student's video.",
+                "next_text": "Review other student's video",
+                "next": reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email}),
+                "next_text_secondary": "Upload another video",
+                "next_secondary": reverse("uploader:model_form_upload")
+                # 'next': "uploader:model_form_upload"
+                # 'next': "uploader:model_form_upload"
+            }
+            return render(request, "uploader/message.html", context)
     else:
         form = UploadedFileForm()
     return render(
