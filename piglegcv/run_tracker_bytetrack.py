@@ -132,6 +132,8 @@ def main_tracker_bytetrack(
     run_tracking, hash_hex = _should_do_tracking_based_on_hash(
         trackers_config_and_checkpoints, filename,
         output_file_path, additional_hash=additional_hash)
+    # if there is change in the tracking algorithm, there should be changed added hash too
+    additional_hash += "0"
 
     models = []
     for tracker_config, tracker_checkpoint in trackers_config_and_checkpoints:

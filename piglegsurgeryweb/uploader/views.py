@@ -450,6 +450,12 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
     return render(request, "uploader/web_report.html", context)
 
 def _find_video_for_annotation(student_id:Optional[int] = None):
+    """Find a video for annotation.
+
+    If student_id is not None, then the video will not be owned by the student.
+    We are looking for videos with finished processing, with no annotations and if we know the email of the user,
+    we are looking for videos not uploaded by the user.
+    """
 
     now = timezone.now()
     thirty_minutes_ago = now - timedelta(minutes=30)
@@ -466,6 +472,7 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     ).filter(
         Q(review_assigned_at__lt=thirty_minutes_ago) | Q(review_assigned_at__isnull=True),
         num_annotations = 0,
+        processing_ok=True,
     )
 
 
