@@ -6,7 +6,8 @@ Actual version: "0.0.0"
 
 * [added] Processing status of the mediafile
 * [added] Review of the mediafile
-* [added] Ask user for a review
+* [added] Ask user for a review after the mediafile is uploaded and in email
+* [changed] Tracking is now more continuous and not so jumpy
 
 ## 2023-12
 
