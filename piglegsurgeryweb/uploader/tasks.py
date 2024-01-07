@@ -325,12 +325,14 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
         "</head>"
         f"<body>"
-        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {serverfile.mediafile}</p>"
+        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(serverfile.mediafile).name)}</p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.email}">You can also do a review</a> .</p>\n'
         f"<p></p>"
         f"<p>Best regards</p>\n"
         f"<p>Miroslav Jirik</p>\n"
