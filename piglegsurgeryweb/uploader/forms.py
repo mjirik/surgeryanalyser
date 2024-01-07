@@ -14,13 +14,13 @@ class UploadedFileForm(forms.ModelForm):
 
 
 class AnnotationForm(forms.ModelForm):
-    STAR_CHOICES = [(i, str(i)) for i in range(1, 6)]  # 0 to 5
+    STAR_CHOICES = [(i, str(i)) for i in range(5, 0, -1)]  # 0 to 5
 
     stars = forms.ChoiceField(choices=STAR_CHOICES, widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
         super(AnnotationForm, self).__init__(*args, **kwargs)
-        self.fields["stars"].initial = 5  # Default to 1 star
+        self.fields["stars"].initial = 1  # Default to 1 star
 
     class Meta:
         model = MediaFileAnnotation
