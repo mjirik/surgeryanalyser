@@ -81,10 +81,10 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'uploader:model_form_upload' %}">Upload</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'uploader:go_to_video_for_annotation_random' %}">Review video</a>
-                </li>
                 {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'uploader:go_to_video_for_annotation_random' %}">Review video</a>
+                    </li>
 
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'uploader:web_reports' %}">Reports</a>
