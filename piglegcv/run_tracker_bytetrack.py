@@ -122,7 +122,7 @@ def main_tracker_bytetrack(
     device=None,
     class_names=[],
     additional_hash="",
-    force_run=False,
+    force_tracker:bool=False,
 ):
     """Run tracking on a video.
     trackers: is list of tuples (config_file, checkpoint)
@@ -144,7 +144,7 @@ def main_tracker_bytetrack(
     imgs = mmcv.VideoReader(str(filename))
     frame_cnt = imgs.frame_cnt
 
-    if run_tracking or force_run:
+    if run_tracking or force_tracker:
         progress = tools.ProgressPrinter(frame_cnt)
         tracking_results = {"tracks": [None]*int(frame_cnt), "hash": hash_hex, "class_names": class_names}
         prev_track_ids = 20 * [-1]
