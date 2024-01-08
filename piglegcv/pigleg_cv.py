@@ -82,6 +82,7 @@ class DoComputerVision:
         is_microsurgery=False,
         test_first_seconds: bool = False,
         device: Optional[str] = None,
+        force_tracker:bool=False
     ):
         log_format = loguru._defaults.LOGURU_FORMAT
         self.logger_id = logger.add(
@@ -115,6 +116,7 @@ class DoComputerVision:
         self.device = device
         self.n_stitches: int = int(n_stitches)
         self.results = None
+        self.force_tracker = force_tracker
         self.is_video: bool = (
             False
             if Path(self.filename).suffix.lower()
@@ -264,6 +266,7 @@ class DoComputerVision:
             class_names=class_names,
             device=self.device,
             additional_hash="s" if self.test_first_seconds else "f",
+            force_tracker=self.force_tracker
         )
 
     def run_video_processing(self):
@@ -601,6 +604,7 @@ def do_computer_vision(
     is_microsurgery: bool = False,
     n_stitches: Optional[int] = None,
     device=DEVICE,
+    force_tracker:bool = False
 ):
     logger.debug(f"{is_microsurgery=}")
     return DoComputerVision(
@@ -610,6 +614,7 @@ def do_computer_vision(
         is_microsurgery=is_microsurgery,
         n_stitches=n_stitches,
         device=device,
+        force_tracker=force_tracker
     ).run()
 
 
