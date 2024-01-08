@@ -10,7 +10,7 @@ import traceback
 # from .pigleg_cv import run_media_processing
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 import django.utils
 import gspread
@@ -151,11 +151,42 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     add_generated_images(serverfile)
     make_zip(serverfile)
 
+    add_status_to_uploaded_file(serverfile)
+
     serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
     _add_row_to_spreadsheet(serverfile, absolute_uri)
     logger.debug("Processing finished")
     logger.remove(logger_id)
+
+def add_status_to_uploaded_file(serverfile:UploadedFile):
+    """
+    Find status in piglegcv log file. Status is the last line of the file.
+    If line contain "Work finished", everything is OK. If line contain error,
+    the processing failed.
+    """
+    piglegcv_log_path = Path(serverfile.outputdir) / "piglegcv_log.txt"
+    is_ok = False
+    if not piglegcv_log_path.exists():
+        is_ok = False
+        status = "Log file does not exist."
+    else:
+        with open(piglegcv_log_path, "r") as fr:
+            lines = fr.readlines()
+            if len(lines) == 0:
+                is_ok = False
+                status = "Log file is empty."
+                return is_ok, status
+            last_line = lines[-1]
+            if "Work finished" in last_line:
+                is_ok = True
+                status = "Work finished."
+            else:
+                is_ok = False
+                status = last_line
+    serverfile.processing_ok = is_ok
+    serverfile.processing_message = status
+    serverfile.save()
 
 
 def _add_row_to_spreadsheet(serverfile, absolute_uri):
@@ -200,6 +231,8 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
             else defaultfilters.date(serverfile.finished_at, "Y-m-d H:i"),
             "filename_full": serverfile.mediafile.name,
             "report_url": f"{absolute_uri}/uploader/web_report/{serverfile.hash}",
+            "processing_ok": serverfile.processing_ok,
+            "processing_message": serverfile.processing_message,
         }
     )
 
@@ -292,12 +325,14 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
         "</head>"
         f"<body>"
-        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {serverfile.mediafile}</p>"
+        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(serverfile.mediafile).name)}</p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.email}">You can also do a review</a> .</p>\n'
         f"<p></p>"
         f"<p>Best regards</p>\n"
         f"<p>Miroslav Jirik</p>\n"

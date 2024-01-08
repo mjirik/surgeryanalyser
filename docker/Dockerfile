@@ -76,6 +76,7 @@ RUN conda install -n piglegsurgery --yes -c conda-forge redis loguru=0.5 gunicor
 RUN conda install -n piglegsurgery --yes -c conda-forge google-api-python-client=2.88 gspread=5.7
 RUN conda install -n piglegsurgery --yes -c conda-forge google-auth-httplib2=0.1 google-auth=2.19 oauth2client=4.1 google-auth-oauthlib=1.0
 RUN conda install -n piglegsurgery --yes -c conda-forge rich
+RUN conda install -n piglegsurgery --yes -c conda-forge rich django==3.2.23
 RUN conda list
 #RUN cd /webapps/scaffanweb_django
 # Make RUN commands use the new environment:
@@ -118,7 +119,7 @@ RUN conda run -n piglegsurgery --no-capture-output pip install -r requirements_p
 
 WORKDIR /webapps
 
-RUN conda run -n piglegsurgery --no-capture-output pip install django-q
+# RUN conda run -n piglegsurgery --no-capture-output pip install django-q=1.3.9
 
 #RUN apt-get install multitail
 RUN mkdir -p ~/piglegcv/logs/
@@ -135,7 +136,7 @@ RUN sudo rm /etc/apt/sources.list.d/nvidia-ml.list
 RUN sudo apt-get update --yes
 RUN sudo apt-get install --yes apache2-utils
 
-RUN conda install -n piglegsurgery --yes -c conda-forge plotly statsmodels
+RUN conda install -n piglegsurgery --yes -c conda-forge plotly=5.18.0 statsmodels
 
 RUN sudo mkdir -p /webapps/piglegsurgery/piglegsurgeryweb/static/
 RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/

@@ -1,1 +1,1 @@
-django-q
+django-q==1.3.9

@@ -43,8 +43,9 @@
                     </a>
 
                 </th>
+                <th scope="col" colspan="2"></th>
                 {% if user.is_authenticated %}
-                    <th scope="col" colspan="3"></th>
+                    <th scope="col" colspan="2"></th>
                     <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
                     <th scope="col"><a href="?order_by=-started_at">
                         {% if order_by == "-started_at" %} ▼ {% endif %} Started At </a>
@@ -67,25 +68,36 @@
                                    style="min-width: 66px; max-width: 80px;"></image>
                         {% endif %}
                     </td>
-                    <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}">
+                    <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}"
+                                       style="word-break: break-all;"
+                    >
                         {{ uploadedfile.email }} </a></td>
-                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}?next={{ request.path|urlencode }}"
+                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}"
                            style="word-break: break-all;"
                     >
                         {{ uploadedfile }}</a></td>
-                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}?next={{ request.path|urlencode }}">
+                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}">
                         {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
+                    <td>
+                        <a class="btn btn-light"
+                           href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}">
+                            {% if uploadedfile.is_microsurgery %}
+                                <i class="fa-solid fa-microscope"></i>
+                            {% else %}
+                                <i class="fa-regular fa-eye"></i>
+                            {% endif %}
+                        </a></td>
+                    </td>
+                    <td>
+                        <div data-toggle="tooltip" data-placement="top" title="{{ uploadedfile.processing_message }}">
+                        {% if uploadedfile.processing_ok %}
+                            <i class="fa fa-check text-success"></i>
+                        {% else %}
+                            <i class="fa fa-close text-danger"></i>
+                        {% endif %}
+                        </div>
+                    </td>
                     {% if user.is_authenticated %}
-                        <td>
-                            <a class="btn btn-light"
-                               href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}">
-                                {% if uploadedfile.is_microsurgery %}
-                                    <i class="fa-solid fa-microscope"></i>
-                                {% else %}
-                                    <i class="fa-regular fa-eye"></i>
-                                {% endif %}
-                            </a></td>
-                        </td>
                         <td><a class="btn btn-light"
                                href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}">Run</a>
                         </td>
@@ -121,6 +133,10 @@
                 }
             })
 
+            {# show tooltip #}
+            {#$(document).ready(function () {#}
+            {#    $('[data-toggle="_status_to_uploaded_filetooltip"]').tooltip();#}
+            {# });#}
         </script>
     </div>
 {% endblock %}

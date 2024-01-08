@@ -43,11 +43,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     {% block head %}
     {% endblock %}
-    <script>
-        $(document).ready(function () {
-            $('[data-toggle="tooltip"]').tooltip();
-        });
-    </script>
+{#    <script>#}
+{#        $(document).ready(function () {#}
+{#            $('[data-toggle="tooltip"]').tooltip();#}
+{#        });#}
+{#    </script>#}
 </head>
 
 <body>
@@ -82,6 +82,9 @@
                     <a class="nav-link" href="{% url 'uploader:model_form_upload' %}">Upload</a>
                 </li>
                 {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'uploader:go_to_video_for_annotation_random' %}">Review video</a>
+                    </li>
 
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'uploader:web_reports' %}">Reports</a>
@@ -246,5 +249,11 @@
         integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
         crossorigin="anonymous"></script>
 
+<script>
+    {# show tooltip #}
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
 </body>
 </html>

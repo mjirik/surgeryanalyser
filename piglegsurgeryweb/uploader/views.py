@@ -21,6 +21,11 @@ from .forms import AnnotationForm, UploadedFileForm
 from .models import MediaFileAnnotation, Owner, UploadedFile, _hash
 from .models_tools import randomString
 from .tasks import email_media_recived, make_preview
+from datetime import timedelta
+from django.utils import timezone
+from django.db.models import Count, Q
+from .models import UploadedFile
+from . import tasks
 
 # Create your views here.
 
@@ -46,7 +51,7 @@ def message(request, headline=None, text=None, next_text=None, next=None):
         if text is None
         else text,
         "next_text": "Forward" if next_text is None else next_text,
-        "next": "uploader/upload" if next is None else next
+        "next": reverse("uploader:model_form_upload") if next is None else next
         # 'next': "uploader:model_form_upload"
         # 'next': "uploader:model_form_upload"
     }
@@ -56,13 +61,16 @@ def message(request, headline=None, text=None, next_text=None, next=None):
 def thanks(request):
     context = {
         "headline": "Thank You",
-        "text": "Thank you for uploading media file. We will let you know when the processing will be finished.",
-        "next_text": "Upload next",
-        "next": None
+        "text": "Thank you for uploading media file. We will let you know when the processing will be finished. "+
+                "Meanwhile you can review other student's video.",
+        "next_text": "Review other student's video",
+        "next": reverse("uploader:go_to_video_for_annotation_random", ),
+        "next_text_secondary" : "Upload another video",
+        "next_secondary": reverse("uploader:model_form_upload")
         # 'next': "uploader:model_form_upload"
         # 'next': "uploader:model_form_upload"
     }
-    return render(request, "uploader/thanks.html", context)
+    return render(request, "uploader/message.html", context)
 
 
 @login_required(login_url="/admin/")
@@ -81,6 +89,7 @@ def update_all_uploaded_files(request):
     for file in files:
         make_preview(file, force=True)
         update_owner(file)
+        tasks.add_status_to_uploaded_file(file)
     return redirect("/uploader/thanks/")
 
 
@@ -262,7 +271,7 @@ def owners_reports_list(request, owner_hash: str):
     return render(request, "uploader/report_list.html", context)
 
 
-def _prepare_context_for_web_report(request, serverfile: UploadedFile):
+def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_edit_hash: Optional[str] = None) -> dict:
     fn = Path(serverfile.zip_file.path)
     logger.debug(fn)
     logger.debug(fn.exists())
@@ -344,7 +353,10 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile):
             videofiles_url.append(videofile_url)
 
     image_list_in, image_list_out = _filter_images(serverfile)
-
+    logger.debug(f"{serverfile.review_edit_hash=}")
+    logger.debug(f"{review_edit_hash=}")
+    edit_review = serverfile.review_edit_hash == review_edit_hash
+    logger.debug(f"{edit_review=}")
     context = {
         "serverfile": serverfile,
         "mediafile": Path(serverfile.mediafile.name).name,
@@ -353,6 +365,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile):
         "next": request.GET["next"] if "next" in request.GET else None,
         "videofiles_url": videofiles_url,
         "results": results,
+        "edit_review": edit_review,
     }
 
     return context
@@ -375,7 +388,7 @@ def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile)
     return context
 
 
-def web_report(request, filename_hash: str):
+def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     if (
@@ -385,12 +398,17 @@ def web_report(request, filename_hash: str):
         context = _prepare_context_if_web_report_not_exists(request, serverfile)
         return render(request, "uploader/message.html", context)
         # return redirect("uploader:message", next=request.path)
-    context = _prepare_context_for_web_report(request, serverfile)
+    context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
 
     # evaluate annotation form
     if request.method == "POST":
+        uploaded_file_annotations = serverfile.mediafileannotation_set.first()
+        if uploaded_file_annotations:
+            logger.debug("annotation loaded from database")
+        else:
+            logger.debug("saving new form")
 
-        form = AnnotationForm(request.POST)
+        form = AnnotationForm(request.POST, instance=uploaded_file_annotations)
         if form.is_valid():
             # process the data in form.cleaned_data as required
             # ...
@@ -399,33 +417,120 @@ def web_report(request, filename_hash: str):
                 annotator = _get_owner(request.user.email)
             else:
                 annotator = None
+            annotation = form.save(commit=False)
+            annotation.uploaded_file = serverfile
+            annotation.updated_at = django.utils.timezone.now()
+            annotation.annotator = annotator
+            annotation.save()
 
-            annotation = MediaFileAnnotation(
-                uploaded_file=serverfile,
-                annotation=form.cleaned_data["annotation"],
-                stars=form.cleaned_data["stars"],
-                annotator=annotator,
-            )
+
+            # annotation = MediaFileAnnotation(
+            #     uploaded_file=serverfile,
+            #     annotation=form.cleaned_data["annotation"],
+            #     stars=form.cleaned_data["stars"],
+            #     annotator=annotator,
+            # )
             annotation.save()
             return redirect(request.path)
     else:
 
-        uploaded_file_annotations = serverfile.mediafileannotation_set.first()
+        uploaded_file_annotations_set = serverfile.mediafileannotation_set
+        logger.debug(f"{uploaded_file_annotations_set=}")
+        uploaded_file_annotations = uploaded_file_annotations_set.first()
+        logger.debug(f"{uploaded_file_annotations=}")
         if uploaded_file_annotations:
             form = AnnotationForm(instance=uploaded_file_annotations)
+            logger.debug("annotation loaded from database")
         else:
             form = AnnotationForm()
-        logger.debug("created empty form")
-    logger.debug(f"form={form}")
+            logger.debug("created empty form")
+    # logger.debug(f"form={form}")
     context["form"] = form
 
     return render(request, "uploader/web_report.html", context)
 
+def _find_video_for_annotation(student_id:Optional[int] = None):
+    """Find a video for annotation.
+
+    If student_id is not None, then the video will not be owned by the student.
+    We are looking for videos with finished processing, with no annotations and if we know the email of the user,
+    we are looking for videos not uploaded by the user.
+    """
+
+    now = timezone.now()
+    thirty_minutes_ago = now - timedelta(minutes=30)
+    today = timezone.now().date()
+
+
+    # Filter videos not uploaded by the requesting student and that have no annotations
+    if student_id:
+        videos = UploadedFile.objects.exclude(owner__id=student_id)
+    else:
+        videos = UploadedFile.objects.all()
+    videos = videos.annotate(
+        num_annotations=Count('mediafileannotation')
+    ).filter(
+        Q(review_assigned_at__lt=thirty_minutes_ago) | Q(review_assigned_at__isnull=True),
+        num_annotations = 0,
+        processing_ok=True,
+    )
+
+
+    video = None
+    # Start with today's videos, then go back each day
+    for days_ago in range(0, 7):  # Search up to a week back, adjust as needed
+        day = today - timedelta(days=days_ago)
+
+        # Get videos from this day, ordered by time (later times later)
+        day_videos = videos.filter(uploaded_at__date=day).order_by('uploaded_at')
+
+        if day_videos.exists():
+            video = day_videos.last()  # Return the latest video of the day
+            break
+
+    # No videos found within the past week so we are looking for the oldest video
+
+    if video is None:
+        video = videos.order_by('uploaded_at').last()
+
+    if video is not None:
+        video.review_assigned_at = now
+        if student_id:
+            video.review_assigned_to = _get_owner(student_id)
+        video.save()
+
+    return video
+
+def go_to_video_for_annotation(request, email:Optional[str]=None):
+    student_id = None
+    if email is None:
+        if request.user.is_authenticated:
+            email = request.user.email
+            if email:
+                student_id = _get_owner(email).id
+    else:
+        student_id = _get_owner(email).id
+
+    video = _find_video_for_annotation(student_id)
+
+    # go to the web_report of the video
+    if video:
+        return redirect("uploader:web_report", filename_hash=video.hash)
+    else:
+        # return redirect("uploader:model_form_upload_upload")
+        return redirect("uploader:message",
+                        headline="No video for review",
+                        text="No video for review found. Please try again later.",
+                        next=reverse("uploader:model_form_upload"),
+                        next_text="Ok"
+                        )
+
 
 def _filter_images(serverfile: UploadedFile):
     allowed_image_patterns = [
-        "heatmap",
-        "needle_holder_area_presence",
+        "needle_holder_heatmap",
+        "needle_holder_all_area_presence",
+        "forceps_heatmap",
         "stitch_detection_0",
         "jpeg",
         "gif",
@@ -479,7 +584,10 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
 
     serverfile.started_at = django.utils.timezone.now()
     serverfile.finished_at = None
+    serverfile.processing_ok = False
+    serverfile.processing_message = "Not finished yet."
     serverfile.save()
+
     logger.debug(f"hostname={hostname}, port={port}")
 
     async_task(
@@ -591,7 +699,22 @@ def model_form_upload(request):
                 timeout=settings.PIGLEGCV_TIMEOUT,
                 hook="uploader.tasks.email_report_from_task",
             )
-            return redirect("/uploader/thanks/")
+            # url = reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email})
+            # logger.debug(f"{url=}")
+            # return redirect("/uploader/thanks/")
+
+            context = {
+                "headline": "Thank You",
+                "text": "Thank you for uploading media file. We will let you know when the processing will be finished. " +
+                        "Meanwhile you can review other student's video.",
+                "next_text": "Review other student's video",
+                "next": reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email}),
+                "next_text_secondary": "Upload another video",
+                "next_secondary": reverse("uploader:model_form_upload")
+                # 'next': "uploader:model_form_upload"
+                # 'next': "uploader:model_form_upload"
+            }
+            return render(request, "uploader/message.html", context)
     else:
         form = UploadedFileForm()
     return render(

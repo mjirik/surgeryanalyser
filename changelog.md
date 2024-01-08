@@ -2,14 +2,19 @@
 
 Actual version: "0.0.0"
 
-* [added] Annotation of the mediafile
+## 2024-01
+
+* [added] Processing status of the mediafile
+* [added] Review of the mediafile
+* [added] Ask user for a review after the mediafile is uploaded and in email
+* [changed] Tracking is now more continuous and not so jumpy
 
 ## 2023-12
 
 * [added] Menu for logged users
 * [added] Hand tracking
 * [added] Microsurgery support
-* [added] Access to the admin page of object from from web report
+* [added] Access to the admin page of object from web report
 
 ## 2022-11
 

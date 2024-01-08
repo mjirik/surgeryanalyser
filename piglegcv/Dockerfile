@@ -107,6 +107,8 @@ RUN mkdir logs
 RUN mkdir -p ./.cache/torch/hub/checkpoints/
 COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
 
+# for easier debugg with this environment connected in pycharm
+RUN pip install django==3.2.23 django-q==1.3.9 plotly==5.18.0
 
 # it is possible to do it togehter but then everything is in one layer and slow to build
 RUN mkdir -p ./resources
