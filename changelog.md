@@ -8,6 +8,7 @@ Actual version: "0.0.0"
 * [added] Review of the mediafile
 * [added] Ask user for a review after the mediafile is uploaded and in email
 * [changed] Tracking is now more continuous and not so jumpy
+* [changed] Every annotation change is now stored to spreadsheet
 
 ## 2023-12
 

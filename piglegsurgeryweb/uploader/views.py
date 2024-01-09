@@ -25,7 +25,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile
-from . import tasks
+from . import tasks, data_tools
 
 # Create your views here.
 
@@ -431,6 +431,14 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             #     annotator=annotator,
             # )
             annotation.save()
+
+            logger.debug("preparing async_task for add_row_to_spreadsheet_and_update_zip")
+            async_task(
+                "uploader.tasks.add_row_to_spreadsheet_and_update_zip",
+                serverfile,
+                request.build_absolute_uri("/"),
+                timeout=settings.PIGLEGCV_TIMEOUT,
+            )
             return redirect(request.path)
     else:
 

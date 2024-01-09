@@ -159,6 +159,15 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
+def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri):
+    logger.debug("Updating spreadsheet...")
+    _add_row_to_spreadsheet(serverfile, absolute_uri)
+    # logger.debug("Spreadsheet updated")
+    # if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
+    #     serverfile.zip_file.delete()
+    # make_zip(serverfile)
+    logger.debug("Zip updated")
+
 def add_status_to_uploaded_file(serverfile:UploadedFile):
     """
     Find status in piglegcv log file. Status is the last line of the file.
@@ -219,6 +228,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
     novy.update(
         {
             "email": serverfile.email,
+            "filename_full": str(Path(serverfile.mediafile.name)),
             # return str(Path(self.mediafile.name).name)
             "filename": str(Path(serverfile.mediafile.name).name),
             # "uploaded_at": None if serverfile.uploaded_at is None else serverfile.uploaded_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -233,8 +243,29 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
             "report_url": f"{absolute_uri}/uploader/web_report/{serverfile.hash}",
             "processing_ok": serverfile.processing_ok,
             "processing_message": serverfile.processing_message,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
     )
+
+    annotation = serverfile.mediafileannotation_set.first()
+    # meta = {
+    # }
+    # data_tools.save_json(meta, Path(serverfile.outputdir) / "meta.json", update=True)
+
+    if annotation:
+        novy.update(
+            {
+                "annotation":{
+                    'annotation': {
+                        "annotation": str(annotation.annotation),
+                        "stars": int(annotation.stars) if annotation.stars is not None else -1,
+                        "annotator": str(annotation.annotator) if annotation.annotator is not None else "",
+                        "updated_at": str(annotation.updated_at),
+                    }
+
+                }
+            }
+        )
 
     pop_from_dict(novy, "incision_bboxes")
     pop_from_dict(novy, "filename_full")
