@@ -318,6 +318,7 @@ class DoComputerVision:
         self._find_stitch_ends_in_tracks(
             n_clusters=self.n_stitches,
             plot_clusters=True,
+            tool_index=1,
             clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
         )
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
@@ -618,42 +619,13 @@ def do_computer_vision(
     ).run()
 
 
-def find_stitch_ends_in_tracks(
-    outputdir,
-    n_clusters: int,
-    tool_index=1,
-    time_axis: int = 2,
-    weight_of_later=0.9,
-    metadata=None,
-    plot_clusters=False,
-    clusters_image_path: Optional[Path] = None,
-):
-    logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
-    points_path = outputdir / "tracks_points.json"
-    assert points_path.exists()
-    time_axis = int(time_axis)
-    with open(points_path, "r") as f:
-        data = json.load(f)
-
-    if metadata is None:
-        meta_path = outputdir / "meta.json"
-        assert points_path.exists()
-        with open(meta_path, "r") as f:
-            metadata = json.load(f)
-    logger.debug(
-        f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}"
-    )
+def _get_X_px_fr(data:dict, incision_bboxes:list, tool_index:int) -> np.ndarray:
+    """Get X vector in pixels and frames filtered to the incision area."""
     if "data_pixels" in data:
         X_px = np.asarray(data["data_pixels"][tool_index])
     else:
         # backward compatibility
         X_px = np.asarray(data[f"data_pixels_{tool_index}"])
-    incision_bboxes = []
-    if ("incision_bboxes" in metadata) and (len(metadata["incision_bboxes"]) > 0):
-        incision_bboxes = metadata["incision_bboxes"]
-    elif "incision_bboxes" in metadata["qr_data"]:
-        incision_bboxes = metadata["qr_data"]["incision_bboxes"]
-    logger.debug(f"{incision_bboxes=}")
 
     time_fr = np.asarray(data["frame_ids"][tool_index]).reshape(-1, 1)
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
@@ -666,6 +638,58 @@ def find_stitch_ends_in_tracks(
         logger.debug(f"{X_px_fr.shape=}, {X_px_fr_tmp.shape=}")
         X_px_fr = X_px_fr_tmp
 
+    return X_px_fr
+
+
+def find_stitch_ends_in_tracks(
+    outputdir,
+    n_clusters: int,
+    tool_index:int = 1,
+    trim_tool_index:int = 0,
+    weight_of_later=0.9,
+    metadata=None,
+    plot_clusters=False,
+    clusters_image_path: Optional[Path] = None,
+):
+    """
+    Find stitch ends in tracks.
+    :param outputdir:
+    :param n_clusters:
+    :param tool_index: tool used for splitting video to the parts
+    :param time_axis:
+    :param weight_of_later:
+    :param metadata:
+    :param plot_clusters:
+    :param clusters_image_path:
+    :param trim_tool_index: tool used for trimming of the video parts
+
+    """
+    time_axis: int = 2
+    logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
+    points_path = outputdir / "tracks_points.json"
+    assert points_path.exists()
+    time_axis = int(time_axis)
+    with open(points_path, "r") as f:
+        data = json.load(f)
+
+    if metadata is None:
+        meta_path = outputdir / "meta.json"
+        assert points_path.exists()
+        with open(meta_path, "r") as f:
+            metadata = json.load(f)
+
+    incision_bboxes = []
+    if ("incision_bboxes" in metadata) and (len(metadata["incision_bboxes"]) > 0):
+        incision_bboxes = metadata["incision_bboxes"]
+    elif "incision_bboxes" in metadata["qr_data"]:
+        incision_bboxes = metadata["qr_data"]["incision_bboxes"]
+    logger.debug(f"{incision_bboxes=}")
+
+    logger.debug(
+        f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}"
+    )
+
+    X_px_fr = _get_X_px_fr(data, incision_bboxes, tool_index)
     # pix_size is in [m] to normaliza data a bit we use [mm]
     axis_normalization = np.asarray(
         [
@@ -708,15 +732,55 @@ def find_stitch_ends_in_tracks(
             splits_s.append(time)
             splits_frames.append(int(time * float(metadata["fps"])))
         prev = label
+
+
+    X_px_fr = _get_X_px_fr(data, incision_bboxes, trim_tool_index)
+
+
+    actual_split_i = 0
+    key_frame = int(X_px_fr[0][time_axis])
+    new_splits_frames = [key_frame]
+    new_splits_s = [float(key_frame) / float(metadata["fps"])]
+    for i in range(1, X_px_fr.shape[0]):
+        X_px_fr_i_prev = X_px_fr[i-1]
+        X_px_fr_i = X_px_fr[i]
+
+        if X_px_fr_i[time_axis] > splits_frames[actual_split_i]:
+            # end of previous split
+            new_splits_frames.append(int(X_px_fr_i_prev[time_axis]))
+            new_splits_s.append(float(X_px_fr_i_prev[time_axis]) / float(metadata["fps"]))
+
+            # start of next split
+            new_splits_frames.append(int(X_px_fr_i[time_axis]))
+            new_splits_s.append(float(X_px_fr_i[time_axis]) / float(metadata["fps"]))
+
+            actual_split_i += 1
+
+    # end of last split
+    new_splits_frames.append(int(X_px_fr[-1][time_axis]))
+    new_splits_s.append(float(X_px_fr[-1][time_axis]) / float(metadata["fps"]))
+
+
+        # if X_px_fr_i[time_axis] > splits_s[-1]:
+        #     new_splits_s.append(X_px_fr_i[time_axis])
+        #     new_splits_frames.append(int(X_px_fr_i[time_axis] * float(metadata["fps"])))
+        #     break
+
+    new_split_s = []
+
+
     if plot_clusters:
         plot_track_clusters(
             X,
             labels,
             cluster_centers,
-            splits_s,
+            new_splits_s,
             clusters_image_path=clusters_image_path,
         )
-    return splits_s, splits_frames
+
+
+    return new_splits_s, new_splits_frames
+    # return splits_s, splits_frames
 
 
 def plot_track_clusters(
@@ -793,8 +857,12 @@ def plot_track_clusters(
             markeredgecolor="k",
             markersize=14,
         )
-    for yline in splits_s:
-        plt.axhline(y=yline, c="r")
+
+    colors = ["g", 'r']
+    for i, yline in enumerate(splits_s):
+        # if odd use green, if even use red
+        plt.axhline(y=yline, c=colors[i%2])
+
 
     if clusters_image_path is not None:
         plt.savefig(clusters_image_path)

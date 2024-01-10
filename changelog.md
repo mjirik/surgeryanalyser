@@ -9,6 +9,7 @@ Actual version: "0.0.0"
 * [added] Ask user for a review after the mediafile is uploaded and in email
 * [changed] Tracking is now more continuous and not so jumpy
 * [changed] Every annotation change is now stored to spreadsheet
+* [added] Every stitch video part is now trimmed by presence of needle holder in the operating area
 
 ## 2023-12
 

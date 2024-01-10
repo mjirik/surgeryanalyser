@@ -1233,78 +1233,45 @@ def main_report(
                 frame_idx_stop = len(frame_id)
                 object_full_name = f"{object_name}"
                 stitch_name = "all"
-                j_before = 0
-                for cut_id, cut_frame in enumerate([0] + cut_frames):
+                # j_before = 0
 
-                    if cut_id > 0:
-                        object_full_name = f"{object_name} stitch {cut_id}"
-                        stitch_name = f"stitch_{cut_id}"
-                        for j, frame in enumerate(frame_id):
-                            if frame > cut_frame:
-                                frame_idx_start = j_before
-                                frame_idx_stop = j
-                                j_before = j
-                                break
+                logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
+                # do the report images and stats fo whole video
+                data_results = make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fps,
+                                                                        pix_size,
+                                                                        is_qr_detected, object_color, object_name,
+                                                                        outputdir, frame_idx_start, frame_idx_stop,
+                                                                        simplename, stitch_name, i, relative_presence,
+                                                                        oa_bbox_linecolor, object_full_name,
+                                                                        video_duration_s, data_results)
+                # for cut_id, cut_frame in enumerate([0] + cut_frames):
+                for cut_id in range(0, int(len(cut_frames)/2)):
+                    cut_frame_idx = int(cut_id * 2)
+                    cut_frame = cut_frames[cut_frame_idx]
+
+                    object_full_name = f"{object_name} stitch {cut_id}"
+                    stitch_name = f"stitch_{cut_id}"
+                    frame_idx_start = cut_frames[cut_frame_idx]
+                    frame_idx_stop = cut_frames[cut_frame_idx + 1]
+
+                    # if cut_id > 0:
+                    #     object_full_name = f"{object_name} stitch {cut_id}"
+                    #     stitch_name = f"stitch_{cut_id}"
+                    #     for j, frame in enumerate(frame_id):
+                    #         if frame > cut_frame:
+                    #             frame_idx_start = j_before
+                    #             frame_idx_stop = j
+                    #             j_before = j
+                    #             break
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
+                    # do the report images and stats for each stitch
+                    data_results = make_stats_and_images_for_one_video_part( frame_id, data_pixel, img_first, fps,
+                                                                             pix_size,
+                        is_qr_detected, object_color, object_name, outputdir, frame_idx_start, frame_idx_stop,
+                        simplename, stitch_name, i, relative_presence, oa_bbox_linecolor, object_full_name,
+                        video_duration_s, data_results)
 
-                    res = create_pdf_report_for_one_tool(
-                        frame_id[frame_idx_start:frame_idx_stop],
-                        data_pixel[frame_idx_start:frame_idx_stop],
-                        img_first,
-                        fps,
-                        pix_size,
-                        is_qr_detected,
-                        object_color,
-                        object_name,
-                        os.path.join(
-                            outputdir,
-                            f"graph_{i}c_{simplename}_trajectory_{stitch_name}.jpg",
-                        ),
-                        os.path.join(
-                            outputdir, f"fig_{i}a_{simplename}_graph_{stitch_name}.jpg"
-                        ),
-                    )
-
-                    oz_presence = relative_presence.calculate_presence(
-                        data_pixel[frame_idx_start:frame_idx_stop]
-                    )
-                    image_presence = relative_presence.draw_image(
-                        img_first.copy(),
-                        data_pixel[frame_idx_start:frame_idx_stop],
-                        bbox_linecolor=oa_bbox_linecolor,
-                    )
-                    cv2.imwrite(
-                        str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
-                        image_presence,
-                    )
-                    if len(res) > 0:
-                        [T, L, V, unit] = res
-                        data_results[f"{object_full_name} length [{unit}]"] = L
-                        data_results[f"{object_full_name} visibility [s]"] = T
-                        data_results[f"{object_full_name} velocity"] = V
-                        data_results[f"{object_full_name} unit"] = unit
-                        data_results[f"{object_full_name} visibility [%]"] = float(
-                            100 * T / video_duration_s
-                        )
-                        data_results[f"{object_full_name} area presence [%]"] = float(
-                            100 * oz_presence
-                        )
-
-                    oa_bbox = None
-                    if simplename == "needle_holder":
-                        logger.debug("adding operating area to the heatmap")
-                        oa_bbox = relative_presence.operating_area_bbox
-
-                    create_heatmap_report_plt(
-                        data_pixel[frame_idx_start:frame_idx_stop],
-                        image=img_first,
-                        filename=Path(outputdir)
-                        / f"fig_{i}b_{simplename}_heatmap_{stitch_name}.jpg",
-                        bbox=oa_bbox,
-                        bbox_linecolor=oa_bbox_linecolor,
-                    )
-
-        # save statistic to file
+                    # save statistic to file
         # save_json(data_results, os.path.join(outputdir, "results.json"))
 
         # TODO unlink but wait for finishing ffmpeg
@@ -1320,6 +1287,86 @@ def main_report(
     ##save perpendicular
     # data_results = load_json(os.path.join(outputdir, "results.json"))
     # perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
+
+
+def make_stats_and_images_for_one_video_part(
+    frame_id,
+    data_pixel,
+    img_first,
+    fps,
+    pix_size,
+    is_qr_detected,
+    object_color,
+    object_name,
+    outputdir,
+    frame_idx_start,
+    frame_idx_stop,
+    simplename,
+    stitch_name,
+    i,
+    relative_presence: RelativePresenceInOperatingArea,
+    oa_bbox_linecolor,
+    object_full_name,
+    video_duration_s,
+    data_results,
+):
+    res = create_pdf_report_for_one_tool(
+        frame_id[frame_idx_start:frame_idx_stop],
+        data_pixel[frame_idx_start:frame_idx_stop],
+        img_first,
+        fps,
+        pix_size,
+        is_qr_detected,
+        object_color,
+        object_name,
+        os.path.join(
+            outputdir,
+            f"graph_{i}c_{simplename}_trajectory_{stitch_name}.jpg",
+        ),
+        os.path.join(
+            outputdir, f"fig_{i}a_{simplename}_graph_{stitch_name}.jpg"
+        ),
+    )
+
+    oz_presence = relative_presence.calculate_presence(
+        data_pixel[frame_idx_start:frame_idx_stop]
+    )
+    image_presence = relative_presence.draw_image(
+        img_first.copy(),
+        data_pixel[frame_idx_start:frame_idx_stop],
+        bbox_linecolor=oa_bbox_linecolor,
+    )
+    cv2.imwrite(
+        str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
+        image_presence,
+    )
+    if len(res) > 0:
+        [T, L, V, unit] = res
+        data_results[f"{object_full_name} length [{unit}]"] = L
+        data_results[f"{object_full_name} visibility [s]"] = T
+        data_results[f"{object_full_name} velocity"] = V
+        data_results[f"{object_full_name} unit"] = unit
+        data_results[f"{object_full_name} visibility [%]"] = float(
+            100 * T / video_duration_s
+        )
+        data_results[f"{object_full_name} area presence [%]"] = float(
+            100 * oz_presence
+        )
+
+    oa_bbox = None
+    if simplename == "needle_holder":
+        logger.debug("adding operating area to the heatmap")
+        oa_bbox = relative_presence.operating_area_bbox
+
+    create_heatmap_report_plt(
+        data_pixel[frame_idx_start:frame_idx_stop],
+        image=img_first,
+        filename=Path(outputdir)
+                 / f"fig_{i}b_{simplename}_heatmap_{stitch_name}.jpg",
+        bbox=oa_bbox,
+        bbox_linecolor=oa_bbox_linecolor,
+    )
+    return data_results
 
 
 if __name__ == "__main__":
