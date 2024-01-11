@@ -550,28 +550,25 @@ class DoComputerVision:
             n_clusters = int(n_clusters)
 
             # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
-            if n_clusters > 1:
-                bboxes_to_points(str(self.outputdir))
-                # split_frames = []
-                split_s, split_frames = find_stitch_ends_in_tracks(
-                    self.outputdir,
-                    n_clusters=n_clusters,
-                    tool_index=tool_index,
-                    time_axis=time_axis,
-                    weight_of_later=weight_of_later,
-                    metadata=self.meta,
-                    plot_clusters=plot_clusters,
-                    clusters_image_path=clusters_image_path,
-                )
-                # self.meta["qr_data"]["stitch_split_frames"] = split_frames
-                self.meta["stitch_split_frames"] = split_frames
-                self.meta["stitch_split_s"] = split_s
-                return split_frames
-            else:
-                logger.debu
-                return []
+            bboxes_to_points(str(self.outputdir))
+            # split_frames = []
+            split_s, split_frames = find_stitch_ends_in_tracks(
+                self.outputdir,
+                n_clusters=n_clusters,
+                tool_index=tool_index,
+                time_axis=time_axis,
+                weight_of_later=weight_of_later,
+                metadata=self.meta,
+                plot_clusters=plot_clusters,
+                clusters_image_path=clusters_image_path,
+            )
+            # self.meta["qr_data"]["stitch_split_frames"] = split_frames
+            self.meta["stitch_split_frames"] = split_frames
+            self.meta["stitch_split_s"] = split_s
+            return split_frames
         except Exception as e:
             logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
+            print(traceback.format_exc())
         return []
 
     def _make_report(self, cut_frames=[]):
@@ -655,7 +652,7 @@ def find_stitch_ends_in_tracks(
     """
     Find stitch ends in tracks.
     :param outputdir:
-    :param n_clusters:
+    :param n_clusters: if zero or one, no clustering is done, just trimming the video
     :param tool_index: tool used for splitting video to the parts
     :param time_axis:
     :param weight_of_later:
@@ -702,41 +699,47 @@ def find_stitch_ends_in_tracks(
 
     X = X_px_fr * axis_normalization
 
-    # time =  np.asarray(list(range(X.shape[0]))).reshape(-1,1)
-    # time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
+    if n_clusters > 1:
 
-    # X = np.concatenate([X, time], axis=1)
-    # X = X * axis_normalization
+        # time =  np.asarray(list(range(X.shape[0]))).reshape(-1,1)
+        # time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
 
-    # bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
-    # ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+        # X = np.concatenate([X, time], axis=1)
+        # X = X * axis_normalization
 
-    ms = KMeans(n_clusters=n_clusters)
-    # ms = DBSCAN()
-    # ms = SpectralClustering()
-    # ms = SpectralClustering(3, affinity='precomputed', n_init=100,
-    #                       assign_labels='discretize')
-    # ms = GaussianMixture()
-    ms.fit(X)
-    labels = ms.labels_
-    # labels = ms.predict(X)
-    cluster_centers = ms.cluster_centers_
+        # bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
+        # ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
 
-    prev = labels[0]
-    splits_s = []
-    splits_frames = []
-    for frame_i, label in enumerate(labels):
-        if label != prev:
-            time = ((1 - weight_of_later) * X[frame_i - 1, time_axis]) + (
-                weight_of_later * X[frame_i, time_axis]
-            )
-            splits_s.append(time)
-            splits_frames.append(int(time * float(metadata["fps"])))
-        prev = label
+        ms = KMeans(n_clusters=n_clusters)
+        # ms = DBSCAN()
+        # ms = SpectralClustering()
+        # ms = SpectralClustering(3, affinity='precomputed', n_init=100,
+        #                       assign_labels='discretize')
+        # ms = GaussianMixture()
+        ms.fit(X)
+        labels = ms.labels_
+        # labels = ms.predict(X)
+        cluster_centers = ms.cluster_centers_
+
+        prev = labels[0]
+        splits_s = []
+        splits_frames = []
+        for frame_i, label in enumerate(labels):
+            if label != prev:
+                time = ((1 - weight_of_later) * X[frame_i - 1, time_axis]) + (
+                    weight_of_later * X[frame_i, time_axis]
+                )
+                splits_s.append(time)
+                splits_frames.append(int(time * float(metadata["fps"])))
+            prev = label
+    else:
+        splits_s = [np.mean(X[:, time_axis])]
+        splits_frames = [int(splits_s[0] * float(metadata["fps"]))]
+        labels = np.zeros(X.shape[0])
 
 
-    print(f"{splits_s=}")
-    print(f"{splits_frames=}")
+    # print(f"{splits_s=}")
+    # print(f"{splits_frames=}")
     X_px_fr = _get_X_px_fr(data, incision_bboxes, trim_tool_index)
 
 
