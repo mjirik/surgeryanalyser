@@ -93,7 +93,11 @@
                         {% if uploadedfile.processing_ok %}
                             <i class="fa fa-check text-success"></i>
                         {% else %}
-                            <i class="fa fa-close text-danger"></i>
+                            {% if uploadedfile.processing_message == "Not finished yet." %}
+                                <i class="fa fa-spinner fa-spin text-secondary"></i>
+                            {% else %}
+                                <i class="fa fa-close text-danger"></i>
+                            {% endif %}
                         {% endif %}
                         </div>
                     </td>
