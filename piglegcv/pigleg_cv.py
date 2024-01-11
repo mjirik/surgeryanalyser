@@ -568,6 +568,7 @@ class DoComputerVision:
                 self.meta["stitch_split_s"] = split_s
                 return split_frames
             else:
+                logger.debu
                 return []
         except Exception as e:
             logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
@@ -734,6 +735,8 @@ def find_stitch_ends_in_tracks(
         prev = label
 
 
+    print(f"{splits_s=}")
+    print(f"{splits_frames=}")
     X_px_fr = _get_X_px_fr(data, incision_bboxes, trim_tool_index)
 
 
@@ -741,9 +744,20 @@ def find_stitch_ends_in_tracks(
     key_frame = int(X_px_fr[0][time_axis])
     new_splits_frames = [key_frame]
     new_splits_s = [float(key_frame) / float(metadata["fps"])]
+    logger.debug(f"{splits_frames=}")
+    new_labels = []
+    
+    
+    
+    
     for i in range(1, X_px_fr.shape[0]):
         X_px_fr_i_prev = X_px_fr[i-1]
         X_px_fr_i = X_px_fr[i]
+        # new_labels.append(actual_split_i)
+#         print(f"{X_px_fr_i=}")
+
+#         print(f"{actual_split_i=}")
+                     
 
         if X_px_fr_i[time_axis] > splits_frames[actual_split_i]:
             # end of previous split
@@ -753,8 +767,10 @@ def find_stitch_ends_in_tracks(
             # start of next split
             new_splits_frames.append(int(X_px_fr_i[time_axis]))
             new_splits_s.append(float(X_px_fr_i[time_axis]) / float(metadata["fps"]))
-
             actual_split_i += 1
+            if actual_split_i >= len(splits_frames):
+                break
+                
 
     # end of last split
     new_splits_frames.append(int(X_px_fr[-1][time_axis]))
@@ -765,10 +781,12 @@ def find_stitch_ends_in_tracks(
         #     new_splits_s.append(X_px_fr_i[time_axis])
         #     new_splits_frames.append(int(X_px_fr_i[time_axis] * float(metadata["fps"])))
         #     break
+        
 
     new_split_s = []
-
-
+        
+        
+        
     if plot_clusters:
         plot_track_clusters(
             X,
@@ -791,33 +809,44 @@ def plot_track_clusters(
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
     fig = plt.figure()
+    # plt.subplot(211)
     plt.subplot(121)
     # plt.clf()
 
-    colors = ["#dede00", "#377eb8", "#f781bf", "#81bf37", "#bf3781", "#f3781b"]
-    markers = [
-        "x",
-        "o",
-        "^",
-        "x",
-        "o",
-        "^",
+    colors = [
+        "#dede00",
+        "#377eb8",
+        "#f781bf",
+        "#81bf37",
+        "#bf3781",
+        "#f3781b",
+        "#eb88b1",
+        "#1bff78",
     ]
+    markers = [ "x", "o","^","s","x","o","^","x","o","^","x","o","^"]
+    markers_x = ["x" for i in range(len(colors))]
+    markers_o = ["x" for i in range(len(colors))]
+    
+    ax0 = 1
+    ax1 = 0
 
     for k, col in zip(range(n_clusters_), colors):
         my_members = labels == k
         cluster_center = cluster_centers[k]
-        plt.plot(X[my_members, 0], X[my_members, 1], markers[k], color=col)
+        plt.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
         plt.plot(
-            cluster_center[0],
-            cluster_center[1],
+            cluster_center[ax0],
+            cluster_center[ax1],
             markers[k],
             markerfacecolor=col,
             markeredgecolor="k",
             markersize=14,
         )
+    plt.xlabel("[mm]")
+    plt.ylabel("[mm]")
     # plt.title("Estimated number of clusters: %d" % n_clusters_)
 
+    # plt.subplot(212)
     plt.subplot(122)
     colors = [
         "#dede00",
@@ -829,39 +858,28 @@ def plot_track_clusters(
         "#eb88b1",
         "#1bff78",
     ]
-    markers = [
-        "x",
-        "o",
-        "^",
-        "s",
-        "x",
-        "o",
-        "^",
-        "x",
-        "o",
-        "^",
-        "x",
-        "o",
-        "^",
-    ]
 
+
+    ax0 = 2
+    ax1 = 0
     for k, col in zip(range(n_clusters_), colors):
         my_members = labels == k
         cluster_center = cluster_centers[k]
-        plt.plot(X[my_members, 0], X[my_members, 2], markers[k], color=col)
+        plt.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
         plt.plot(
-            cluster_center[0],
-            cluster_center[2],
+            cluster_center[ax0],
+            cluster_center[ax1],
             markers[k],
             markerfacecolor=col,
             markeredgecolor="k",
             markersize=14,
         )
-
+    plt.xlabel("[s]")
     colors = ["g", 'r']
     for i, yline in enumerate(splits_s):
         # if odd use green, if even use red
-        plt.axhline(y=yline, c=colors[i%2])
+        plt.axvline(x=yline, c=colors[i%2])
+        # plt.axhline(y=yline, c=colors[i%2])
 
 
     if clusters_image_path is not None:
