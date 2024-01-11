@@ -556,7 +556,6 @@ class DoComputerVision:
                 self.outputdir,
                 n_clusters=n_clusters,
                 tool_index=tool_index,
-                time_axis=time_axis,
                 weight_of_later=weight_of_later,
                 metadata=self.meta,
                 plot_clusters=plot_clusters,
@@ -654,7 +653,6 @@ def find_stitch_ends_in_tracks(
     :param outputdir:
     :param n_clusters: if zero or one, no clustering is done, just trimming the video
     :param tool_index: tool used for splitting video to the parts
-    :param time_axis:
     :param weight_of_later:
     :param metadata:
     :param plot_clusters:
