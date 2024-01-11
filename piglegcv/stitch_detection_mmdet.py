@@ -44,7 +44,7 @@ def parse_args():
 
 
 # def main(args):
-def run_stitch_detection(img, json_file, device="cuda"):
+def run_stitch_detection(img, json_file, confidence_treshold = 0.5, device="cuda"):
 
     cfg_path = Path("./stitch_detection_mmdet_config.py")
     checkpoint_path = (
@@ -100,13 +100,21 @@ def run_stitch_detection(img, json_file, device="cuda"):
             idx_best = np.array(list(bboxes_best_idx))
             bboxes_best = bboxes[idx_best].tolist()
             labels_best = labels[idx_best].tolist()
+            
+    # filter only confident bbox
+    bboxes_filtered = []
+    labels_filtered = []
+    for box, label in zip(bboxes_best, labels_best):
+        if box[4] > confidence_treshold:
+            bboxes_filtered.append(box)
+            labels_filtered.append(label)
 
-    save_json({"stitch_labels": labels_best, "stitch_bboxes": bboxes_best}, json_file)
+    save_json({"stitch_labels": labels_filtered, "stitch_bboxes": bboxes_filtered}, json_file)
 
-    logger.debug(f"number of detected stitches = {len(bboxes_best)}")
+    logger.debug(f"number of filtered stitches = {len(bboxes_filtered)}")
     logger.debug(f"Stitch detection finished, boxes in: {json_file}")
 
-    return bboxes_best, labels_best
+    return bboxes_filtered, labels_filtered
     # return bboxes, labels
 
 
@@ -157,8 +165,9 @@ def run_stitch_analyser(
 
     ########
     r_score = 0.0
-    s_score = 1.0
+    s_score = 0.0
     N = len(bboxes)
+    p_score = 0.0
     if N > 1:
 
         w = np.abs(bboxes[:, 0] - bboxes[:, 2])
@@ -178,15 +187,18 @@ def run_stitch_analyser(
 
         score1 = res1.rvalue**2
         score2 = res2.rvalue**2
-
+        
+        logger.debug(f"R-squared upper line: {score1:.3f}")
+        logger.debug(f"R-squared lower line: {score2:.3f}")
+        logger.debug(f"Slope upper line: {res1.slope:.3f}")
+        logger.debug(f"Slope lower line: {res2.slope:.3f}")
+        
         r_score = (score1 + score2) / 2.0
         s_score = 1.0 - (
             abs(np.arctan(res1.slope) - np.arctan(res2.slope)) / np.pi
         )  # np.arctan [-pi/2, pi/2]
-
-        logger.debug(f"R-squared upper line: {score1:.3f}")
-        logger.debug(f"R-squared lower line: {score2:.3f}")
-
+        p_score = 1. - (np.mean(labels) / 3.) #perpendicular score for 4 classes, 0 .. mean is 3, 1 .. mean is 0
+                
         xx = np.array([0, cols])
         ax.plot(
             xx,
@@ -202,12 +214,14 @@ def run_stitch_analyser(
         ax.plot(xx, [wpercent * (y0 - shift_px), wpercent * (y1 - shift_px)], "k")
 
         plt.legend()
+                
+        
     # plt.show()
     plt.axis("off")
     plt.savefig(output_filename, bbox_inches="tight", dpi=300)  # save image with result
     plt.close(fig)
 
-    return {"r_score": r_score, "s_score": s_score, "N": N}
+    return {"r_score": r_score, "s_score": s_score, "N": N, "p_score" : p_score}
 
 
 if __name__ == "__main__":
