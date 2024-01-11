@@ -607,8 +607,10 @@ def create_video_report_figure(
     # Draw vlines on scissors QR code visible
     # logger.debug(f"{cut_frames=}")
     t = (1.0 / source_fps) * np.array(cut_frames)
-    for frt in t:
-        plt.axvline(frt, c="m")
+    colors = ["g", 'r']
+    for i, frt in enumerate(t):
+        plt.axvline(frt, c=colors[i%2])
+
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     # ax2.legend(loc="upper left")
 
