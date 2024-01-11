@@ -733,8 +733,11 @@ def find_stitch_ends_in_tracks(
                 splits_frames.append(int(time * float(metadata["fps"])))
             prev = label
     else:
-        splits_s = [np.mean(X[:, time_axis])]
-        splits_frames = [int(splits_s[0] * float(metadata["fps"]))]
+        # splits_s = [np.mean(X[:, time_axis])]
+        # splits_frames = [int(splits_s[0] * float(metadata["fps"]))]
+        splits_s = []
+        splits_frames = []
+        cluster_centers = [np.mean(X, axis=0)]
         labels = np.zeros(X.shape[0])
 
 
