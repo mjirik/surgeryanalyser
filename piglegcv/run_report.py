@@ -144,7 +144,7 @@ class RelativePresenceInOperatingArea(object):
                     (int(point[0]), int(point[1])),
                     radius=0,
                     color=color,
-                    thickness=2,
+                    thickness=1,
                 )
             return img
         else:
@@ -847,7 +847,8 @@ def draw_track_object(
         )
 
     if class_id > 10:  # just right and left hand bbbox
-        scale = 1. if class_id > 12 else 0.5
+        # scale = 1. if class_id > 12 else 0.5
+        scale = 0.5
         cv2.rectangle(
             img,
             (int(box[0]), int(box[1])),
@@ -918,7 +919,7 @@ def main_report(
         visualization_length_unit=None,
         ruler_size_in_units=None,
         confidence_score_thr=0.0,
-        oa_bbox_linecolor=[0, 255, 128],
+        oa_bbox_linecolor=[200, 200, 0],
         cut_frames: list = [],
         is_microsurgery: bool = False,
         test_first_seconds: bool = False,
