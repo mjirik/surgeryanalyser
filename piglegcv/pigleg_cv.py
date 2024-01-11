@@ -785,7 +785,7 @@ def find_stitch_ends_in_tracks(
         #     break
         
 
-    new_split_s = []
+    # new_split_s = []
         
         
         

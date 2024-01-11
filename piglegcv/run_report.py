@@ -1231,7 +1231,7 @@ def main_report(
                 simplename = object_name.lower().strip().replace(" ", "_")
                 # print(cut_frames)
 
-                frame_idx_start = 0
+                frame_idx_start = int(0)
                 frame_idx_stop = len(frame_id)
                 object_full_name = f"{object_name}"
                 stitch_name = "all"
@@ -1253,8 +1253,8 @@ def main_report(
 
                     object_full_name = f"{object_name} stitch {cut_id}"
                     stitch_name = f"stitch_{cut_id}"
-                    frame_idx_start = cut_frames[cut_frame_idx]
-                    frame_idx_stop = cut_frames[cut_frame_idx + 1]
+                    frame_idx_start = int(cut_frames[cut_frame_idx])
+                    frame_idx_stop = int(cut_frames[cut_frame_idx + 1])
 
                     # if cut_id > 0:
                     #     object_full_name = f"{object_name} stitch {cut_id}"
