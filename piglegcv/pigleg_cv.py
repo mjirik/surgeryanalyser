@@ -753,29 +753,27 @@ def find_stitch_ends_in_tracks(
     logger.debug(f"{splits_frames=}")
     new_labels = []
     
-    
-    
-    
-    for i in range(1, X_px_fr.shape[0]):
-        X_px_fr_i_prev = X_px_fr[i-1]
-        X_px_fr_i = X_px_fr[i]
-        # new_labels.append(actual_split_i)
-#         print(f"{X_px_fr_i=}")
+    if len(splits_frames) > 0:
+        for i in range(1, X_px_fr.shape[0]):
+            X_px_fr_i_prev = X_px_fr[i-1]
+            X_px_fr_i = X_px_fr[i]
+            # new_labels.append(actual_split_i)
+    #         print(f"{X_px_fr_i=}")
 
-#         print(f"{actual_split_i=}")
-                     
+    #         print(f"{actual_split_i=}")
 
-        if X_px_fr_i[time_axis] > splits_frames[actual_split_i]:
-            # end of previous split
-            new_splits_frames.append(int(X_px_fr_i_prev[time_axis]))
-            new_splits_s.append(float(X_px_fr_i_prev[time_axis]) / float(metadata["fps"]))
 
-            # start of next split
-            new_splits_frames.append(int(X_px_fr_i[time_axis]))
-            new_splits_s.append(float(X_px_fr_i[time_axis]) / float(metadata["fps"]))
-            actual_split_i += 1
-            if actual_split_i >= len(splits_frames):
-                break
+            if X_px_fr_i[time_axis] > splits_frames[actual_split_i]:
+                # end of previous split
+                new_splits_frames.append(int(X_px_fr_i_prev[time_axis]))
+                new_splits_s.append(float(X_px_fr_i_prev[time_axis]) / float(metadata["fps"]))
+
+                # start of next split
+                new_splits_frames.append(int(X_px_fr_i[time_axis]))
+                new_splits_s.append(float(X_px_fr_i[time_axis]) / float(metadata["fps"]))
+                actual_split_i += 1
+                if actual_split_i >= len(splits_frames):
+                    break
                 
 
     # end of last split
