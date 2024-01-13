@@ -248,7 +248,8 @@ def create_pdf_report_for_one_tool(
     :return:
     """
 
-    if frame_id != []:
+    if len(frame_id) > 1:
+        
         data_pixel = np.array(data_pixel)
         data = pix_size * data_pixel
         t = 1.0 / source_fps * np.array(frame_id)

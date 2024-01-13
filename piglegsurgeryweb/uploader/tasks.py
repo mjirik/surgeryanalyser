@@ -34,7 +34,7 @@ from .data_tools import (
     remove_iterables_from_dict,
 )
 from .media_tools import convert_avi_to_mp4, make_images_from_video, rescale
-from .models import BitmapImage, UploadedFile
+from .models import BitmapImage, UploadedFile, Owner
 from .visualization_tools import crop_square
 
 
@@ -156,8 +156,91 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
     _add_row_to_spreadsheet(serverfile, absolute_uri)
+    html_path = make_graph_for_owner(serverfile.owner)
     logger.debug("Processing finished")
     logger.remove(logger_id)
+    
+def make_graph_for_owner(owner:Owner):
+    # owner = get_object_or_404(Owner, hash=owner_hash)
+    order_by = request.GET.get("order_by", "-uploaded_at")
+    files = UploadedFile.objects.filter(owner=owner).order_by(order_by)
+    return make_graph(files, owner)
+
+    
+
+def get_graph_path(owner: Optional[Owner] = None):
+    if owner:
+        html_path = Path(settings.MEDIA_ROOT) / "generated" / owner.hash / "graph.html"
+    else:
+        html_path = Path(settings.MEDIA_ROOT) / "generated/graph.html"
+    return html_path
+
+
+def make_graph(
+    uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Owner] = None,
+):
+    import pandas as pd
+    import plotly.express as px
+    from django.utils import timezone
+
+    html_path = _get_graph_path(owner)
+    html_path.parent.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+
+    for i, uploaded_file in enumerate(uploaded_file_set):
+
+        results_path = Path(uploaded_file.outputdir) / "results.json"
+        # read results.json
+        if results_path.exists():
+            with open(results_path) as f:
+                loaded_results = json.load(f)
+            # fix typo
+            if "Stichtes linearity score" in loaded_results:
+                loaded_results["Stitches linearity score"] = loaded_results.pop("Stichtes linearity score")
+            loaded_results["Uploaded at"] = uploaded_file.uploaded_at
+            loaded_results["i"] = i
+            rows.append(loaded_results)
+
+    df = pd.DataFrame(rows)
+
+
+    if "Stitches linearity score" in df.keys():
+        df["Stitches linearity score [%]"] = df["Stitches linearity score"] * 100
+
+    if "Stitches parallelism score" in df.keys():
+        df["Stitches parallelism score [%]"] = df["Stitches parallelism score"] * 100
+
+    y = [
+        "Needle holder visibility [%]",
+        "Needle holder area presence [%]",
+        "Forceps visibility [%]",
+        "Forceps area presence [%]",
+        "Stitches linearity score [%]",
+        "Stitches parallelism score [%]",
+    ]
+
+    y = [element for element in y if element in df.keys()]
+    if len(y) == 0:
+        return None
+    # x = list(df.keys())
+    #
+    # x = [el for el in x if el != 'Uploaded at']
+
+    x = "Uploaded at"
+    import plotly.express as px
+
+    fig = px.scatter(
+        df,
+        x=x,
+        y=y,
+        # marginal_x="box",
+        # marginal_y="box"
+    )
+    fig.write_html(html_path, full_html=False)
+    return html_path
+    
+    
 
 def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri):
     logger.debug("Updating spreadsheet...")

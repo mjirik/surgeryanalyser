@@ -6,6 +6,8 @@ import gspread
 import pandas as pd
 from loguru import logger
 from oauth2client.service_account import ServiceAccountCredentials
+from collections import Counter
+from gspread.exceptions import GSpreadException
 
 
 def flatten_dict(dct: dict, parent_key: str = "", sep: str = "_") -> dict:
@@ -38,6 +40,22 @@ def remove_empty_lists(dct: dict) -> dict:
     return {k: v for k, v in dct.items() if v != []}
 
 
+def check_duplicate_columns_in_header(sheet_instance):
+     # Get the header row
+    header_row = sheet_instance.row_values(1)
+
+    # Count each column name
+    header_count = Counter(header_row)
+
+    # Find and print duplicate column names
+    duplicates = [col for col, count in header_count.items() if count > 1]
+    if duplicates:
+        print("Duplicate column names found:", duplicates)
+    else:
+        print("No duplicate column names found.")
+        
+    return duplicates
+
 def google_spreadsheet_append(
     title: str, creds, data: Union[pd.DataFrame, dict], scope=None, sheet_index=0
 ) -> pd.DataFrame:
@@ -68,6 +86,10 @@ def google_spreadsheet_append(
     # get the first sheet of the Spreadsheet
     sheet_instance = sheet.get_worksheet(sheet_index)
 
+    
+    duplicates = check_duplicate_columns_in_header(sheet_instance)
+    if len(duplicates) > 0:
+        logger.debug(f"Remove duplicates from the Google spreasheet table. Duplicates={duplicates}")
     # get all the records of the data
     # records_data = sheet_instance.get_all_records()
 
@@ -76,7 +98,12 @@ def google_spreadsheet_append(
 
     # view the top records
     # records_df.head()
-    records_data = sheet_instance.get_all_records()
+    try:
+        records_data = sheet_instance.get_all_records()
+    except GSpreadException as e:
+        
+        logger.error("Duplicate columns in header. Try to remove empty columns in Google Spreasheet.")
+        raise e
 
     # convert the json to dataframe
     records_df = pd.DataFrame.from_dict(records_data)

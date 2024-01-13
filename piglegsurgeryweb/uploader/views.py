@@ -20,7 +20,7 @@ from loguru import logger
 from .forms import AnnotationForm, UploadedFileForm
 from .models import MediaFileAnnotation, Owner, UploadedFile, _hash
 from .models_tools import randomString
-from .tasks import email_media_recived, make_preview
+from .tasks import email_media_recived, make_preview, get_graph_path
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
@@ -162,79 +162,6 @@ def report_list(request):
     return render(request, "uploader/report_list.html", context)
 
 
-def _get_graph_path(owner: Optional[Owner] = None):
-    if owner:
-        html_path = Path(settings.MEDIA_ROOT) / "generated" / owner.hash / "graph.html"
-    else:
-        html_path = Path(settings.MEDIA_ROOT) / "generated/graph.html"
-    return html_path
-
-
-def make_graph(
-    uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Owner] = None
-):
-    import pandas as pd
-    import plotly.express as px
-    from django.utils import timezone
-
-    html_path = _get_graph_path(owner)
-    html_path.parent.mkdir(parents=True, exist_ok=True)
-
-    rows = []
-
-    for i, uploaded_file in enumerate(uploaded_file_set):
-
-        results_path = Path(uploaded_file.outputdir) / "results.json"
-        # read results.json
-        if results_path.exists():
-            with open(results_path) as f:
-                loaded_results = json.load(f)
-
-            loaded_results["Uploaded at"] = uploaded_file.uploaded_at
-            loaded_results["i"] = i
-            rows.append(loaded_results)
-
-    df = pd.DataFrame(rows)
-    # fix typo
-    df.rename(
-        columns={"Stichtes linearity score": "Stitches linearity score"}, inplace=True
-    )
-
-    if "Stitches linearity score" in df.keys():
-        df["Stitches linearity score [%]"] = df["Stitches linearity score"] * 100
-
-    if "Stitches parallelism score" in df.keys():
-        df["Stitches parallelism score [%]"] = df["Stitches parallelism score"] * 100
-
-    y = [
-        "Needle holder visibility [%]",
-        "Needle holder area presence [%]",
-        "Forceps visibility [%]",
-        "Forceps area presence [%]",
-        "Stitches linearity score [%]",
-        "Stitches parallelism score [%]",
-    ]
-
-    y = [element for element in y if element in df.keys()]
-    if len(y) == 0:
-        return None
-    # x = list(df.keys())
-    #
-    # x = [el for el in x if el != 'Uploaded at']
-
-    x = "Uploaded at"
-    import plotly.express as px
-
-    fig = px.scatter(
-        df,
-        x=x,
-        y=y,
-        # marginal_x="box",
-        # marginal_y="box"
-    )
-    fig.write_html(html_path, full_html=False)
-    return html_path
-
 
 def owners_reports_list(request, owner_hash: str):
     owner = get_object_or_404(Owner, hash=owner_hash)
@@ -254,8 +181,8 @@ def owners_reports_list(request, owner_hash: str):
 
     qs_json = json.dumps(qs_data)
 
-    html_path = make_graph(files, owner)
-
+    
+    html_path = get_graph_path(owner)
     html = html_path.read_text() if html_path else None
     # logger.debug(html)
 
