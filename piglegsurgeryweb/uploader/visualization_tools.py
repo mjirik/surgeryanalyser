@@ -56,6 +56,7 @@ def read_one_result(opath:Path)->dict:
 
 def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
                             filename_contains:str="Einzelknopfnaht",
+                            normalization_path:Optional[Union[str, Path]]=None
                             )->dict:
 
     if df is None:
@@ -81,7 +82,8 @@ def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
     else:
         odir = get_media_path(base_path)
 
-    normalization_path = odir / "normalization.json"
+    if normalization_path is None:
+        normalization_path = odir / "generated/normalization.json"
 
     # calculate_normalization
     # filename contain "Einzelknopfnaht"
@@ -91,6 +93,7 @@ def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
     #
     normalization = dfs.median(numeric_only=True, skipna=True)
     norm_dct = normalization.to_dict()
+    normalization_path.parent.mkdir(parents=True, exist_ok=True)
     with open(normalization_path, "w") as f:
         json.dump(norm_dct, f, indent=4)
     # normalization.to_csv(normalization_path, index=False)

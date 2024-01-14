@@ -168,6 +168,10 @@ def get_graph_path_for_report(serverfile: UploadedFile):
     report_graph_html_path = settings.MEDIA_ROOT / "generated" / serverfile.hash / "report_graph.html"
     return report_graph_html_path
 
+def get_normalization_path():
+    normalization_path = settings.MEDIA_ROOT /  "generated/normalization.json"
+    return normalization_path
+
 def _make_graphs(uploadedfile: UploadedFile):
     # one graph with records of owner
     html_path = make_graph_for_owner(uploadedfile.owner)
@@ -182,7 +186,14 @@ def _make_metrics_for_report(uploadedfile: UploadedFile):
 
 
     # one graph for one report of the owner
-    normalization_path = settings.MEDIA_ROOT / "normalization.json"
+    normalization_path = get_normalization_path()
+    if not normalization_path.exists():
+        # calculate normalization
+        visualization_tools.calculate_normalization(
+            settings.MEDIA_ROOT,
+            normalization_path=normalization_path,
+        )
+
     with open(normalization_path) as f:
         normalization = json.load(f)
 
