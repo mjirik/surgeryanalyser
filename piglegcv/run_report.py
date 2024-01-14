@@ -1312,6 +1312,8 @@ def make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fp
                                              object_full_name, data_results) ->dict:
 
     video_duration_s = float((frame_idx_stop - frame_idx_start) / fps)
+    sn = stitch_name.replace("_", " ")
+    data_results[f"{sn} duration [s]"] = video_duration_s
     res = create_pdf_report_for_one_tool(
         frame_id[frame_idx_start:frame_idx_stop],
         data_pixel[frame_idx_start:frame_idx_stop],
