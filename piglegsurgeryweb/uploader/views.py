@@ -24,7 +24,7 @@ from .tasks import email_media_recived, make_preview, get_graph_path_for_owner, 
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
-from .models import UploadedFile
+from .models import UploadedFile, _hash
 from . import tasks, data_tools
 
 # Create your views here.
