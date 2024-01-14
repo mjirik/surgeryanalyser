@@ -177,6 +177,18 @@ def _make_graphs(uploadedfile: UploadedFile):
     html_path = make_graph_for_owner(uploadedfile.owner)
     _make_metrics_for_report(uploadedfile)
 
+def update_normalization():
+    """
+    Update normalization file. The normalization file is used for making graphs.
+    """
+    logger.debug("Updating normalization...")
+    normalization_path = get_normalization_path()
+    visualization_tools.calculate_normalization(
+        settings.MEDIA_ROOT,
+        normalization_path=normalization_path,
+    )
+    logger.debug("Normalization updated")
+
 
 def _make_metrics_for_report(uploadedfile: UploadedFile):
     """
@@ -188,11 +200,7 @@ def _make_metrics_for_report(uploadedfile: UploadedFile):
     # one graph for one report of the owner
     normalization_path = get_normalization_path()
     if not normalization_path.exists():
-        # calculate normalization
-        visualization_tools.calculate_normalization(
-            settings.MEDIA_ROOT,
-            normalization_path=normalization_path,
-        )
+        update_normalization()
 
     with open(normalization_path) as f:
         normalization = json.load(f)
