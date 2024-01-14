@@ -6,6 +6,8 @@ import shutil
 import subprocess
 import time
 import traceback
+import plotly
+import plotly.express as px
 
 # from .pigleg_cv import run_media_processing
 from datetime import datetime
@@ -33,9 +35,9 @@ from .data_tools import (
     remove_empty_lists,
     remove_iterables_from_dict,
 )
-from .media_tools import convert_avi_to_mp4, make_images_from_video, rescale
+from .media_tools import convert_avi_to_mp4, make_images_from_video, rescale, crop_square
 from .models import BitmapImage, UploadedFile, Owner
-from .visualization_tools import crop_square
+from . import visualization_tools
 
 
 def _run_media_processing_rest_api(
@@ -159,11 +161,46 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     html_path = make_graph_for_owner(serverfile.owner)
     logger.debug("Processing finished")
     logger.remove(logger_id)
-    
+
+def make_metrics_for_report(uploadedfile: UploadedFile):
+    """
+    Make metrics for report. The metrics are saved to the database.
+    """
+    logger.debug("Making metrics for report...")
+    odir = settings.MEDIA_ROOT
+    visualization_tools.calculate_normalization(odir)
+    normalization = pd.read_csv(odir / "normalization.csv")
+
+    filename = Path(uploadedfile.outputdir) / "results.json"
+    with open(filename) as f:
+        loaded_results = json.load(f)
+    with open(Path(uploadedfile.outputdir) / "meta.json") as f:
+        meta = json.load(f)
+
+    loaded_results.update(flatten_dict(meta))
+    df_one = pd.DataFrame(loaded_results, index=[0])
+
+    cols = [
+        "Needle holder stitch 0 length [m]",
+        "Needle holder stitch 0 visibility [s]",
+        "Needle holder stitch 0 visibility [%]",
+        "Needle holder stitch 0 area presence [%]",
+        "Forceps stitch 0 visibility [%]",
+        "Left hand bbox stitch 0 visibility [%]",
+        "Right hand bbox stitch 0 visibility [%]",
+        "Stitches linearity score [%]",
+        "Stitches parallelism score [%]",
+    ]
+
+    visualization_tools.make_plot_with_metric(df_one, normalization,cols)
+
+
+
+
 def make_graph_for_owner(owner:Owner):
     # owner = get_object_or_404(Owner, hash=owner_hash)
-    order_by = request.GET.get("order_by", "-uploaded_at")
-    files = UploadedFile.objects.filter(owner=owner).order_by(order_by)
+    # order_by = request.GET.get("order_by", "-uploaded_at")
+    files = UploadedFile.objects.filter(owner=owner)
     return make_graph(files, owner)
 
     
@@ -180,10 +217,8 @@ def make_graph(
     uploaded_file_set: UploadedFile.objects.all(), owner: Optional[Owner] = None,
 ):
     import pandas as pd
-    import plotly.express as px
-    from django.utils import timezone
 
-    html_path = _get_graph_path(owner)
+    html_path = get_graph_path(owner)
     html_path.parent.mkdir(parents=True, exist_ok=True)
 
     rows = []
@@ -228,7 +263,6 @@ def make_graph(
     # x = [el for el in x if el != 'Uploaded at']
 
     x = "Uploaded at"
-    import plotly.express as px
 
     fig = px.scatter(
         df,

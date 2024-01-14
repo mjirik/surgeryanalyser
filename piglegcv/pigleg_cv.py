@@ -19,6 +19,7 @@ from incision_detection_mmdet import run_incision_detection
 from loguru import logger
 from media_tools import make_images_from_video
 from run_perpendicular import get_frame_to_process, main_perpendicular
+import datetime
 
 # from run_mmpose import main_mmpose
 from run_qr import main_qr
@@ -339,6 +340,7 @@ class DoComputerVision:
         # save statistic to file
 
         self.meta["duration_s_report"] = float(time.time() - s)
+        self.meta["processed_at"]=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._save_results()
 
         set_progress(99)
