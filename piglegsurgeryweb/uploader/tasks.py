@@ -206,6 +206,9 @@ def _make_metrics_for_report(uploadedfile: UploadedFile):
         normalization = json.load(f)
 
     loaded_results = visualization_tools.read_one_result(uploadedfile.outputdir)
+    if loaded_results is None:
+        logger.warning(f"cannot generate graph for {uploadedfile.outputdir}")
+        return
 
     if "Needle holder stitch 0 visibility [%]" in loaded_results:
         cols = [

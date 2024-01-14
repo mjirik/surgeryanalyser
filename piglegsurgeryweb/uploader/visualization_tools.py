@@ -37,6 +37,7 @@ def read_one_result(opath:Path)->dict:
 
             loaded_results.update(data_tools.flatten_dict(meta))
         else:
+            logger.warning(f"File {fn} does not exist")
             return None
         # loaded_results["Uploaded at"] = uploaded_file.uploaded_at
         # fix typo
@@ -51,6 +52,7 @@ def read_one_result(opath:Path)->dict:
 
         return loaded_results
     else:
+        logger.warning(f"File {results_path} does not exist")
         return None
 
 
