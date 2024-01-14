@@ -196,7 +196,7 @@ def filter_points_in_bbox(points, bbox):
     """
     # count = 0
     logger.debug(f"{bbox}")
-    logger.debug(f"{points}")
+    # logger.debug(f"{points}")
     points_in_bbox = []
     for point in points:
         if (

@@ -158,43 +158,65 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
     _add_row_to_spreadsheet(serverfile, absolute_uri)
-    html_path = make_graph_for_owner(serverfile.owner)
+    _make_graphs(serverfile)
+
+
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
-def make_metrics_for_report(uploadedfile: UploadedFile):
+def get_graph_path_for_report(serverfile: UploadedFile):
+    report_graph_html_path = settings.MEDIA_ROOT / "generated" / serverfile.hash / "report_graph.html"
+    return report_graph_html_path
+
+def _make_graphs(uploadedfile: UploadedFile):
+    # one graph with records of owner
+    html_path = make_graph_for_owner(uploadedfile.owner)
+    _make_metrics_for_report(uploadedfile)
+
+
+def _make_metrics_for_report(uploadedfile: UploadedFile):
     """
     Make metrics for report. The metrics are saved to the database.
     """
     logger.debug("Making metrics for report...")
-    odir = settings.MEDIA_ROOT
-    visualization_tools.calculate_normalization(odir)
-    normalization = pd.read_csv(odir / "normalization.csv")
-
-    filename = Path(uploadedfile.outputdir) / "results.json"
-    with open(filename) as f:
-        loaded_results = json.load(f)
-    with open(Path(uploadedfile.outputdir) / "meta.json") as f:
-        meta = json.load(f)
-
-    loaded_results.update(flatten_dict(meta))
-    df_one = pd.DataFrame(loaded_results, index=[0])
-
-    cols = [
-        "Needle holder stitch 0 length [m]",
-        "Needle holder stitch 0 visibility [s]",
-        "Needle holder stitch 0 visibility [%]",
-        "Needle holder stitch 0 area presence [%]",
-        "Forceps stitch 0 visibility [%]",
-        "Left hand bbox stitch 0 visibility [%]",
-        "Right hand bbox stitch 0 visibility [%]",
-        "Stitches linearity score [%]",
-        "Stitches parallelism score [%]",
-    ]
-
-    visualization_tools.make_plot_with_metric(df_one, normalization,cols)
 
 
+    # one graph for one report of the owner
+    normalization_path = settings.MEDIA_ROOT / "normalization.json"
+    with open(normalization_path) as f:
+        normalization = json.load(f)
+
+    loaded_results = visualization_tools.read_one_result(uploadedfile.outputdir)
+
+    if "Needle holder stitch 0 visibility [%]" in loaded_results:
+        cols = [
+            "Needle holder stitch 0 length [m]",
+            "Needle holder stitch 0 visibility [s]",
+            "Needle holder stitch 0 visibility [%]",
+            "Needle holder stitch 0 area presence [%]",
+            "Forceps stitch 0 visibility [%]",
+            "Left hand bbox stitch 0 visibility [%]",
+            "Right hand bbox stitch 0 visibility [%]",
+            "Stitches linearity score [%]",
+            "Stitches parallelism score [%]",
+        ]
+    else:
+        cols = [
+            "Needle holder length [m]",
+            "Needle holder visibility [s]",
+            "Needle holder visibility [%]",
+            "Needle holder area presence [%]",
+            "Forceps visibility [%]",
+            "Left hand bbox visibility [%]",
+            "Right hand bbox visibility [%]",
+            "Stitches linearity score [%]",
+            "Stitches parallelism score [%]",
+        ]
+
+    report_graph_html_path = get_graph_path_for_report(uploadedfile)
+    report_graph_html_path.parent.mkdir(parents=True, exist_ok=True)
+    visualization_tools.make_plot_with_metric(
+        loaded_results, normalization, cols=cols, filename=report_graph_html_path)
 
 
 def make_graph_for_owner(owner:Owner):
@@ -205,7 +227,7 @@ def make_graph_for_owner(owner:Owner):
 
     
 
-def get_graph_path(owner: Optional[Owner] = None):
+def get_graph_path_for_owner(owner: Optional[Owner] = None):
     if owner:
         html_path = Path(settings.MEDIA_ROOT) / "generated" / owner.hash / "graph.html"
     else:
@@ -218,7 +240,7 @@ def make_graph(
 ):
     import pandas as pd
 
-    html_path = get_graph_path(owner)
+    html_path = get_graph_path_for_owner(owner)
     html_path.parent.mkdir(parents=True, exist_ok=True)
 
     rows = []
@@ -400,6 +422,32 @@ def pop_from_dict(d, key):
     if key in d:
         d.pop(key)
 
+def update_all_uploaded_files():
+    files = UploadedFile.objects.all()
+    logger.info("update all uploaded files")
+    for file in files:
+        make_preview(file, force=True)
+        update_owner(file)
+        add_status_to_uploaded_file(file)
+
+def update_owner(uploadedfile: UploadedFile) -> Owner:
+    if not uploadedfile.owner:
+        owners = Owner.objects.filter(email=uploadedfile.email)
+        if len(owners) == 0:
+            owner = Owner(email=uploadedfile.email, hash=_hash())
+            owner.save()
+            # create one
+        else:
+            owner = owners[0]
+    else:
+        owner = uploadedfile.owner
+
+    # uploadedfiles = UploadedFile.objects.filter(owner=owner)
+    if uploadedfile.owner != owner:
+        uploadedfile.owner = owner
+        uploadedfile.save()
+
+    return owner
 
 def make_preview(
     serverfile: UploadedFile, force: bool = False, height=100, make_square: bool = True

@@ -149,6 +149,13 @@
 
         <div>
             <h3>Statistics</h3>
+            {% if myhtml %}
+            Graph
+
+            {% autoescape off %}
+            {{ myhtml }}
+            {% endautoescape %}
+            {% endif %}
             <ul>
                 {% for key, value in results.items %}
                     <li><b>{{ key }}</b>: {{ value }}</li>

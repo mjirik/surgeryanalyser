@@ -6,6 +6,7 @@ import time
 import pandas as pd
 import plotly.express as px
 from typing import Optional, Union
+from loguru import logger
 try:
     import data_tools
     import media_tools
@@ -23,6 +24,35 @@ def get_media_path(base_path="."):
     odir = first_result_path.parents[2]
     return odir
 
+def read_one_result(opath:Path)->dict:
+    opath = Path(opath)
+    results_path = opath / "results.json"
+    if results_path.exists():
+        with open(results_path) as f:
+            loaded_results = json.load(f)
+        fn = opath / "meta.json"
+        if fn.exists():
+            with open(fn) as f:
+                meta = json.load(f)
+
+            loaded_results.update(data_tools.flatten_dict(meta))
+        else:
+            return None
+        # loaded_results["Uploaded at"] = uploaded_file.uploaded_at
+        # fix typo
+        if "Stichtes linearity score" in loaded_results:
+            loaded_results["Stitches linearity score"] = loaded_results.pop("Stichtes linearity score")
+
+        if "Stitches linearity score" in loaded_results:
+            loaded_results["Stitches linearity score [%]"] = loaded_results["Stitches linearity score"] * 100
+
+        if "Stitches parallelism score" in loaded_results:
+            loaded_results["Stitches parallelism score [%]"] = loaded_results["Stitches parallelism score"] * 100
+
+        return loaded_results
+    else:
+        return None
+
 
 def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
                             filename_contains:str="Einzelknopfnaht",
@@ -38,22 +68,8 @@ def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
         rows = []
         for i, results_path in enumerate(results_list):
 
-            # read results.json
-            if results_path.exists():
-                with open(results_path) as f:
-                    loaded_results = json.load(f)
-                fn = results_path.parent / "meta.json"
-                if fn.exists():
-                    with open(fn) as f:
-                        meta = json.load(f)
-
-                    loaded_results.update(data_tools.flatten_dict(meta))
-                else:
-                    continue
-                # loaded_results["Uploaded at"] = uploaded_file.uploaded_at
-                # fix typo
-                if "Stichtes linearity score" in loaded_results:
-                    loaded_results["Stitches linearity score"] = loaded_results.pop("Stichtes linearity score")
+            loaded_results = read_one_result(results_path.parent)
+            if loaded_results is not None:
                 loaded_results["i"] = i
                 rows.append(loaded_results)
 
@@ -94,8 +110,21 @@ def make_plot_with_metric(one_record:dict, normalization:dict, cols:list, show:b
     distance = []
     for col in cols:
         colname = col if "[%]" in col else col # + f" norm"
+
+        if (col in one_record) and (one_record[col] is not None):
+            if "[%]" in col:
+                # if "[%]" in col then there is no recalculation
+                val = one_record[col]
+                logger.debug(f"val kept. val: {val}, {col=}")
+            elif (col in normalization) and (normalization[col] is not None):
+                val = 100 * one_record[col] / normalization[col]
+                logger.debug(f"val normalized. val: {val}, {col=}")
+            else:
+                continue
+        else:
+            continue
+
         xs.append(colname)
-        val = one_record[col] if "[%]" in col else 100 * (one_record[col] / normalization[col])
         ys.append(val)
         distance.append(abs(100 - val))
         hover_data.append(one_record[col])

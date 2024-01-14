@@ -331,12 +331,12 @@ class DoComputerVision:
         set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
-                data_results["Stitches linearity score"] = self.meta["stitch_scores"][
+                data_results["Stitches linearity score [%]"] = self.meta["stitch_scores"][
                     0
-                ]["r_score"]
-                data_results["Stitches parallelism score"] = self.meta["stitch_scores"][
+                ]["r_score"] * 100
+                data_results["Stitches parallelism score [%]"] = self.meta["stitch_scores"][
                     0
-                ]["s_score"]
+                ]["s_score"] * 100
         # save statistic to file
 
         self.meta["duration_s_report"] = float(time.time() - s)

@@ -20,7 +20,7 @@ from loguru import logger
 from .forms import AnnotationForm, UploadedFileForm
 from .models import MediaFileAnnotation, Owner, UploadedFile, _hash
 from .models_tools import randomString
-from .tasks import email_media_recived, make_preview, get_graph_path
+from .tasks import email_media_recived, make_preview, get_graph_path_for_owner, update_owner
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
@@ -84,13 +84,16 @@ def reset_hashes(request):
 
 @login_required(login_url="/admin/")
 def update_all_uploaded_files(request):
-    files = UploadedFile.objects.all()
-    logger.info("update all uploaded files")
-    for file in files:
-        make_preview(file, force=True)
-        update_owner(file)
-        tasks.add_status_to_uploaded_file(file)
-    return redirect("/uploader/thanks/")
+    async_task(
+        "uploader.tasks.update_all_uploaded_files"
+    )
+    message_context = {
+        "headline": "Update all uploaded files",
+        "text": "We will update all uploaded files. It may take a while.",
+        "next": reverse("uploader:web_reports", kwargs={}),
+        "next_text": "Back",
+    }
+    return render(request, "uploader/message.html", message_context)
 
 
 def resend_report_email(request, filename_id):
@@ -182,8 +185,14 @@ def owners_reports_list(request, owner_hash: str):
     qs_json = json.dumps(qs_data)
 
     
-    html_path = get_graph_path(owner)
-    html = html_path.read_text() if html_path else None
+    html_path = get_graph_path_for_owner(owner)
+
+    html = None
+    if html_path:
+        if not html_path.exists():
+            tasks.make_graph(owner)
+        if html_path.exists():
+            html = html_path.read_text()
     # logger.debug(html)
 
     context = {
@@ -284,6 +293,17 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     logger.debug(f"{review_edit_hash=}")
     edit_review = serverfile.review_edit_hash == review_edit_hash
     logger.debug(f"{edit_review=}")
+
+    html_path = tasks.get_graph_path_for_report(serverfile)
+
+    html = None
+    if html_path:
+        # if not html_path.exists():
+
+        tasks._make_metrics_for_report(serverfile)
+        if html_path.exists():
+            html = html_path.read_text()
+
     context = {
         "serverfile": serverfile,
         "mediafile": Path(serverfile.mediafile.name).name,
@@ -293,6 +313,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "videofiles_url": videofiles_url,
         "results": results,
         "edit_review": edit_review,
+        "myhtml": html,
     }
 
     return context
@@ -300,6 +321,9 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
 def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile):
     logger.debug("Zip file name does not exist")
+
+
+
     # zip_file does not exists
     context = {
         "headline": "File not exists",
@@ -562,24 +586,6 @@ class DetailView(generic.DetailView):
     template_name = "uploader/model_form_upload.html"
 
 
-def update_owner(uploadedfile: UploadedFile) -> Owner:
-    if not uploadedfile.owner:
-        owners = Owner.objects.filter(email=uploadedfile.email)
-        if len(owners) == 0:
-            owner = Owner(email=uploadedfile.email, hash=_hash())
-            owner.save()
-            # create one
-        else:
-            owner = owners[0]
-    else:
-        owner = uploadedfile.owner
-
-    # uploadedfiles = UploadedFile.objects.filter(owner=owner)
-    if uploadedfile.owner != owner:
-        uploadedfile.owner = owner
-        uploadedfile.save()
-
-    return owner
 
 
 def _get_owner(owner_email: str):
