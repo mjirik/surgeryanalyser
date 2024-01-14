@@ -98,7 +98,6 @@ def update_all_uploaded_files(request):
 
 def resend_report_email(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
-    from django_q.tasks import async_task
 
     async_task(
         "uploader.tasks.email_report",
@@ -539,7 +538,6 @@ def run(request, filename_id):
 def _run(request, filename_id, hostname="127.0.0.1", port=5000):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
 
-    from django_q.tasks import async_task
 
     serverfile.started_at = django.utils.timezone.now()
     serverfile.finished_at = None
@@ -607,7 +605,6 @@ def model_form_upload(request):
             # owner=request.user
         )
         if form.is_valid():
-            from django_q.tasks import async_task
 
             # logger.debug(f"imagefile.name={dir(form)}")
             # name = form.cleaned_data['imagefile']
