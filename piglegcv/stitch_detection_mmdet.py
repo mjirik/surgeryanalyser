@@ -204,7 +204,7 @@ def run_stitch_analyser(
             xx,
             res1.intercept + res1.slope * xx,
             "b:",
-            label=f"R-squared: {r_score:.2f}, Slope-diff: {s_score:.3f}",
+            label=f"r-score: {r_score:.2f}, s-score: {s_score:.3f}",
         )
         ax.plot(xx, res2.intercept + res2.slope * xx, "b:")
 
