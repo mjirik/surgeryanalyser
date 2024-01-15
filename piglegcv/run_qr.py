@@ -161,12 +161,23 @@ def interpret_bboxes(
         micro_side_length,
     )
 
+def pixsize_from_bboxes_incision(bboxes_incision, incision_width_m=0.06):
+    pix_sizes = []
+    pix_sizes_weights = []
+    pix_sizes_methods = []
+    for bbox in bboxes_incision:
+        pix_sizes.append(incision_width_m / (bbox[2] - bbox[0]))
+        pix_sizes_weights.append(bbox[-1])
+        pix_sizes_methods.append("incision_width")
+    return pix_sizes, pix_sizes_weights, pix_sizes_methods
+
 
 def bbox_info_extraction_from_frame(
     img, qreader=None, device="cpu", debug_image_file: Optional[Path] = None
 ):
     img = np.asarray(img)
     width = img.shape[1]
+    height = img.shape[0]
     # Todo Viktora
 
     bboxes, masks, _ = get_bboxes(img, device=device, image_file=debug_image_file)
@@ -183,6 +194,11 @@ def bbox_info_extraction_from_frame(
     pix_sizes = []
     pix_sizes_weights = []
     pix_sizes_methods = []
+
+    ret = pixsize_from_bboxes_incision(bboxes_incision_area)
+    pix_sizes.extend(ret[0])
+    pix_sizes_weights.extend(ret[1])
+    pix_sizes_methods.extend(ret[2])
 
     bboxes_holes = bboxes[4]
     ps_holes, ps_holes_weights, ps_holes_methods = _holes_pix_sizes(bboxes_holes)
@@ -264,7 +280,8 @@ def bbox_info_extraction_from_frame(
 
     # pigleg_holder_width [m] - usually it takes around half of the image width
     scene_size = 0.300  # [m]
-    size_by_scene = scene_size / width
+    longer_side = max(width, height)
+    size_by_scene = scene_size / longer_side
     # if len(pix_sizes) == 0:
     pix_sizes.append(size_by_scene)
     pix_sizes_weights.append(0.1)
