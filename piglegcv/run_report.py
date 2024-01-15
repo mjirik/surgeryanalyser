@@ -678,45 +678,6 @@ def _scissors_frames(scissors_frames: dict, fps, peak_distance_s=10) -> list:
     return peaks.tolist()
 
 
-def insert_ruler_in_image(img, pixelsize:float, ruler_size:float=50, resize_factor=1.0, unit:str="mm"):
-    """Add ruler in the image.
-    pixelsize: [lenght_unit/px]
-    ruler_size: [length_unit]
-    unit: length_unit text to be displayed
-
-    """
-    image_size = np.asarray(img.shape[:2])
-    # start_point = np.asarray(image_size) * 0.90
-    # start_point = np.array([10,10])
-    thickness = int(0.01 * img.shape[0] / resize_factor)
-    # start_point = np.array([image_size[1]*0.98, image_size[0]*0.97]) # right down corner
-    start_point = np.array([image_size[1] * 0.02, image_size[0] * 0.97])
-    ruler_size_px = ruler_size / pixelsize
-    end_point = start_point + np.array([ruler_size_px, 0])
-
-    cv2.line(
-        img, start_point.astype(int), end_point.astype(int), (255, 255, 255), thickness
-    )
-
-    text_point = start_point.astype(int) - np.array(
-        [0, int(0.020 * img.shape[0]) / resize_factor]
-    ).astype(int)
-    # img[line]
-    text_thickness = int(0.004 * img.shape[0] / resize_factor)
-    # logger.debug(f"ruler_size_px={ruler_size_px}")
-    # logger.debug(f"text_point={text_point}")
-    # logger.debug(f"text_thickness={text_thickness}")
-    cv2.putText(
-        img,
-        f"{ruler_size:0.0f} [{unit}]",
-        text_point,
-        # (int(position[0]+(circle_radius*2.5)), int(position[1]+circle_radius*0)),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        fontScale=0.0007 * img.shape[0] / resize_factor,
-        color=(255, 255, 255),
-        thickness=text_thickness,
-    )
-    return img
 
 
 #####################################
@@ -877,39 +838,6 @@ def draw_track_object(
     return img
 
 
-class AddRulerInTheFrame(object):
-    """Add ruler in the image.
-    If pix_size_m is None, no ruler is added.
-    """
-    def __init__(self, frame_shape, pix_size_m:Optional[float], ruler_size:float, unit:str, resize_factor=1.0):
-        """
-
-        """
-        self.frame_shape = frame_shape
-        self.pix_size_m = pix_size_m
-        # self.ruler_size = ruler_size
-        self.resize_factor = resize_factor
-        self.unit = unit
-        self.mask = np.zeros(frame_shape, dtype=np.uint8)
-
-        if pix_size_m is not None:
-            pixelsize = tools.unit_conversion(pix_size_m, "m", unit)
-            # ruler_size = unit_conversion(ruler_size, "mm", unit)
-
-            self.mask = insert_ruler_in_image(
-                self.mask,
-                pixelsize=pixelsize,
-                ruler_size=ruler_size,
-                unit=unit,
-            )
-
-    def add_in_the_frame(self, frame:np.ndarray):
-        if self.pix_size_m is not None:
-            # logger.trace(f"{frame.shape=}, {self.mask.shape=}")
-            frame[self.mask > 0] = self.mask[self.mask > 0]
-        return frame
-
-
 
 def main_report(
         filename,
@@ -1031,6 +959,7 @@ def main_report(
                 int(expected_video_width / 2),
                 int(expected_video_height),
             ]
+            # if the output is smaller than input video, the number is below 1.0
             resize_factor = float(expected_video_height) / float(size_input_video[1])
             size_output_img = [
                 int(resize_factor * size_input_video[0]),
@@ -1057,7 +986,7 @@ def main_report(
 
         shape = (size_output_img[1], size_output_img[0], 3)
         logger.debug(f"{pix_size=}, {resize_factor=}, {ruler_size_in_units=}, {visualization_length_unit=}")
-        ruler_adder = AddRulerInTheFrame(shape, pix_size_m=pix_size * resize_factor,
+        ruler_adder = tools.AddRulerInTheFrame(shape, pix_size_m=pix_size / resize_factor,
                                          ruler_size=ruler_size_in_units,
                                          unit=visualization_length_unit)
         logger.debug(f"{ruler_adder.mask.shape=}, {shape=}")
