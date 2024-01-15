@@ -66,7 +66,7 @@ def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
         results_list = list(Path(base_path).glob("./**/results.json"))
         # print(len(results_list))
         odir = results_list[0].parents[2]
-        all_df_path = odir / "all_measured_data.csv"
+        # all_df_path = odir / "all_measured_data.csv"
 
         rows = []
         for i, results_path in enumerate(results_list):
@@ -84,8 +84,8 @@ def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
     else:
         odir = get_media_path(base_path)
 
-    if normalization_path is None:
-        normalization_path = odir / "generated/normalization.json"
+    # if normalization_path is None:
+    #     normalization_path = odir / "generated/normalization.json"
 
     # calculate_normalization
     # filename contain "Einzelknopfnaht"
@@ -95,9 +95,10 @@ def calculate_normalization(base_path=".", df:Optional[pd.DataFrame]=None,
     #
     normalization = dfs.median(numeric_only=True, skipna=True)
     norm_dct = normalization.to_dict()
-    normalization_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(normalization_path, "w") as f:
-        json.dump(norm_dct, f, indent=4)
+    if normalization_path is not None:
+        normalization_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(normalization_path, "w") as f:
+            json.dump(norm_dct, f, indent=4)
     # normalization.to_csv(normalization_path, index=False)
     return norm_dct
 
@@ -151,9 +152,10 @@ def make_plot_with_metric(one_record:dict, normalization:dict, cols:list, show:b
     #              )
     # create the same graph, just hide the colorbar
     fig = px.bar(df_one_melted, x="Metric", y="Normalized [%]", text='Value', hover_data=["Metric"], color='distance',
-                 # color_continuous_scale=["green", "yellow", "red"],
-                 color_continuous_scale=["red", "yellow", "green", "yellow", "red"],
-                 color_continuous_midpoint=100,
+                 color_continuous_scale=["green", "yellow", "red"],
+                 # color_continuous_scale=[(0, "red"), (50., "yellow"), (100., "green")],
+                 color_continuous_midpoint=1,
+                 range_color=[0, 75.]
                  # color_continuous_scale=[(50, "red"), (75, "yellow"), (100, "green"), (125, "yellow"), (150, "red")],
                  )
 

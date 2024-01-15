@@ -37,7 +37,7 @@ from .data_tools import (
 )
 from .media_tools import convert_avi_to_mp4, make_images_from_video, rescale, crop_square
 from .models import BitmapImage, UploadedFile, Owner
-from . import visualization_tools
+from . import visualization_tools, models
 
 
 def _run_media_processing_rest_api(
@@ -457,7 +457,7 @@ def update_owner(uploadedfile: UploadedFile) -> Owner:
     if not uploadedfile.owner:
         owners = Owner.objects.filter(email=uploadedfile.email)
         if len(owners) == 0:
-            owner = Owner(email=uploadedfile.email, hash=_hash())
+            owner = Owner(email=uploadedfile.email, hash=models._hash())
             owner.save()
             # create one
         else:
