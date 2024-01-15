@@ -65,6 +65,8 @@ def google_spreadsheet_append(
 
     if type(data) == dict:
         df_novy = pd.DataFrame(data)
+        ## maybe this line is better
+        # df_novy = pd.DataFrame(data, intex=[0])
     else:
         df_novy = data
     if scope is None:

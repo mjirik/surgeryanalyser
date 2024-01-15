@@ -530,7 +530,13 @@ class DoComputerVision:
         totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap.release()
         self.meta.update(
-            {"filename_full": str(filename), "fps": fps, "frame_count": totalframecount}
+            {
+                "filename_full": str(filename),
+                "fps": fps,
+                "frame_count": totalframecount,
+                "frame_width": int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                "frame_height": int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+            }
         )
 
     def _find_stitch_ends_in_tracks(
