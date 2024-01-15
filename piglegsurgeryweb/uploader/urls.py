@@ -11,7 +11,7 @@ urlpatterns = [
     path("upload/", views.model_form_upload, name="model_form_upload"),
     path("thanks/", views.thanks, name="thanks"),
     path("message/", views.message, name="message"),
-    path("message/<str:headline>/<str:text>/<str:next>/<str:next_text>", views.message, name="message_with_next"),
+    path("message/<str:headline>/<str:text>/<str:next>/<str:next_text>/", views.message, name="message_with_next"),
     path(
         "<int:filename_id>/run/", views.run, name="run"
     ),  # used for debugging purposes

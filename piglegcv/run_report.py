@@ -119,7 +119,7 @@ class RelativePresenceInOperatingArea(object):
             return 0
 
     def draw_image(
-        self, img: np.ndarray, points: np.ndarray, bbox_linecolor=(0, 255, 128)
+        self, img: np.ndarray, points: np.ndarray, bbox_linecolor=(0, 255, 128), bbox_linewidth=2
     ):
         img = draw_bbox_into_image(
             img, self.operating_area_bbox, linecolor=bbox_linecolor
@@ -1296,6 +1296,7 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
         img_first.copy(),
         data_pixel[frame_idx_start:frame_idx_stop],
         bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
+        bbox_linewidth=1
     )
     cv2.imwrite(
         str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),

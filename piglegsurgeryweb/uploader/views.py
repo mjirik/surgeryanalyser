@@ -460,20 +460,24 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     return video
 
 def go_to_video_for_annotation(request, email:Optional[str]=None):
-    student_id = None
-    if email is None:
-        if request.user.is_authenticated:
-            email = request.user.email
-            if email:
-                student_id = _get_owner(email).id
-    else:
+    if email:
         student_id = _get_owner(email).id
+    else:
+        student_id = None
+
+        # if request.user.is_authenticated:
+        #     email = request.user.email
+        #     if email:
+        #         student_id = _get_owner(email).id
 
     video = _find_video_for_annotation(student_id)
 
     # go to the web_report of the video
     if video:
-        return redirect("uploader:web_report", filename_hash=video.hash)
+        if email:
+            return redirect("uploader:web_report", filename_hash=video.hash, review_edit_hash=video.review_edit_hash)
+        else:
+            return redirect("uploader:web_report", filename_hash=video.hash)
     else:
         # return redirect("uploader:model_form_upload_upload")
         return redirect("uploader:message_with_next",
