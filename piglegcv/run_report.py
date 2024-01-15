@@ -924,7 +924,7 @@ def main_report(
         visualization_length_unit=None,
         ruler_size_in_units=None,
         confidence_score_thr=0.0,
-        oa_bbox_linecolor=[200, 200, 0],
+        oa_bbox_linecolor_rgb=[200, 200, 0],
         cut_frames: list = [],
         is_microsurgery: bool = False,
         test_first_seconds: bool = False,
@@ -1130,7 +1130,7 @@ def main_report(
                 #                 print(oa_bbox_resized)
                 oa_bbox_resized = oa_bbox_resized * resize_factor
                 img = draw_bbox_into_image(
-                    img, oa_bbox_resized, linecolor=oa_bbox_linecolor
+                    img, oa_bbox_resized, linecolor=oa_bbox_linecolor_rgb[::-1]
                 )
 
             if not (i % 50):
@@ -1265,7 +1265,7 @@ def main_report(
                                                                         is_qr_detected, object_color, object_name,
                                                                         outputdir, frame_idx_start, frame_idx_stop,
                                                                         simplename, stitch_name, i, relative_presence,
-                                                                        oa_bbox_linecolor, object_full_name,
+                                                                        oa_bbox_linecolor_rgb, object_full_name,
                                                                         video_part_duration_frames,
                                                                         data_results=data_results)
                 # for cut_id, cut_frame in enumerate([0] + cut_frames):
@@ -1307,7 +1307,7 @@ def main_report(
                                                                             pix_size, is_qr_detected, object_color,
                                                                             object_name, outputdir, frame_idx_start,
                                                                             frame_idx_stop, simplename, stitch_name, i,
-                                                                            relative_presence, oa_bbox_linecolor,
+                                                                            relative_presence, oa_bbox_linecolor_rgb,
                                                                             object_full_name,
                                                                             video_part_duration_frames,
                                                                             data_results=data_results)
@@ -1333,7 +1333,7 @@ def main_report(
 def make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected,
                                              object_color, object_name, outputdir, frame_idx_start, frame_idx_stop,
                                              simplename, stitch_name, i,
-                                             relative_presence: RelativePresenceInOperatingArea, oa_bbox_linecolor,
+                                             relative_presence: RelativePresenceInOperatingArea, oa_bbox_linecolor_rgb,
                                              object_full_name, video_part_duration_frames, data_results) ->dict:
 
     video_duration_s = float(video_part_duration_frames) / float(fps)
@@ -1361,7 +1361,7 @@ def make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fp
     image_presence = relative_presence.draw_image(
         img_first.copy(),
         data_pixel[frame_idx_start:frame_idx_stop],
-        bbox_linecolor=oa_bbox_linecolor,
+        bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
     )
     cv2.imwrite(
         str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
@@ -1394,7 +1394,7 @@ def make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fp
         filename=Path(outputdir)
                  / f"fig_{i}b_{simplename}_heatmap_{stitch_name}.jpg",
         bbox=oa_bbox,
-        bbox_linecolor=oa_bbox_linecolor,
+        bbox_linecolor=oa_bbox_linecolor_rgb,
     )
     return data_results
 
