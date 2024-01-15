@@ -1313,7 +1313,7 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
         data_results[f"{object_full_name} unit"] = unit
         data_results[f"{object_full_name} visibility [%]"] = float(
             100.0 * (T / video_duration_s)
-        )
+        ) if video_duration_s > 0 else 0.0
         data_results[f"{object_full_name} area presence [%]"] = float(
             100.0 * oz_presence
         )

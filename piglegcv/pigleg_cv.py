@@ -8,7 +8,7 @@ import subprocess
 import time
 import traceback
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import cv2
 import loguru
@@ -319,7 +319,6 @@ class DoComputerVision:
         self._find_stitch_ends_in_tracks(
             n_clusters=self.n_stitches,
             plot_clusters=True,
-            tool_index=1,
             clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
         )
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
@@ -537,14 +536,22 @@ class DoComputerVision:
     def _find_stitch_ends_in_tracks(
         self,
         n_clusters: int,
-        tool_index: int = 1,
-        time_axis: int = 2,
+        # tool_index: int = 1,
         weight_of_later=0.9,
         plot_clusters=False,
         clusters_image_path: Optional[Path] = None,
+        # trim_tool_index:int = 0
     ) -> List:
         self.meta["stitch_split_frames"] = []
         self.meta["stitch_split_s"] = []
+
+        if self.is_microsurgery:
+            tool_index = [1,2]
+            trim_tool_index = [0,1,2]
+        else:
+            tool_index = [1]
+            trim_tool_index = [0,1]
+
         try:
             n_clusters = int(n_clusters)
 
@@ -554,11 +561,12 @@ class DoComputerVision:
             split_s, split_frames = find_stitch_ends_in_tracks(
                 self.outputdir,
                 n_clusters=n_clusters,
-                tool_index=tool_index,
+                tool_indexes=tool_index,
                 weight_of_later=weight_of_later,
                 metadata=self.meta,
                 plot_clusters=plot_clusters,
                 clusters_image_path=clusters_image_path,
+                trim_tool_indexes=trim_tool_index
             )
             # self.meta["qr_data"]["stitch_split_frames"] = split_frames
             self.meta["stitch_split_frames"] = split_frames
@@ -615,6 +623,19 @@ def do_computer_vision(
     ).run()
 
 
+def _get_X_px_fr_more_tools(data: dict, incision_bboxes: list, tool_indexes:List[int], time_axis=2) -> np.ndarray:
+    # merge several tools
+    X_px_fr_list = []
+    for trim_tool_index in tool_indexes:
+        X_px_fr_list.append(_get_X_px_fr(data, incision_bboxes, trim_tool_index))
+
+    # merge the lists
+    X_px_fr = np.concatenate(X_px_fr_list, axis=0)
+    #sort by time_axis
+    X_px_fr = X_px_fr[X_px_fr[:, time_axis].argsort()]
+    return X_px_fr
+
+
 def _get_X_px_fr(data:dict, incision_bboxes:list, tool_index:int) -> np.ndarray:
     """Get X vector in pixels and frames filtered to the incision area."""
     if "data_pixels" in data:
@@ -640,8 +661,8 @@ def _get_X_px_fr(data:dict, incision_bboxes:list, tool_index:int) -> np.ndarray:
 def find_stitch_ends_in_tracks(
     outputdir,
     n_clusters: int,
-    tool_index:int = 1,
-    trim_tool_index:int = 0,
+    tool_indexes:Union[int,List[int]] = 1,
+    trim_tool_indexes:Union[int,List[int]] = 0,
     weight_of_later=0.9,
     metadata=None,
     plot_clusters=False,
@@ -651,16 +672,22 @@ def find_stitch_ends_in_tracks(
     Find stitch ends in tracks.
     :param outputdir:
     :param n_clusters: if zero or one, no clustering is done, just trimming the video
-    :param tool_index: tool used for splitting video to the parts
+    :param tool_indexes: tool used for splitting video to the parts
     :param weight_of_later:
     :param metadata:
     :param plot_clusters:
     :param clusters_image_path:
-    :param trim_tool_index: tool used for trimming of the video parts
+    :param trim_tool_indexes: tool used for trimming of the video parts
 
     """
     time_axis: int = 2
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
+
+    if type(tool_indexes) == int:
+        tool_indexes = [tool_indexes]
+    if type(trim_tool_indexes) == int:
+        trim_tool_indexes = [trim_tool_indexes]
+
     points_path = outputdir / "tracks_points.json"
     assert points_path.exists()
     time_axis = int(time_axis)
@@ -684,7 +711,7 @@ def find_stitch_ends_in_tracks(
         f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}"
     )
 
-    X_px_fr = _get_X_px_fr(data, incision_bboxes, tool_index)
+    X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, tool_indexes, time_axis=time_axis)
     # pix_size is in [m] to normaliza data a bit we use [mm]
     axis_normalization = np.asarray(
         [
@@ -740,8 +767,8 @@ def find_stitch_ends_in_tracks(
 
     # print(f"{splits_s=}")
     # print(f"{splits_frames=}")
-    X_px_fr = _get_X_px_fr(data, incision_bboxes, trim_tool_index)
 
+    X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, trim_tool_indexes, time_axis=time_axis)
 
     actual_split_i = 0
     key_frame = int(X_px_fr[0][time_axis])
