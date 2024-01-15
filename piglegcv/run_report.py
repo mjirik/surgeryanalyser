@@ -1056,9 +1056,11 @@ def main_report(
             ]
 
         shape = (size_output_img[1], size_output_img[0], 3)
+        logger.debug(f"{pix_size=}, {resize_factor=}, {ruler_size_in_units=}, {visualization_length_unit=}")
         ruler_adder = AddRulerInTheFrame(shape, pix_size_m=pix_size * resize_factor,
                                          ruler_size=ruler_size_in_units,
                                          unit=visualization_length_unit)
+        logger.debug(f"{ruler_adder.mask.shape=}, {shape=}")
 
         logger.debug(
             f"size_input_video: {size_input_video}, size_output_video: {size_output_video}, size_output_img: {size_output_img}, resize_factor: {resize_factor}"
@@ -1256,7 +1258,7 @@ def main_report(
                 frame_idx_stop = len(frame_ids) - 1
                 object_full_name = f"{object_name}"
                 stitch_name = "all"
-                video_part_duration_frames = cut_frames[-1] - cut_frames[0]
+                video_part_duration_frames = cut_frames[-1] - cut_frames[0] if len(cut_frames) > 0 else frame_cnt
                 # j_before = 0
 
                 logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")

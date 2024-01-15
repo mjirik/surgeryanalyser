@@ -476,7 +476,7 @@ def go_to_video_for_annotation(request, email:Optional[str]=None):
         return redirect("uploader:web_report", filename_hash=video.hash)
     else:
         # return redirect("uploader:model_form_upload_upload")
-        return redirect("uploader:message",
+        return redirect("uploader:message_with_next",
                         headline="No video for review",
                         text="No video for review found. Please try again later.",
                         next=reverse("uploader:model_form_upload"),

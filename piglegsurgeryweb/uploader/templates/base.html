@@ -159,6 +159,21 @@
                                 <i class="bi bi-arrow-clockwise"></i> Update all uploaded files
                             </a>
                         </li>
+
+                        {%  if request.user.email %}
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center"
+                               href="{% url 'uploader:go_to_video_for_annotation_email' request.user.email %}">
+                                Review as {{ request.user.email }}
+                            </a>
+                        </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center"
+                                   href="{% url 'uploader:go_to_video_for_annotation_random' %}">
+                                    Review as random
+                                </a>
+                            </li>
+                        {% endif %}
                         <li>
                             <hr class="dropdown-divider">
                         </li>
