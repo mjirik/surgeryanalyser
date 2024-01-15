@@ -327,18 +327,15 @@ class DoComputerVision:
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
         s = time.time()
-        data_results = self._make_report(cut_frames=self.meta["stitch_split_frames"])
+        self._make_report(cut_frames=self.meta["stitch_split_frames"])
         set_progress(70)
         if "stitch_scores" in self.meta:
             if len(self.meta["stitch_scores"]) > 0:
-                data_results["Stitches linearity score [%]"] = self.meta["stitch_scores"][
-                    0
-                ]["r_score"] * 100
-                data_results["Stitches parallelism score [%]"] = self.meta["stitch_scores"][
-                    0
-                ]["s_score"] * 100
+                self.results["Stitches linearity score [%]"] = self.meta["stitch_scores"][0]["r_score"] * 100
+                self.results["Stitches parallelism score [%]"] = self.meta["stitch_scores"][0]["s_score"] * 100
+                self.results["Stitches perpendicular score [%]"] = self.meta["stitch_scores"][0]["p_score"] * 100
         # save statistic to file
-
+        
         self.meta["duration_s_report"] = float(time.time() - s)
         self.meta["processed_at"]=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self._save_results()
