@@ -152,8 +152,9 @@ def make_plot_with_metric(one_record:dict, normalization:dict, cols:list, show:b
     # create the same graph, just hide the colorbar
     fig = px.bar(df_one_melted, x="Metric", y="Normalized [%]", text='Value', hover_data=["Metric"], color='distance',
                  # color_continuous_scale=["green", "yellow", "red"],
-                 color_continuous_scale=[(50, "red"), (75, "yellow"), (100, "green"), (125, "yellow"), (150, "red")],
-                 # color_continuous_midpoint=0,
+                 color_continuous_scale=["red", "yellow", "green", "yellow", "red"],
+                 color_continuous_midpoint=100,
+                 # color_continuous_scale=[(50, "red"), (75, "yellow"), (100, "green"), (125, "yellow"), (150, "red")],
                  )
 
 
