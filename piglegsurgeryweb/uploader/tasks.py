@@ -165,8 +165,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     logger.remove(logger_id)
 
 def get_graph_path_for_report(serverfile: UploadedFile):
-    report_graph_html_path = settings.MEDIA_ROOT / "generated" / serverfile.hash / "report_graph.html"
-    return report_graph_html_path
+    return Path(serverfile.outputdir) / "report_graph.html"
 
 def get_normalization_path():
     normalization_path = settings.MEDIA_ROOT /  "generated/normalization.json"
@@ -219,6 +218,7 @@ def _make_metrics_for_report(uploadedfile: UploadedFile):
             "Forceps stitch 0 visibility [%]",
             "Left hand bbox stitch 0 visibility [%]",
             "Right hand bbox stitch 0 visibility [%]",
+            "stitch 0 duration [s]",
             "Stitches linearity score [%]",
             "Stitches parallelism score [%]",
         ]
@@ -231,6 +231,7 @@ def _make_metrics_for_report(uploadedfile: UploadedFile):
             "Forceps visibility [%]",
             "Left hand bbox visibility [%]",
             "Right hand bbox visibility [%]",
+            "all duration [s]",
             "Stitches linearity score [%]",
             "Stitches parallelism score [%]",
         ]

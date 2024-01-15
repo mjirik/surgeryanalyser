@@ -217,7 +217,7 @@ def create_heatmap_report_plt(
 
 # ds_threshold [m]
 def create_pdf_report_for_one_tool(
-    frame_id,
+    frame_ids,
     data_pixel,
     image,
     source_fps,
@@ -233,7 +233,7 @@ def create_pdf_report_for_one_tool(
 ):
     """
 
-    :param frame_id:
+    :param frame_ids:
     :param data_pixel:
     :param image:
     :param source_fps:
@@ -248,11 +248,11 @@ def create_pdf_report_for_one_tool(
     :return:
     """
 
-    if len(frame_id) > 1:
+    if len(frame_ids) > 1:
         
         data_pixel = np.array(data_pixel)
         data = pix_size * data_pixel
-        t = 1.0 / source_fps * np.array(frame_id)
+        t = np.array(frame_ids) / float(source_fps)
         dxy = data[1:] - data[:-1]
         ds = np.sqrt(np.sum(dxy * dxy, axis=1))
         if not qr_init:
@@ -272,6 +272,10 @@ def create_pdf_report_for_one_tool(
         # print(dt)
         L = np.sum(ds)
         T = np.sum(dt)
+        logger.debug(f"{object_name=}")
+        logger.debug(f"{frame_ids=}")
+        logger.debug(f"tool: {T=} , {source_fps=}, {len(frame_ids)=}")
+        logger.debug(f"whole vieo part: {t[-1] - t[0]} sec, {t[0]=}, {t[-1]=}")
         ds_dt_filtered = gaussian_filter(ds / dt, sigma=2)
         V = np.mean(ds_dt_filtered)
 
@@ -1019,7 +1023,7 @@ def main_report(
             ruler_size_in_units = 10 if meta["is_microsurgery"] else 5
         if visualization_length_unit is None:
             visualization_length_unit = "mm" if meta_qr["is_microsurgery"] else "cm"
-        # logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
+        logger.debug(f"{ruler_size_in_units=}, {visualization_length_unit=}")
 
 
         if concat_axis == 1:
@@ -1212,7 +1216,7 @@ def main_report(
 
             i += 1
 
-        video_duration_s = float((i - 1) / fps)
+        # video_duration_s = float((i - 1) / fps)
         logger.debug(f"pix_size={pix_size}")
         logger.debug(f"frameshape={im.shape}")
         logger.debug(f"confidence_score_thr={confidence_score_thr}")
@@ -1233,46 +1237,65 @@ def main_report(
             cut_frame_idx = int(cut_id * 2)
             cut_frame = cut_frames[cut_frame_idx]
             cut_frame_next = cut_frames[cut_frame_idx + 1]
-            cut_frame_duration = cut_frame_next - cut_frame
-            data_results[f"Stitch {cut_id} duration [s]"] = cut_frame_duration / fps
-            data_results[f"Stitch {cut_id} duration [%]"] = cut_frame_duration / frame_cnt * 100
+            video_part_duration_frames = cut_frame_next - cut_frame
+            data_results[f"Stitch {cut_id} duration [s]"] = video_part_duration_frames / fps
+            data_results[f"Stitch {cut_id} duration [%]"] = video_part_duration_frames / frame_cnt * 100
 
 
-        for i, (frame_id, data_pixel, object_color, object_name) in enumerate(
+        # for each tool
+        for i, (frame_ids, data_pixel, object_color, object_name) in enumerate(
             zip(frame_ids, data_pixels, object_colors, object_names)
         ):
-            if frame_id != []:
+
+            if frame_ids != []:
+                # frame_ids = [ 5,6,10, ... 54,59]
                 simplename = object_name.lower().strip().replace(" ", "_")
                 # print(cut_frames)
 
                 frame_idx_start = int(0)
-                frame_idx_stop = len(frame_id) - 1
+                frame_idx_stop = len(frame_ids) - 1
                 object_full_name = f"{object_name}"
                 stitch_name = "all"
+                video_part_duration_frames = cut_frames[-1] - cut_frames[0]
                 # j_before = 0
 
                 logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                 # do the report images and stats fo whole video
-                data_results = make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fps, pix_size,
+                data_results = make_stats_and_images_for_one_video_part(frame_ids, data_pixel, img_first, fps, pix_size,
                                                                         is_qr_detected, object_color, object_name,
                                                                         outputdir, frame_idx_start, frame_idx_stop,
                                                                         simplename, stitch_name, i, relative_presence,
                                                                         oa_bbox_linecolor, object_full_name,
-                                                                        data_results)
+                                                                        video_part_duration_frames,
+                                                                        data_results=data_results)
                 # for cut_id, cut_frame in enumerate([0] + cut_frames):
+                # for each stitch in each tool
                 for cut_id in range(0, int(len(cut_frames)/2)):
                     cut_frame_idx = int(cut_id * 2)
                     cut_frame = cut_frames[cut_frame_idx]
 
                     object_full_name = f"{object_name} stitch {cut_id}"
                     stitch_name = f"stitch_{cut_id}"
-                    frame_idx_start = int(cut_frames[cut_frame_idx])
-                    frame_idx_stop = int(cut_frames[cut_frame_idx + 1])
+
+                    cut_frame = cut_frames[cut_frame_idx]
+                    cut_frame_next = cut_frames[cut_frame_idx + 1]
+                    video_part_duration_frames = cut_frame_next - cut_frame
+
+                    # frame_idx_start = int(cut_frames[cut_frame_idx])
+                    # frame_idx_stop = int(cut_frames[cut_frame_idx + 1])
+
+                    for j, frame_id in enumerate(frame_ids):
+                        if frame_id <= cut_frame:
+                            frame_idx_start = j
+                        if frame_id >= cut_frame_next:
+                            frame_idx_stop = j
+                            break
+
 
                     # if cut_id > 0:
                     #     object_full_name = f"{object_name} stitch {cut_id}"
                     #     stitch_name = f"stitch_{cut_id}"
-                    #     for j, frame in enumerate(frame_id):
+                    #     for j, frame in enumerate(frame_ids):
                     #         if frame > cut_frame:
                     #             frame_idx_start = j_before
                     #             frame_idx_stop = j
@@ -1280,12 +1303,14 @@ def main_report(
                     #             break
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                     # do the report images and stats for each stitch
-                    data_results = make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fps,
+                    data_results = make_stats_and_images_for_one_video_part(frame_ids, data_pixel, img_first, fps,
                                                                             pix_size, is_qr_detected, object_color,
                                                                             object_name, outputdir, frame_idx_start,
                                                                             frame_idx_stop, simplename, stitch_name, i,
                                                                             relative_presence, oa_bbox_linecolor,
-                                                                            object_full_name, data_results)
+                                                                            object_full_name,
+                                                                            video_part_duration_frames,
+                                                                            data_results=data_results)
 
                     # save statistic to file
         # save_json(data_results, os.path.join(outputdir, "results.json"))
@@ -1309,11 +1334,9 @@ def make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fp
                                              object_color, object_name, outputdir, frame_idx_start, frame_idx_stop,
                                              simplename, stitch_name, i,
                                              relative_presence: RelativePresenceInOperatingArea, oa_bbox_linecolor,
-                                             object_full_name, data_results) ->dict:
+                                             object_full_name, video_part_duration_frames, data_results) ->dict:
 
-    video_duration_s = float((frame_idx_stop - frame_idx_start) / fps)
-    sn = stitch_name.replace("_", " ")
-    data_results[f"{sn} duration [s]"] = video_duration_s
+    video_duration_s = float(video_part_duration_frames) / float(fps)
     res = create_pdf_report_for_one_tool(
         frame_id[frame_idx_start:frame_idx_stop],
         data_pixel[frame_idx_start:frame_idx_stop],
@@ -1346,15 +1369,18 @@ def make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fp
     )
     if len(res) > 0:
         [T, L, V, unit] = res
+        logger.debug(f"{video_duration_s=}")
+        logger.debug(f"{T=}, {L=}, {V=}, {unit=}")
+        logger.debug(f"{type(T)=}, {type(L)=}, {type(V)=}, {type(unit)=}")
         data_results[f"{object_full_name} length [{unit}]"] = L
         data_results[f"{object_full_name} visibility [s]"] = T
         data_results[f"{object_full_name} velocity"] = V
         data_results[f"{object_full_name} unit"] = unit
         data_results[f"{object_full_name} visibility [%]"] = float(
-            100 * T / video_duration_s
+            100.0 * (T / video_duration_s)
         )
         data_results[f"{object_full_name} area presence [%]"] = float(
-            100 * oz_presence
+            100.0 * oz_presence
         )
 
     oa_bbox = None
