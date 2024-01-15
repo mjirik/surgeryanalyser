@@ -168,8 +168,10 @@ def run_stitch_analyser(
     s_score = 0.0
     N = len(bboxes)
     p_score = 0.0
+    if N > 0:
+        p_score = 1. - (np.mean(labels) / 3.) #perpendicular score for 4 classes, 0 .. mean is 3, 1 .. mean is 0
+        
     if N > 1:
-
         w = np.abs(bboxes[:, 0] - bboxes[:, 2])
         h = np.abs(bboxes[:, 1] - bboxes[:, 3])
 
@@ -197,7 +199,6 @@ def run_stitch_analyser(
         s_score = 1.0 - (
             abs(np.arctan(res1.slope) - np.arctan(res2.slope)) / np.pi
         )  # np.arctan [-pi/2, pi/2]
-        p_score = 1. - (np.mean(labels) / 3.) #perpendicular score for 4 classes, 0 .. mean is 3, 1 .. mean is 0
                 
         xx = np.array([0, cols])
         ax.plot(
