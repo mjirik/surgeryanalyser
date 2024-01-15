@@ -315,7 +315,7 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
 
 
 def main_perpendicular(
-    filename,
+        img,
     outputdir,
     meta: dict,
     roi=(0.08, 0.04),
@@ -324,7 +324,8 @@ def main_perpendicular(
     device="cpu",
 ):  # (x,y)
     logger.debug("main_perpendicular...")
-    img = get_frame_to_process(filename)
+    # img = get_frame_to_process(filename)
+    img
 
     if img is None:
         logger.error("Input image is None")
@@ -583,4 +584,5 @@ def draw_expected_stitch_line(
 
 
 if __name__ == "__main__":
-    main_perpendicular(sys.argv[1], sys.argv[2])
+    img = get_frame_to_process(sys.argv[1])
+    main_perpendicular(img, sys.argv[2])

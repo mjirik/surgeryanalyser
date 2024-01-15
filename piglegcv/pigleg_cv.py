@@ -208,7 +208,7 @@ class DoComputerVision:
         self.meta["qr_data"] = qr_data
         logger.debug(self.meta)
 
-        main_perpendicular(self.filename, self.outputdir, self.meta, device=self.device)
+        main_perpendicular(self.frame, self.outputdir, self.meta, device=self.device)
         logger.debug("Perpendicular finished.")
 
     def _run_tracking(self):
