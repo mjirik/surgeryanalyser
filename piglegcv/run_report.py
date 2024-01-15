@@ -214,6 +214,9 @@ def create_heatmap_report_plt(
 
     return fig
 
+def calculate_one_two_hands_visibility():
+    pass
+
 
 # ds_threshold [m]
 def create_pdf_report_for_one_tool(
@@ -1193,13 +1196,12 @@ def main_report(
 
                 logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                 # do the report images and stats fo whole video
-                data_results = make_stats_and_images_for_one_video_part(frame_ids, data_pixel, img_first, fps, pix_size,
-                                                                        is_qr_detected, object_color, object_name,
-                                                                        outputdir, frame_idx_start, frame_idx_stop,
-                                                                        simplename, stitch_name, i, relative_presence,
-                                                                        oa_bbox_linecolor_rgb, object_full_name,
-                                                                        video_part_duration_frames,
-                                                                        data_results=data_results)
+                data_results = make_stats_and_images_for_one_tool_in_one_video_part(
+                    frame_ids, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name,
+                    outputdir, frame_idx_start, frame_idx_stop, simplename, stitch_name, i, relative_presence,
+                    oa_bbox_linecolor_rgb, object_full_name, video_part_duration_frames,
+                    data_results=data_results
+                )
                 # for cut_id, cut_frame in enumerate([0] + cut_frames):
                 # for each stitch in each tool
                 for cut_id in range(0, int(len(cut_frames)/2)):
@@ -1235,14 +1237,14 @@ def main_report(
                     #             break
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                     # do the report images and stats for each stitch
-                    data_results = make_stats_and_images_for_one_video_part(frame_ids, data_pixel, img_first, fps,
-                                                                            pix_size, is_qr_detected, object_color,
-                                                                            object_name, outputdir, frame_idx_start,
-                                                                            frame_idx_stop, simplename, stitch_name, i,
-                                                                            relative_presence, oa_bbox_linecolor_rgb,
-                                                                            object_full_name,
-                                                                            video_part_duration_frames,
-                                                                            data_results=data_results)
+                    data_results = make_stats_and_images_for_one_tool_in_one_video_part(frame_ids, data_pixel, img_first, fps,
+                                                                                        pix_size, is_qr_detected, object_color,
+                                                                                        object_name, outputdir, frame_idx_start,
+                                                                                        frame_idx_stop, simplename, stitch_name, i,
+                                                                                        relative_presence, oa_bbox_linecolor_rgb,
+                                                                                        object_full_name,
+                                                                                        video_part_duration_frames,
+                                                                                        data_results=data_results)
 
                     # save statistic to file
         # save_json(data_results, os.path.join(outputdir, "results.json"))
@@ -1262,11 +1264,11 @@ def main_report(
     # perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
 
 
-def make_stats_and_images_for_one_video_part(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected,
-                                             object_color, object_name, outputdir, frame_idx_start, frame_idx_stop,
-                                             simplename, stitch_name, i,
-                                             relative_presence: RelativePresenceInOperatingArea, oa_bbox_linecolor_rgb,
-                                             object_full_name, video_part_duration_frames, data_results) ->dict:
+def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected,
+                                                         object_color, object_name, outputdir, frame_idx_start, frame_idx_stop,
+                                                         simplename, stitch_name, i,
+                                                         relative_presence: RelativePresenceInOperatingArea, oa_bbox_linecolor_rgb,
+                                                         object_full_name, video_part_duration_frames, data_results) ->dict:
 
     video_duration_s = float(video_part_duration_frames) / float(fps)
     res = create_pdf_report_for_one_tool(
