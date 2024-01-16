@@ -20,6 +20,7 @@ from loguru import logger
 from media_tools import make_images_from_video
 from run_perpendicular import get_frame_to_process, main_perpendicular
 import datetime
+import sklearn
 
 # from run_mmpose import main_mmpose
 from run_qr import main_qr
@@ -664,39 +665,13 @@ def _get_X_px_fr(data:dict, incision_bboxes:list, tool_index:int) -> np.ndarray:
     return X_px_fr
 
 
-def find_stitch_ends_in_tracks(
-    outputdir,
-    n_clusters: int,
-    tool_indexes:Union[int,List[int]] = 1,
-    trim_tool_indexes:Union[int,List[int]] = 0,
-    weight_of_later=0.9,
-    metadata=None,
-    plot_clusters=False,
-    clusters_image_path: Optional[Path] = None,
-):
-    """
-    Find stitch ends in tracks.
-    :param outputdir:
-    :param n_clusters: if zero or one, no clustering is done, just trimming the video
-    :param tool_indexes: tool used for splitting video to the parts
-    :param weight_of_later:
-    :param metadata:
-    :param plot_clusters:
-    :param clusters_image_path:
-    :param trim_tool_indexes: tool used for trimming of the video parts
+    
+def _get_metadata(outputdir, metadata=None):
 
-    """
-    time_axis: int = 2
-    logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
-
-    if type(tool_indexes) == int:
-        tool_indexes = [tool_indexes]
-    if type(trim_tool_indexes) == int:
-        trim_tool_indexes = [trim_tool_indexes]
 
     points_path = outputdir / "tracks_points.json"
     assert points_path.exists()
-    time_axis = int(time_axis)
+    
     with open(points_path, "r") as f:
         data = json.load(f)
 
@@ -717,6 +692,64 @@ def find_stitch_ends_in_tracks(
         f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}"
     )
 
+    return data, metadata, incision_bboxes
+
+def _smooth_in_1D(X, labels, time_axis=2, n_neighbors=100): 
+    clf = sklearn.neighbors.KNeighborsClassifier(n_neighbors=n_neighbors)
+    clf.fit(X[:,time_axis].reshape(-1,1), labels)
+    labels1 = clf.predict(X[:,time_axis].reshape(-1,1))
+    return labels1
+
+
+def _get_splits(X, labels, fps, time_axis=2, weight_of_later=0.6):
+    prev = labels[0]
+    splits_s = []
+    splits_frames = []
+    for frame_i, label in enumerate(labels):
+        if label != prev:
+            time = ((1 - weight_of_later) * X[frame_i - 1, time_axis]) + (
+                weight_of_later * X[frame_i, time_axis]
+            )
+            splits_s.append(time)
+            splits_frames.append(int(time * float(fps)))
+        prev = label
+        
+    return splits_s, splits_frames
+    
+
+def find_stitch_ends_in_tracks(
+    outputdir,
+    n_clusters: int,
+    tool_indexes:Union[int,List[int]] = [0, 1],
+    trim_tool_indexes:Union[int,List[int]] = [0,1],
+    weight_of_later=0.6,
+    metadata=None,
+    plot_clusters=False,
+    clusters_image_path: Optional[Path] = None,
+):
+    """
+    Find stitch ends in tracks.
+    :param outputdir:
+    :param n_clusters: if zero or one, no clustering is done, just trimming the video
+    :param tool_indexes: tool used for splitting video to the parts
+    :param weight_of_later:
+    :param metadata:
+    :param plot_clusters:
+    :param clusters_image_path:
+    :param trim_tool_indexes: tool used for trimming of the video parts
+
+    """
+    time_axis: int = 2
+    time_axis = int(time_axis)
+
+    if type(tool_indexes) == int:
+        tool_indexes = [tool_indexes]
+    if type(trim_tool_indexes) == int:
+        trim_tool_indexes = [trim_tool_indexes]
+    
+    logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
+    data, metadata, incision_bboxes = _get_metadata(outputdir, metadata)
+
     X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, tool_indexes, time_axis=time_axis)
     # pix_size is in [m] to normaliza data a bit we use [mm]
     axis_normalization = np.asarray(
@@ -730,38 +763,14 @@ def find_stitch_ends_in_tracks(
     X = X_px_fr * axis_normalization
 
     if n_clusters > 1:
-
-        # time =  np.asarray(list(range(X.shape[0]))).reshape(-1,1)
-        # time =  np.asarray(data["frame_ids"][tool_index]).reshape(-1,1) / metadata["fps"]
-
-        # X = np.concatenate([X, time], axis=1)
-        # X = X * axis_normalization
-
-        # bandwidth = estimate_bandwidth(X, quantile=0.2, n_samples=500)
-        # ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
-
         ms = KMeans(n_clusters=n_clusters)
-        # ms = DBSCAN()
-        # ms = SpectralClustering()
-        # ms = SpectralClustering(3, affinity='precomputed', n_init=100,
-        #                       assign_labels='discretize')
-        # ms = GaussianMixture()
         ms.fit(X)
         labels = ms.labels_
         # labels = ms.predict(X)
         cluster_centers = ms.cluster_centers_
 
-        prev = labels[0]
-        splits_s = []
-        splits_frames = []
-        for frame_i, label in enumerate(labels):
-            if label != prev:
-                time = ((1 - weight_of_later) * X[frame_i - 1, time_axis]) + (
-                    weight_of_later * X[frame_i, time_axis]
-                )
-                splits_s.append(time)
-                splits_frames.append(int(time * float(metadata["fps"])))
-            prev = label
+        labels = _smooth_in_1D(X, labels, time_axis=time_axis)
+        splits_s, splits_frames = _get_splits(X, labels, metadata["fps"], time_axis=time_axis, weight_of_later=weight_of_later)
     else:
         # splits_s = [np.mean(X[:, time_axis])]
         # splits_frames = [int(splits_s[0] * float(metadata["fps"]))]
@@ -775,6 +784,7 @@ def find_stitch_ends_in_tracks(
     # print(f"{splits_frames=}")
 
     X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, trim_tool_indexes, time_axis=time_axis)
+    X2 = X_px_fr * axis_normalization
 
     actual_split_i = 0
     key_frame = int(X_px_fr[0][time_axis])
@@ -810,16 +820,6 @@ def find_stitch_ends_in_tracks(
     new_splits_frames.append(int(X_px_fr[-1][time_axis]))
     new_splits_s.append(float(X_px_fr[-1][time_axis]) / float(metadata["fps"]))
 
-
-        # if X_px_fr_i[time_axis] > splits_s[-1]:
-        #     new_splits_s.append(X_px_fr_i[time_axis])
-        #     new_splits_frames.append(int(X_px_fr_i[time_axis] * float(metadata["fps"])))
-        #     break
-        
-
-    # new_split_s = []
-        
-        
         
     if plot_clusters:
         plot_track_clusters(
@@ -827,26 +827,33 @@ def find_stitch_ends_in_tracks(
             labels,
             cluster_centers,
             new_splits_s,
+            splits_s,
+            X2,
             clusters_image_path=clusters_image_path,
-            splits_hints_s=splits_s
         )
 
 
-    return new_splits_s, new_splits_frames
-    # return splits_s, splits_frames
-
+    return new_splits_s, new_splits_frames    
+    
+    
+    
+    
 
 def plot_track_clusters(
-    X, labels, cluster_centers, splits_s, clusters_image_path: Optional[Path] = None,
-    splits_hints_s=None
+    X, labels, 
+    cluster_centers, splits_s, 
+    splits_hints_s, X2,
+    clusters_image_path: Optional[Path] = None
 ):
     from matplotlib import pyplot as plt
 
     labels_unique = np.unique(labels)
     n_clusters_ = len(labels_unique)
-    fig = plt.figure()
+    # fig = plt.figure(figsize=(15,4))
+    
+    fif, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3]})
     # plt.subplot(211)
-    plt.subplot(121)
+    # plt.subplot(121)
     # plt.clf()
 
     colors = [
@@ -866,11 +873,14 @@ def plot_track_clusters(
     ax0 = 1
     ax1 = 0
 
+    # draw additional points used for cropping
+    a0.plot(X2[:,ax0],X2[:,ax1], ".", color="k") 
+
     for k, col in zip(range(n_clusters_), colors):
         my_members = labels == k
         cluster_center = cluster_centers[k]
-        plt.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
-        plt.plot(
+        a0.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
+        a0.plot(
             cluster_center[ax0],
             cluster_center[ax1],
             markers[k],
@@ -878,12 +888,12 @@ def plot_track_clusters(
             markeredgecolor="k",
             markersize=14,
         )
-    plt.xlabel("[mm]")
-    plt.ylabel("[mm]")
+    a0.set_xlabel("[mm]")
+    a0.set_ylabel("[mm]")
     # plt.title("Estimated number of clusters: %d" % n_clusters_)
 
     # plt.subplot(212)
-    plt.subplot(122)
+    # plt.subplot(122)
     colors = [
         "#dede00",
         "#377eb8",
@@ -895,14 +905,17 @@ def plot_track_clusters(
         "#1bff78",
     ]
 
-
     ax0 = 2
     ax1 = 0
+    
+
+    # draw additional points used for cropping
+    a1.plot(X2[:,ax0],X2[:,ax1], ".", color="k")
     for k, col in zip(range(n_clusters_), colors):
         my_members = labels == k
         cluster_center = cluster_centers[k]
-        plt.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
-        plt.plot(
+        a1.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
+        a1.plot(
             cluster_center[ax0],
             cluster_center[ax1],
             markers[k],
@@ -910,17 +923,15 @@ def plot_track_clusters(
             markeredgecolor="k",
             markersize=14,
         )
-    plt.xlabel("[s]")
+    a1.set_xlabel("[s]")
     colors = ["g", 'r']
     linestyles= [(0, (4, 8)), (6, (4, 8))]
     for i, yline in enumerate(splits_s):
         # if odd use green, if even use red
-        plt.axvline(x=yline, c=colors[i%2], linestyle=linestyles[i%2])
+        a1.axvline(x=yline, c=colors[i%2], linestyle=linestyles[i%2], linewidth=1)
         # plt.axhline(y=yline, c=colors[i%2])
-    if splits_hints_s:
-        for i, yline in enumerate(splits_hints_s):
-            plt.axvline(x=yline, c="k", linestyle=":")
-
+    for i, yline in enumerate(splits_hints_s):
+        a1.axvline(x=yline, c="k", linestyle=":", linewidth=1)
 
     if clusters_image_path is not None:
         plt.savefig(clusters_image_path)
