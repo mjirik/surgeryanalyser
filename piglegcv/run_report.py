@@ -618,7 +618,9 @@ def create_video_report_figure(
     linestyles = [(0, (4, 8)), (6, (4, 8))]
     colors = ["g", 'r']
     for i, frt in enumerate(t):
-        plt.axvline(frt, c=colors[i%2], linestyle=linestyles[i%2], linewidth=1)
+        plt.axvline(frt, c=colors[i%2], linestyle=linestyles[i%2],
+                    # linewidth=1
+                    )
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     # ax2.legend(loc="upper left")
