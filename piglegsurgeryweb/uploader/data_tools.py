@@ -8,6 +8,7 @@ from loguru import logger
 from oauth2client.service_account import ServiceAccountCredentials
 from collections import Counter
 from gspread.exceptions import GSpreadException
+import numpy as np
 
 
 def flatten_dict(dct: dict, parent_key: str = "", sep: str = "_") -> dict:
