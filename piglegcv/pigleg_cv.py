@@ -854,7 +854,7 @@ def plot_track_clusters(
     n_clusters_ = len(labels_unique)
     # fig = plt.figure(figsize=(15,4))
     
-    fif, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3]})
+    fig, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3]})
     # plt.subplot(211)
     # plt.subplot(121)
     # plt.clf()
