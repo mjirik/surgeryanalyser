@@ -65,9 +65,13 @@ def google_spreadsheet_append(
     # https://www.analyticsvidhya.com/blog/2020/07/read-and-update-google-spreadsheets-with-python/
 
     if type(data) == dict:
-        df_novy = pd.DataFrame(data)
+        # df_novy = pd.DataFrame(data)
         ## maybe this line is better
-        # df_novy = pd.DataFrame(data, intex=[0])
+        first_key = list(data.keys())[0]
+        if type(data[first_key]) == list:
+            df_novy = pd.DataFrame(data)
+        else:
+            df_novy = pd.DataFrame(data, index=[0])
     else:
         df_novy = data
     if scope is None:
@@ -110,6 +114,8 @@ def google_spreadsheet_append(
 
     # convert the json to dataframe
     records_df = pd.DataFrame.from_dict(records_data)
+    
+    ############# this is my code
     df_concat = pd.concat([records_df, df_novy], axis=0, ignore_index=True)
     df_empty = pd.DataFrame(columns=df_concat.keys())
 
@@ -119,9 +125,10 @@ def google_spreadsheet_append(
     df_out2 = df_out.where(pd.notnull(df_out), None)
     df_out2 = df_out2.fillna("")
     logger.debug(f"appended keys={list(df_out2.keys())}")
-    logger.debug(f"appended row={df_out2.values.tolist()}")
-    sheet_instance.append_rows(df_out2.values.tolist())
-
+    logger.debug(f"appended rows={df_out2.values.tolist()}")
+    sheet_instance.append_rows(df_out2.values.tolist(), table_range="A1")
+    
+    
     # update  header
     cell_list = sheet_instance.range(1, 1, 1, len(df_out2.keys()))
     sheet_instance.update_cells(
