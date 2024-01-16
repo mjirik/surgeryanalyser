@@ -828,6 +828,7 @@ def find_stitch_ends_in_tracks(
             cluster_centers,
             new_splits_s,
             clusters_image_path=clusters_image_path,
+            splits_hints_s=splits_s
         )
 
 
@@ -836,7 +837,8 @@ def find_stitch_ends_in_tracks(
 
 
 def plot_track_clusters(
-    X, labels, cluster_centers, splits_s, clusters_image_path: Optional[Path] = None
+    X, labels, cluster_centers, splits_s, clusters_image_path: Optional[Path] = None,
+    splits_hints_s=None
 ):
     from matplotlib import pyplot as plt
 
@@ -858,8 +860,8 @@ def plot_track_clusters(
         "#1bff78",
     ]
     markers = [ "x", "o","^","s","x","o","^","x","o","^","x","o","^"]
-    markers_x = ["x" for i in range(len(colors))]
-    markers_o = ["x" for i in range(len(colors))]
+    markers_x = ["." for i in range(len(colors))]
+    markers_o = ["." for i in range(len(colors))]
     
     ax0 = 1
     ax1 = 0
@@ -910,10 +912,14 @@ def plot_track_clusters(
         )
     plt.xlabel("[s]")
     colors = ["g", 'r']
+    linestyles= [(0, (4, 8)), (6, (4, 8))]
     for i, yline in enumerate(splits_s):
         # if odd use green, if even use red
-        plt.axvline(x=yline, c=colors[i%2])
+        plt.axvline(x=yline, c=colors[i%2], linestyle=linestyles[i%2])
         # plt.axhline(y=yline, c=colors[i%2])
+    if splits_hints_s:
+        for i, yline in enumerate(splits_hints_s):
+            plt.axvline(x=yline, c="k", linestyle=":")
 
 
     if clusters_image_path is not None:
