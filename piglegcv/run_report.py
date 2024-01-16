@@ -277,7 +277,6 @@ def create_pdf_report_for_one_tool(
         # T = np.sum(dt)
         T = len(frame_ids) / float(source_fps)
         logger.debug(f"{object_name=}")
-        logger.debug(f"{frame_ids=}")
         logger.debug(f"tool: {T=} , {source_fps=}, {len(frame_ids)=}")
         logger.debug(f"whole vieo part: {t[-1] - t[0]} sec, {t[0]=}, {t[-1]=}")
         ds_dt_filtered = gaussian_filter(ds / dt, sigma=2)
