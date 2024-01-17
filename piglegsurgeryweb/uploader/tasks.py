@@ -537,6 +537,8 @@ def email_report_from_task(task):
 
 def email_report(serverfile: UploadedFile, absolute_uri: str):
     logger.debug("Sending email report...")
+    logger.debug(f"absolute_uri={absolute_uri}, {type(absolute_uri)}")
+    logger.debug(f"serverfile={serverfile}, {type(serverfile)}")
     html_message = (
         '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
         '<html xmlns="http://www.w3.org/1999/xhtml">\n'
@@ -546,12 +548,13 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
         "</head>"
         f"<body>"
-        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(serverfile.mediafile).name)}</p>"
+        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f"<p></p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.email}">You can also do a review</a> .</p>\n'
         f"<p></p>"
@@ -601,8 +604,6 @@ def email_media_recived(serverfile: UploadedFile):
     send_mail(
         "Pig Leg Surgery Analyser: Media file recived",
         "Thank you for uploading a file. \n"
-        + "Now we are in an early stage of the project when we plan to collect the data."
-        + " The outputs of the analysis will be introduced in few weeks. "
         + "We will let you know when the processing will be finished. \n\n"
         + "Best regards,\n"
         "Miroslav Jirik, Ph.D.\n\n"
