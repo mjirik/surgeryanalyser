@@ -354,9 +354,10 @@ class DoComputerVision:
         n_tries=None,
         debug_image_file: Optional[Path] = None,
         frame_from_end_step: int = 5,
-        n_detection_tries: int = 90,
+        n_detection_tries: int = 180,
     ):
-        # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
+        # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
+        # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         if self.is_video:
             frame_from_end = 0
             for i in range(n_detection_tries):
