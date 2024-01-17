@@ -193,20 +193,26 @@ def create_heatmap_report_plt(
     plt.gca().yaxis.set_major_locator(plt.NullLocator())
 
     x, y = points[:, 0], points[:, 1]
-    sns.kdeplot(
-        x=x,
-        y=y,
-        fill=True,
-        # thresh=0.1,
-        # levels=100,
-        # cmap="mako",
-        # cmap="jet",
-        # palette="jet",
-        # cmap="crest",
-        cmap="rocket",
-        alpha=0.5,
-        linewidth=0,
-    )
+    try:
+        sns.kdeplot(
+            x=x,
+            y=y,
+            fill=True,
+            # thresh=0.1,
+            # levels=100,
+            # cmap="mako",
+            # cmap="jet",
+            # palette="jet",
+            # cmap="crest",
+            cmap="rocket",
+            alpha=0.5,
+            linewidth=0,
+        )
+    except ValueError as e:
+        logger.error(f"Error creating heatmap: {e}")
+        logger.debug(f"{x=}")
+        logger.debug(f"{y=}")
+        return None
     if filename is not None:
         # plt.savefig(Path(filename))
         plt.savefig(Path(filename), bbox_inches="tight", pad_inches=0)

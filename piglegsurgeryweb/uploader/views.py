@@ -240,14 +240,17 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
                 if new_key in (
                     "Needle holder length [pix]",
                     "Needle holder length [m]",
+                    "Needle holder length [cm]",
                     "Needle holder visibility [s]",
                     "Needle holder visibility [%]",
                     "Forceps length [pix]",
                     "Forceps length [m]",
+                    "Forceps length [cm]",
                     "Forceps visibility [s]",
                     "Forceps visibility [%]",
                     "Scissors length [pix]",
                     "Scissors length [m]",
+                    "Scissors length [cm]",
                     "Scissors visibility [s]",
                     "Scissors visibility [%]",
                     "Needle holder area presence [%]",
@@ -287,10 +290,13 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
             videofile_url = s[: s.rfind("/")] + "/" + videofile.name
             videofiles_url.append(videofile_url)
 
-    image_list_in, image_list_out = _filter_images(serverfile)
+    image_list_in, image_list_out, static_analysis_image = _filter_images(serverfile)
     logger.debug(f"{serverfile.review_edit_hash=}")
     logger.debug(f"{review_edit_hash=}")
-    edit_review = serverfile.review_edit_hash == review_edit_hash
+    # if no everyone should annotate the video
+    # edit_review = serverfile.review_edit_hash == review_edit_hash
+    # if everyone can do the review
+    edit_review = True
     logger.debug(f"{edit_review=}")
 
     html_path = tasks.get_graph_path_for_report(serverfile)
@@ -313,6 +319,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "results": results,
         "edit_review": edit_review,
         "myhtml": html,
+        "static_analysis_image": static_analysis_image,
     }
 
     return context
@@ -489,30 +496,47 @@ def go_to_video_for_annotation(request, email:Optional[str]=None):
 
 
 def _filter_images(serverfile: UploadedFile):
-    allowed_image_patterns = [
-        "needle_holder_heatmap",
-        "needle_holder_all_area_presence",
-        "forceps_heatmap",
-        "stitch_detection_0",
-        "jpeg",
-        "gif",
-    ]
+    if serverfile.stitch_count > 0:
+        allowed_image_patterns = [
+            "needle_holder_heatmap_0",
+            "forceps_heatmap_0",
+            "stitch_detection_0",
+            "needle_holder_all_area_presence",
+            "forceps_all_area_presence",
+            "jpeg",
+            "gif",
+        ]
+    else:
+        allowed_image_patterns = [
+            "needle_holder_heatmap_all",
+            "forceps_heatmap_all",
+            "stitch_detection_0",
+            "needle_holder_all_area_presence",
+            "forceps_all_area_presence",
+            "jpeg",
+            "gif",
+        ]
     filtered_in = []
     filtered_out = []
+    static_analysis_image = None
 
     for image in serverfile.bitmapimage_set.all():
         to_keep = False
         # if image.filename.startswith("_") or image.filename.startswith("__"):
         #     continue
+        filename = os.path.basename(image.bitmap_image.name)
+        logger.debug(f"{filename=}")
         for allowed_image_pattern in allowed_image_patterns:
-            filename = os.path.basename(image.bitmap_image.name)
             if allowed_image_pattern in filename.lower():
                 to_keep = True
                 filtered_in.append(image)
         if not to_keep:
             filtered_out.append(image)
+        if "incision_stitch_0.jpg" in filename.lower():
+            logger.debug(f"static_analysis_image={image}")
+            static_analysis_image = image
 
-    return filtered_in, filtered_out
+    return filtered_in, filtered_out, static_analysis_image
 
 
 def redirect_to_spreadsheet(request):

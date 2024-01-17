@@ -221,6 +221,7 @@ def _make_metrics_for_report(uploadedfile: UploadedFile):
             "stitch 0 duration [s]",
             "Stitches linearity score [%]",
             "Stitches parallelism score [%]",
+            "Stitches perpendicular score [%]",
         ]
     else:
         cols = [
@@ -234,6 +235,7 @@ def _make_metrics_for_report(uploadedfile: UploadedFile):
             "all duration [s]",
             "Stitches linearity score [%]",
             "Stitches parallelism score [%]",
+            "Stitches perpendicular score [%]",
         ]
 
     report_graph_html_path = get_graph_path_for_report(uploadedfile)

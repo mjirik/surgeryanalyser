@@ -47,177 +47,248 @@
 
 
 {% block body %}
-    <div class="container pb-4">
-        <H2> Report: {{ mediafile }} </H2>
-        {% for videofile_url in videofiles_url %}
-            <div class="pt-3">
-                <video
-                        id="my-video"
-                        class="video-js embed-responsive"
-                        controls
-                        autoplay
-                        muted
-                        preload="auto"
-                        data-setup='{"fluid": true}'
-                        poster="{{ videofile_url }}.jpg"
-                >
-                    <source src="{{ videofile_url }}" type="video/mp4"/>
-                    <!--                    <source src="MY_VIDEO.webm" type="video/webm" />-->
-                    <p class="vjs-no-js">
-                        To view this video please enable JavaScript, and consider upgrading to a
-                        web browser that
-                        <a href="https://videojs.com/html5-video-support/" target="_blank"
-                        >supports HTML5 video</a
-                        >
-                    </p>
-                </video>
-                <!--                </div>-->
+<div class="container pb-4">
+    <H2> Report: {{ mediafile }} </H2>
+    <p>
+    <div class="accordion pt-3" id="accordionExample">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                        aria-expanded="true" aria-controls="collapseOne">
+                    Dynamic analysis video
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    {% for videofile_url in videofiles_url %}
+                        <div class="pt-3">
+                            <video
+                                    id="my-video"
+                                    class="video-js embed-responsive"
+                                    controls
+                                    autoplay
+                                    muted
+                                    preload="auto"
+                                    data-setup='{"fluid": true}'
+                                    poster="{{ videofile_url }}.jpg"
+                            >
+                                <source src="{{ videofile_url }}" type="video/mp4"/>
+                                <!--                    <source src="MY_VIDEO.webm" type="video/webm" />-->
+                                <p class="vjs-no-js">
+                                    To view this video please enable JavaScript, and consider upgrading to a
+                                    web browser that
+                                    <a href="https://videojs.com/html5-video-support/" target="_blank"
+                                    >supports HTML5 video</a
+                                    >
+                                </p>
+                            </video>
+                            <!--                </div>-->
 
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
-        {% endfor %}
+        </div>
+
 
         <!-- Button to add current time-position -->
 
         <!-- Text area to display time-positions -->
         {#<textarea id="time-positions" rows="4" cols="50"></textarea>#}
 
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Static analysis image
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                <div class="accordion-body">
+                    {#        <div class="pt-3">#}
+                    {#            <img src="{{ static_analysis_image.bitmap_image.url }}" class="img-fluid" alt="Responsive image">#}
+                    {#        </div>#}
+                    {#        <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.#}
 
-    <div>
-    {% if form.annotation.value or edit_review %}
-    <h3>Annotation</h3>
 
-    <form method="post">
-        {% csrf_token %}
-
-        <div class="row">
-            <!-- Text Field Column -->
-            <div class="col-md-9">
-                <div class="form-group">
-                        <textarea class="form-control" name="annotation" id="id_annotation" rows="5"
-                                  {% if not edit_review %}disabled {% endif %}
-                    >{% if form.annotation.value %}{{ form.annotation.value }}{% endif %}</textarea>
-                </div> </div>
-            <!-- Buttons and Star Rating Column -->
-            <div class="col-md-3">
-                <div class="d-flex flex-column align-items-end">
-
-                    {% if edit_review %}
-                    <button id="add-time-btn" type="button" class="btn btn-secondary mb-2" data-toggle="tooltip" data-placement="top" title="Shortcut: Alt + t">
-                        Add Timed Annotation (Alt + t)
-                    </button>
-                    {% endif %}
-
-                    <div class="star-rating mb-2">
-                        {% for choice in form.stars %}
-                            {{ choice.tag }}
-                            <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
-                        {% endfor %}
-                    </div>
-
-                    {% if edit_review %}
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    {% endif %}
-
+                    <a href="#" class="pop">
+                        <figure class="figure">
+                            <img src="{{ static_analysis_image.bitmap_image.url }}" class="figure-img img-fluid rounded"
+                                 alt="A generic square placeholder image with rounded corners in a figure." width=550>
+                            -
+                            {#                  <figcaption class="figure-caption">Static analysis image</figcaption>#}
+                        </figure>
+                    </a>
                 </div>
             </div>
         </div>
-    </form>
-    {% endif %}
-</div>
 
+    </div>
+    <div>
+        {% if form.annotation.value or edit_review %}
+            <h3>Annotation</h3>
 
-        {#        <div>#}
-        {#            <h3>Annotation</h3>#}
-        {#        <button id="add-time-btn" class="btn btn-secondary">Add Current Time</button>#}
-        {#            <button id="add-time-btn" class="btn btn-secondary" data-toggle="tooltip" data-placement="top"#}
-        {#                    title="Shortcut: Alt + t">#}
-        {#                Add Timed Annotation (Alt + t)#}
-        {#            </button>#}
-        {#            <form method="post">#}
-        {#                {% csrf_token %}#}
-        {#                {{ form.annotation }}#}
-        {#                <div class="star-rating">#}
-        {#                    {% for choice in form.stars %}#}
-        {#                        {{ choice.tag }}#}
-        {#                        <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>#}
-        {#                    {% endfor %}#}
-        {#                </div>#}
-        {#                <button type="submit" class="btn btn-primary">Save</button>#}
-        {#            </form>#}
-        {#        </div>#}
+            <form method="post">
+                {% csrf_token %}
 
+                <div class="row">
+                    <!-- Text Field Column -->
+                    <div class="col-md-9">
+                        <div class="form-group">
+                        <textarea class="form-control" name="annotation" id="id_annotation" rows="5"
+                                  {% if not edit_review %}disabled {% endif %}
+                        >{% if form.annotation.value %}{{ form.annotation.value }}{% endif %}</textarea>
+                        </div>
+                    </div>
+                    <!-- Buttons and Star Rating Column -->
+                    <div class="col-md-3">
+                        <div class="d-flex flex-column align-items-end">
 
-        <div>
-            <h3>Statistics</h3>
-            {% if myhtml %}
-            Graph
+                            {% if edit_review %}
+                                <button id="add-time-btn" type="button" class="btn btn-secondary mb-2"
+                                        data-toggle="tooltip" data-placement="top" title="Shortcut: Alt + t">
+                                    Add Timed Annotation (Alt + t)
+                                </button>
+                            {% endif %}
 
-            {% autoescape off %}
-            {{ myhtml }}
-            {% endautoescape %}
-            {% endif %}
-            <ul>
-                {% for key, value in results.items %}
-                    <li><b>{{ key }}</b>: {{ value }}</li>
-                {% endfor %}
-            </ul>
-        </div>
+                            <div class="star-rating mb-2">
+                                {% for choice in form.stars %}
+                                    {{ choice.tag }}
+                                    <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
+                                {% endfor %}
+                            </div>
 
-        <!--    <p>-->
-        <!--        {{ serverfile.mediafile.name }}-->
-        <!--    </p>-->
-        <!--    <p>-->
-        <!--        {{ serverfile.zipfile.url }}-->
-        <!--    </p>-->
-        <div class="pt-3">
-            <h3>Images</h3>
-            {% for im in image_list %}
-                <a href="#" class="pop">
+                            {% if edit_review %}
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            {% endif %}
 
-                    <figure class="figure">
-                        <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
-                             alt="A generic square placeholder image with rounded corners in a figure." width=550>
-                        -
-                        <figcaption class="figure-caption">{{ im.filename }}</figcaption>
-                    </figure>
-                </a>
-            {% endfor %}
-            <p>
-                <a class="btn btn-secondary" data-bs-toggle="collapse" href="#collapseExample" role="button"
-                   aria-expanded="false" aria-controls="collapseExample">
-                    More images
-                </a>
-            </p>
-            <div class="collapse" id="collapseExample">
-                {% for im in image_list_out %}
-                    <a href="#" class="pop">
-
-                        <figure class="figure">
-                            <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
-                                 alt="A generic square placeholder image with rounded corners in a figure." width=550>
-                            <figcaption class="figure-caption">{{ im.filename }}</figcaption>
-                        </figure>
-                    </a>
-                {% endfor %}
-            </div>
-
-            <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-                 aria-hidden="true">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-body">
-                            <button type="button" class="close" data-dismiss="modal"><span
-                                    aria-hidden="true">&times;</span><span
-                                    class="sr-only">Close</span></button>
-                            <img src="" class="imagepreview" style="width: 100%;">
                         </div>
                     </div>
                 </div>
+            </form>
+        {% endif %}
+    </div>
+
+
+    {#        <div>#}
+    {#            <h3>Annotation</h3>#}
+    {#        <button id="add-time-btn" class="btn btn-secondary">Add Current Time</button>#}
+    {#            <button id="add-time-btn" class="btn btn-secondary" data-toggle="tooltip" data-placement="top"#}
+    {#                    title="Shortcut: Alt + t">#}
+    {#                Add Timed Annotation (Alt + t)#}
+    {#            </button>#}
+    {#            <form method="post">#}
+    {#                {% csrf_token %}#}
+    {#                {{ form.annotation }}#}
+    {#                <div class="star-rating">#}
+    {#                    {% for choice in form.stars %}#}
+    {#                        {{ choice.tag }}#}
+    {#                        <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>#}
+    {#                    {% endfor %}#}
+    {#                </div>#}
+    {#                <button type="submit" class="btn btn-primary">Save</button>#}
+    {#            </form>#}
+    {#        </div>#}
+
+    <div>
+        <h3>Statistics</h3>
+        {% if myhtml %}
+
+        {% autoescape off %}
+        {{ myhtml }}
+        {% endautoescape %}
+        {% endif %}
+    </div>
+    <div class="accordion" id="accordionPanelsStayOpenExample">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
+                        aria-controls="panelsStayOpen-collapseOne">
+                    Measured Values
+                </button>
+            </h2>
+            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    <ul>
+                        {% for key, value in results.items %}
+                            <li><b>{{ key }}</b>: {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+                        aria-controls="panelsStayOpen-collapseTwo">
+                    Images
+                </button>
+            </h2>
+            <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show">
+                <div class="accordion-body">
+                    <div class="pt-3">
+                        <h3>Images</h3>
+                        {% for im in image_list %}
+                            <a href="#" class="pop">
+
+                                <figure class="figure">
+                                    <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
+                                         alt="A generic square placeholder image with rounded corners in a figure."
+                                         width=550>
+                                    -
+                                    <figcaption class="figure-caption">{{ im.filename }}</figcaption>
+                                </figure>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
+                            aria-controls="panelsStayOpen-collapseThree">
+                        More Images
+                    </button>
+                </h2>
+                <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                    <div class="accordion-body">
+                        {% for im in image_list_out %}
+                            <a href="#" class="pop">
+
+                                <figure class="figure">
+                                    <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
+                                         alt="A generic square placeholder image with rounded corners in a figure."
+                                         width=550>
+                                    <figcaption class="figure-caption">{{ im.filename }}</figcaption>
+                                </figure>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
 
+        <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close" data-dismiss="modal"><span
+                                aria-hidden="true">&times;</span><span
+                                class="sr-only">Close</span></button>
+                        <img src="" class="imagepreview" style="width: 100%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
+
+    <div class="mt-3">
         {% if next == None %}
             <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
         {% else %}
@@ -232,48 +303,50 @@
             {#        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>#}
             <a class="btn btn-secondary" href='{% url 'uploader:show_logs' serverfile.hash %}'> Show log </a>
         {% endif %}
+
     </div>
+</div>
 
-    {#<script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>#}
-    <script>
+{#<script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>#}
+<script>
 
 
-        document.getElementById('add-time-btn').addEventListener('click', function () {
-            var video = document.getElementById('my-video');
-            var currentTime = video.currentTime; // Get current time in seconds
+    document.getElementById('add-time-btn').addEventListener('click', function () {
+        var video = document.getElementById('my-video');
+        var currentTime = video.currentTime; // Get current time in seconds
 
-            // Format the time correctly
-            var hours = Math.floor(currentTime / 3600);
-            var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
-            var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+        // Format the time correctly
+        var hours = Math.floor(currentTime / 3600);
+        var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+        var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
 
-            var formattedTime =
-                (hours < 10 ? "0" + hours : hours) + ":" +
-                (minutes < 10 ? "0" + minutes : minutes) + ":" +
-                (seconds < 10 ? "0" + seconds : seconds);
+        var formattedTime =
+            (hours < 10 ? "0" + hours : hours) + ":" +
+            (minutes < 10 ? "0" + minutes : minutes) + ":" +
+            (seconds < 10 ? "0" + seconds : seconds);
 
-            var textArea = document.getElementById('id_annotation');
-            textArea.value += (textArea.value ? "\n" : "") + formattedTime + " "; // Append formatted time to text area
-            textArea.focus(); // Set focus on the text area
-            textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
+        var textArea = document.getElementById('id_annotation');
+        textArea.value += (textArea.value ? "\n" : "") + formattedTime + " "; // Append formatted time to text area
+        textArea.focus(); // Set focus on the text area
+        textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
+    });
+
+
+    {# add keyboard shortuct #}
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('keydown', function (event) {
+            // Check if Alt is pressed along with the 'T' key
+            if (event.altKey && event.key === 't') {
+                event.preventDefault(); // Prevent any default action triggered by this combination
+                document.getElementById('add-time-btn').click(); // Trigger the button click
+            }
         });
+    });
 
 
-        {# add keyboard shortuct #}
-        document.addEventListener('DOMContentLoaded', function () {
-            document.addEventListener('keydown', function (event) {
-                // Check if Alt is pressed along with the 'T' key
-                if (event.altKey && event.key === 't') {
-                    event.preventDefault(); // Prevent any default action triggered by this combination
-                    document.getElementById('add-time-btn').click(); // Trigger the button click
-                }
-            });
-        });
-
-
-        {# show tooltip #}
-        {#$(document).ready(function () {#}
-        {#    $('[data-toggle="tooltip"]').tooltip();#}
-        {# }); #}
-    </script>
+    {# show tooltip #}
+    {#$(document).ready(function () {#}
+    {#    $('[data-toggle="tooltip"]').tooltip();#}
+    {# }); #}
+</script>
 {% endblock %}
