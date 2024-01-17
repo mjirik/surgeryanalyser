@@ -353,10 +353,13 @@ class DoComputerVision:
         return_qrdata=False,
         n_tries=None,
         debug_image_file: Optional[Path] = None,
+        frame_from_end_step: int = 5,
+        n_detection_tries: int = 90,
     ):
+        # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         if self.is_video:
             frame_from_end = 0
-            for i in range(10):
+            for i in range(n_detection_tries):
                 frame, local_meta = get_frame_to_process(
                     str(filename),
                     n_tries=n_tries,
@@ -373,7 +376,7 @@ class DoComputerVision:
                     break
                 else:
                     frame_from_end = (
-                        local_meta["reference_frame_position_from_end"] + 10
+                        local_meta["reference_frame_position_from_end"] + frame_from_end_step
                     )
             logger.debug(
                 f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
@@ -851,7 +854,7 @@ def plot_track_clusters(
     n_clusters_ = len(labels_unique)
     # fig = plt.figure(figsize=(15,4))
     
-    fif, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3]})
+    fig, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3]})
     # plt.subplot(211)
     # plt.subplot(121)
     # plt.clf()
