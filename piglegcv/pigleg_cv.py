@@ -634,6 +634,31 @@ def do_computer_vision(
     ).run()
 
 
+
+def add_dim_with_cumulative_number_of_empty_frames(X_px_fr: np.ndarray, empty_frames_axis:int=3) -> np.ndarray:
+    """
+    Add dimension with cumulative number of empty frames.
+    :param X_px_fr: X_px_fr
+    :return: X_px_fr with added dimension
+    """
+    # add dimension with cumulative number of empty frames
+    X_px_fr = np.concatenate(
+        [X_px_fr, np.zeros((X_px_fr.shape[0], 1), dtype=X_px_fr.dtype)], axis=1
+    )
+    empty_frames = 0
+    
+    for i in range(1, X_px_fr.shape[0]):
+        if X_px_fr[i, 2] - X_px_fr[i - 1, 2] > 1:
+            empty_frames += (X_px_fr[i, 2] - X_px_fr[i - 1, 2]) - 1
+        X_px_fr[i, empty_frames_axis] = empty_frames
+        
+    logger.debug(f"{X_px_fr.shape[0]=}")
+    logger.debug(f"{empty_frames=}")
+    logger.debug(f"{X_px_fr[-1, 2]=}")
+    return X_px_fr
+
+
+
 def _get_X_px_fr_more_tools(data: dict, incision_bboxes: list, tool_indexes:List[int], time_axis=2) -> np.ndarray:
     # merge several tools
     X_px_fr_list = []
@@ -744,7 +769,7 @@ def find_stitch_ends_in_tracks(
 
     """
     time_axis: int = 2
-    time_axis = int(time_axis)
+    empty_frame_axis:int = 3
 
     if type(tool_indexes) == int:
         tool_indexes = [tool_indexes]
@@ -753,17 +778,18 @@ def find_stitch_ends_in_tracks(
     
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
     data, metadata, incision_bboxes = _get_metadata(outputdir, metadata)
-
-    X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, tool_indexes, time_axis=time_axis)
     # pix_size is in [m] to normaliza data a bit we use [mm]
     axis_normalization = np.asarray(
         [
             metadata["qr_data"]["pix_size"] * 1000,
             metadata["qr_data"]["pix_size"] * 1000,
             1.0 / metadata["fps"],
+            1.0 / metadata["fps"],
         ]
     )
-
+    
+    X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, tool_indexes, time_axis=time_axis)
+    X_px_fr = add_dim_with_cumulative_number_of_empty_frames(X_px_fr, empty_frames_axis=empty_frame_axis)
     X = X_px_fr * axis_normalization
 
     if n_clusters > 1:
@@ -788,6 +814,7 @@ def find_stitch_ends_in_tracks(
     # print(f"{splits_frames=}")
 
     X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, trim_tool_indexes, time_axis=time_axis)
+    X_px_fr = add_dim_with_cumulative_number_of_empty_frames(X_px_fr, empty_frames_axis=empty_frame_axis)
     X2 = X_px_fr * axis_normalization
 
     actual_split_i = 0
@@ -855,11 +882,93 @@ def plot_track_clusters(
     n_clusters_ = len(labels_unique)
     # fig = plt.figure(figsize=(15,4))
     
-    fig, (a0, a1) = plt.subplots(1, 2, gridspec_kw={'width_ratios': [1, 3]})
+    fig, ((a0, a1), (a2, a3)) = plt.subplots(2, 2, 
+                                     gridspec_kw={'width_ratios': [1, 3]}
+                                    )
+    fig.delaxes(a2)
+    # print("fig created")
     # plt.subplot(211)
     # plt.subplot(121)
     # plt.clf()
 
+# toodo
+    _draw_points(a0, cluster_centers, X, X2, n_clusters_, labels, ax0=1, ax1=0)
+    a0.set_xlabel("[mm]")
+    a0.set_ylabel("[mm]")
+    # plt.title("Estimated number of clusters: %d" % n_clusters_)
+
+    # plt.subplot(212)
+    # plt.subplot(122)
+    # colors = [
+    #     "#dede00",
+    #     "#377eb8",
+    #     "#f781bf",
+    #     "#81bf37",
+    #     "#bf3781",
+    #     "#f3781b",
+    #     "#eb88b1",
+    #     "#1bff78",
+    # ]
+
+#     ax0 = 2
+#     ax1 = 0
+    _draw_points(a1, cluster_centers, X, X2, n_clusters_, labels, ax0=2, ax1=0)
+
+
+    # # draw additional points used for cropping
+    # a1.plot(X2[:,ax0],X2[:,ax1], ".", color="k")
+    # for k, col in zip(range(n_clusters_), colors):
+    #     my_members = labels == k
+    #     cluster_center = cluster_centers[k]
+    #     a1.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
+    #     a1.plot(
+    #         cluster_center[ax0],
+    #         cluster_center[ax1],
+    #         markers[k],
+    #         markerfacecolor=col,
+    #         markeredgecolor="k",
+    #         markersize=14,
+    #     )
+    a1.set_xlabel("[s]")
+    _draw_time_lines_in_plot(a1, splits_s, splits_hints_s)
+    
+    _draw_points(a3, cluster_centers, X, X2, n_clusters_, labels, ax0=2, ax1=3)
+    _draw_time_lines_in_plot(a3, splits_s, splits_hints_s)
+    a3.set_xlabel("[s]")
+    a3.set_ylabel("[s]")
+        
+#     a2.plot(X2[:,ax0],X2[:,ax1], ".", color="k")
+#     for k, col in zip(range(n_clusters_), colors):
+#         my_members = labels == k
+#         cluster_center = cluster_centers[k]
+#         a2.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
+#         a2.plot(
+#             cluster_center[ax0],
+#             cluster_center[ax1],
+#             markers[k],
+#             markerfacecolor=col,
+#             markeredgecolor="k",
+#             markersize=14,
+#         )
+        
+#     ax0 = 2
+#     ax1 = 3
+#     a2.set_xlabel("[s]")
+#     colors = ["g", 'r']
+#     linestyles= [(0, (4, 8)), (6, (4, 8))]
+#     for i, yline in enumerate(splits_s):
+#         # if odd use green, if even use red
+#         a1.axvline(x=yline, c=colors[i%2], linestyle=linestyles[i%2], linewidth=1)
+#         # plt.axhline(y=yline, c=colors[i%2])
+#     for i, yline in enumerate(splits_hints_s):
+#         a2.axvline(x=yline, c="k", linestyle=":", linewidth=1)
+    
+
+    if clusters_image_path is not None:
+        plt.savefig(clusters_image_path)
+        plt.close(fig)
+        
+def _draw_points(a0, cluster_centers, X, X2, n_clusters_, labels, ax0=1, ax1=0):
     colors = [
         "#dede00",
         "#377eb8",
@@ -873,9 +982,7 @@ def plot_track_clusters(
     markers = [ "x", "o","^","s","x","o","^","x","o","^","x","o","^"]
     markers_x = ["." for i in range(len(colors))]
     markers_o = ["." for i in range(len(colors))]
-    
-    ax0 = 1
-    ax1 = 0
+    logger.debug(f"{cluster_centers=}")
 
     # draw additional points used for cropping
     a0.plot(X2[:,ax0],X2[:,ax1], ".", color="k") 
@@ -892,42 +999,9 @@ def plot_track_clusters(
             markeredgecolor="k",
             markersize=14,
         )
-    a0.set_xlabel("[mm]")
-    a0.set_ylabel("[mm]")
-    # plt.title("Estimated number of clusters: %d" % n_clusters_)
-
-    # plt.subplot(212)
-    # plt.subplot(122)
-    colors = [
-        "#dede00",
-        "#377eb8",
-        "#f781bf",
-        "#81bf37",
-        "#bf3781",
-        "#f3781b",
-        "#eb88b1",
-        "#1bff78",
-    ]
-
-    ax0 = 2
-    ax1 = 0
     
 
-    # draw additional points used for cropping
-    a1.plot(X2[:,ax0],X2[:,ax1], ".", color="k")
-    for k, col in zip(range(n_clusters_), colors):
-        my_members = labels == k
-        cluster_center = cluster_centers[k]
-        a1.plot(X[my_members, ax0], X[my_members, ax1], markers_x[k], color=col)
-        a1.plot(
-            cluster_center[ax0],
-            cluster_center[ax1],
-            markers[k],
-            markerfacecolor=col,
-            markeredgecolor="k",
-            markersize=14,
-        )
-    a1.set_xlabel("[s]")
+def _draw_time_lines_in_plot(a1, splits_s, splits_hints_s):
     colors = ["g", 'r']
     linestyles= [(0, (4, 8)), (6, (4, 8))]
     for i, yline in enumerate(splits_s):
@@ -936,11 +1010,7 @@ def plot_track_clusters(
         # plt.axhline(y=yline, c=colors[i%2])
     for i, yline in enumerate(splits_hints_s):
         a1.axvline(x=yline, c="k", linestyle=":", linewidth=1)
-
-    if clusters_image_path is not None:
-        plt.savefig(clusters_image_path)
-        plt.close(fig)
-
+    
 
 # def do_computer_vision_2(filename, outputdir, meta):
 #     log_format = loguru._defaults.LOGURU_FORMAT
