@@ -481,7 +481,7 @@ def make_preview(
         input_file = Path(serverfile.mediafile.path)
         # if not input_file.exists():
         #     return
-        filename = input_file.parent / input_file.name + ".preview.jpg"
+        filename = input_file.parent / (input_file.stem + ".preview.jpg")
         filename_rel = filename.relative_to(settings.MEDIA_ROOT)
         # logger.debug(f"  {input_file=}")
         # logger.debug(f"    {filename=}")
@@ -717,11 +717,7 @@ def make_zip(serverfile: UploadedFile):
 def import_files_from_drop_dir(email, absolute_uri):
     """Find files in MEDIA_ROOT / drop_dir and import them to the database
     """
-    dropdir = Path(settings.MEDIA_ROOT) / "drop_dir"
-    dropdir.mkdir(exist_ok=True, parents=True)
-    files = (dropdir.glob("**/*"))
-    files = [f for f in files if
-             f.is_file() and f.suffix.lower in (".jpg", ".jpeg", ".png", ".mp4", ".avi", ".mov", ".mkv")]
+    files = list_files_in_drop_dir()
     for i, file_path in enumerate(files):
         # # Step 1: Read file from the server's hard drive
         # file_path = '/path/to/your/file'  # Replace with the path of your file
@@ -732,6 +728,7 @@ def import_files_from_drop_dir(email, absolute_uri):
         new_uploaded_file = UploadedFile()
         new_uploaded_file.email = email
         new_uploaded_file.uploaded_at = datetime.now()
+        update_owner(new_uploaded_file)
         # Set other fields as needed
         logger.debug(f"{file_path=}")
         logger.debug(f"{new_uploaded_file=}")
@@ -740,10 +737,13 @@ def import_files_from_drop_dir(email, absolute_uri):
         # Step 2: Save the file to the destination path
         destination_path = models_tools.upload_to_unqiue_folder(new_uploaded_file, os.path.basename(file_path))
         full_destination_path = os.path.join(settings.MEDIA_ROOT, destination_path)
-        os.makedirs(os.path.dirname(full_destination_path), exist_ok=True)
+        Path(full_destination_path).parent.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"{destination_path=}")
+        logger.debug(f"{full_destination_path=}")
+
 
         # Step 3: Move the file
-        shutil.move(file_path, new_uploaded_file.mediafile.upload_to)
+        shutil.move(file_path, full_destination_path)
 
         # Step 4: Update the mediafile field
         new_uploaded_file.mediafile = destination_path
@@ -751,6 +751,19 @@ def import_files_from_drop_dir(email, absolute_uri):
         # Step 5: Save the UploadedFile instance
         new_uploaded_file.save()
         call_async_run_processing(new_uploaded_file, absolute_uri)
+
+
+def list_files_in_drop_dir() -> list[Path]:
+    dropdir = settings.DROP_DIR
+    dropdir.mkdir(exist_ok=True, parents=True)
+    logger.debug(f"{list(dropdir.glob('*'))=}")
+    files = (dropdir.glob("**/*"))
+    logger.debug(f"{files=}")
+    files = [f for f in files if
+             f.is_file() and (f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".avi", ".mov", ".mkv"))]
+
+    logger.debug(f"{files=}")
+    return files
 
 
 def call_async_run_processing(serverfile, absolute_uri):
