@@ -481,7 +481,7 @@ def make_preview(
         input_file = Path(serverfile.mediafile.path)
         # if not input_file.exists():
         #     return
-        filename = input_file.parent / "preview.jpg"
+        filename = input_file.parent / input_file.name + ".preview.jpg"
         filename_rel = filename.relative_to(settings.MEDIA_ROOT)
         # logger.debug(f"  {input_file=}")
         # logger.debug(f"    {filename=}")
@@ -712,3 +712,60 @@ def make_zip(serverfile: UploadedFile):
         pth_rel = op.relpath(pth_zip, settings.MEDIA_ROOT)
         serverfile.zip_file = pth_rel
         serverfile.save()
+
+
+def import_files_from_drop_dir(email, absolute_uri):
+    """Find files in MEDIA_ROOT / drop_dir and import them to the database
+    """
+    dropdir = Path(settings.MEDIA_ROOT) / "drop_dir"
+    dropdir.mkdir(exist_ok=True, parents=True)
+    files = (dropdir.glob("**/*"))
+    files = [f for f in files if
+             f.is_file() and f.suffix.lower in (".jpg", ".jpeg", ".png", ".mp4", ".avi", ".mov", ".mkv")]
+    for i, file_path in enumerate(files):
+        # # Step 1: Read file from the server's hard drive
+        # file_path = '/path/to/your/file'  # Replace with the path of your file
+        # with open(file_path, 'rb') as f:
+        #     file_content = f.read()
+
+        # Step 1: Create a new UploadedFile instance
+        new_uploaded_file = UploadedFile()
+        new_uploaded_file.email = email
+        new_uploaded_file.uploaded_at = datetime.now()
+        # Set other fields as needed
+        logger.debug(f"{file_path=}")
+        logger.debug(f"{new_uploaded_file=}")
+
+        from . import models_tools
+        # Step 2: Save the file to the destination path
+        destination_path = models_tools.upload_to_unqiue_folder(new_uploaded_file, os.path.basename(file_path))
+        full_destination_path = os.path.join(settings.MEDIA_ROOT, destination_path)
+        os.makedirs(os.path.dirname(full_destination_path), exist_ok=True)
+
+        # Step 3: Move the file
+        shutil.move(file_path, new_uploaded_file.mediafile.upload_to)
+
+        # Step 4: Update the mediafile field
+        new_uploaded_file.mediafile = destination_path
+
+        # Step 5: Save the UploadedFile instance
+        new_uploaded_file.save()
+        call_async_run_processing(new_uploaded_file, absolute_uri)
+
+
+def call_async_run_processing(serverfile, absolute_uri):
+    serverfile.started_at = django.utils.timezone.now()
+    serverfile.save()
+    PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
+    PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
+    make_preview(serverfile)
+    update_owner(serverfile)
+    async_task(
+        "uploader.tasks.run_processing",
+        serverfile,
+        absolute_uri,
+        PIGLEGCV_HOSTNAME,
+        int(PIGLEGCV_PORT),
+        timeout=settings.PIGLEGCV_TIMEOUT,
+        hook="uploader.tasks.email_report_from_task",
+    )

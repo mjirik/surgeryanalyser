@@ -177,6 +177,12 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center"
+                               href="{% url 'uploader:import_files_from_drop_dir' %}">
+                                Import files from server drop dir
+                            </a>
+                        </li>
                         {% block superusermenu %}
                         {% endblock %}
 

@@ -108,3 +108,5 @@ def upload_to_unqiue_folder(instance, filename):
         datetimestr + "_" + instance_filename + "_" + hash,
         filename,
     )
+
+
