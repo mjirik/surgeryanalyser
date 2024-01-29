@@ -53,5 +53,6 @@ urlpatterns = [
     path("login/", auth_views.LoginView.as_view(), name="login"),
     path("go_to_video_for_annotation/", views.go_to_video_for_annotation, name="go_to_video_for_annotation_random"),
     path("go_to_video_for_annotation/<str:email>/", views.go_to_video_for_annotation, name="go_to_video_for_annotation_email"),
+    path("import_files_from_drop_dir/", views.import_files_from_drop_dir_view, name="import_files_from_drop_dir"),
     # path("about_ev_en/", views.about_ev_en, name="about_ev_en"),
 ]

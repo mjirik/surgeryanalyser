@@ -11,6 +11,7 @@ Actual version: "0.0.0"
 * [changed] Every annotation change is now stored to spreadsheet
 * [added] Every stitch video part is now trimmed by presence of needle holder in the operating area
 * [added] Bar plot in report with metric
+* [added] Bulk import files by copying into server "drop_dir" folder
 
 ## 2023-12
 

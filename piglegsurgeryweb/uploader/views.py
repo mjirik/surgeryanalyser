@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+import shutil
 
 import django.utils
 from django.conf import settings
@@ -20,7 +21,7 @@ from loguru import logger
 from .forms import AnnotationForm, UploadedFileForm
 from .models import MediaFileAnnotation, Owner, UploadedFile, _hash
 from .models_tools import randomString
-from .tasks import email_media_recived, make_preview, get_graph_path_for_owner, update_owner
+from .tasks import email_media_recived, make_preview, get_graph_path_for_owner, update_owner, import_files_from_drop_dir, call_async_run_processing
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
@@ -624,6 +625,13 @@ def _get_owner(owner_email: str):
         owner = owners[0]
     return owner
 
+@login_required(login_url="/admin/")
+def import_files_from_drop_dir_view(request):
+    """Import files from MEDIA_ROOT/drop_dir"""
+    email = request.user.email
+    absolute_uri = request.build_absolute_uri("/")
+    async_task("uploader.tasks.import_files_from_drop_dir", email, absolute_uri)
+
 
 def model_form_upload(request):
     if request.method == "POST":
@@ -650,21 +658,8 @@ def model_form_upload(request):
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
             # serverfile.owner = request.user
-            serverfile.started_at = django.utils.timezone.now()
-            serverfile.save()
-            PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
-            PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
-            make_preview(serverfile)
-            update_owner(serverfile)
-            async_task(
-                "uploader.tasks.run_processing",
-                serverfile,
-                request.build_absolute_uri("/"),
-                PIGLEGCV_HOSTNAME,
-                int(PIGLEGCV_PORT),
-                timeout=settings.PIGLEGCV_TIMEOUT,
-                hook="uploader.tasks.email_report_from_task",
-            )
+            absolute_uri = request.build_absolute_uri("/")
+            call_async_run_processing(serverfile, absolute_uri)
             # url = reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email})
             # logger.debug(f"{url=}")
             # return redirect("/uploader/thanks/")
