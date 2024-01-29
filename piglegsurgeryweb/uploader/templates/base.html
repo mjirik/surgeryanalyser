@@ -43,34 +43,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     {% block head %}
     {% endblock %}
-{#    <script>#}
-{#        $(document).ready(function () {#}
-{#            $('[data-toggle="tooltip"]').tooltip();#}
-{#        });#}
-{#    </script>#}
 </head>
 
 <body>
-<!--<header id="3" class="header bg-light fixed-top d-flex align-items-center">-->
-
-<!--    <div class="d-flex align-items-center justify-content-between">-->
-<!--      <a href="index.html" class="logo d-flex align-items-center">-->
-<!--        <img src="assets/img/logo.png" alt="">-->
-<!--        <span class="d-none d-lg-block">NiceAdmin</span>-->
-<!--      </a>-->
-<!--      <i class="bi bi-list toggle-sidebar-btn"></i>-->
-<!--    </div>&lt;!&ndash; End Logo &ndash;&gt;-->
-
-<!--    <div class="search-bar">-->
-<!--      <form class="search-form d-flex align-items-center" method="POST" action="#">-->
-<!--        <input type="text" name="query" placeholder="Search" title="Enter search keyword">-->
-<!--        <button type="submit" title="Search"><i class="bi bi-search"></i></button>-->
-<!--      </form>-->
-<!--    </div>&lt;!&ndash; End Search Bar &ndash;&gt;-->
-<!--    <nav class="header-nav ms-auto">-->
-<!--    </nav>&lt;!&ndash; End Icons Navigation &ndash;&gt;-->
-
-<!--  </header>-->
 <div class="mb-2 pt-3 px-2 bg-light pb-0 text-center">
     <h1>Surgery Analyser</h1>
     <p class="text pb-0 mb-0">Analysis of the instrument tip track</p>
@@ -181,6 +156,12 @@
                             <a class="dropdown-item d-flex align-items-center"
                                href="{% url 'uploader:import_files_from_drop_dir' %}">
                                 Import files from server drop dir
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center"
+                               href="{% url 'uploader:show_logs' %}">
+                                Show Logs
                             </a>
                         </li>
                         {% block superusermenu %}

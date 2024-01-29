@@ -631,6 +631,25 @@ def import_files_from_drop_dir_view(request):
     email = request.user.email
     absolute_uri = request.build_absolute_uri("/")
     async_task("uploader.tasks.import_files_from_drop_dir", email, absolute_uri)
+    files = tasks.list_files_in_drop_dir()
+
+    files_str= ""
+    for file in files:
+        files_str += str(file.name) + "<br>"
+
+    key_value = {
+        "Drop dir": settings.DROP_DIR,
+        "Files": files_str
+    }
+
+    context = {
+        "headline": "Import files from drop_dir",
+        "text": "We will import files from drop_dir. It may take a while.",
+        "key_value": key_value,
+        "next_text": "Back",
+        "next": reverse("uploader:web_reports", kwargs={}),
+    }
+    return render(request, "uploader/message.html", context )
 
 
 def model_form_upload(request):
@@ -718,6 +737,48 @@ def _get_logs_as_html(serverfile: UploadedFile) -> dict:
     # logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
     return key_value
     # return render(_as_htmlrequest,'uploader/show_logs.html', {"key_value": key_value, "logpath": logpath})
+
+def _set_loglevel_color(line:str) -> str:
+    """Set color of the log level in the log line"""
+    if "DEBUG" in line:
+        return f"<span class='text-muted'>{line}</span>"
+    elif "INFO" in line:
+        return f"<span class='text-info'>{line}</span>"
+    elif "WARNING" in line:
+        return f"<span class='text-warning'>{line}</span>"
+    elif "ERROR" in line:
+        return f"<span class='text-danger'>{line}</span>"
+    else:
+        return f"<span class='text-muted'>{line}</span>"
+
+@login_required(login_url="/admin/")
+def show_logs(request, n_lines: int = 100):
+    key_value = {}
+
+    files = settings.LOG_DIR.glob("**/*")
+
+    for file in files:
+        if file.is_file():
+            with open(file) as f:
+                lines = f.readlines()
+            lines = [_set_loglevel_color(line) for line in lines]
+            # take just first n_lines lines
+            lines = lines[-n_lines:] if len(lines) > n_lines else lines
+            key_value.update(
+                {str(file.stem): '<p class="font-monospace">' + "<br>".join(lines) + "</p>"}
+            )
+    # logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
+    return render(
+        request,
+        "uploader/show_logs.html",
+        {
+            "headline": "Logs",
+            "key_value": key_value,
+            "next": request.GET["next"]
+            if "next" in request.GET
+            else "/uploader/upload/",
+        },
+    )
 
 
 def _make_html_from_log(logpath: Path):

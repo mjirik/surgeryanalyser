@@ -61,17 +61,22 @@
                 <tr class="align-middle" id="row{{ uploadedfile.id }}">
                     <td scope="col" class="p-1">
                         {% if uploadedfile.preview %}
-                            <!--                {{ uploadedfile.preview }}-->
-                            <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
                             <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
                                    alt="thumbnail with the processed video"
                                    style="min-width: 66px; max-width: 80px;"></image>
                         {% endif %}
                     </td>
-                    <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}"
+
+                    <td scope="row">
+                {% if uploadedfile.owner.hash %}
+                        <a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}"
                                        style="word-break: break-all;"
                     >
-                        {{ uploadedfile.email }} </a></td>
+                        {{ uploadedfile.email }} </a>
+                        {% else %}
+                        {{ uploadedfile.email }}
+                        {% endif %}
+                    </td>
                     <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}"
                            style="word-break: break-all;"
                     >

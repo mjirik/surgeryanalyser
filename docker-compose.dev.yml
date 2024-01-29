@@ -70,6 +70,8 @@ volumes:
     driver: local
   dev_piglegcv:
     driver: local
+  dev_logs:
+    driver: local
 
 networks:
   dev_piglegnet:

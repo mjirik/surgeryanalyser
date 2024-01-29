@@ -14,6 +14,7 @@ Actual version: "0.0.0"
 
 * [added] Bulk import files by copying into server "drop_dir" folder
 * [changed] Empty frames used as another axis in stitch split detection
+* [added] Logs in webapp for superuser
 
 ## 2023-12
 

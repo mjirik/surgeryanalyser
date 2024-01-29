@@ -201,3 +201,6 @@ Q_CLUSTER = {
 TIME_ZONE = "Europe/Prague"
 
 CREDS_JSON_FILE = Path(PRIVATE_DIR) / "piglegsurgery-creds.json"
+
+DROP_DIR = Path(MEDIA_ROOT) / "drop_dir"
+LOG_DIR = Path("/home/appuser/pigleg/logs")
