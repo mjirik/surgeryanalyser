@@ -557,10 +557,10 @@ class DoComputerVision:
         self.meta["stitch_split_s"] = []
 
         if self.is_microsurgery:
-            tool_index = [1,2]
+            tool_index = [0,1,2]
             trim_tool_index = [0,1,2]
         else:
-            tool_index = [1]
+            tool_index = [0,1]
             trim_tool_index = [0,1]
 
         try:
