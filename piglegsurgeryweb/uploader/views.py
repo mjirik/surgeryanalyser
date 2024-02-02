@@ -708,7 +708,7 @@ def test(request):
     return render(request, "uploader/test.html", {})
 
 
-def show_logs(request, filename_hash: str):
+def show_mediafile_logs(request, filename_hash: str):
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     key_value = _get_logs_as_html(serverfile)
     return render(

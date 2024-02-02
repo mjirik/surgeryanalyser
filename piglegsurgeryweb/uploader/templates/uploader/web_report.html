@@ -301,7 +301,7 @@
             {#               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send#}
             {#            Email</a></td>#}
             {#        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>#}
-            <a class="btn btn-secondary" href='{% url 'uploader:show_logs' serverfile.hash %}'> Show log </a>
+            <a class="btn btn-secondary" href='{% url 'uploader:show_mediafile_logs' serverfile.hash %}'> Show log </a>
         {% endif %}
 
     </div>
