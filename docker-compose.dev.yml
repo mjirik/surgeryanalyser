@@ -13,7 +13,7 @@ services:
       - PIGLEG_SPREADSHEET_URL="${PIGLEG_SPREADSHEET_URL}"
     env_file:
       # there should be PIGLEG_SPREADSHEET_URL
-      - ".env.prod"
+      - ".env.dev"
     #      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
     #      - PIGLEGCV_PORT_DEVEL=5000
     #      - DOCKERLOGNAME="devel"
@@ -31,7 +31,7 @@ services:
     build: piglegcv
     env_file:
       # there should be PIGLEG_DEVICE
-      - ".env.prod"
+      - ".env.dev"
     #    command: nvidia-smi
     #    runtime: nvidia
     ports:
