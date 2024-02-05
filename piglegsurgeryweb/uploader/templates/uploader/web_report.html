@@ -23,6 +23,33 @@
             color: gold; /* Highlighted and selected star color */
         }
     </style>
+    <style>
+         .star-rating2 {
+             direction: rtl; /* Reverse the order of the radio buttons */
+         }
+
+        .star-rating2 input[type="radio"] {
+            display: none; /* Hide the radio buttons */
+        }
+
+        .star-rating2 label {
+            color: #ccc; /* Default star color */
+                font-size: 14px;
+            padding: 0 2px;
+            cursor: pointer;
+        }
+
+        .star-rating2 label:hover,
+        .star-rating2 label:hover ~ label,
+        .star-rating2 input[type="radio"]:checked ~ label {
+            color: #353535; /* Highlighted and selected star color */
+        }
+    </style>
+    <style>
+        .fieldWrapper label {
+            display: inline-block;
+        }
+    </style>
     <script>
         $(function () {
             $('.pop').on('click', function () {
@@ -146,17 +173,27 @@
                                 {{ from.annotation.errors }}
                                 {{ from.annotation.group.value }}
                             {% endif %}
+                            <div class="star-rating mb-2">
+                                {% for choice in form.stars %}
+                                    {{ choice.tag }}
+                                    <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
+                                {% endfor %}
+                            : {{ form.stars.label }}
+                            </div>
+                            {% if edit_review %}
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            {% endif %}
                         </div>
                     </div>
                     <!-- Buttons and Star Rating Column -->
                     <div class="col-md-4">
                         <div class="d-flex flex-column align-items-end">
                             {% for field in form.group2 %}
-                                <p>
+                                <div class="fieldWrapper">
                                     {{ field.errors }}
-                                    {{ field.label_tag }}
-                                    {{ field }}
-                                </p>
+                                    {{ field.label_tag }} {{ field }}
+                                </div>
+{#                                <br>#}
                             {% endfor %}
                         </div>
                     </div>
@@ -164,25 +201,28 @@
                         <div class="d-flex flex-column align-items-end">
 
 
-                            <div class="star-rating mb-2">
-                                {% for choice in form.stars %}
-                                    {{ choice.tag }}
-                                    <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
-                                {% endfor %}
-                            </div>
                             {%  for field in form.group3 %}
-                                {% if field.name != 'annotation' and field.name != 'stars' %}
-                                    <p>
+                                    <div class="fieldWrapper">
                                         {{ field.errors }}
-                                        {{ field.label_tag }}
-                                        {{ field }}
-                                    </p>
-                                {% endif %}
+                                        {{ field.label_tag }} {{ field }}
+                                    </div>
                             {% endfor %}
 
-                            {% if edit_review %}
-                                <button type="submit" class="btn btn-primary">Save</button>
-                            {% endif %}
+                            {%  for field in form.group4 %}
+                                    <div class="fieldWrapper">
+                                        {{ field.errors }}
+
+{#                                        {{ field }}#}
+                                        <div class="star-rating2 mb-2">
+                                            {% for choice in field %}
+                                                {{ choice.tag }}
+                                                <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
+                                            {% endfor %}
+                                            : {{ field.label }}
+                                        </div>
+                                    </div>
+                            {% endfor %}
+
 
                         </div>
                     </div>

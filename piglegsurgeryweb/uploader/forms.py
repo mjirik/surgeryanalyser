@@ -14,15 +14,26 @@ class UploadedFileForm(forms.ModelForm):
 
 
 class AnnotationForm(forms.ModelForm):
-    STAR_CHOICES = [(i, str(i)) for i in range(5, 0, -1)]  # 0 to 5
+    STAR_CHOICES_RTL = [(i, str(i)) for i in range(5, 0, -1)]  # 0 to 5
+    STAR_CHOICES = [(i, str(i)) for i in range(0, 5, 1)]  # 0 to 5
 
-    stars = forms.ChoiceField(choices=STAR_CHOICES, widget=forms.RadioSelect)
+    stars = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
+    respect_for_tissue = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
+    time_and_movements = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
+    instrument_handling = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
+    procedure_flow = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
         super(AnnotationForm, self).__init__(*args, **kwargs)
         self.fields["stars"].initial = 1  # Default to 1 star
+        self.fields["stars"].label = "Global Assessment"
         # self.fields["stars"].group = 1
-        self.fields["annotation"].group = 1
+        # for field in self.group3():
+        #     self.fields[field].initial = 1
+
+        for field in self.group4():
+            field.initial = 1
+
 
     def group1(self):
         return [self["annotation"], self["stars"]]
@@ -51,7 +62,10 @@ class AnnotationForm(forms.ModelForm):
             self["stitches_perpendicular_to_wound"],
             self["equal_sized_wound_portions"],
             self["no_excessive_tension"],
+        ]
 
+    def group4(self):
+        return [
             self["respect_for_tissue"],
             self["time_and_movements"],
             self["instrument_handling"],
