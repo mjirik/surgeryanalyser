@@ -51,9 +51,10 @@
             <h2>{{ headline }}</h2>
             <p class="text-danger">{{ error_text }}</p>
 
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="upload_form">
                 {% csrf_token %}
                 {{ form.as_p }}
+                <p><div class="progress not-visible" id="progress"></div></p>
                 <button class="btn btn-primary has-spinner" id="btnUpload" type="submit">
                     {#            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>#}
                     <i class="fas fa-upload"></i>
@@ -66,4 +67,59 @@
             </form>
         </div>
     </div>
+
+    <script>
+        const uploadForm = document.getElementById('upload_form');
+        const input_file = document.getElementById('id_mediafile');
+        const progress_bar = document.getElementById('progress');
+
+        $("#upload_form").submit(function(e){
+            e.preventDefault();
+            $form = $(this)
+            var formData = new FormData(this);
+            const media_data = input_file.files[0];
+            if(media_data != null){
+                progress_bar.classList.remove("not-visible");
+            }
+
+            $.ajax({
+                type: 'POST',
+                {# get url of actual pakge #}
+                url: window.location.href,
+                {#url:'{% url 'caidapp:upload_archive' %}',#}
+                {#url:'{% url next %}',#}
+                data: formData,
+                dataType: 'json',
+                beforeSend: function(){
+
+                },
+                xhr:function(){
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', e=>{
+                        if(e.lengthComputable){
+                            const percentProgress = (e.loaded/e.total)*100;
+                            const percentProgressInt = Math.round(percentProgress);
+                            progress_bar.innerHTML = `<div class="progress-bar progress-bar-striped bg-success"
+                    role="progressbar" style="width: ${percentProgress}%" aria-valuenow="${percentProgress}" aria-valuemin="0"
+                    aria-valuemax="100">${percentProgressInt}%</div>`
+                        }
+                    });
+                    return xhr
+                },
+                success: function(response){
+                    uploadForm.reset()
+                    progress_bar.classList.add('not-visible')
+                },
+                error: function(err){
+                    console.log(err);
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+            });
+        });
+
+    </script>
+
+
 {% endblock %}

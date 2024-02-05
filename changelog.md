@@ -7,6 +7,7 @@ Actual version: "0.0.0"
 * [changed] Video is now stretched to 100% if possible
 * [changed] The report can be reviewed without the processing is finished
 * [added] New metrics in the review
+* [added] Upload progress bar
 
 
 ## 2024-01
