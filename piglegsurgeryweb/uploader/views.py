@@ -456,7 +456,8 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     ).filter(
         Q(review_assigned_at__lt=thirty_minutes_ago) | Q(review_assigned_at__isnull=True),
         num_annotations = 0,
-        processing_ok=True,
+        ##  comment next line to allow to annotate videos that are not processed yet
+        # processing_ok=True,
     )
 
 
