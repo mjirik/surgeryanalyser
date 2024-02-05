@@ -84,14 +84,39 @@
                     <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}">
                         {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
                     <td>
-                        <a class="btn btn-light"
-                           href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}">
                             {% if uploadedfile.is_microsurgery %}
                                 <i class="fa-solid fa-microscope"></i>
                             {% else %}
                                 <i class="fa-regular fa-eye"></i>
                             {% endif %}
-                        </a></td>
+                    {% if uploadedfile.stitch_count > 0 %}
+                        <div data-toggle="tooltip" data-placement="top" title="Stitch Count">
+                        <span class="badge rounded-pill text-bg-secondary">
+                        {{ uploadedfile.stitch_count }}
+                        </span>
+                        </div>
+                    {% endif %}
+                    {% if uploadedfile.review_assigned_to %}
+                        <div data-toggle="tooltip" data-placement="top"
+                             title="Assigned to: {{ uploadedfile.review_assigned_to }} at {{ uploadedfile.review_assigned_at|date:'Y-m-d H:i' }}"
+                        >
+                        <i class="fa fa-user"></i>
+                        </div>
+                    {% endif %}
+                    {% if uploadedfile.mediafileannotation_set.all %}
+                        <div data-toggle="tooltip" data-placement="top"
+title="Annotated by {{ uploadedfile.mediafileannotation_set.1.annotator.email }} at {{ uploadedfile.mediafileannotation_set.0.updated_at|date:'Y-m-d H:i' }}"
+                             >
+                        <i class="bi bi-card-text"></i>
+                        </div>
+    <!-- There are MediaFileAnnotations related to this UploadedFile -->
+{% else %}
+    <!-- There are no MediaFileAnnotations related to this UploadedFile -->
+{% endif %}
+{#                      <span class="fa-stack fa-2x">#}
+{#    <i class="fa-solid fa-camera fa-stack-1x"></i>#}
+{#    <i class="fa-solid fa-ban fa-stack-2x" style="color:Tomato"></i>#}
+{#  </span>#}
                     </td>
                     <td>
                         <div data-toggle="tooltip" data-placement="top" title="{{ uploadedfile.processing_message }}">
@@ -108,11 +133,37 @@
                     </td>
                     {% if user.is_authenticated %}
                         <td><a class="btn btn-light"
-                               href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}">Run</a>
+                               href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}"
+                        >Run</a>
                         </td>
-                        <td><a class="btn btn-light"
-                               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send
-                            Email</a></td>
+                        <td>
+                            <div class="dropdown">
+  <a class="btn btn-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="fa-solid fa-ellipsis-v"></i>
+  </a>
+
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item"
+           href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}"
+    >Send Email</a>
+    </li>
+      <li><a class="dropdown-item"
+             href="{% url 'admin:uploader_uploadedfile_change' uploadedfile.id %}"
+      >Edit in Admin</a>
+      </li>
+      <li>
+            <a class="dropdown-item"
+               href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}"
+            >
+                Switch <i class="fa-solid fa-microscope"></i> /
+                <i class="fa-regular fa-eye"></i>
+            </a>
+      </li>
+
+
+  </ul>
+</div>
+                        </td>
                         <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
                         <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
                     {% endif %}
