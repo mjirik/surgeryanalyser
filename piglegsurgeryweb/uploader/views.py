@@ -325,8 +325,25 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     return context
 
-
 def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile):
+    edit_review = True
+    context = {
+        "serverfile": serverfile,
+        "mediafile": Path(serverfile.mediafile.name).name,
+        # "image_list": image_list_in,
+        # "image_list_out": image_list_out,
+        "next": request.GET["next"] if "next" in request.GET else None,
+        "videofiles_url": [serverfile.mediafile.url],
+        # "results": results,
+        "edit_review": edit_review,
+        # "myhtml": "<b>The report is not ready yet.</b>"
+        # "static_analysis_image": static_analysis_image,
+    }
+
+    return context
+
+
+def _prepare_context_for_message_if_web_report_not_exists(request, serverfile: UploadedFile):
     logger.debug("Zip file name does not exist")
 
 
@@ -353,10 +370,11 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
         not bool(serverfile.zip_file.name)
         or not Path(serverfile.zip_file.path).exists()
     ):
+        # context = _prepare_context_for_message_if_web_report_not_exists(request, serverfile)
+        # return render(request, "uploader/message.html", context)
         context = _prepare_context_if_web_report_not_exists(request, serverfile)
-        return render(request, "uploader/message.html", context)
-        # return redirect("uploader:message", next=request.path)
-    context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
+    else:
+        context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
 
     # evaluate annotation form
     if request.method == "POST":
