@@ -71,8 +71,10 @@
                                     preload="auto"
                                     data-setup='{"fluid": true}'
                                     poster="{{ videofile_url }}.jpg"
+                                    width="100%"
                             >
-                                <source src="{{ videofile_url }}" type="video/mp4"/>
+{#                                <source src="{{ videofile_url }}" type="video/mp4"/>#}
+                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>
                                 <p class="vjs-no-js">
                                     To view this video please enable JavaScript, and consider upgrading to a
                                     web browser that
@@ -130,24 +132,37 @@
                 {% csrf_token %}
 
                 <div class="row">
-                    <!-- Text Field Column -->
-                    <div class="col-md-9">
+{#                    <!-- Text Field Column -->#}
+                    <div class="col-md-4">
                         <div class="form-group">
                         <textarea class="form-control" name="annotation" id="id_annotation" rows="5"
                                   {% if not edit_review %}disabled {% endif %}
                         >{% if form.annotation.value %}{{ form.annotation.value }}{% endif %}</textarea>
-                        </div>
-                    </div>
-                    <!-- Buttons and Star Rating Column -->
-                    <div class="col-md-3">
-                        <div class="d-flex flex-column align-items-end">
-
                             {% if edit_review %}
-                                <button id="add-time-btn" type="button" class="btn btn-secondary mb-2"
+                                <button id="add-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
                                         data-toggle="tooltip" data-placement="top" title="Shortcut: Alt + t">
                                     Add Timed Annotation (Alt + t)
                                 </button>
+                                {{ from.annotation.errors }}
+                                {{ from.annotation.group.value }}
                             {% endif %}
+                        </div>
+                    </div>
+                    <!-- Buttons and Star Rating Column -->
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column align-items-end">
+                            {% for field in form.group2 %}
+                                <p>
+                                    {{ field.errors }}
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column align-items-end">
+
 
                             <div class="star-rating mb-2">
                                 {% for choice in form.stars %}
@@ -155,6 +170,15 @@
                                     <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
                                 {% endfor %}
                             </div>
+                            {%  for field in form.group3 %}
+                                {% if field.name != 'annotation' and field.name != 'stars' %}
+                                    <p>
+                                        {{ field.errors }}
+                                        {{ field.label_tag }}
+                                        {{ field }}
+                                    </p>
+                                {% endif %}
+                            {% endfor %}
 
                             {% if edit_review %}
                                 <button type="submit" class="btn btn-primary">Save</button>

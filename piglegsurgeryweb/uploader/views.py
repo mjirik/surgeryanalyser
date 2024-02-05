@@ -652,7 +652,7 @@ def import_files_from_drop_dir_view(request):
     return render(request, "uploader/message.html", context )
 
 
-def model_form_upload(request):
+def upload_mediafile(request):
     if request.method == "POST":
         form = UploadedFileForm(
             request.POST,
@@ -672,6 +672,11 @@ def model_form_upload(request):
             #     })
 
             serverfile = form.save()
+            from .media_tools import make_images_from_video
+            mediafile_path = Path(serverfile.mediafile.path)
+            if mediafile_path.suffix.lower() in [".mp4", ".avi", ".mov"]:
+                make_images_from_video(
+                   mediafile_path , mediafile_path.parent, filemask=str(mediafile_path) + ".jpg", n_frames=1)
             async_task("uploader.tasks.email_media_recived", serverfile)
 
             # email_media_recived(serverfile)

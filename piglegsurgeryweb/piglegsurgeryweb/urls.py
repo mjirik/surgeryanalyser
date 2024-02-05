@@ -25,7 +25,7 @@ from uploader import views
 # from ..uploader import views
 
 urlpatterns = [
-    path("", views.model_form_upload, name="model_form_upload"),
+    path("", views.upload_mediafile, name="model_form_upload"),
     # path('', TemplateView.as_view(template_name='uploader/login.html'), name="login"), # <--I
     path(
         "uploader/",

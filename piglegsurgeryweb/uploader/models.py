@@ -69,6 +69,29 @@ class MediaFileAnnotation(models.Model):
     )
     stars = models.IntegerField(default=-1)
 
+    needle_grabbed_correctly = models.BooleanField(default=False)
+    needle_holder_stabilized = models.BooleanField(default=False)
+    needle_pierced_at_first_try = models.BooleanField(default=False)
+    needle_pierced_at_right_angle = models.BooleanField(default=False)
+    needle_rotated_correctly_on_opposite_side = models.BooleanField(default=False)
+    needle_rotated_correctly_on_students_side = models.BooleanField(default=False)
+    forceps_grabs_the_edge = models.BooleanField(default=False)
+    three_knots_per_stitch = models.BooleanField(default=False)
+    knots_are_done_right = models.BooleanField(default=False)
+    threads_shortened_appropriately = models.BooleanField(default=False)
+
+    stitch_to_wound_distance_is_correct = models.BooleanField(default=False)
+    distance_between_stitches_is_correct = models.BooleanField(default=False)
+    stitches_perpendicular_to_wound = models.BooleanField(default=False)
+    equal_sized_wound_portions = models.BooleanField(default=False)
+    no_excessive_tension = models.BooleanField(default=False)
+
+    respect_for_tissue = models.IntegerField(default=-1)
+    time_and_movements = models.IntegerField(default=-1)
+    instrument_handling = models.IntegerField(default=-1)
+    procedure_flow = models.IntegerField(default=-1)
+
+
     def __str__(self):
         # return first line of annotation
         return (
