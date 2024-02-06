@@ -10,9 +10,10 @@ import django.utils
 from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views import generic
+from django.template.loader import render_to_string
 
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 from django_q.tasks import async_task, queue_size, schedule
@@ -718,7 +719,10 @@ def upload_mediafile(request):
                 # 'next': "uploader:model_form_upload"
                 # 'next': "uploader:model_form_upload"
             }
-            return render(request, "uploader/message.html", context)
+
+            logger.debug("redirecting to thanks")
+            html = render_to_string("uploader/partial_message.html", context=context, request=request)
+            return JsonResponse({"html": html})
     else:
         form = UploadedFileForm()
     return render(

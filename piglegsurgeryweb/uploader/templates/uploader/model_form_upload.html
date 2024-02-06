@@ -109,6 +109,13 @@
                 success: function(response){
                     uploadForm.reset()
                     progress_bar.classList.add('not-visible')
+
+                    console.log("close to the render");
+                    console.log(response);
+
+                    const container = document.getElementById('appbody');
+                    // Inject the server-rendered HTML into the selected container
+                    container.innerHTML = response.html;
                 },
                 error: function(err){
                     console.log(err);
