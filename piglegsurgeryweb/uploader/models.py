@@ -28,6 +28,7 @@ class Owner(models.Model):
         return str(self.email)
 
 
+
 class UploadedFile(models.Model):
     email = models.EmailField(max_length=200)
     # hash = scaffanweb_tools.randomString(12)
@@ -57,6 +58,14 @@ class UploadedFile(models.Model):
     def __str__(self):
         return str(Path(self.mediafile.name).name)
 
+class Collection(models.Model):
+    name = models.CharField(max_length=255, blank=True, default="")
+    owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
+    # one collection can have many uploaded files
+    uploaded_files = models.ManyToManyField(UploadedFile)
+
+    def __str__(self):
+        return str(self.name)
 
 class MediaFileAnnotation(models.Model):
     uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
