@@ -4,6 +4,7 @@ from .models import MediaFileAnnotation, UploadedFile
 
 
 class UploadedFileForm(forms.ModelForm):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'autocomplete': 'email'}))
     class Meta:
         model = UploadedFile
         fields = ("email", "mediafile", "stitch_count", "is_microsurgery")
