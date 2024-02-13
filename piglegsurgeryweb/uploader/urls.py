@@ -56,4 +56,5 @@ urlpatterns = [
     path("import_files_from_drop_dir/", views.import_files_from_drop_dir_view, name="import_files_from_drop_dir"),
     # path("about_ev_en/", views.about_ev_en, name="about_ev_en"),
     path("show_logs/", views.show_logs, name="show_logs"),
+    path("delete_media_file/<int:filename_id>/", views.delete_media_file, name="delete_media_file"),
 ]

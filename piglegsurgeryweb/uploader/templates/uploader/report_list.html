@@ -159,6 +159,13 @@ title="Annotated by {{ uploadedfile.mediafileannotation_set.1.annotator.email }}
                 <i class="fa-regular fa-eye"></i>
             </a>
       </li>
+      <li>
+            <a class="dropdown-item"
+               href="{% url 'uploader:delete_media_file' uploadedfile.id %}"
+               onclick="return confirm('Are you sure you want to delete {{ uploadedfile }}?');"
+            >
+                Delete
+            </a>
 
 
   </ul>

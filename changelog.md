@@ -8,6 +8,7 @@ Actual version: "0.0.0"
 * [changed] The report can be reviewed without the processing is finished
 * [added] New metrics in the review
 * [added] Upload progress bar
+* [added] Delete media file
 
 
 ## 2024-01

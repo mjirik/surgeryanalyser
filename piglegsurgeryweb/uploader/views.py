@@ -326,6 +326,12 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     return context
 
+@login_required(login_url="/admin/")
+def delete_media_file(request, filename_id):
+    serverfile = get_object_or_404(UploadedFile, pk=filename_id)
+    serverfile.delete()
+    return redirect("uploader:web_reports")
+
 def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile):
     edit_review = True
     context = {
