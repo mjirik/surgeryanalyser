@@ -57,4 +57,5 @@ urlpatterns = [
     # path("about_ev_en/", views.about_ev_en, name="about_ev_en"),
     path("show_logs/", views.show_logs, name="show_logs"),
     path("delete_media_file/<int:filename_id>/", views.delete_media_file, name="delete_media_file"),
+    path("download_sample_image", views.download_sample_image, name="download_sample_image"),
 ]

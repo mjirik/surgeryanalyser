@@ -27,7 +27,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile, _hash
-from . import tasks, data_tools
+from . import tasks, data_tools, models
 
 # Create your views here.
 
@@ -325,6 +325,24 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     }
 
     return context
+
+
+def download_sample_image(request):
+    """Download uploaded file."""
+
+    collection = get_object_or_404(models.Collection, name="test_data")
+    media_file = collection.uploaded_files.first()
+
+    file_path = Path(settings.MEDIA_ROOT) / media_file.mediafile.name
+    if file_path.exists():
+        with open(file_path, "rb") as fh:
+            response = HttpResponse(fh.read(), content_type="application/zip")
+            response["Content-Disposition"] = "inline; filename=" + os.path.basename(file_path)
+            return response
+    # raise Http404
+    else:
+        return redirect("uploader:upload_mediafile")
+
 
 @login_required(login_url="/admin/")
 def delete_media_file(request, filename_id):
