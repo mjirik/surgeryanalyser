@@ -311,6 +311,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         if html_path.exists():
             html = html_path.read_text()
 
+    reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
     context = {
         "serverfile": serverfile,
         "mediafile": Path(serverfile.mediafile.name).name,
@@ -322,6 +323,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "edit_review": edit_review,
         "myhtml": html,
         "static_analysis_image": static_analysis_image,
+        "review_number": len(serverfile.mediafileannotation_set.all()),
+        "reviews": reviews,
     }
 
     return context
@@ -387,6 +390,13 @@ def _prepare_context_for_message_if_web_report_not_exists(request, serverfile: U
     logger.debug(request.path)
     return context
 
+def common_review(request):
+    collection = get_object_or_404(models.Collection, name="common_review")
+
+    url = reverse("uploader:web_report", kwargs={"filename_hash": collection.uploaded_files.first().hash}) + "?review_idx=new"
+    return redirect(url)
+
+
 
 def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None):
     # fn = get_outputdir_from_hash(hash)
@@ -401,15 +411,26 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
     else:
         context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
 
+    uploaded_file_annotations_set = serverfile.mediafileannotation_set.all()
+    logger.debug(f"{uploaded_file_annotations_set=}")
+
+    review_idx = request.GET.get("review_idx", -1)
+    review_idx = None if review_idx == "new" else int(review_idx)
+    if review_idx and (review_idx < 0):
+        review_idx = len(uploaded_file_annotations_set) + review_idx
+
+    if review_idx:
+        uploaded_file_annotation = uploaded_file_annotations_set[review_idx]
+        logger.debug("annotation loaded from database")
+    else:
+        uploaded_file_annotation = None
+        logger.debug("created empty form")
+
     # evaluate annotation form
     if request.method == "POST":
-        uploaded_file_annotations = serverfile.mediafileannotation_set.first()
-        if uploaded_file_annotations:
-            logger.debug("annotation loaded from database")
-        else:
-            logger.debug("saving new form")
+        # if (review_idx >= 0) and (review_idx < len(uploaded_file_annotations_set)):
 
-        form = AnnotationForm(request.POST, instance=uploaded_file_annotations)
+        form = AnnotationForm(request.POST, instance=uploaded_file_annotation)
         if form.is_valid():
             # process the data in form.cleaned_data as required
             # ...
@@ -442,17 +463,18 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             )
             return redirect(request.path)
     else:
+        form = AnnotationForm(instance=uploaded_file_annotation)
+        # check if in request get is review_idx
+        # if (review_idx >= 0) and (review_idx < len(uploaded_file_annotations_set)):
+        #     uploaded_file_annotation = uploaded_file_annotations_set[review_idx]
+        #     form = AnnotationForm(instance=uploaded_file_annotation)
+        #     logger.debug("annotation loaded from database")
+        # else:
+        #     form = AnnotationForm()
+        #     logger.debug("created empty form")
+            # uploaded_file_annotation = serverfile.mediafileannotation_set.last()
+            # here the output might be None if the annotation does not exist
 
-        uploaded_file_annotations_set = serverfile.mediafileannotation_set
-        logger.debug(f"{uploaded_file_annotations_set=}")
-        uploaded_file_annotations = uploaded_file_annotations_set.first()
-        logger.debug(f"{uploaded_file_annotations=}")
-        if uploaded_file_annotations:
-            form = AnnotationForm(instance=uploaded_file_annotations)
-            logger.debug("annotation loaded from database")
-        else:
-            form = AnnotationForm()
-            logger.debug("created empty form")
     # logger.debug(f"form={form}")
     context["form"] = form
 

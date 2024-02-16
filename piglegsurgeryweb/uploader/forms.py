@@ -51,7 +51,6 @@ class AnnotationForm(forms.ModelForm):
             self["forceps_grabs_the_edge"],
             self["three_knots_per_stitch"],
             self["knots_are_done_right"],
-            self["threads_shortened_appropriately"],
             self["threads_shortened_appropriately"]
 
         ]
