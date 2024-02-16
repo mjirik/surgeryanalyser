@@ -416,10 +416,11 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
 
     review_idx = request.GET.get("review_idx", -1)
     review_idx = None if review_idx == "new" else int(review_idx)
-    if review_idx and (review_idx < 0):
+    if (review_idx is not None) and (review_idx < 0):
         review_idx = len(uploaded_file_annotations_set) + review_idx
+    review_idx = None if (review_idx < 0) else review_idx
 
-    if review_idx:
+    if review_idx is not None:
         uploaded_file_annotation = uploaded_file_annotations_set[review_idx]
         logger.debug("annotation loaded from database")
     else:
@@ -439,11 +440,18 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
                 annotator = _get_owner(request.user.email)
             else:
                 annotator = None
+            logger.debug(f"{len(serverfile.mediafileannotation_set.all())=}")
             annotation = form.save(commit=False)
             annotation.uploaded_file = serverfile
             annotation.updated_at = django.utils.timezone.now()
             annotation.annotator = annotator
             annotation.save()
+
+            logger.debug(f"{len(serverfile.mediafileannotation_set.all())=}")
+            new_review_idx = 0
+            for idx, ann in enumerate(serverfile.mediafileannotation_set.all()):
+                if ann == annotation:
+                    new_review_idx = idx
 
 
             # annotation = MediaFileAnnotation(
@@ -461,7 +469,7 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
                 request.build_absolute_uri("/"),
                 timeout=settings.PIGLEGCV_TIMEOUT,
             )
-            return redirect(request.path)
+            return redirect(request.path + "?review_idx=" + str(new_review_idx))
     else:
         form = AnnotationForm(instance=uploaded_file_annotation)
         # check if in request get is review_idx
@@ -477,6 +485,7 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
 
     # logger.debug(f"form={form}")
     context["form"] = form
+
 
     return render(request, "uploader/web_report.html", context)
 
