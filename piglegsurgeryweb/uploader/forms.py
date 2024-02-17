@@ -18,11 +18,39 @@ class AnnotationForm(forms.ModelForm):
     STAR_CHOICES_RTL = [(i, str(i)) for i in range(5, 0, -1)]  # 0 to 5
     STAR_CHOICES = [(i, str(i)) for i in range(0, 5, 1)]  # 0 to 5
 
-    stars = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
-    respect_for_tissue = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
-    time_and_movements = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
-    instrument_handling = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
-    procedure_flow = forms.ChoiceField(choices=STAR_CHOICES_RTL, widget=forms.RadioSelect)
+    stars = forms.ChoiceField(
+        choices=STAR_CHOICES_RTL, widget=forms.RadioSelect,
+        help_text = "1: Beginner Many unnecessary movements, frequent interruptions, uncertainty, no planning ahead, many stitches incorrectly placed; " +
+                    "3: Competent some unnecessary moves, effective use of time, planning ahead, most stitches neatly placed; " +
+                    "5: Expert economical movements, obviously pre - planned course of action, fluid movements, clean suture "
+
+
+    )
+    respect_for_tissue = forms.ChoiceField(
+        choices=STAR_CHOICES_RTL, widget=forms.RadioSelect,
+        help_text = "1: Often unnecessary force applied to the tissue or damage caused by improper use of the instruments; " +
+                    "3: Careful handling of the fabric, yet sometimes unintentional damage is caused; " +
+                    "5: Careful handling of the fabric throughout with minimal damage "
+    )
+    time_and_movements = forms.ChoiceField(
+        choices=STAR_CHOICES_RTL, widget=forms.RadioSelect,
+        help_text = "1: Many unnecessary movements; "
+                    "3: Effective work but some unnecessary movements; " +
+                    "5: economical movements and maximum effectiveness"
+
+    )
+    instrument_handling = forms.ChoiceField(
+        choices=STAR_CHOICES_RTL, widget=forms.RadioSelect,
+        help_text = "1: Frequently timid or awkward movements due to improper use of the instruments; " +
+                    "3: Competent use of instruments, but sometimes stiff or awkward movements; " +
+                    "5: Fluid movements and no clumsiness"
+    )
+    procedure_flow = forms.ChoiceField(
+        choices=STAR_CHOICES_RTL, widget=forms.RadioSelect,
+        help_text = "1: Frequent interruptions and uncertainty about the next step;" +
+                    "3: Next steps planned in advance and appropriate course of the procedure;" +
+                    "5: Clearly planned procedure with effortless transition to the next step "
+    )
 
     def __init__(self, *args, **kwargs):
         super(AnnotationForm, self).__init__(*args, **kwargs)
@@ -41,7 +69,7 @@ class AnnotationForm(forms.ModelForm):
 
     def group2(self):
         return [
-
+            # Video
             self["needle_grabbed_correctly"],
             self["needle_holder_stabilized"],
             self["needle_pierced_at_first_try"],
@@ -56,6 +84,7 @@ class AnnotationForm(forms.ModelForm):
         ]
 
     def group3(self):
+        # Result
         return [
             self["stitch_to_wound_distance_is_correct"],
             self["distance_between_stitches_is_correct"],
@@ -64,7 +93,9 @@ class AnnotationForm(forms.ModelForm):
             self["no_excessive_tension"],
         ]
 
+
     def group4(self):
+       # Global Rating Scale
         return [
             self["respect_for_tissue"],
             self["time_and_movements"],

@@ -78,27 +78,29 @@ class MediaFileAnnotation(models.Model):
     )
     stars = models.IntegerField(default=-1)
 
-    needle_grabbed_correctly = models.BooleanField(default=False)
-    needle_holder_stabilized = models.BooleanField(default=False)
-    needle_pierced_at_first_try = models.BooleanField(default=False)
+    needle_grabbed_correctly = models.BooleanField(default=False, help_text="Needle grabbed in first or second third of needle holder")
+    needle_holder_stabilized = models.BooleanField(default=False, help_text="Needle holder is stabilized with the index finger")
+    needle_pierced_at_first_try = models.BooleanField(default=False, help_text="Needle is pierced through skin at the first try")
     needle_pierced_at_right_angle = models.BooleanField(default=False)
-    needle_rotated_correctly_on_opposite_side = models.BooleanField(default=False)
-    needle_rotated_correctly_on_students_side = models.BooleanField(default=False)
-    forceps_grabs_the_edge = models.BooleanField(default=False)
-    three_knots_per_stitch = models.BooleanField(default=False)
-    knots_are_done_right = models.BooleanField(default=False)
-    threads_shortened_appropriately = models.BooleanField(default=False)
+    needle_rotated_correctly_on_opposite_side = models.BooleanField(default=False, help_text="Needle rotated according to the curvature (opposite wound edge)")
+    needle_rotated_correctly_on_students_side = models.BooleanField(default=False, help_text="Needle rotated according to the curvature (wound edge on students side)")
+    forceps_grabs_the_edge = models.BooleanField(default=False, help_text="Forceps only grabs the edge of the wound")
+    three_knots_per_stitch = models.BooleanField(default=False, help_text="Minimum of three knots per stitch")
+    knots_are_done_right = models.BooleanField(default=False, help_text="Knots are done right (square knots)")
+    threads_shortened_appropriately = models.BooleanField(default=False, help_text="Threads are shortened to an appropriate length")
 
-    stitch_to_wound_distance_is_correct = models.BooleanField(default=False)
-    distance_between_stitches_is_correct = models.BooleanField(default=False)
-    stitches_perpendicular_to_wound = models.BooleanField(default=False)
-    equal_sized_wound_portions = models.BooleanField(default=False)
-    no_excessive_tension = models.BooleanField(default=False)
+    stitch_to_wound_distance_is_correct = models.BooleanField(default=False, help_text="Distance of stitches to wound is 4-6mm")
+    distance_between_stitches_is_correct = models.BooleanField(default=False, help_text="Distance between stitches is 9-11mm")
+    stitches_perpendicular_to_wound = models.BooleanField(default=False, help_text="Stitches perpendicular to wound")
+    equal_sized_wound_portions = models.BooleanField(default=False, help_text="Equal-sized wound portions")
+    no_excessive_tension = models.BooleanField(default=False, help_text="Wound edges are brought together without excessive tension")
 
-    respect_for_tissue = models.IntegerField(default=-1)
-    time_and_movements = models.IntegerField(default=-1)
-    instrument_handling = models.IntegerField(default=-1)
-    procedure_flow = models.IntegerField(default=-1)
+    respect_for_tissue = models.IntegerField(default=-1, help_text="1 = Often unnecessary force applied to the tissue or damage caused by improper use of the instruments <br> "+
+"3 = Careful handling of the fabric, yet sometimes unintentional damage is caused <br> "+
+"5 = Careful handling of the fabric throughout with minimal damage ")
+    time_and_movements = models.IntegerField(default=-1, help_text="")
+    instrument_handling = models.IntegerField(default=-1, help_text="")
+    procedure_flow = models.IntegerField(default=-1, help_text="")
 
 
     def __str__(self):
