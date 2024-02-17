@@ -418,7 +418,8 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
     review_idx = None if review_idx == "new" else int(review_idx)
     if (review_idx is not None) and (review_idx < 0):
         review_idx = len(uploaded_file_annotations_set) + review_idx
-    review_idx = None if (review_idx < 0) else review_idx
+        if review_idx < 0:
+            review_idx = None
 
     if review_idx is not None:
         uploaded_file_annotation = uploaded_file_annotations_set[review_idx]
