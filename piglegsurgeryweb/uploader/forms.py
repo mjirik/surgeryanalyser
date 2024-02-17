@@ -11,7 +11,7 @@ class UploadedFileForm(forms.ModelForm):
         help_texts = {
             "stitch_count": "Number of stitches created in uploaded video. If you don't know, leave it zero.",
             "is_microsurgery": "Check if your video is microsurgery.",
-            "consent": "I agree to the use and share of my anonymized data for scientific purposes."
+            "consent": "I agree to the use and anonymized sharing of my data for scientific purposes."
         }
 
 
