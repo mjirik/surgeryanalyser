@@ -9,6 +9,7 @@ Actual version: "0.0.0"
 * [added] New metrics in the review
 * [added] Upload progress bar
 * [added] Delete media file
+* [added] Consent added
 
 
 ## 2024-01

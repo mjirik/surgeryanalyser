@@ -54,7 +54,7 @@ class UploadedFile(models.Model):
     review_assigned_at = models.DateTimeField("Assigned at", null=True, blank=True, default=None)
     review_assigned_to = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True, related_name="review_assigned_to")
     review_edit_hash = models.CharField(max_length=255, blank=True, default=_hash)
-    consent = models.BooleanField(default=False, label="I agree to the use of my anonymized data for scientific purposes.")
+    consent = models.BooleanField(default=False)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)
