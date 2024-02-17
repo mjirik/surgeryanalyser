@@ -7,10 +7,11 @@ class UploadedFileForm(forms.ModelForm):
     email = forms.EmailField(widget=forms.EmailInput(attrs={'autocomplete': 'email'}))
     class Meta:
         model = UploadedFile
-        fields = ("email", "mediafile", "stitch_count", "is_microsurgery")
+        fields = ("email", "mediafile", "stitch_count", "is_microsurgery", "consent")
         help_texts = {
             "stitch_count": "Number of stitches created in uploaded video. If you don't know, leave it zero.",
             "is_microsurgery": "Check if your video is microsurgery.",
+            "consent": "I agree to the use of my anonymized data for scientific purposes."
         }
 
 
