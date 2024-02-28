@@ -126,7 +126,7 @@ COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/i
 COPY ./resources/single_image_detector/mdl_sid_2.pth ./resources/single_image_detector
 COPY ./resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
 COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/yolo_l_8x8.py ./resources/tracker_model_bytetrack
+COPY ./resources/tracker_model_bytetrack/yolox_l_8x8.py ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack_hands_tools/* ./resources/tracker_model_bytetrack_hands_tools/
 COPY ./resources/tracker_model_bytetrack_microsurgery/* ./resources/tracker_model_bytetrack_microsurgery/
