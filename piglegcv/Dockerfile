@@ -104,8 +104,8 @@ RUN mkdir logs
 
 # Get models
 
-RUN mkdir -p ./.cache/torch/hub/checkpoints/
-COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
+#RUN mkdir -p ./.cache/torch/hub/checkpoints/
+#COPY ./resources/torch/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth ./.cache/torch/hub/checkpoints/
 
 # for easier debugg with this environment connected in pycharm
 RUN pip install django==3.2.23 django-q==1.3.9 plotly==5.18.0
@@ -126,6 +126,7 @@ COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/i
 COPY ./resources/single_image_detector/mdl_sid_2.pth ./resources/single_image_detector
 COPY ./resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
 COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
+COPY ./resources/tracker_model_bytetrack/yolo_l_8x8.py ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
 COPY ./resources/tracker_model_bytetrack_hands_tools/* ./resources/tracker_model_bytetrack_hands_tools/
 COPY ./resources/tracker_model_bytetrack_microsurgery/* ./resources/tracker_model_bytetrack_microsurgery/
