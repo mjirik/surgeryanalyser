@@ -639,20 +639,18 @@ def collections(request):
 @staff_member_required(login_url="/admin/")
 def run_collection(request, collection_id):
     collection = get_object_or_404(models.Collection, id=collection_id)
+    PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
+    PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
     for uploaded_file in collection.uploaded_files.all():
-        async_task(
-            "uploader.tasks.run_processing",
-            uploaded_file,
-            request.build_absolute_uri("/"),
-            timeout=settings.PIGLEGCV_TIMEOUT,
-        )
+        serverfile = _run(request, uploaded_file.id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
     return redirect("uploader:web_reports")
 
 
 def run(request, filename_id):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
-    return _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+    serverfile = _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+    return _render_run(request, serverfile)
 
 
 # def run_development(request, filename_id):
@@ -682,19 +680,23 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
         timeout=settings.PIGLEGCV_TIMEOUT,
         # hook="uploader.tasks.email_report_from_task",
     )
+    return serverfile
+    # return redirect("/uploader/upload/")
+
+
+def _render_run(request, serverfile):
     next_url = None
     if "next" in request.GET:
         next_url = request.GET["next"] + "#" + request.GET["next_anchor"]
     context = {
         "headline": "Processing started",
         "text": f"We are processing file {str(Path(serverfile.mediafile.name).name)}. "
-        + "We will let you know by email as soon as it is finished.",
+                + "We will let you know by email as soon as it is finished.",
         # The output will be stored in {serverfile.outputdir}.",
         "next": next_url,
         "next_text": "Back",
     }
     return render(request, "uploader/thanks.html", context)
-    # return redirect("/uploader/upload/")
 
 
 def about_ev_cs(request):
