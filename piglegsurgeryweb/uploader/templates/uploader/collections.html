@@ -5,15 +5,19 @@
         <H2>{{ headline }} </H2>
         <div class="row">
             {% for collection in collections %}
-                <div class="col-md-4">
+                <div class="col-md-2">
 
 
                     <div class="card">
+                        {% if collection.uploaded_files.first.preview %}
+    <img src="{{ collection.uploaded_files.first.preview.url }}" alt="Thumbnail" class="card-img-top">
+{% else %}
+    <p>No thumbnail available</p>
+{% endif %}
 {#                        <img src="..." class="card-img-top" alt="...">#}
                         <div class="card-body">
 
                             <h5 class="card-title">{{ collection.name }}</h5>
-{#                            {{ collection.uploaded_files }}#}
 {#                            <p class="card-text">Some quick example text to build on the card title and make up the bulk#}
 {#                                of the card's content.</p>#}
                             <a href="{% url 'uploader:run_collection' collection.id %}" class="btn btn-primary">Run</a>
