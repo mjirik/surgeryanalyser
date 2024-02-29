@@ -10,6 +10,7 @@ import django.utils
 from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views import generic
@@ -626,6 +627,26 @@ def redirect_to_spreadsheet(request):
         pigleg_spreadsheet_url = pigleg_spreadsheet_url.replace('"', "")
         logger.debug(f"piglegcv_spreadsheet_url={pigleg_spreadsheet_url}")
         return redirect(pigleg_spreadsheet_url)
+
+def collections(request):
+    collections = models.Collection.objects.all()
+    context = {
+        "collections": collections,
+    }
+    return render(request, "uploader/collections.html", context)
+
+
+@staff_member_required(login_url="/admin/")
+def run_collection(request, collection_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    for uploaded_file in collection.uploaded_files.all():
+        async_task(
+            "uploader.tasks.run_processing",
+            uploaded_file,
+            request.build_absolute_uri("/"),
+            timeout=settings.PIGLEGCV_TIMEOUT,
+        )
+    return redirect("uploader:web_reports")
 
 
 def run(request, filename_id):

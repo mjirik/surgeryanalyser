@@ -10,6 +10,7 @@ Actual version: "0.0.0"
 * [added] Upload progress bar
 * [added] Delete media file
 * [added] Consent added
+* [added] Collections can be run together
 
 
 ## 2024-01
