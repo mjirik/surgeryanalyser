@@ -318,7 +318,7 @@ class DoComputerVision:
         )
         logger.debug(f"{self.frame_at_beginning=}, {type(self.frame_at_beginning)=}")
         if self.frame_at_beginning is not None:
-            cv2.i
+            cv2.imwrite(str(self.outputdir / "_frame_at_beginning_with_incision.jpg"), self.frame_at_beginning)
         self.run_image_processing()
 
         logger.debug(
