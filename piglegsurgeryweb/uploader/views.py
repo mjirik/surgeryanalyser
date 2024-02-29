@@ -641,9 +641,22 @@ def run_collection(request, collection_id):
     collection = get_object_or_404(models.Collection, id=collection_id)
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
+    collection_len = len(collection.uploaded_files.all())
     for uploaded_file in collection.uploaded_files.all():
-        serverfile = _run(request, uploaded_file.id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
-    return redirect("uploader:web_reports")
+        _ = _run(request, uploaded_file.id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+    # next_url = None
+
+    # if "next" in request.GET:
+    #     next_url = request.GET["next"] + "#" + request.GET["next_anchor"]
+    context = {
+        "headline": "Processing started",
+        "text": f"Processing of {collection_len} files started. ",
+        # The output will be stored in {serverfile.outputdir}.",
+        "next": reverse("uploader:web_reports", kwargs={}),
+        "next_text": "Back",
+    }
+    return render(request, "uploader/thanks.html", context)
+    # return redirect("uploader:web_reports")
 
 
 def run(request, filename_id):
