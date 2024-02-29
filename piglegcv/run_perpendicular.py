@@ -14,6 +14,7 @@ from matplotlib import cm
 from skimage import filters
 from skimage.draw import line
 from skimage.exposure import histogram
+from typing import Optional
 
 # from skimage.transform import hough_line, hough_line_peaks
 from skimage.feature import canny
@@ -31,10 +32,10 @@ from sklearn.cluster import MeanShift
 
 try:
     #     from run_report import load_json, save_json
-    from incision_detection_mmdet import run_incision_detection
+    from incision_detection_mmdet import run_incision_detection, save_incision_cropped_images
     from stitch_detection_mmdet import run_stitch_analyser, run_stitch_detection
 except ImportError:
-    from .incision_detection_mmdet import run_incision_detection
+    from .incision_detection_mmdet import run_incision_detection, save_incision_cropped_images
     from .stitch_detection_mmdet import run_stitch_analyser, run_stitch_detection
 #     from .run_report import load_json, save_json
 
@@ -156,10 +157,12 @@ def get_frame_to_process(
     return_metadata: bool = False,
     n_tries=None,
     reference_frame_position_from_end=0,
+    step:int = 1,
 ):
     """Get last frame from video or image.
     reference_frame_position_from_end: int we start with i-th frame position from the end
     """
+    assert Path(filename).exists()
     if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
         img = cv2.imread(str(filename))
@@ -168,11 +171,13 @@ def get_frame_to_process(
 
         return np.asarray(img)
     else:
-        ##################
-
         cap = cv2.VideoCapture(str(filename))
-        last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
-        logger.debug(last_frame)
+        if reference_frame_position_from_end >= 0:
+            last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+        else:
+            last_frame = 0
+        logger.debug(f"{last_frame=}")
+        logger.debug(f"{reference_frame_position_from_end=}")
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - reference_frame_position_from_end)
         ret, img = cap.read()
         fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -192,7 +197,7 @@ def get_frame_to_process(
                 last_frame - reference_frame_position_from_end - 1,
             )
             ret, img = cap.read()
-            reference_frame_position_from_end += 1
+            reference_frame_position_from_end += step
         cap.release()
         if not ret:
             logger.error("Last frame capture error")
@@ -315,13 +320,14 @@ def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny
 
 
 def main_perpendicular(
-        img,
+    img,
     outputdir,
     meta: dict,
     roi=(0.08, 0.04),
     needle_holder_id=0,
     canny_sigma=2,
     device="cpu",
+    img_alternative:Optional[np.ndarray]=None
 ):  # (x,y)
     logger.debug("main_perpendicular...")
     # img = get_frame_to_process(filename)
@@ -334,6 +340,9 @@ def main_perpendicular(
 
     logger.debug("incision detection ...")
     imgs, bboxes = run_incision_detection(img, outputdir, meta, device=device)
+    if img_alternative is not None:
+        save_incision_cropped_images(img_alternative, outputdir, bboxes, suffix="_start")
+
     logger.debug(f"len(imgs)={len(imgs)}")
     pixelsize_m = meta["pixelsize_m_by_incision_size"]
 
