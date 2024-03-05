@@ -427,6 +427,8 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     annotation_set = serverfile.mediafileannotation_set.all()
     if len(annotation_set) > 0:
         annotation = annotation_set[ith_annotation]
+    else:
+        annotation = None
     # meta = {
     # }
     # data_tools.save_json(meta, Path(serverfile.outputdir) / "meta.json", update=True)
