@@ -261,7 +261,7 @@ class DoComputerVision:
                     "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
                     str(
                         Path(__file__).parent
-                        / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"
+                        / "resources/tracker_model_bytetrack_hands_tools/epoch.pth"
                     ),
                 ),
             ]
