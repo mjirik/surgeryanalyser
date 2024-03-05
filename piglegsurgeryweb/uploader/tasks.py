@@ -321,7 +321,14 @@ def make_graph(
     )
     fig.write_html(html_path, full_html=False)
     return html_path
-    
+
+def add_rows_to_spreadsheet_and_update_zips(uploaded_files, absolute_uri):
+    for uploaded_file in uploaded_files:
+        add_row_to_spreadsheet_and_update_zip(uploaded_file, absolute_uri, ith_annotation=None)
+        # sleep (to avoid too many requests)
+        time.sleep(20)
+
+
     
 
 def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri, ith_annotation:Optional[int]):

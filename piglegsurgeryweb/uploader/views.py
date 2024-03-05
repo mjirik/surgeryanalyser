@@ -651,14 +651,14 @@ def collections(request):
 
 def collection_update_spreadsheet(request, collection_id):
     collection = get_object_or_404(models.Collection, id=collection_id)
-    for uploaded_file in collection.uploaded_files.all():
-        async_task(
-            "uploader.tasks.add_row_to_spreadsheet_and_update_zip",
-            uploaded_file,
-            request.build_absolute_uri("/"),
-            None,
-            timeout=settings.PIGLEGCV_TIMEOUT,
-        )
+    uploaded_files = collection.uploaded_files.all()
+    async_task(
+        # "uploader.tasks.add_row_to_spreadsheet_and_update_zip",
+        "uploader.tasks.add_rows_to_spreadsheet_and_update_zips",
+        uploaded_files,
+        request.build_absolute_uri("/"),
+        timeout=settings.PIGLEGCV_TIMEOUT,
+    )
     return redirect("uploader:collections")
 
 
