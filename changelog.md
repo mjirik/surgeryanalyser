@@ -2,6 +2,10 @@
 
 Actual version: "0.0.0"
 
+## 2024-03
+
+* [added] Update spreadsheet for collection
+
 ## 2024-02
 
 * [changed] Video is now stretched to 100% if possible

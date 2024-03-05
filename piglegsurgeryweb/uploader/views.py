@@ -482,6 +482,7 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
                 "uploader.tasks.add_row_to_spreadsheet_and_update_zip",
                 serverfile,
                 request.build_absolute_uri("/"),
+                new_review_idx,
                 timeout=settings.PIGLEGCV_TIMEOUT,
             )
             return redirect(request.path + "?review_idx=" + str(new_review_idx))
@@ -647,6 +648,18 @@ def collections(request):
         "collections": collections,
     }
     return render(request, "uploader/collections.html", context)
+
+def collection_update_spreadsheet(request, collection_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    for uploaded_file in collection.uploaded_files.all():
+        async_task(
+            "uploader.tasks.add_row_to_spreadsheet_and_update_zip",
+            uploaded_file,
+            request.build_absolute_uri("/"),
+            None,
+            timeout=settings.PIGLEGCV_TIMEOUT,
+        )
+    return redirect("uploader:collections")
 
 
 @staff_member_required(login_url="/admin/")

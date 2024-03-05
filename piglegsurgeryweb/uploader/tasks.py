@@ -157,9 +157,10 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
 
     serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
-    _add_row_to_spreadsheet(serverfile, absolute_uri)
-    _make_graphs(serverfile)
+    # _add_row_to_spreadsheet(serverfile, absolute_uri)
+    _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
 
+    _make_graphs(serverfile)
 
     logger.debug("Processing finished")
     logger.remove(logger_id)
@@ -323,9 +324,13 @@ def make_graph(
     
     
 
-def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri):
+def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri, ith_annotation:Optional[int]):
+    """Add row to spreadsheet and update zip file. If ith_annotation is not None, add row for each annotation."""
     logger.debug("Updating spreadsheet...")
-    _add_row_to_spreadsheet(serverfile, absolute_uri)
+    if ith_annotation is not None:
+        _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
+    else:
+        _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=ith_annotation)
     # logger.debug("Spreadsheet updated")
     # if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
     #     serverfile.zip_file.delete()
@@ -361,8 +366,16 @@ def add_status_to_uploaded_file(serverfile:UploadedFile):
     serverfile.processing_message = status
     serverfile.save()
 
+def _add_rows_to_spreadsheet_for_each_annotation(serverfile: UploadedFile, absolute_uri):
+    if len(serverfile.mediafileannotation_set.all()) == 0:
+        _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0)
+    else:
 
-def _add_row_to_spreadsheet(serverfile, absolute_uri):
+        for i in range(len(serverfile.mediafileannotation_set.all())):
+            _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=i)
+
+
+def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
 
     creds_file = Path(settings.CREDS_JSON_FILE)  # 'piglegsurgery-1987db83b363.json'
     if not creds_file.exists():
@@ -411,21 +424,33 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
         }
     )
 
-    annotation = serverfile.mediafileannotation_set.first()
+    annotation_set = serverfile.mediafileannotation_set
+    if len(annotation_set) > 0:
+        annotation = annotation_set.all()[ith_annotation]
     # meta = {
     # }
     # data_tools.save_json(meta, Path(serverfile.outputdir) / "meta.json", update=True)
 
     if annotation:
+        # go over all annotation fields and add them to the dictionary
+        ann = {}
+        for field in annotation._meta.fields:
+            ann[field.name] = getattr(annotation, field.name)
+
+        ann["i"] = ith_annotation
+
         novy.update(
             {
                 "annotation":{
-                    'annotation': {
-                        "annotation": str(annotation.annotation),
-                        "stars": int(annotation.stars) if annotation.stars is not None else -1,
-                        "annotator": str(annotation.annotator) if annotation.annotator is not None else "",
-                        "updated_at": str(annotation.updated_at),
-                    }
+                    'annotation': ann,
+                    #     {
+                    #     "id": int(annotation.id),
+                    #     "annotation": str(annotation.annotation),
+                    #     "stars": int(annotation.stars) if annotation.stars is not None else -1,
+                    #     "annotator": str(annotation.annotator) if annotation.annotator is not None else "",
+                    #     "updated_at": str(annotation.updated_at),
+                    #
+                    # }
 
                 }
             }
