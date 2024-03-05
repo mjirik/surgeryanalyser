@@ -435,7 +435,11 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
         # go over all annotation fields and add them to the dictionary
         ann = {}
         for field in annotation._meta.fields:
-            ann[field.name] = getattr(annotation, field.name)
+            value = getattr(annotation, field.name)
+            # if type is TimestampField, convert to string
+            if isinstance(value, datetime):
+                value = defaultfilters.date(value, "Y-m-d H:i")
+            ann[field.name] = value
 
         ann["i"] = ith_annotation
 
