@@ -439,7 +439,19 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
             # if type is TimestampField, convert to string
             if isinstance(value, datetime):
                 value = defaultfilters.date(value, "Y-m-d H:i")
-            ann[field.name] = value
+                ann[field.name] = value
+            elif isinstance(value, str):
+                ann[field.name] = value
+            elif isinstance(value, int):
+                ann[field.name] = value
+            elif isinstance(value, float):
+                ann[field.name] = value
+            elif isinstance(value, bool):
+                ann[field.name] = value
+            elif isinstance(value, UploadedFile):
+                continue
+            elif isinstance(value, Owner):
+                ann[field.name] = str(value)
 
         ann["i"] = ith_annotation
 
