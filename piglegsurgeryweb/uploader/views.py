@@ -129,31 +129,36 @@ def swap_is_microsurgery(request, filename_id: int):
 def report_list(request):
     # order_by = request.session.get("order_by", '-uploaded_at')
 
+    uploaded_file_set = UploadedFile.objects.all()
+
+    context = _general_report_list(request, uploaded_file_set)
+
+    return render(request, "uploader/report_list.html", context)
+
+
+def _general_report_list(request, uploaded_file_set):
     if "order_by" in request.GET:
         logger.debug(f"order_by={request.GET['order_by']}")
         request.session["order_by"] = request.GET.get("order_by")
         request.session.modified = True
-
     order_by = request.session.get("order_by", "-uploaded_at")
     # logger.debug(f"order_by={order_by}")
-
     # order_by = request.GET.get("order_by", "-uploaded_at")
     if order_by == "filename":
-        files = sorted(UploadedFile.objects.all(), key=str)
+        files = sorted(uploaded_file_set, key=str)
     else:
-        files = UploadedFile.objects.all().order_by(order_by)
+        files = uploaded_file_set.order_by(order_by)
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
-            str(e.email)
-            + " "
-            + str(e)
-            + " "
-            + str(e.uploaded_at)
-            + " "
-            + str(e.finished_at)
+                str(e.email)
+                + " "
+                + str(e)
+                + " "
+                + str(e.uploaded_at)
+                + " "
+                + str(e.finished_at)
         )
-
     qs_json = json.dumps(qs_data)
     # logger.debug(qs_data)
     context = {
@@ -163,28 +168,35 @@ def report_list(request):
         "page_reference": "web_reports",
         "order_by": order_by,
     }
+    return context
 
+
+def show_collection_reports_list(request, collection_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    upload_files_set = collection.uploaded_files.all()
+    context = _general_report_list(request, upload_files_set)
     return render(request, "uploader/report_list.html", context)
-
 
 
 def owners_reports_list(request, owner_hash: str):
     owner = get_object_or_404(Owner, hash=owner_hash)
     order_by = request.GET.get("order_by", "-uploaded_at")
     files = UploadedFile.objects.filter(owner=owner).order_by(order_by)
-    qs_data = {}
-    for e in files:
-        qs_data[e.id] = (
-            str(e.email)
-            + " "
-            + str(e)
-            + " "
-            + str(e.uploaded_at)
-            + " "
-            + str(e.finished_at)
-        )
+    context = _general_report_list(request, files)
 
-    qs_json = json.dumps(qs_data)
+    # qs_data = {}
+    # for e in files:
+    #     qs_data[e.id] = (
+    #         str(e.email)
+    #         + " "
+    #         + str(e)
+    #         + " "
+    #         + str(e.uploaded_at)
+    #         + " "
+    #         + str(e.finished_at)
+    #     )
+    #
+    # qs_json = json.dumps(qs_data)
 
     
     html_path = get_graph_path_for_owner(owner)
@@ -197,14 +209,15 @@ def owners_reports_list(request, owner_hash: str):
             html = html_path.read_text()
     # logger.debug(html)
 
-    context = {
-        "uploadedfiles": files,
-        "queue_size": queue_size(),
-        "qs_json": qs_json,
-        "page_reference": "owners_reports_list",
-        "owner": owner,
-        "myhtml": html,
-    }
+    # context = {
+    #     "uploadedfiles": files,
+    #     "queue_size": queue_size(),
+    #     "qs_json": qs_json,
+    #     "page_reference": "owners_reports_list",
+    #     "owner": owner,
+    #     "myhtml": html,
+    # }
+    context["myhtml"] = html
 
     return render(request, "uploader/report_list.html", context)
 
