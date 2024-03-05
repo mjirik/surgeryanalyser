@@ -327,7 +327,7 @@ def make_graph(
 def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri, ith_annotation:Optional[int]):
     """Add row to spreadsheet and update zip file. If ith_annotation is not None, add row for each annotation."""
     logger.debug("Updating spreadsheet...")
-    if ith_annotation is not None:
+    if ith_annotation is None:
         _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
     else:
         _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=ith_annotation)
@@ -429,9 +429,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
         annotation = annotation_set[ith_annotation]
     else:
         annotation = None
-    # meta = {
-    # }
-    # data_tools.save_json(meta, Path(serverfile.outputdir) / "meta.json", update=True)
+
 
     if annotation:
         # go over all annotation fields and add them to the dictionary
