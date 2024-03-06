@@ -12,6 +12,7 @@ admin.site.register(models.BitmapImage)
 admin.site.register(models.Owner)
 admin.site.register(models.MediaFileAnnotation)
 admin.site.register(models.Collection)
+admin.site.register(models.Category)
 
 
 # @admin.register(UploadedFile)

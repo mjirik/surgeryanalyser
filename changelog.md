@@ -5,6 +5,7 @@ Actual version: "0.0.0"
 ## 2024-03
 
 * [added] Update spreadsheet for collection
+* [added] Categories added
 
 ## 2024-02
 

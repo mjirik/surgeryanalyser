@@ -35,6 +35,12 @@
                 <th scope="col"><a class="link-secondary" href="?order_by=filename">
                     {% if order_by == "filename" %} ▼ {% endif %} File name </a>
                 </th>
+                <th scope="col">
+                    <a class="link-secondary" href="?order_by=-category">
+                        {% if order_by == "-category"  %} ▼ {% endif %}
+                        Category
+                    </a>
+                </th>
 
                 <th scope="col">
                     <a class="link-secondary" href="?order_by=-uploaded_at">
@@ -81,6 +87,8 @@
                            style="word-break: break-all;"
                     >
                         {{ uploadedfile }}</a></td>
+                    <td>
+                        {{ uploadedfile.category }}</td>
                     <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}">
                         {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
                     <td>

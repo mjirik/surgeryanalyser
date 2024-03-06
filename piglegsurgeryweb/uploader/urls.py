@@ -59,8 +59,10 @@ urlpatterns = [
     path("delete_media_file/<int:filename_id>/", views.delete_media_file, name="delete_media_file"),
     path("download_sample_image", views.download_sample_image, name="download_sample_image"),
     path("common_review", views.common_review, name="common_review"),
-    path("collections/", views.collections, name="collections"),
+    path("collections/", views.collections_view, name="collections"),
     path("run_collection/<int:collection_id>/", views.run_collection, name="run_collection"),
     path("show_collection/<int:collection_id>/", views.show_collection_reports_list, name="show_collection"),
     path("collection_update_spreadsheet/<int:collection_id>/", views.collection_update_spreadsheet, name="collection_update_spreadsheet"),
+    path("categories/", views.categories_view, name="categories"),
+    path("category/<int:category_id>/", views.category_view, name="show_category"),
 ]

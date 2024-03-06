@@ -27,6 +27,10 @@ class Owner(models.Model):
     def __str__(self):
         return str(self.email)
 
+class Category(models.Model):
+    name = models.CharField(max_length=255, blank=True, default="")
+    def __str__(self):
+        return str(self.name)
 
 
 class UploadedFile(models.Model):
@@ -55,6 +59,7 @@ class UploadedFile(models.Model):
     review_assigned_to = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True, related_name="review_assigned_to")
     review_edit_hash = models.CharField(max_length=255, blank=True, default=_hash)
     consent = models.BooleanField(default=False)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)

@@ -642,7 +642,22 @@ def redirect_to_spreadsheet(request):
         logger.debug(f"piglegcv_spreadsheet_url={pigleg_spreadsheet_url}")
         return redirect(pigleg_spreadsheet_url)
 
-def collections(request):
+
+def categories_view(request):
+    collections = models.Category.objects.all()
+    context = {
+        "categories": collections,
+    }
+    return render(request, "uploader/categories.html", context)
+
+def category_view(request, category_id):
+    category = get_object_or_404(models.Category, id=category_id)
+    uploadedfile_set = category.uploadedfile_set.all()
+    context = _general_report_list(request, uploadedfile_set)
+
+    return render(request, "uploader/report_list.html", context)
+
+def collections_view(request):
     collections = models.Collection.objects.all()
     context = {
         "collections": collections,
