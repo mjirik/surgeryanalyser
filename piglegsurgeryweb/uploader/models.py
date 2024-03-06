@@ -112,9 +112,9 @@ class MediaFileAnnotation(models.Model):
     def __str__(self):
         # return first line of annotation
         return (
-            str(self.annotation.split("\n")[0]) + (": " + str(self.annotator))
+            str(self.id) + ", " + str(self.uploaded_file) + ", " + str(self.annotation.split("\n")[0]) + (", " + str(self.annotator))
             if self.annotator
-            else ""
+            else str(self.id) + ", " + str(self.uploaded_file)
         )
 
 
