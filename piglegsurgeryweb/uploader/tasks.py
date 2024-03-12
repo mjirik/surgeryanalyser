@@ -597,7 +597,7 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
         "</head>"
         f"<body>"
-        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
+        f"<p>Report processing finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
         f"<p></p>"

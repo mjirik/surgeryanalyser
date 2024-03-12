@@ -65,6 +65,7 @@ urlpatterns = [
     path("run_collection/<int:collection_id>/", views.run_collection, name="run_collection"),
     path("show_collection/<int:collection_id>/", views.show_collection_reports_list, name="show_collection"),
     path("collection_update_spreadsheet/<int:collection_id>/", views.collection_update_spreadsheet, name="collection_update_spreadsheet"),
+    path("add_to_collection/<int:collection_id>/<int:filename_id>/", views.add_uploaded_file_to_collection, name="add_to_collection"),
     path("categories/", views.categories_view, name="categories"),
     path("category/<int:category_id>/", views.category_view, name="show_category"),
 ]

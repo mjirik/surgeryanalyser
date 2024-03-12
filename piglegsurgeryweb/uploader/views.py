@@ -98,6 +98,12 @@ def update_all_uploaded_files(request):
     }
     return render(request, "uploader/message.html", message_context)
 
+def add_uploaded_file_to_collection(request, collection_id, filename_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    uploaded_file = get_object_or_404(models.UploadedFile, id=filename_id)
+    collection.uploaded_files.add(uploaded_file)
+    # return redirect(reverse("uploader:show_collection_reports_list", kwargs={"collection_id": collection_id}))
+    return redirect(reverse("uploader:web_reports", kwargs={}))
 
 def resend_report_email(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
@@ -167,6 +173,7 @@ def _general_report_list(request, uploaded_file_set):
         "qs_json": qs_json,
         "page_reference": "web_reports",
         "order_by": order_by,
+        "collections": models.Collection.objects.all(),
     }
     return context
 
@@ -204,7 +211,7 @@ def owners_reports_list(request, owner_hash: str):
     html = None
     if html_path:
         if not html_path.exists():
-            tasks.make_graph(owner)
+            tasks.make_graph(files, owner)
         if html_path.exists():
             html = html_path.read_text()
     # logger.debug(html)

@@ -8,6 +8,7 @@ Actual version: "0.0.0"
 * [added] Categories added
 * [added] Show annotator and file owner for authenticated users
 * [fixed] Fixed not showing some star type annotations in the report
+* [added] Add into collection from the list of reports
 
 ## 2024-02
 
