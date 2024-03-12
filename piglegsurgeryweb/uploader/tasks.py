@@ -23,6 +23,7 @@ import requests
 from django.conf import settings
 from django.core.mail import EmailMessage, send_mail
 from django.template import defaultfilters
+from django.shortcuts import reverse
 from django.utils.html import strip_tags
 from django_q.models import Schedule
 from django_q.tasks import async_task, queue_size, schedule
@@ -604,7 +605,7 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.email}">You can also do a review</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
         f"<p></p>"
         f"<p>Best regards</p>\n"
         f"<p>Miroslav Jirik</p>\n"
@@ -647,20 +648,50 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
     # )
 
 
-def email_media_recived(serverfile: UploadedFile):
+def email_media_recived(serverfile: UploadedFile, absolute_uri: str):
     # async_task('django.core.mail.send_mail',
+    review_url = reverse("uploader:go_to_video_for_annotation_email", kwargs={
+        "annotator_hash": serverfile.owner.hash
+    }),
+    html_message = (
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
+        '<html xmlns="http://www.w3.org/1999/xhtml">\n'
+        "<head> \n"
+        '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'
+        "<title>Media recived</title>"
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
+        "</head>"
+        f"<body>"
+        f"<p>Thank you for uploading a file.</p>"
+        f"<p>We will let you know when the processing will be finished.</p>"
+        f"<p>Meanwhile you can "
+        f"<a href='{review_url}'>review other student's video</a> .</p>\n"
+        f"<p></p>"
+        f"<p></p>"
+        f"</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
+        f"<p></p>"
+        f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f"<p></p>"
+        f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
+        f"<p></p>"
+        f"<p>Best regards</p>\n"
+        f"<p>Miroslav Jirik</p>\n"
+        f"<p></p>"
+        "<p>Faculty of Applied Sciences</p\n"
+        "<p>University of West Bohemia</p>\n"
+        "<p>Pilsen, Czech Republic</p>\n"
+        "<p>mjirik@kky.zcu.cz</p>\n"
+        f"</body></html>"
+    )
     send_mail(
         "Pig Leg Surgery Analyser: Media file recived",
-        "Thank you for uploading a file. \n"
-        + "We will let you know when the processing will be finished. \n\n"
-        + "Best regards,\n"
-        "Miroslav Jirik, Ph.D.\n\n"
-        "Faculty of Applied Sciences\n"
-        "University of West Bohemia\n"
-        "Pilsen, Czech Republic",
-        "mjirik@kky.zcu.cz",
-        [serverfile.email],
+        html_message,
+        from_email= "mjirik@kky.zcu.cz",
+        recipient_list=[serverfile.email],
         fail_silently=False,
+        html_message=html_message,
     )
 
 

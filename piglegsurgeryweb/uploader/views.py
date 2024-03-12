@@ -575,10 +575,11 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
 
     return video
 
-def go_to_video_for_annotation(request, email:Optional[str]=None):
-    logger.debug(f"{email=}")
-    if email:
-        annotator = _get_owner(email)
+def go_to_video_for_annotation(request, annotator_hash:Optional[str]=None):
+    logger.debug(f"{annotator_hash=}")
+    if annotator_hash:
+        # get the annotator
+        annotator = get_object_or_404(Owner, hash=annotator_hash)
         student_id = annotator.id
     else:
         annotator = None
@@ -593,7 +594,7 @@ def go_to_video_for_annotation(request, email:Optional[str]=None):
 
     # go to the web_report of the video
     if video:
-        if email:
+        if annotator_hash:
             return redirect("uploader:web_report", filename_hash=video.hash,
                             review_edit_hash=video.review_edit_hash,
                             review_annotator_hash=annotator.hash
@@ -848,12 +849,13 @@ def upload_mediafile(request):
             #     })
 
             serverfile = form.save()
+            owner = _get_owner(serverfile.email)
             from .media_tools import make_images_from_video
             mediafile_path = Path(serverfile.mediafile.path)
             if mediafile_path.suffix.lower() in [".mp4", ".avi", ".mov"]:
                 make_images_from_video(
                    mediafile_path , mediafile_path.parent, filemask=str(mediafile_path) + ".jpg", n_frames=1)
-            async_task("uploader.tasks.email_media_recived", serverfile)
+            async_task("uploader.tasks.email_media_recived", serverfile, absolute_uri=request.build_absolute_uri("/"))
 
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
@@ -869,7 +871,10 @@ def upload_mediafile(request):
                 "text": "Thank you for uploading media file. We will let you know when the processing will be finished. " +
                         "Meanwhile you can review other student's video.",
                 "next_text": "Review other student's video",
-                "next": reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email}),
+                "next": reverse("uploader:go_to_video_for_annotation_email", kwargs={
+                    # "email":serverfile.email
+                    "annotator_hash": owner.hash
+                }),
                 "next_text_secondary": "Upload another video",
                 "next_secondary": reverse("uploader:model_form_upload")
                 # 'next': "uploader:model_form_upload"
