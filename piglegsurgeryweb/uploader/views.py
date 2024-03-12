@@ -412,7 +412,7 @@ def common_review(request):
 
 
 
-def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None):
+def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None, review_annotator_hash: Optional[str] = None):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     if (
@@ -424,6 +424,14 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
         context = _prepare_context_if_web_report_not_exists(request, serverfile)
     else:
         context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
+
+    if review_annotator_hash:
+        annotator = get_object_or_404(Owner, hash=review_annotator_hash)
+    else:
+        if request.user.is_authenticated:
+            annotator = _get_owner(request.user.email)
+        else:
+            annotator = None
 
     uploaded_file_annotations_set = serverfile.mediafileannotation_set.all()
     logger.debug(f"{uploaded_file_annotations_set=}")
@@ -459,10 +467,6 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             # process the data in form.cleaned_data as required
             # ...
             # redirect to a new URL:
-            if request.user.is_authenticated:
-                annotator = _get_owner(request.user.email)
-            else:
-                annotator = None
             logger.debug(f"{len(serverfile.mediafileannotation_set.all())=}")
             annotation = form.save(commit=False)
             annotation.uploaded_file = serverfile
@@ -571,9 +575,12 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     return video
 
 def go_to_video_for_annotation(request, email:Optional[str]=None):
+    logger.debug(f"{email=}")
     if email:
-        student_id = _get_owner(email).id
+        annotator = _get_owner(email)
+        student_id = annotator.id
     else:
+        annotator = None
         student_id = None
 
         # if request.user.is_authenticated:
@@ -586,7 +593,10 @@ def go_to_video_for_annotation(request, email:Optional[str]=None):
     # go to the web_report of the video
     if video:
         if email:
-            return redirect("uploader:web_report", filename_hash=video.hash, review_edit_hash=video.review_edit_hash)
+            return redirect("uploader:web_report", filename_hash=video.hash,
+                            review_edit_hash=video.review_edit_hash,
+                            review_annotator_hash=annotator.hash
+                            )
         else:
             return redirect("uploader:web_report", filename_hash=video.hash)
     else:

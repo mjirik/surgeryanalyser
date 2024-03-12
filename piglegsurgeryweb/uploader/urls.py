@@ -28,6 +28,8 @@ urlpatterns = [
     ),
     path("web_report/<str:filename_hash>/", views.web_report, name="web_report"),
     path("web_report/<str:filename_hash>/<str:review_edit_hash>/", views.web_report, name="web_report"),
+    path("web_report/<str:filename_hash>/<str:review_edit_hash>/<str:review_annotator_hash>/", views.web_report, name="web_report"),
+
     path(
         "owners_reports/<str:owner_hash>/",
         views.owners_reports_list,

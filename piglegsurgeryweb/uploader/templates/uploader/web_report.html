@@ -82,7 +82,8 @@
 
 {% block body %}
 <div class="container pb-4">
-    <H2> Report: {{ mediafile }} </H2>
+    <h2> Report: {{ mediafile }} </h2>
+
     <p>
     <div class="accordion pt-3" id="accordionExample">
         <div class="accordion-item">
@@ -261,7 +262,24 @@
                                 : {{ form.stars.label }}
                             </div>
                             {% if edit_review %}
-                                    <button type="submit" class="btn btn-primary">Save</button>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                {% if user.is_authenticated %}
+                                    <i class="fa fa-user-pen"
+                                       data-toggle="tooltip" data-placement="top"
+                                       title="
+                                       annotator={{ form.annotator.value }},
+                                       created_at={{ form.created_at.value |date:'Y-m-d H:i' }},
+                                       updated_at={{ form.updated_at.value |date:'Y-m-d H:i' }}"
+                                    ></i>
+                                            {% if user.is_authenticated %}
+                                                <i class="fa fa-user"
+                                                   data-toggle="tooltip" data-placement="top"
+                                                   title="
+                                                                           uploaded_by={{ serverfile.owner }},
+                                                                           uploaded_at={{ serverfile.uploaded_at |date:'Y-m-d H:i' }}"
+                                                ></i>
+                                            {% endif %}
+                                {% endif %}
                             {% endif %}
                         </div>
                         </div>

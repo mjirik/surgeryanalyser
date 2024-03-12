@@ -8,7 +8,7 @@ class UploadedFileForm(forms.ModelForm):
     email = forms.EmailField(widget=forms.EmailInput(attrs={'autocomplete': 'email'}))
     class Meta:
         model = UploadedFile
-        fields = ("email", "mediafile", "category", "stitch_count", "is_microsurgery", "consent")
+        fields = ("email", "mediafile", "category", "stitch_count", "is_microsurgery", "consent",)
         help_texts = {
             "stitch_count": "Number of stitches created in uploaded video. If you don't know, leave it zero.",
             "is_microsurgery": "Check if your video is microsurgery.",
@@ -56,17 +56,23 @@ class AnnotationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(AnnotationForm, self).__init__(*args, **kwargs)
-        logger.debug(f"{args=}")
-        logger.debug(f"{kwargs=}")
+        # logger.debug(f"{args=}")
+        # logger.debug(f"{kwargs=}")
         self.fields["stars"].initial = 1  # Default to 1 star
         self.fields["stars"].label = "Global Assessment"
         self.fields["respect_for_tissue"].initial = 1  # Default to 1 star
         self.fields["time_and_movements"].initial = 1  # Default to 1 star
         self.fields["instrument_handling"].initial = 1  # Default to 1 star
         self.fields["procedure_flow"].initial = 1  # Default to 1 star
-        logger.debug(f"{dir(self.fields['respect_for_tissue'])}")
-        logger.debug(f"{self.fields['respect_for_tissue'].help_text}")
-        logger.debug(f"{self.fields['time_and_movements'].help_text}")
+        # logger.debug(f"{dir(self.fields['respect_for_tissue'])}")
+        # logger.debug(f"{self.fields['respect_for_tissue'].help_text}")
+        # logger.debug(f"{self.fields['time_and_movements'].help_text}")
+        # logger.debug(f"{kwargs.get('instance').respect_for_tissue=}")
+        # logger.debug(f"{dir(kwargs.get('instance').respect_for_tissue)=}")
+        # logger.debug(f"{type(kwargs.get('instance').respect_for_tissue)=}")
+        # log help text for respect_for_tissue from instance
+        # logger.debug(f"{kwargs.get('instance').respect_for_tissue.help_text=}")
+
         # self.fields["stars"].group = 1
         # for field in self.group3():
         #     self.fields[field].initial = 1
@@ -145,6 +151,11 @@ class AnnotationForm(forms.ModelForm):
             "instrument_handling",
             "procedure_flow",
             # ))
+            # just for edit
+            "annotator",
+            "created_at",
+            "updated_at"
+
         )
 
 
