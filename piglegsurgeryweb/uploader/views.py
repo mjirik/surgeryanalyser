@@ -517,6 +517,7 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
 
     # logger.debug(f"form={form}")
     context["form"] = form
+    context["actual_annotation"] = uploaded_file_annotation
 
 
     return render(request, "uploader/web_report.html", context)

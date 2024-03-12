@@ -6,6 +6,8 @@ Actual version: "0.0.0"
 
 * [added] Update spreadsheet for collection
 * [added] Categories added
+* [added] Show annotator and file owner for authenticated users
+* [fixed] Fixed not showing some star type annotations in the report
 
 ## 2024-02
 

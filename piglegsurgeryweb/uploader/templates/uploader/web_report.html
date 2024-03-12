@@ -264,15 +264,16 @@
                             {% if edit_review %}
                                 <button type="submit" class="btn btn-primary">Save</button>
                                 {% if user.is_authenticated %}
-                                    <i class="fa fa-user-pen"
+                                    <i class="fa fa-user-pen text-secondary"
                                        data-toggle="tooltip" data-placement="top"
                                        title="
-                                       annotator={{ form.annotator.value }},
+{#                                       annotator={{ form.annotator.value }},#}
+                                       annotator={{ actual_annotation.annotator }},
                                        created_at={{ form.created_at.value |date:'Y-m-d H:i' }},
                                        updated_at={{ form.updated_at.value |date:'Y-m-d H:i' }}"
                                     ></i>
                                             {% if user.is_authenticated %}
-                                                <i class="fa fa-user"
+                                                <i class="fa fa-user text-secondary"
                                                    data-toggle="tooltip" data-placement="top"
                                                    title="
                                                                            uploaded_by={{ serverfile.owner }},
