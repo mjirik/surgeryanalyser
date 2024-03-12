@@ -442,6 +442,14 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
         uploaded_file_annotation = None
         logger.debug("created empty form")
 
+    annotation = uploaded_file_annotation
+    logger.debug(f"{request.method=}")
+    logger.debug(f"{annotation=}, {annotation is None=}")
+    if annotation is not None:
+        logger.debug(f"{annotation.respect_for_tissue=}")
+        logger.debug(f"{annotation.time_and_movements=}")
+        logger.debug(f"{annotation.instrument_handling=}")
+        logger.debug(f"{annotation.procedure_flow=}")
     # evaluate annotation form
     if request.method == "POST":
         # if (review_idx >= 0) and (review_idx < len(uploaded_file_annotations_set)):
@@ -486,6 +494,10 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
                 timeout=settings.PIGLEGCV_TIMEOUT,
             )
             return redirect(request.path + "?review_idx=" + str(new_review_idx))
+        else:
+            logger.debug(f"{form.errors=}")
+            context["form"] = form
+            return render(request, "uploader/web_report.html", context)
     else:
         form = AnnotationForm(instance=uploaded_file_annotation)
         # check if in request get is review_idx

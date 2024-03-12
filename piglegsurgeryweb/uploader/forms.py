@@ -1,6 +1,7 @@
 from django import forms
 
 from .models import MediaFileAnnotation, UploadedFile
+from loguru import logger
 
 
 class UploadedFileForm(forms.ModelForm):
@@ -55,14 +56,23 @@ class AnnotationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(AnnotationForm, self).__init__(*args, **kwargs)
+        logger.debug(f"{args=}")
+        logger.debug(f"{kwargs=}")
         self.fields["stars"].initial = 1  # Default to 1 star
         self.fields["stars"].label = "Global Assessment"
+        self.fields["respect_for_tissue"].initial = 1  # Default to 1 star
+        self.fields["time_and_movements"].initial = 1  # Default to 1 star
+        self.fields["instrument_handling"].initial = 1  # Default to 1 star
+        self.fields["procedure_flow"].initial = 1  # Default to 1 star
+        logger.debug(f"{dir(self.fields['respect_for_tissue'])}")
+        logger.debug(f"{self.fields['respect_for_tissue'].help_text}")
+        logger.debug(f"{self.fields['time_and_movements'].help_text}")
         # self.fields["stars"].group = 1
         # for field in self.group3():
         #     self.fields[field].initial = 1
 
-        for field in self.group4():
-            field.initial = 1
+        # for field in self.group4():
+        #     field.initial = 1
 
 
     def group1(self):

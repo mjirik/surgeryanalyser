@@ -75,7 +75,8 @@ class Collection(models.Model):
 
 class MediaFileAnnotation(models.Model):
     uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)
-    annotation = models.TextField()
+    # annotation text field might be empty
+    annotation = models.TextField(blank=True, default="")
     # title = models.CharField(max_length=255, blank=True, default="")
     created_at = models.DateTimeField("Created at", default=datetime.now)
     updated_at = models.DateTimeField("Updated at", default=datetime.now)
