@@ -176,6 +176,16 @@
 
             <form method="post">
                 {% csrf_token %}
+{#            form errors #}
+    {% for field in form %}
+        {% if field.errors %}
+        <span class="text-danger">
+            {{ field.label_tag }} {{ field.errors }}
+        </span>
+        {% endif %}
+                {% endfor %}
+
+
 
                 <div class="row">
                     {#                    <!-- Text Field Column -->#}
@@ -269,8 +279,8 @@
                                        title="
 {#                                       annotator={{ form.annotator.value }},#}
                                        annotator={{ actual_annotation.annotator }},
-                                       created_at={{ form.created_at.value |date:'Y-m-d H:i' }},
-                                       updated_at={{ form.updated_at.value |date:'Y-m-d H:i' }}"
+                                       created_at={{ actual_annotation.created_at |date:'Y-m-d H:i' }},
+                                       updated_at={{ actual_annotation.updated_at |date:'Y-m-d H:i' }}"
                                     ></i>
                                             {% if user.is_authenticated %}
                                                 <i class="fa fa-user text-secondary"

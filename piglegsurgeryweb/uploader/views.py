@@ -506,9 +506,10 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             )
             return redirect(request.path + "?review_idx=" + str(new_review_idx))
         else:
+            logger.debug("Errors")
             logger.debug(f"{form.errors=}")
-            context["form"] = form
-            return render(request, "uploader/web_report.html", context)
+            # context["form"] = form
+            # return render(request, "uploader/web_report.html", context)
     else:
         form = AnnotationForm(instance=uploaded_file_annotation)
         # check if in request get is review_idx

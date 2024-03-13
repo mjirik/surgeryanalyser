@@ -151,10 +151,6 @@ class AnnotationForm(forms.ModelForm):
             "instrument_handling",
             "procedure_flow",
             # ))
-            # just for edit
-            "annotator",
-            "created_at",
-            "updated_at"
 
         )
 
