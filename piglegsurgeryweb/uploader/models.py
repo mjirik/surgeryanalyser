@@ -1,6 +1,7 @@
 import os.path as op
 from datetime import datetime
 from pathlib import Path
+import numpy as np
 
 from django.db import models
 
