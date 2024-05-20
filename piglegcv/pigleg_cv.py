@@ -687,8 +687,10 @@ def _get_X_px_fr_more_tools(data: dict, incision_bboxes: list, tool_indexes:List
     for trim_tool_index in tool_indexes:
         X_px_fr_list.append(_get_X_px_fr(data, incision_bboxes, trim_tool_index))
 
+    logger.debug(f"{X_px_fr_list=}")
     # merge the lists
     X_px_fr = np.concatenate(X_px_fr_list, axis=0)
+    logger.debug(f"{X_px_fr.shape=}")
     #sort by time_axis
     X_px_fr = X_px_fr[X_px_fr[:, time_axis].argsort()]
     return X_px_fr
