@@ -51,11 +51,39 @@
         }
     </style>
     <style>
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-height: 70vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
         .my-video {
             width: 100%;
             max-height: 70vh;
             object-fit: contain;
         }
+        .rotate90 {
+    transform: rotate(90deg) translateY(-100%);
+    transform-origin: top left;
+}
+
+.rotate180 {
+    transform: rotate(180deg) translate(-100%, -100%);
+    transform-origin: top left;
+}
+
+.rotate270 {
+    transform: rotate(270deg) translateX(-100%);
+    transform-origin: top left;
+}
+
+.rotate360 {
+    transform: rotate(360deg);
+    transform-origin: top left;
+}
     </style>
     <script>
         $(function () {
@@ -83,9 +111,54 @@
 {% block body %}
 <div class="container pb-4">
     <h2> Report: {{ mediafile }} </h2>
+    <div class="container">
+    <a class="btn btn-secondary" href="{% url 'uploader:rotate_mediafile_right'  serverfile.hash %}"
+       data-toggle="tooltip" data-placement="top" title="actual rotation: {{ serverfile.rotation }}°"
+    ><i class="bi bi-arrow-clockwise"></i></a>
+
+    </div>
 
     <p>
     <div class="accordion pt-3" id="accordionExample">
+        <div class="accordion-item">
+{#            <div class="accordion-item">#}
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRawVideo"
+                            aria-expanded="false" aria-controls="collapseRawVideo">
+                        Raw video - no overlay
+                    </button>
+                </h2>
+                <div id="collapseRawVideo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        {% for videofile_url in alternative_videofiles_url %}
+                            <div class="video-container pt-3">
+                                <video
+                                        id="my-raw-video"
+                                        {#                                    class="video-js embed-responsive"#}
+                                        controls
+                                        autoplay
+                                        muted
+                                        preload="auto"
+                                        data-setup='{"fluid": true}'
+                                        poster="{{ videofile_url }}.jpg"
+                                        class="my-video rotate{{ serverfile.rotation }}"
+                                >
+                                    <source src="{{ videofile_url }}" type="video/mp4"/>
+                                    {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
+                                    <p class="vjs-no-js">
+                                        To view this video please enable JavaScript, and consider upgrading to a
+                                        web browser that
+                                        <a href="https://videojs.com/html5-video-support/" target="_blank"
+                                        >supports HTML5 video</a
+                                        >
+                                    </p>
+                                </video>
+
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
