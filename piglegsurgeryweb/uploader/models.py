@@ -61,6 +61,7 @@ class UploadedFile(models.Model):
     review_edit_hash = models.CharField(max_length=255, blank=True, default=_hash)
     consent = models.BooleanField(default=False)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    rotation = models.IntegerField(default=0)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)

@@ -2,6 +2,10 @@
 
 Actual version: "0.0.0"
 
+## 2024-05
+
+* [added] Video rotation
+
 ## 2024-03
 
 * [added] Update spreadsheet for collection

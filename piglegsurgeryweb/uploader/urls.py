@@ -68,4 +68,5 @@ urlpatterns = [
     path("add_to_collection/<int:collection_id>/<int:filename_id>/", views.add_uploaded_file_to_collection, name="add_to_collection"),
     path("categories/", views.categories_view, name="categories"),
     path("category/<int:category_id>/", views.category_view, name="show_category"),
+    path("mediafile/rotate_right/<str:mediafile_hash>/", views.rotate_mediafile_right, name="rotate_mediafile_right")
 ]

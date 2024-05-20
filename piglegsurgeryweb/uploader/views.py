@@ -340,6 +340,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "image_list_out": image_list_out,
         "next": request.GET["next"] if "next" in request.GET else None,
         "videofiles_url": videofiles_url,
+        "alternative_videofiles_url": [serverfile.mediafile.url],
         "results": results,
         "edit_review": edit_review,
         "myhtml": html,
@@ -383,6 +384,7 @@ def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile)
         # "image_list_out": image_list_out,
         "next": request.GET["next"] if "next" in request.GET else None,
         "videofiles_url": [serverfile.mediafile.url],
+        "alternative_videofiles_url": [serverfile.mediafile.url],
         # "results": results,
         "edit_review": edit_review,
         # "myhtml": "<b>The report is not ready yet.</b>"
@@ -417,10 +419,27 @@ def common_review(request):
     url = reverse("uploader:web_report", kwargs={"filename_hash": collection.uploaded_files.first().hash}) + "?review_idx=new"
     return redirect(url)
 
+# @login_required(login_url="/admin/")
+def rotate_mediafile_right(request, mediafile_hash: str):
+    uploaded_file = get_object_or_404(UploadedFile, hash=mediafile_hash)
+    logger.debug(uploaded_file.rotation)
+    uploaded_file.rotation = (uploaded_file.rotation + 90) % 360
+    logger.debug(uploaded_file.rotation)
+    uploaded_file.save()
+    return redirect("uploader:web_report", filename_hash=mediafile_hash)
 
 
 def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None, review_annotator_hash: Optional[str] = None):
     # fn = get_outputdir_from_hash(hash)
+
+    if review_annotator_hash:
+        annotator = get_object_or_404(Owner, hash=review_annotator_hash)
+    else:
+        if request.user.is_authenticated:
+            annotator = _get_owner(request.user.email)
+        else:
+            annotator = None
+
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     if (
         not bool(serverfile.zip_file.name)
@@ -432,13 +451,6 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
     else:
         context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
 
-    if review_annotator_hash:
-        annotator = get_object_or_404(Owner, hash=review_annotator_hash)
-    else:
-        if request.user.is_authenticated:
-            annotator = _get_owner(request.user.email)
-        else:
-            annotator = None
 
     uploaded_file_annotations_set = serverfile.mediafileannotation_set.all()
     logger.debug(f"{uploaded_file_annotations_set=}")
