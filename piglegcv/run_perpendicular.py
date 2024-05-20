@@ -178,6 +178,7 @@ def get_frame_to_process(
             last_frame = 0
         logger.debug(f"{last_frame=}")
         logger.debug(f"{reference_frame_position_from_end=}")
+        logger.debug(f"{step=}")
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - reference_frame_position_from_end)
         ret, img = cap.read()
         fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -189,8 +190,8 @@ def get_frame_to_process(
         # i = 0
         while (not ret) and (reference_frame_position_from_end < n_tries):
             logger.debug(
-                "Last frame capture error, frame",
-                last_frame - reference_frame_position_from_end,
+                f"Last frame capture error, frame " +
+                f"{last_frame - reference_frame_position_from_end}, {last_frame=}, {reference_frame_position_from_end=}"
             )
             cap.set(
                 cv2.CAP_PROP_POS_FRAMES,
