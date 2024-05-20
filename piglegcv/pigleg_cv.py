@@ -312,9 +312,9 @@ class DoComputerVision:
         logger.debug("Searching for frame at beginning")
         self.frame_at_beginning = self._get_frame_to_process_ideally_with_incision(
             self.filename_cropped,
-            n_tries=None,
+            n_tries=100,
             frame_from_end=-1,
-            frame_from_end_step=-1
+            frame_from_end_step=-5
         )
         logger.debug(f"{self.frame_at_beginning=}, {type(self.frame_at_beginning)=}")
         if self.frame_at_beginning is not None:
@@ -431,7 +431,7 @@ class DoComputerVision:
                 / "_single_image_detector_results_full_size.jpg",
             )
         else:
-            frame, local_meta = get_frame_to_process(self.filename_original)
+            self.frame, local_meta = get_frame_to_process(self.filename_original)
         qr_data["qr_scissors_frames"] = []
         imgs, bboxes = run_incision_detection(self.frame, device=self.device)
         qr_data["incision_bboxes_old"] = bboxes.tolist()
