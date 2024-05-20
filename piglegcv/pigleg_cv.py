@@ -621,6 +621,7 @@ class DoComputerVision:
             return split_frames
         except Exception as e:
             logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
+            logger.error(traceback.format_exc())
             print(traceback.format_exc())
         return []
 
@@ -819,7 +820,15 @@ def find_stitch_ends_in_tracks(
         # labels = ms.predict(X)
         cluster_centers = ms.cluster_centers_
 
-        labels = _smooth_in_1D(X, labels, time_axis=time_axis)
+        #n_neighbors should be half of the less frequent label
+        n_per_class = np.bincount(labels)
+        logger.debug(f"{np.bincount(labels)=}")
+        if np.min(n_per_class) > 2:
+            n_neighbors = int(np.min(n_per_class) / 2)
+            if n_neighbors > 100:
+                n_neighbors = 100
+
+            labels = _smooth_in_1D(X, labels, time_axis=time_axis, n_neighbors=n_neighbors)
         splits_s, splits_frames = _get_splits(X, labels, metadata["fps"], time_axis=time_axis, weight_of_later=weight_of_later)
     else:
         # splits_s = [np.mean(X[:, time_axis])]
