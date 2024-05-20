@@ -129,7 +129,7 @@ def main_tracker_bytetrack(
     additional_hash: is a string that will be added to the hash of the first frame
     """
     logger.debug("main_tracker")
-    additional_hash += "bt1"
+    additional_hash += "bt2"
     run_tracking, hash_hex = _should_do_tracking_based_on_hash(
         trackers_config_and_checkpoints, filename,
         output_file_path, additional_hash=additional_hash)

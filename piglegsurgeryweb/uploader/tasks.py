@@ -23,6 +23,7 @@ import requests
 from django.conf import settings
 from django.core.mail import EmailMessage, send_mail
 from django.template import defaultfilters
+from django.shortcuts import reverse
 from django.utils.html import strip_tags
 from django_q.models import Schedule
 from django_q.tasks import async_task, queue_size, schedule
@@ -157,9 +158,10 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
 
     serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
-    _add_row_to_spreadsheet(serverfile, absolute_uri)
-    _make_graphs(serverfile)
+    # _add_row_to_spreadsheet(serverfile, absolute_uri)
+    _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
 
+    _make_graphs(serverfile)
 
     logger.debug("Processing finished")
     logger.remove(logger_id)
@@ -320,12 +322,23 @@ def make_graph(
     )
     fig.write_html(html_path, full_html=False)
     return html_path
-    
+
+def add_rows_to_spreadsheet_and_update_zips(uploaded_files, absolute_uri):
+    for uploaded_file in uploaded_files:
+        add_row_to_spreadsheet_and_update_zip(uploaded_file, absolute_uri, ith_annotation=None)
+        # sleep (to avoid too many requests)
+        time.sleep(20)
+
+
     
 
-def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri):
+def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri, ith_annotation:Optional[int]):
+    """Add row to spreadsheet and update zip file. If ith_annotation is not None, add row for each annotation."""
     logger.debug("Updating spreadsheet...")
-    _add_row_to_spreadsheet(serverfile, absolute_uri)
+    if ith_annotation is None:
+        _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
+    else:
+        _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=ith_annotation)
     # logger.debug("Spreadsheet updated")
     # if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
     #     serverfile.zip_file.delete()
@@ -361,8 +374,16 @@ def add_status_to_uploaded_file(serverfile:UploadedFile):
     serverfile.processing_message = status
     serverfile.save()
 
+def _add_rows_to_spreadsheet_for_each_annotation(serverfile: UploadedFile, absolute_uri):
+    if len(serverfile.mediafileannotation_set.all()) == 0:
+        _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0)
+    else:
 
-def _add_row_to_spreadsheet(serverfile, absolute_uri):
+        for i in range(len(serverfile.mediafileannotation_set.all())):
+            _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=i)
+
+
+def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
 
     creds_file = Path(settings.CREDS_JSON_FILE)  # 'piglegsurgery-1987db83b363.json'
     if not creds_file.exists():
@@ -411,21 +432,49 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri):
         }
     )
 
-    annotation = serverfile.mediafileannotation_set.first()
-    # meta = {
-    # }
-    # data_tools.save_json(meta, Path(serverfile.outputdir) / "meta.json", update=True)
+    annotation_set = serverfile.mediafileannotation_set.all()
+    if len(annotation_set) > 0:
+        annotation = annotation_set[ith_annotation]
+    else:
+        annotation = None
+
 
     if annotation:
+        # go over all annotation fields and add them to the dictionary
+        ann = {}
+        for field in annotation._meta.fields:
+            value = getattr(annotation, field.name)
+            # if type is TimestampField, convert to string
+            if isinstance(value, datetime):
+                value = defaultfilters.date(value, "Y-m-d H:i")
+                ann[field.name] = value
+            elif isinstance(value, str):
+                ann[field.name] = value
+            elif isinstance(value, int):
+                ann[field.name] = value
+            elif isinstance(value, float):
+                ann[field.name] = value
+            elif isinstance(value, bool):
+                ann[field.name] = value
+            elif isinstance(value, UploadedFile):
+                continue
+            elif isinstance(value, Owner):
+                ann[field.name] = str(value)
+
+        ann["i"] = ith_annotation
+
         novy.update(
             {
                 "annotation":{
-                    'annotation': {
-                        "annotation": str(annotation.annotation),
-                        "stars": int(annotation.stars) if annotation.stars is not None else -1,
-                        "annotator": str(annotation.annotator) if annotation.annotator is not None else "",
-                        "updated_at": str(annotation.updated_at),
-                    }
+                    'annotation': ann,
+                    #     {
+                    #     "id": int(annotation.id),
+                    #     "annotation": str(annotation.annotation),
+                    #     "stars": int(annotation.stars) if annotation.stars is not None else -1,
+                    #     "annotator": str(annotation.annotator) if annotation.annotator is not None else "",
+                    #     "updated_at": str(annotation.updated_at),
+                    #
+                    # }
 
                 }
             }
@@ -481,7 +530,7 @@ def make_preview(
         input_file = Path(serverfile.mediafile.path)
         # if not input_file.exists():
         #     return
-        filename = input_file.parent / "preview.jpg"
+        filename = input_file.parent / (input_file.stem + ".preview.jpg")
         filename_rel = filename.relative_to(settings.MEDIA_ROOT)
         # logger.debug(f"  {input_file=}")
         # logger.debug(f"    {filename=}")
@@ -548,7 +597,7 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
         "</head>"
         f"<body>"
-        f"<p>Finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
+        f"<p>Report processing finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
         f"<p></p>"
@@ -556,7 +605,7 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.email}">You can also do a review</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
         f"<p></p>"
         f"<p>Best regards</p>\n"
         f"<p>Miroslav Jirik</p>\n"
@@ -599,20 +648,50 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
     # )
 
 
-def email_media_recived(serverfile: UploadedFile):
+def email_media_recived(serverfile: UploadedFile, absolute_uri: str):
     # async_task('django.core.mail.send_mail',
+    review_url = reverse("uploader:go_to_video_for_annotation_email", kwargs={
+        "annotator_hash": serverfile.owner.hash
+    }),
+    html_message = (
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
+        '<html xmlns="http://www.w3.org/1999/xhtml">\n'
+        "<head> \n"
+        '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />'
+        "<title>Media recived</title>"
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>'
+        "</head>"
+        f"<body>"
+        f"<p>Thank you for uploading a file.</p>"
+        f"<p>We will let you know when the processing will be finished.</p>"
+        f"<p>Meanwhile you can "
+        f"<a href='{review_url}'>review other student's video</a> .</p>\n"
+        f"<p></p>"
+        f"<p></p>"
+        f"</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
+        f"<p></p>"
+        f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f"<p></p>"
+        f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
+        f"<p></p>"
+        f"<p>Best regards</p>\n"
+        f"<p>Miroslav Jirik</p>\n"
+        f"<p></p>"
+        "<p>Faculty of Applied Sciences</p\n"
+        "<p>University of West Bohemia</p>\n"
+        "<p>Pilsen, Czech Republic</p>\n"
+        "<p>mjirik@kky.zcu.cz</p>\n"
+        f"</body></html>"
+    )
     send_mail(
         "Pig Leg Surgery Analyser: Media file recived",
-        "Thank you for uploading a file. \n"
-        + "We will let you know when the processing will be finished. \n\n"
-        + "Best regards,\n"
-        "Miroslav Jirik, Ph.D.\n\n"
-        "Faculty of Applied Sciences\n"
-        "University of West Bohemia\n"
-        "Pilsen, Czech Republic",
-        "mjirik@kky.zcu.cz",
-        [serverfile.email],
+        html_message,
+        from_email= "mjirik@kky.zcu.cz",
+        recipient_list=[serverfile.email],
         fail_silently=False,
+        html_message=html_message,
     )
 
 
@@ -712,3 +791,73 @@ def make_zip(serverfile: UploadedFile):
         pth_rel = op.relpath(pth_zip, settings.MEDIA_ROOT)
         serverfile.zip_file = pth_rel
         serverfile.save()
+
+
+def import_files_from_drop_dir(email, absolute_uri):
+    """Find files in MEDIA_ROOT / drop_dir and import them to the database
+    """
+    files = list_files_in_drop_dir()
+    for i, file_path in enumerate(files):
+        # # Step 1: Read file from the server's hard drive
+        # file_path = '/path/to/your/file'  # Replace with the path of your file
+        # with open(file_path, 'rb') as f:
+        #     file_content = f.read()
+
+        # Step 1: Create a new UploadedFile instance
+        new_uploaded_file = UploadedFile()
+        new_uploaded_file.email = email
+        new_uploaded_file.uploaded_at = datetime.now()
+        update_owner(new_uploaded_file)
+        # Set other fields as needed
+        logger.debug(f"{file_path=}")
+        logger.debug(f"{new_uploaded_file=}")
+
+        from . import models_tools
+        # Step 2: Save the file to the destination path
+        destination_path = models_tools.upload_to_unqiue_folder(new_uploaded_file, os.path.basename(file_path))
+        full_destination_path = os.path.join(settings.MEDIA_ROOT, destination_path)
+        Path(full_destination_path).parent.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"{destination_path=}")
+        logger.debug(f"{full_destination_path=}")
+
+
+        # Step 3: Move the file
+        shutil.move(file_path, full_destination_path)
+
+        # Step 4: Update the mediafile field
+        new_uploaded_file.mediafile = destination_path
+
+        # Step 5: Save the UploadedFile instance
+        new_uploaded_file.save()
+        call_async_run_processing(new_uploaded_file, absolute_uri)
+
+
+def list_files_in_drop_dir() -> list[Path]:
+    dropdir = settings.DROP_DIR
+    dropdir.mkdir(exist_ok=True, parents=True)
+    logger.debug(f"{list(dropdir.glob('*'))=}")
+    files = (dropdir.glob("**/*"))
+    logger.debug(f"{files=}")
+    files = [f for f in files if
+             f.is_file() and (f.suffix.lower() in (".jpg", ".jpeg", ".png", ".mp4", ".avi", ".mov", ".mkv"))]
+
+    logger.debug(f"{files=}")
+    return files
+
+
+def call_async_run_processing(serverfile, absolute_uri):
+    serverfile.started_at = django.utils.timezone.now()
+    serverfile.save()
+    PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
+    PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
+    make_preview(serverfile)
+    update_owner(serverfile)
+    async_task(
+        "uploader.tasks.run_processing",
+        serverfile,
+        absolute_uri,
+        PIGLEGCV_HOSTNAME,
+        int(PIGLEGCV_PORT),
+        timeout=settings.PIGLEGCV_TIMEOUT,
+        hook="uploader.tasks.email_report_from_task",
+    )

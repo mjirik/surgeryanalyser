@@ -111,6 +111,7 @@ class DoComputerVision:
         self.meta: dict = meta if meta is not None else {}
         self.logger_id = None
         self.frame: Optional[np.ndarray] = None
+        self.frame_at_beginning: Optional[np.ndarray] = None
         self.filename_cropped: Optional[Path] = None
         self.test_first_seconds = test_first_seconds
         self.debug_images = {}
@@ -191,6 +192,19 @@ class DoComputerVision:
             logger.debug(f"Cropping done in {time.time() - s}s.")
             self.update_meta()
 
+    # def _find_frame_from_start_of_video(self):
+    #
+    #     logger.debug("Looking from the frame from the video start...")
+    #     self.frame = self._get_frame_to_process_ideally_with_incision(
+    #         self.filename_cropped, n_tries=None
+    #     )
+    #     # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
+    #     qr_data = run_qr.bbox_info_extraction_from_frame(
+    #         self.frame,
+    #         device=self.device,
+    #         debug_image_file=self.outputdir / "_single_image_detector_results.jpg",
+    #     )
+
     def run_image_processing(self):
         if self.meta is None:
             self.meta = {}
@@ -209,7 +223,7 @@ class DoComputerVision:
         self.meta["qr_data"] = qr_data
         logger.debug(self.meta)
 
-        main_perpendicular(self.frame, self.outputdir, self.meta, device=self.device)
+        main_perpendicular(self.frame, self.outputdir, self.meta, device=self.device, img_alternative=self.frame_at_beginning)
         logger.debug("Perpendicular finished.")
 
     def _run_tracking(self):
@@ -247,7 +261,7 @@ class DoComputerVision:
                     "./resources/tracker_model_bytetrack_hands_tools/bytetrack_pigleg.py",
                     str(
                         Path(__file__).parent
-                        / "resources/tracker_model_bytetrack_hands_tools/epoch_2.pth"
+                        / "resources/tracker_model_bytetrack_hands_tools/epoch.pth"
                     ),
                 ),
             ]
@@ -295,7 +309,18 @@ class DoComputerVision:
         self._make_sure_media_is_cropped()
 
         s = time.time()
+        logger.debug("Searching for frame at beginning")
+        self.frame_at_beginning = self._get_frame_to_process_ideally_with_incision(
+            self.filename_cropped,
+            n_tries=None,
+            frame_from_end=-1,
+            frame_from_end_step=-1
+        )
+        logger.debug(f"{self.frame_at_beginning=}, {type(self.frame_at_beginning)=}")
+        if self.frame_at_beginning is not None:
+            cv2.imwrite(str(self.outputdir / "_frame_at_beginning_with_incision.jpg"), self.frame_at_beginning)
         self.run_image_processing()
+
         logger.debug(
             f"Single frame processing on cropped mediafile finished in {time.time() - s}s."
         )
@@ -355,17 +380,19 @@ class DoComputerVision:
         debug_image_file: Optional[Path] = None,
         frame_from_end_step: int = 5,
         n_detection_tries: int = 180,
+        frame_from_end: int = 0,
     ):
         # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
         # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         if self.is_video:
-            frame_from_end = 0
+            # frame_from_end = 0
             for i in range(n_detection_tries):
                 frame, local_meta = get_frame_to_process(
                     str(filename),
                     n_tries=n_tries,
                     return_metadata=True,
                     reference_frame_position_from_end=frame_from_end,
+                    step=frame_from_end_step
                 )
                 qr_data = run_qr.bbox_info_extraction_from_frame(
                     frame, device=self.device, debug_image_file=debug_image_file
@@ -502,9 +529,18 @@ class DoComputerVision:
                 str(self.filename_cropped),
             ]
         )
+        ffmpeg_subprocess_params = ' '.join(s)
         logger.debug(f"{' '.join(s)}")
+        self.meta["ffmpeg_subprocess_params"] = ffmpeg_subprocess_params
+        prev_meta = self._check_meta_and_load()
+
         try:
-            subprocess.check_output(s, shell=False, stderr=subprocess.STDOUT)
+            if prev_meta and ("ffmpeg_subprocess_params" in prev_meta) and (
+                self.meta["ffmpeg_subprocess_params"] == prev_meta["ffmpeg_subprocess_params"]
+            ):
+                logger.debug("Skipping video resize. It was done before.")
+            else:
+                subprocess.check_output(s, shell=False, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(
                 "command '{}' return with error (code {}): {}".format(
@@ -513,7 +549,7 @@ class DoComputerVision:
             )
 
         logger.debug(
-            f"filename_cropped={self.filename_cropped}, {self.filename_cropped.exists()}"
+            f"{self.filename_cropped=}, {self.filename_cropped.exists()=}"
         )
         make_images_from_video(
             self.filename_cropped,
@@ -611,6 +647,16 @@ class DoComputerVision:
         assert meta_path.exists()
         with open(meta_path, "r") as f:
             self.meta = json.load(f)
+
+    def _check_meta_and_load(self) -> Optional[dict]:
+        meta_path = self.outputdir / "meta.json"
+        if not meta_path.exists():
+            return None
+        with open(meta_path, "r") as f:
+            meta = json.load(f)
+
+        return meta
+
 
 
 def do_computer_vision(

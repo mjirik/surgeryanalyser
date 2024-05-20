@@ -4,14 +4,17 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+import shutil
 
 import django.utils
 from django.conf import settings
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views import generic
+from django.template.loader import render_to_string
 
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 from django_q.tasks import async_task, queue_size, schedule
@@ -20,12 +23,12 @@ from loguru import logger
 from .forms import AnnotationForm, UploadedFileForm
 from .models import MediaFileAnnotation, Owner, UploadedFile, _hash
 from .models_tools import randomString
-from .tasks import email_media_recived, make_preview, get_graph_path_for_owner, update_owner
+from .tasks import email_media_recived, make_preview, get_graph_path_for_owner, update_owner, import_files_from_drop_dir, call_async_run_processing
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile, _hash
-from . import tasks, data_tools
+from . import tasks, data_tools, models
 
 # Create your views here.
 
@@ -95,6 +98,12 @@ def update_all_uploaded_files(request):
     }
     return render(request, "uploader/message.html", message_context)
 
+def add_uploaded_file_to_collection(request, collection_id, filename_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    uploaded_file = get_object_or_404(models.UploadedFile, id=filename_id)
+    collection.uploaded_files.add(uploaded_file)
+    # return redirect(reverse("uploader:show_collection_reports_list", kwargs={"collection_id": collection_id}))
+    return redirect(reverse("uploader:web_reports", kwargs={}))
 
 def resend_report_email(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
@@ -126,31 +135,36 @@ def swap_is_microsurgery(request, filename_id: int):
 def report_list(request):
     # order_by = request.session.get("order_by", '-uploaded_at')
 
+    uploaded_file_set = UploadedFile.objects.all()
+
+    context = _general_report_list(request, uploaded_file_set)
+
+    return render(request, "uploader/report_list.html", context)
+
+
+def _general_report_list(request, uploaded_file_set):
     if "order_by" in request.GET:
         logger.debug(f"order_by={request.GET['order_by']}")
         request.session["order_by"] = request.GET.get("order_by")
         request.session.modified = True
-
     order_by = request.session.get("order_by", "-uploaded_at")
     # logger.debug(f"order_by={order_by}")
-
     # order_by = request.GET.get("order_by", "-uploaded_at")
     if order_by == "filename":
-        files = sorted(UploadedFile.objects.all(), key=str)
+        files = sorted(uploaded_file_set, key=str)
     else:
-        files = UploadedFile.objects.all().order_by(order_by)
+        files = uploaded_file_set.order_by(order_by)
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
-            str(e.email)
-            + " "
-            + str(e)
-            + " "
-            + str(e.uploaded_at)
-            + " "
-            + str(e.finished_at)
+                str(e.email)
+                + " "
+                + str(e)
+                + " "
+                + str(e.uploaded_at)
+                + " "
+                + str(e.finished_at)
         )
-
     qs_json = json.dumps(qs_data)
     # logger.debug(qs_data)
     context = {
@@ -159,29 +173,37 @@ def report_list(request):
         "qs_json": qs_json,
         "page_reference": "web_reports",
         "order_by": order_by,
+        "collections": models.Collection.objects.all(),
     }
+    return context
 
+
+def show_collection_reports_list(request, collection_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    upload_files_set = collection.uploaded_files.all()
+    context = _general_report_list(request, upload_files_set)
     return render(request, "uploader/report_list.html", context)
-
 
 
 def owners_reports_list(request, owner_hash: str):
     owner = get_object_or_404(Owner, hash=owner_hash)
     order_by = request.GET.get("order_by", "-uploaded_at")
     files = UploadedFile.objects.filter(owner=owner).order_by(order_by)
-    qs_data = {}
-    for e in files:
-        qs_data[e.id] = (
-            str(e.email)
-            + " "
-            + str(e)
-            + " "
-            + str(e.uploaded_at)
-            + " "
-            + str(e.finished_at)
-        )
+    context = _general_report_list(request, files)
 
-    qs_json = json.dumps(qs_data)
+    # qs_data = {}
+    # for e in files:
+    #     qs_data[e.id] = (
+    #         str(e.email)
+    #         + " "
+    #         + str(e)
+    #         + " "
+    #         + str(e.uploaded_at)
+    #         + " "
+    #         + str(e.finished_at)
+    #     )
+    #
+    # qs_json = json.dumps(qs_data)
 
     
     html_path = get_graph_path_for_owner(owner)
@@ -189,19 +211,20 @@ def owners_reports_list(request, owner_hash: str):
     html = None
     if html_path:
         if not html_path.exists():
-            tasks.make_graph(owner)
+            tasks.make_graph(files, owner)
         if html_path.exists():
             html = html_path.read_text()
     # logger.debug(html)
 
-    context = {
-        "uploadedfiles": files,
-        "queue_size": queue_size(),
-        "qs_json": qs_json,
-        "page_reference": "owners_reports_list",
-        "owner": owner,
-        "myhtml": html,
-    }
+    # context = {
+    #     "uploadedfiles": files,
+    #     "queue_size": queue_size(),
+    #     "qs_json": qs_json,
+    #     "page_reference": "owners_reports_list",
+    #     "owner": owner,
+    #     "myhtml": html,
+    # }
+    context["myhtml"] = html
 
     return render(request, "uploader/report_list.html", context)
 
@@ -309,6 +332,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         if html_path.exists():
             html = html_path.read_text()
 
+    reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
     context = {
         "serverfile": serverfile,
         "mediafile": Path(serverfile.mediafile.name).name,
@@ -320,12 +344,55 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "edit_review": edit_review,
         "myhtml": html,
         "static_analysis_image": static_analysis_image,
+        "review_number": len(serverfile.mediafileannotation_set.all()),
+        "reviews": reviews,
     }
 
     return context
 
 
+def download_sample_image(request):
+    """Download uploaded file."""
+
+    collection = get_object_or_404(models.Collection, name="test_data")
+    media_file = collection.uploaded_files.first()
+
+    file_path = Path(settings.MEDIA_ROOT) / media_file.mediafile.name
+    if file_path.exists():
+        with open(file_path, "rb") as fh:
+            response = HttpResponse(fh.read(), content_type="application/zip")
+            response["Content-Disposition"] = "inline; filename=" + os.path.basename(file_path)
+            return response
+    # raise Http404
+    else:
+        return redirect("uploader:upload_mediafile")
+
+
+@login_required(login_url="/admin/")
+def delete_media_file(request, filename_id):
+    serverfile = get_object_or_404(UploadedFile, pk=filename_id)
+    serverfile.delete()
+    return redirect("uploader:web_reports")
+
 def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile):
+    edit_review = True
+    context = {
+        "serverfile": serverfile,
+        "mediafile": Path(serverfile.mediafile.name).name,
+        # "image_list": image_list_in,
+        # "image_list_out": image_list_out,
+        "next": request.GET["next"] if "next" in request.GET else None,
+        "videofiles_url": [serverfile.mediafile.url],
+        # "results": results,
+        "edit_review": edit_review,
+        # "myhtml": "<b>The report is not ready yet.</b>"
+        # "static_analysis_image": static_analysis_image,
+    }
+
+    return context
+
+
+def _prepare_context_for_message_if_web_report_not_exists(request, serverfile: UploadedFile):
     logger.debug("Zip file name does not exist")
 
 
@@ -344,41 +411,81 @@ def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile)
     logger.debug(request.path)
     return context
 
+def common_review(request):
+    collection = get_object_or_404(models.Collection, name="common_review")
 
-def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None):
+    url = reverse("uploader:web_report", kwargs={"filename_hash": collection.uploaded_files.first().hash}) + "?review_idx=new"
+    return redirect(url)
+
+
+
+def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None, review_annotator_hash: Optional[str] = None):
     # fn = get_outputdir_from_hash(hash)
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     if (
         not bool(serverfile.zip_file.name)
         or not Path(serverfile.zip_file.path).exists()
     ):
+        # context = _prepare_context_for_message_if_web_report_not_exists(request, serverfile)
+        # return render(request, "uploader/message.html", context)
         context = _prepare_context_if_web_report_not_exists(request, serverfile)
-        return render(request, "uploader/message.html", context)
-        # return redirect("uploader:message", next=request.path)
-    context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
+    else:
+        context = _prepare_context_for_web_report(request, serverfile, review_edit_hash)
 
+    if review_annotator_hash:
+        annotator = get_object_or_404(Owner, hash=review_annotator_hash)
+    else:
+        if request.user.is_authenticated:
+            annotator = _get_owner(request.user.email)
+        else:
+            annotator = None
+
+    uploaded_file_annotations_set = serverfile.mediafileannotation_set.all()
+    logger.debug(f"{uploaded_file_annotations_set=}")
+
+    review_idx = request.GET.get("review_idx", -1)
+    review_idx = None if review_idx == "new" else int(review_idx)
+    if (review_idx is not None) and (review_idx < 0):
+        review_idx = len(uploaded_file_annotations_set) + review_idx
+        if review_idx < 0:
+            review_idx = None
+
+    if review_idx is not None:
+        uploaded_file_annotation = uploaded_file_annotations_set[review_idx]
+        logger.debug("annotation loaded from database")
+    else:
+        uploaded_file_annotation = None
+        logger.debug("created empty form")
+
+    annotation = uploaded_file_annotation
+    logger.debug(f"{request.method=}")
+    logger.debug(f"{annotation=}, {annotation is None=}")
+    if annotation is not None:
+        logger.debug(f"{annotation.respect_for_tissue=}")
+        logger.debug(f"{annotation.time_and_movements=}")
+        logger.debug(f"{annotation.instrument_handling=}")
+        logger.debug(f"{annotation.procedure_flow=}")
     # evaluate annotation form
     if request.method == "POST":
-        uploaded_file_annotations = serverfile.mediafileannotation_set.first()
-        if uploaded_file_annotations:
-            logger.debug("annotation loaded from database")
-        else:
-            logger.debug("saving new form")
+        # if (review_idx >= 0) and (review_idx < len(uploaded_file_annotations_set)):
 
-        form = AnnotationForm(request.POST, instance=uploaded_file_annotations)
+        form = AnnotationForm(request.POST, instance=uploaded_file_annotation)
         if form.is_valid():
             # process the data in form.cleaned_data as required
             # ...
             # redirect to a new URL:
-            if request.user.is_authenticated:
-                annotator = _get_owner(request.user.email)
-            else:
-                annotator = None
+            logger.debug(f"{len(serverfile.mediafileannotation_set.all())=}")
             annotation = form.save(commit=False)
             annotation.uploaded_file = serverfile
             annotation.updated_at = django.utils.timezone.now()
             annotation.annotator = annotator
             annotation.save()
+
+            logger.debug(f"{len(serverfile.mediafileannotation_set.all())=}")
+            new_review_idx = 0
+            for idx, ann in enumerate(serverfile.mediafileannotation_set.all()):
+                if ann == annotation:
+                    new_review_idx = idx
 
 
             # annotation = MediaFileAnnotation(
@@ -394,23 +501,32 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
                 "uploader.tasks.add_row_to_spreadsheet_and_update_zip",
                 serverfile,
                 request.build_absolute_uri("/"),
+                new_review_idx,
                 timeout=settings.PIGLEGCV_TIMEOUT,
             )
-            return redirect(request.path)
-    else:
-
-        uploaded_file_annotations_set = serverfile.mediafileannotation_set
-        logger.debug(f"{uploaded_file_annotations_set=}")
-        uploaded_file_annotations = uploaded_file_annotations_set.first()
-        logger.debug(f"{uploaded_file_annotations=}")
-        if uploaded_file_annotations:
-            form = AnnotationForm(instance=uploaded_file_annotations)
-            logger.debug("annotation loaded from database")
+            return redirect(request.path + "?review_idx=" + str(new_review_idx))
         else:
-            form = AnnotationForm()
-            logger.debug("created empty form")
+            logger.debug("Errors")
+            logger.debug(f"{form.errors=}")
+            # context["form"] = form
+            # return render(request, "uploader/web_report.html", context)
+    else:
+        form = AnnotationForm(instance=uploaded_file_annotation)
+        # check if in request get is review_idx
+        # if (review_idx >= 0) and (review_idx < len(uploaded_file_annotations_set)):
+        #     uploaded_file_annotation = uploaded_file_annotations_set[review_idx]
+        #     form = AnnotationForm(instance=uploaded_file_annotation)
+        #     logger.debug("annotation loaded from database")
+        # else:
+        #     form = AnnotationForm()
+        #     logger.debug("created empty form")
+            # uploaded_file_annotation = serverfile.mediafileannotation_set.last()
+            # here the output might be None if the annotation does not exist
+
     # logger.debug(f"form={form}")
     context["form"] = form
+    context["actual_annotation"] = uploaded_file_annotation
+
 
     return render(request, "uploader/web_report.html", context)
 
@@ -437,7 +553,8 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     ).filter(
         Q(review_assigned_at__lt=thirty_minutes_ago) | Q(review_assigned_at__isnull=True),
         num_annotations = 0,
-        processing_ok=True,
+        ##  comment next line to allow to annotate videos that are not processed yet
+        # processing_ok=True,
     )
 
 
@@ -466,10 +583,14 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
 
     return video
 
-def go_to_video_for_annotation(request, email:Optional[str]=None):
-    if email:
-        student_id = _get_owner(email).id
+def go_to_video_for_annotation(request, annotator_hash:Optional[str]=None):
+    logger.debug(f"{annotator_hash=}")
+    if annotator_hash:
+        # get the annotator
+        annotator = get_object_or_404(Owner, hash=annotator_hash)
+        student_id = annotator.id
     else:
+        annotator = None
         student_id = None
 
         # if request.user.is_authenticated:
@@ -481,8 +602,11 @@ def go_to_video_for_annotation(request, email:Optional[str]=None):
 
     # go to the web_report of the video
     if video:
-        if email:
-            return redirect("uploader:web_report", filename_hash=video.hash, review_edit_hash=video.review_edit_hash)
+        if annotator_hash:
+            return redirect("uploader:web_report", filename_hash=video.hash,
+                            review_edit_hash=video.review_edit_hash,
+                            review_annotator_hash=annotator.hash
+                            )
         else:
             return redirect("uploader:web_report", filename_hash=video.hash)
     else:
@@ -551,10 +675,68 @@ def redirect_to_spreadsheet(request):
         return redirect(pigleg_spreadsheet_url)
 
 
+def categories_view(request):
+    collections = models.Category.objects.all()
+    context = {
+        "categories": collections,
+    }
+    return render(request, "uploader/categories.html", context)
+
+def category_view(request, category_id):
+    category = get_object_or_404(models.Category, id=category_id)
+    uploadedfile_set = category.uploadedfile_set.all()
+    context = _general_report_list(request, uploadedfile_set)
+
+    return render(request, "uploader/report_list.html", context)
+
+def collections_view(request):
+    collections = models.Collection.objects.all()
+    context = {
+        "collections": collections,
+    }
+    return render(request, "uploader/collections.html", context)
+
+def collection_update_spreadsheet(request, collection_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    uploaded_files = collection.uploaded_files.all()
+    async_task(
+        # "uploader.tasks.add_row_to_spreadsheet_and_update_zip",
+        "uploader.tasks.add_rows_to_spreadsheet_and_update_zips",
+        uploaded_files,
+        request.build_absolute_uri("/"),
+        timeout=settings.PIGLEGCV_TIMEOUT,
+    )
+    return redirect("uploader:collections")
+
+
+@staff_member_required(login_url="/admin/")
+def run_collection(request, collection_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
+    PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
+    collection_len = len(collection.uploaded_files.all())
+    for uploaded_file in collection.uploaded_files.all():
+        _ = _run(request, uploaded_file.id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+    # next_url = None
+
+    # if "next" in request.GET:
+    #     next_url = request.GET["next"] + "#" + request.GET["next_anchor"]
+    context = {
+        "headline": "Processing started",
+        "text": f"Processing of {collection_len} files started. ",
+        # The output will be stored in {serverfile.outputdir}.",
+        "next": reverse("uploader:web_reports", kwargs={}),
+        "next_text": "Back",
+    }
+    return render(request, "uploader/thanks.html", context)
+    # return redirect("uploader:web_reports")
+
+
 def run(request, filename_id):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
-    return _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+    serverfile = _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+    return _render_run(request, serverfile)
 
 
 # def run_development(request, filename_id):
@@ -584,19 +766,23 @@ def _run(request, filename_id, hostname="127.0.0.1", port=5000):
         timeout=settings.PIGLEGCV_TIMEOUT,
         # hook="uploader.tasks.email_report_from_task",
     )
+    return serverfile
+    # return redirect("/uploader/upload/")
+
+
+def _render_run(request, serverfile):
     next_url = None
     if "next" in request.GET:
         next_url = request.GET["next"] + "#" + request.GET["next_anchor"]
     context = {
         "headline": "Processing started",
         "text": f"We are processing file {str(Path(serverfile.mediafile.name).name)}. "
-        + "We will let you know by email as soon as it is finished.",
+                + "We will let you know by email as soon as it is finished.",
         # The output will be stored in {serverfile.outputdir}.",
         "next": next_url,
         "next_text": "Back",
     }
     return render(request, "uploader/thanks.html", context)
-    # return redirect("/uploader/upload/")
 
 
 def about_ev_cs(request):
@@ -624,8 +810,34 @@ def _get_owner(owner_email: str):
         owner = owners[0]
     return owner
 
+@login_required(login_url="/admin/")
+def import_files_from_drop_dir_view(request):
+    """Import files from MEDIA_ROOT/drop_dir"""
+    email = request.user.email
+    absolute_uri = request.build_absolute_uri("/")
+    async_task("uploader.tasks.import_files_from_drop_dir", email, absolute_uri)
+    files = tasks.list_files_in_drop_dir()
 
-def model_form_upload(request):
+    files_str= ""
+    for file in files:
+        files_str += str(file.name) + "<br>"
+
+    key_value = {
+        "Drop dir": settings.DROP_DIR,
+        "Files": files_str
+    }
+
+    context = {
+        "headline": "Import files from drop_dir",
+        "text": "We will import files from drop_dir. It may take a while.",
+        "key_value": key_value,
+        "next_text": "Back",
+        "next": reverse("uploader:web_reports", kwargs={}),
+    }
+    return render(request, "uploader/message.html", context )
+
+
+def upload_mediafile(request):
     if request.method == "POST":
         form = UploadedFileForm(
             request.POST,
@@ -645,26 +857,19 @@ def model_form_upload(request):
             #     })
 
             serverfile = form.save()
-            async_task("uploader.tasks.email_media_recived", serverfile)
+            owner = _get_owner(serverfile.email)
+            from .media_tools import make_images_from_video
+            mediafile_path = Path(serverfile.mediafile.path)
+            if mediafile_path.suffix.lower() in [".mp4", ".avi", ".mov"]:
+                make_images_from_video(
+                   mediafile_path , mediafile_path.parent, filemask=str(mediafile_path) + ".jpg", n_frames=1)
+            async_task("uploader.tasks.email_media_recived", serverfile, absolute_uri=request.build_absolute_uri("/"))
 
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
             # serverfile.owner = request.user
-            serverfile.started_at = django.utils.timezone.now()
-            serverfile.save()
-            PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
-            PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
-            make_preview(serverfile)
-            update_owner(serverfile)
-            async_task(
-                "uploader.tasks.run_processing",
-                serverfile,
-                request.build_absolute_uri("/"),
-                PIGLEGCV_HOSTNAME,
-                int(PIGLEGCV_PORT),
-                timeout=settings.PIGLEGCV_TIMEOUT,
-                hook="uploader.tasks.email_report_from_task",
-            )
+            absolute_uri = request.build_absolute_uri("/")
+            call_async_run_processing(serverfile, absolute_uri)
             # url = reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email})
             # logger.debug(f"{url=}")
             # return redirect("/uploader/thanks/")
@@ -674,13 +879,19 @@ def model_form_upload(request):
                 "text": "Thank you for uploading media file. We will let you know when the processing will be finished. " +
                         "Meanwhile you can review other student's video.",
                 "next_text": "Review other student's video",
-                "next": reverse("uploader:go_to_video_for_annotation_email", kwargs={"email":serverfile.email}),
+                "next": reverse("uploader:go_to_video_for_annotation_email", kwargs={
+                    # "email":serverfile.email
+                    "annotator_hash": owner.hash
+                }),
                 "next_text_secondary": "Upload another video",
                 "next_secondary": reverse("uploader:model_form_upload")
                 # 'next': "uploader:model_form_upload"
                 # 'next': "uploader:model_form_upload"
             }
-            return render(request, "uploader/message.html", context)
+
+            logger.debug("redirecting to thanks")
+            html = render_to_string("uploader/partial_message.html", context=context, request=request)
+            return JsonResponse({"html": html})
     else:
         form = UploadedFileForm()
     return render(
@@ -694,7 +905,7 @@ def test(request):
     return render(request, "uploader/test.html", {})
 
 
-def show_logs(request, filename_hash: str):
+def show_mediafile_logs(request, filename_hash: str):
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     key_value = _get_logs_as_html(serverfile)
     return render(
@@ -723,6 +934,48 @@ def _get_logs_as_html(serverfile: UploadedFile) -> dict:
     # logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
     return key_value
     # return render(_as_htmlrequest,'uploader/show_logs.html', {"key_value": key_value, "logpath": logpath})
+
+def _set_loglevel_color(line:str) -> str:
+    """Set color of the log level in the log line"""
+    if "DEBUG" in line:
+        return f"<span class='text-muted'>{line}</span>"
+    elif "INFO" in line:
+        return f"<span class='text-info'>{line}</span>"
+    elif "WARNING" in line:
+        return f"<span class='text-warning'>{line}</span>"
+    elif "ERROR" in line:
+        return f"<span class='text-danger'>{line}</span>"
+    else:
+        return f"<span class='text-muted'>{line}</span>"
+
+@login_required(login_url="/admin/")
+def show_logs(request, n_lines: int = 100):
+    key_value = {}
+
+    files = settings.LOG_DIR.glob("**/*")
+
+    for file in files:
+        if file.is_file():
+            with open(file) as f:
+                lines = f.readlines()
+            lines = [_set_loglevel_color(line) for line in lines]
+            # take just first n_lines lines
+            lines = lines[-n_lines:] if len(lines) > n_lines else lines
+            key_value.update(
+                {str(file.stem): '<p class="font-monospace">' + "<br>".join(lines) + "</p>"}
+            )
+    # logpath = Path(serverfile.outputdir) / "piglegcv_log.txt"
+    return render(
+        request,
+        "uploader/show_logs.html",
+        {
+            "headline": "Logs",
+            "key_value": key_value,
+            "next": request.GET["next"]
+            if "next" in request.GET
+            else "/uploader/upload/",
+        },
+    )
 
 
 def _make_html_from_log(logpath: Path):

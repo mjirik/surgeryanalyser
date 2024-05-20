@@ -268,19 +268,7 @@ def run_incision_detection(
     class_id = 0
     # obj_in_class_id = 0
     bboxes = result[class_id]
-    logger.debug(f"number of detected incisions = {len(bboxes)}")
-    imgs = []
-    bbox_sizes = []  # used for resolution evaluation
-    for i, bbox in enumerate(bboxes):
-
-        imcr = img[int(bbox[1]) : int(bbox[3]), int(bbox[0]) : int(bbox[2])]
-
-        sz = sorted([int(bbox[3]) - int(bbox[1]), int(bbox[2]) - int(bbox[0])])
-        bbox_sizes.append(sz)
-        if local_output_data_dir is not None:
-            cv2.imwrite(str(local_output_data_dir / f"incision_crop_{i}.jpg"), imcr)
-        imgs.append(imcr)
-        # plt.imshow(imcr[:, :, ::-1])
+    bbox_sizes, imgs = save_incision_cropped_images(img, local_output_data_dir, bboxes)
     # predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir)
     if len(bbox_sizes) > 0:
         bbox_sizes = np.asarray(bbox_sizes)
@@ -297,6 +285,23 @@ def run_incision_detection(
     )
 
     return imgs, bboxes
+
+
+def save_incision_cropped_images(img, local_output_data_dir, bboxes, suffix=""):
+    logger.debug(f"number of detected incisions = {len(bboxes)}")
+    imgs = []
+    bbox_sizes = []  # used for resolution evaluation
+    for i, bbox in enumerate(bboxes):
+
+        imcr = img[int(bbox[1]): int(bbox[3]), int(bbox[0]): int(bbox[2])]
+
+        sz = sorted([int(bbox[3]) - int(bbox[1]), int(bbox[2]) - int(bbox[0])])
+        bbox_sizes.append(sz)
+        if local_output_data_dir is not None:
+            cv2.imwrite(str(local_output_data_dir / f"incision_crop_{i}{suffix}.jpg"), imcr)
+        imgs.append(imcr)
+        # plt.imshow(imcr[:, :, ::-1])
+    return bbox_sizes, imgs
 
 
 def predict_image_with_cfg(cfg, model, img_fn, local_output_data_dir):

@@ -23,6 +23,40 @@
             color: gold; /* Highlighted and selected star color */
         }
     </style>
+    <style>
+        .star-rating2 {
+            direction: rtl; /* Reverse the order of the radio buttons */
+        }
+
+        .star-rating2 input[type="radio"] {
+            display: none; /* Hide the radio buttons */
+        }
+
+        .star-rating2 label {
+            color: #ccc; /* Default star color */
+            font-size: 14px;
+            padding: 0 2px;
+            cursor: pointer;
+        }
+
+        .star-rating2 label:hover,
+        .star-rating2 label:hover ~ label,
+        .star-rating2 input[type="radio"]:checked ~ label {
+            color: #353535; /* Highlighted and selected star color */
+        }
+    </style>
+    <style>
+        .fieldWrapper label {
+            display: inline-block;
+        }
+    </style>
+    <style>
+        .my-video {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+        }
+    </style>
     <script>
         $(function () {
             $('.pop').on('click', function () {
@@ -48,7 +82,8 @@
 
 {% block body %}
 <div class="container pb-4">
-    <H2> Report: {{ mediafile }} </H2>
+    <h2> Report: {{ mediafile }} </h2>
+
     <p>
     <div class="accordion pt-3" id="accordionExample">
         <div class="accordion-item">
@@ -64,16 +99,17 @@
                         <div class="pt-3">
                             <video
                                     id="my-video"
-                                    class="video-js embed-responsive"
+                                    {#                                    class="video-js embed-responsive"#}
                                     controls
                                     autoplay
                                     muted
                                     preload="auto"
                                     data-setup='{"fluid": true}'
                                     poster="{{ videofile_url }}.jpg"
+                                    class="my-video"
                             >
                                 <source src="{{ videofile_url }}" type="video/mp4"/>
-                                <!--                    <source src="MY_VIDEO.webm" type="video/webm" />-->
+                                {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
                                 <p class="vjs-no-js">
                                     To view this video please enable JavaScript, and consider upgrading to a
                                     web browser that
@@ -82,7 +118,6 @@
                                     >
                                 </p>
                             </video>
-                            <!--                </div>-->
 
                         </div>
                     {% endfor %}
@@ -126,42 +161,138 @@
     </div>
     <div>
         {% if form.annotation.value or edit_review %}
-            <h3>Annotation</h3>
+            <h3>Review</h3>
+            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+  <div class="btn-group mr-2 mb-1" role="group" aria-label="First group">
+      {% for review in reviews %}
+          <a href="?review_idx={{ forloop.counter0 }}" class="btn btn-secondary">{{ forloop.counter }}
+              {{ review.annotated_at|date:'Y-m-d H:i' }} </a>
+        {% endfor %}
+      <a href="?review_idx=new" class="btn btn-secondary">New Review</a>
+
+  </div>
+</div>
+
 
             <form method="post">
                 {% csrf_token %}
+{#            form errors #}
+    {% for field in form %}
+        {% if field.errors %}
+        <span class="text-danger">
+            {{ field.label_tag }} {{ field.errors }}
+        </span>
+        {% endif %}
+                {% endfor %}
+
+
 
                 <div class="row">
-                    <!-- Text Field Column -->
-                    <div class="col-md-9">
+                    {#                    <!-- Text Field Column -->#}
+                    <!-- Buttons and Star Rating Column -->
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column align-items-end">
+                            <h5>Video (1st stitch)</h5>
+                            {% for field in form.group2 %}
+                                <div class="fieldWrapper"
+                                    data-toggle="tooltip" data-placement="top" title="{{ field.help_text }}">
+                                    {{ field.errors }}
+                                    {{ field.label_tag }} {{ field }}
+                                </div>
+                                {#                                <br>#}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column align-items-end">
+                            <h5>Results</h5>
+
+
+                            {% for field in form.group3 %}
+                                <div class="fieldWrapper"
+                                     data-toggle="tooltip" data-placement="top" title="{{ field.help_text }}">
+                                    {{ field.errors }}
+                                    {{ field.label_tag }} {{ field }}
+                                </div>
+                            {% endfor %}
+
+                        <h5>Global Rating Scale</h5>
+                            {% for field in form.group4 %}
+{#                                <div class="row">#}
+{##}
+{#                                <div class="col"#}
+{#                                                data-toggle="tooltip" data-placement="top" title=" asd{{ field.help_text }}">#}
+{#                                        {{ field.label }}#}
+{#                                </div>#}
+{#                                <div class="col">#}
+                                <div class="fieldWrapper">
+                                    {{ field.errors }}
+
+                                    {#                                        {{ field }}#}
+                                    <div class="star-rating2 mb-2">
+                                        {% for choice in field %}
+                                            {{ choice.tag }}
+                                            <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
+                                        {% endfor %}
+                                        :
+                                        <span
+                                                data-toggle="tooltip" data-placement="top" title=" {{ field.help_text }}">
+                                        {{ field.label }}
+                                            </span>
+                                    </div>
+{#                                </div>#}
+{#                                </div>#}
+                                </div>
+                            {% endfor %}
+
+
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column align-items-end">
+                        <h5>Global Assessment</h5>
                         <div class="form-group">
                         <textarea class="form-control" name="annotation" id="id_annotation" rows="5"
                                   {% if not edit_review %}disabled {% endif %}
                         >{% if form.annotation.value %}{{ form.annotation.value }}{% endif %}</textarea>
-                        </div>
-                    </div>
-                    <!-- Buttons and Star Rating Column -->
-                    <div class="col-md-3">
-                        <div class="d-flex flex-column align-items-end">
-
                             {% if edit_review %}
-                                <button id="add-time-btn" type="button" class="btn btn-secondary mb-2"
+                                <button id="add-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
                                         data-toggle="tooltip" data-placement="top" title="Shortcut: Alt + t">
                                     Add Timed Annotation (Alt + t)
                                 </button>
+                                {{ from.annotation.errors }}
+                                {{ from.annotation.group.value }}
                             {% endif %}
-
-                            <div class="star-rating mb-2">
+                            <div class="star-rating mb-2"
+                                 data-toggle="tooltip" data-placement="top" title="{{ field.help_text }}">
                                 {% for choice in form.stars %}
                                     {{ choice.tag }}
                                     <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
                                 {% endfor %}
+                                : {{ form.stars.label }}
                             </div>
-
                             {% if edit_review %}
                                 <button type="submit" class="btn btn-primary">Save</button>
+                                {% if user.is_authenticated %}
+                                    <i class="fa fa-user-pen text-secondary"
+                                       data-toggle="tooltip" data-placement="top"
+                                       title="
+{#                                       annotator={{ form.annotator.value }},#}
+                                       annotator={{ actual_annotation.annotator }},
+                                       created_at={{ actual_annotation.created_at |date:'Y-m-d H:i' }},
+                                       updated_at={{ actual_annotation.updated_at |date:'Y-m-d H:i' }}"
+                                    ></i>
+                                            {% if user.is_authenticated %}
+                                                <i class="fa fa-user text-secondary"
+                                                   data-toggle="tooltip" data-placement="top"
+                                                   title="
+                                                                           uploaded_by={{ serverfile.owner }},
+                                                                           uploaded_at={{ serverfile.uploaded_at |date:'Y-m-d H:i' }}"
+                                                ></i>
+                                            {% endif %}
+                                {% endif %}
                             {% endif %}
-
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -170,26 +301,7 @@
     </div>
 
 
-    {#        <div>#}
-    {#            <h3>Annotation</h3>#}
-    {#        <button id="add-time-btn" class="btn btn-secondary">Add Current Time</button>#}
-    {#            <button id="add-time-btn" class="btn btn-secondary" data-toggle="tooltip" data-placement="top"#}
-    {#                    title="Shortcut: Alt + t">#}
-    {#                Add Timed Annotation (Alt + t)#}
-    {#            </button>#}
-    {#            <form method="post">#}
-    {#                {% csrf_token %}#}
-    {#                {{ form.annotation }}#}
-    {#                <div class="star-rating">#}
-    {#                    {% for choice in form.stars %}#}
-    {#                        {{ choice.tag }}#}
-    {#                        <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>#}
-    {#                    {% endfor %}#}
-    {#                </div>#}
-    {#                <button type="submit" class="btn btn-primary">Save</button>#}
-    {#            </form>#}
-    {#        </div>#}
-
+    {% if serverfile.finished_at %}
     <div>
         <h3>Statistics</h3>
         {% if myhtml %}
@@ -279,7 +391,7 @@
                         <button type="button" class="close" data-dismiss="modal"><span
                                 aria-hidden="true">&times;</span><span
                                 class="sr-only">Close</span></button>
-                        <img src="" class="imagepreview" style="width: 100%;">
+                        <img src="" class="imagepreview" style="width: 100%;" alt="big report image">
                     </div>
                 </div>
             </div>
@@ -287,6 +399,10 @@
     </div>
 
 
+    {% else %}
+    <h3>Statistics</h3>
+    <p><b> Automatic evaluation is not finished yet.</b></p>
+    {% endif %}
 
     <div class="mt-3">
         {% if next == None %}
@@ -295,17 +411,25 @@
             <a class="btn btn-secondary" href="{{ next }}">Back</a>
         {% endif %}
         <a class="btn btn-secondary" href='{{ serverfile.mediafile.url }}' download> Download original file </a>
-        <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report </a>
+        {% if serverfile.zip_file %}
+            <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report </a>
+        {% endif %}
         {% if user.is_authenticated %}
             {#        <td><a class="btn btn-light"#}
             {#               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send#}
             {#            Email</a></td>#}
             {#        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>#}
-            <a class="btn btn-secondary" href='{% url 'uploader:show_logs' serverfile.hash %}'> Show log </a>
+            <a class="btn btn-secondary" href='{% url 'uploader:show_mediafile_logs' serverfile.hash %}'> Show log </a>
         {% endif %}
 
     </div>
 </div>
+<script>
+    {# show tooltip #}
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
 
 {#<script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>#}
 <script>

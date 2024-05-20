@@ -2,6 +2,24 @@
 
 Actual version: "0.0.0"
 
+## 2024-03
+
+* [added] Update spreadsheet for collection
+* [added] Categories added
+* [added] Show annotator and file owner for authenticated users
+* [fixed] Fixed not showing some star type annotations in the report
+* [added] Add into collection from the list of reports
+
+## 2024-02
+
+* [changed] Video is now stretched to 100% if possible
+* [changed] The report can be reviewed without the processing is finished
+* [added] New metrics in the review
+* [added] Upload progress bar
+* [added] Delete media file
+* [added] Consent added
+* [added] Collections of uploaded files can be run together
+
 ## 2024-01
 
 * [added] Processing status of the mediafile
@@ -11,6 +29,10 @@ Actual version: "0.0.0"
 * [changed] Every annotation change is now stored to spreadsheet
 * [added] Every stitch video part is now trimmed by presence of needle holder in the operating area
 * [added] Bar plot in report with metric
+
+* [added] Bulk import files by copying into server "drop_dir" folder
+* [changed] Empty frames used as another axis in stitch split detection
+* [added] Logs in webapp for superuser
 
 ## 2023-12
 

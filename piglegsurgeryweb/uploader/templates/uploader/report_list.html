@@ -1,95 +1,137 @@
 {% extends 'base.html' %}
 
 {% block body %}
-    <div
-            {% if user.is_authenticated %}
-                class="container-xxl"
-            {% else %}
-                class="container"
-            {% endif %}
-    >
-        {% if owner %}
-            <H2> Reports for {{ owner.email }} </H2>
+<div
+        {% if user.is_authenticated %}
+            class="container-xxl"
         {% else %}
-            <H2> List of reports </H2>
+            class="container"
         {% endif %}
-{#        <H2> List of reports </H2>#}
-        {% if myhtml %}
-            Graph
+>
+    {% if owner %}
+        <H2> Reports for {{ owner.email }} </H2>
+    {% else %}
+        <H2> List of reports </H2>
+    {% endif %}
+    {#        <H2> List of reports </H2>#}
+    {% if myhtml %}
+    Graph
 
-        {% autoescape off %}
-            {{ myhtml }}
-        {% endautoescape %}
-        {% endif %}
-        <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
-        <table class="table">
-            <thead>
-            <tr>
-                <th scope="col"></th>
-                </th>
+    {% autoescape off %}
+    {{ myhtml }}
+    {% endautoescape %}
+    {% endif %}
+    <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col"></th>
+            </th>
 
-                <th scope="col"><a class="link-secondary" href="?order_by=email">
-                    {% if order_by == "email" %} ▼ {% endif %} Email </a>
-                </th>
+            <th scope="col"><a class="link-secondary" href="?order_by=email">
+                {% if order_by == "email" %} ▼ {% endif %} Email </a>
+            </th>
 
-                <th scope="col"><a class="link-secondary" href="?order_by=filename">
-                    {% if order_by == "filename" %} ▼ {% endif %} File name </a>
-                </th>
+            <th scope="col"><a class="link-secondary" href="?order_by=filename">
+                {% if order_by == "filename" %} ▼ {% endif %} File name </a>
+            </th>
+            <th scope="col">
+                <a class="link-secondary" href="?order_by=-category">
+                    {% if order_by == "-category" %} ▼ {% endif %}
+                    Category
+                </a>
+            </th>
 
-                <th scope="col">
-                    <a class="link-secondary" href="?order_by=-uploaded_at">
-                        {% if order_by == "-uploaded_at"  %} ▼ {% endif %}
-                        Uploaded At
-                    </a>
+            <th scope="col">
+                <a class="link-secondary" href="?order_by=-uploaded_at">
+                    {% if order_by == "-uploaded_at" %} ▼ {% endif %}
+                    Uploaded At
+                </a>
 
-                </th>
+            </th>
+            <th scope="col" colspan="2"></th>
+            {% if user.is_authenticated %}
                 <th scope="col" colspan="2"></th>
-                {% if user.is_authenticated %}
-                    <th scope="col" colspan="2"></th>
-                    <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
-                    <th scope="col"><a href="?order_by=-started_at">
-                        {% if order_by == "-started_at" %} ▼ {% endif %} Started At </a>
-                    </th>
-                    <th scope="col"><a href="?order_by=-finished_at">
-                        {% if order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
-                    </th>
-                {% endif %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for uploadedfile in uploadedfiles %}
-                <tr class="align-middle" id="row{{ uploadedfile.id }}">
-                    <td scope="col" class="p-1">
-                        {% if uploadedfile.preview %}
-                            <!--                {{ uploadedfile.preview }}-->
-                            <!--                <image src="{{ uploadedfile.bitmapimage_set.all.0.bitmap_image.url }}" class="rounded img-fluid" alt="thumbnail with the processed video" style="min-width: 66px;"></image>-->
-                            <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
-                                   alt="thumbnail with the processed video"
-                                   style="min-width: 66px; max-width: 80px;"></image>
-                        {% endif %}
-                    </td>
-                    <td scope="row"><a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}"
-                                       style="word-break: break-all;"
-                    >
-                        {{ uploadedfile.email }} </a></td>
-                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}"
+                <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
+                <th scope="col"><a href="?order_by=-started_at">
+                    {% if order_by == "-started_at" %} ▼ {% endif %} Started At </a>
+                </th>
+                <th scope="col"><a href="?order_by=-finished_at">
+                    {% if order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
+                </th>
+            {% endif %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for uploadedfile in uploadedfiles %}
+            <tr class="align-middle" id="row{{ uploadedfile.id }}">
+                <td scope="col" class="p-1">
+                    {% if uploadedfile.preview %}
+                        <image src="{{ uploadedfile.preview.url }}" class="rounded img-fluid"
+                               alt="thumbnail with the processed video"
+                               style="min-width: 66px; max-width: 80px;"></image>
+                    {% endif %}
+                </td>
+
+                <td scope="row">
+                    {% if uploadedfile.owner.hash %}
+                        <a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}"
                            style="word-break: break-all;"
+                        >
+                            {{ uploadedfile.email }} </a>
+                    {% else %}
+                        {{ uploadedfile.email }}
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}"
+                       style="word-break: break-all;"
                     >
                         {{ uploadedfile }}</a></td>
-                    <td><a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}">
+                <td>
+                    {{ uploadedfile.category }}</td>
+                <td>
+                    <a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}">
                         {{ uploadedfile.uploaded_at |date:'Y-m-d H:i' }}</a></td>
-                    <td>
-                        <a class="btn btn-light"
-                           href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}">
-                            {% if uploadedfile.is_microsurgery %}
-                                <i class="fa-solid fa-microscope"></i>
-                            {% else %}
-                                <i class="fa-regular fa-eye"></i>
-                            {% endif %}
-                        </a></td>
-                    </td>
-                    <td>
-                        <div data-toggle="tooltip" data-placement="top" title="{{ uploadedfile.processing_message }}">
+                <td>
+                    {% if uploadedfile.is_microsurgery %}
+                        <i class="fa-solid fa-microscope"></i>
+                    {% else %}
+                        <i class="fa-regular fa-eye"></i>
+                    {% endif %}
+                    {% if uploadedfile.stitch_count > 0 %}
+                        <div data-toggle="tooltip" data-placement="top" title="Stitch Count">
+                        <span class="badge rounded-pill text-bg-secondary">
+                        {{ uploadedfile.stitch_count }}
+                        </span>
+                        </div>
+                    {% endif %}
+                    {% if uploadedfile.review_assigned_to %}
+                        <div data-toggle="tooltip" data-placement="top"
+                             title="Assigned to: {{ uploadedfile.review_assigned_to }} at
+                                     {{ uploadedfile.review_assigned_at|date:'Y-m-d H:i' }}"
+                        >
+                            <i class="fa fa-user"></i>
+                        </div>
+                    {% endif %}
+                    {% if uploadedfile.mediafileannotation_set.all %}
+                        <div data-toggle="tooltip" data-placement="top"
+                             title="Annotated by {{ uploadedfile.mediafileannotation_set.1.annotator.email }} at
+                                     {{ uploadedfile.mediafileannotation_set.0.updated_at|date:'Y-m-d H:i' }}"
+                        >
+                            <i class="bi bi-card-text"></i>
+                        </div>
+                        <!-- There are MediaFileAnnotations related to this UploadedFile -->
+                    {% else %}
+                        <!-- There are no MediaFileAnnotations related to this UploadedFile -->
+                    {% endif %}
+                    {#                      <span class="fa-stack fa-2x">#}
+                    {#    <i class="fa-solid fa-camera fa-stack-1x"></i>#}
+                    {#    <i class="fa-solid fa-ban fa-stack-2x" style="color:Tomato"></i>#}
+                    {#  </span>#}
+                </td>
+                <td>
+                    <div data-toggle="tooltip" data-placement="top" title="{{ uploadedfile.processing_message }}">
                         {% if uploadedfile.processing_ok %}
                             <i class="fa fa-check text-success"></i>
                         {% else %}
@@ -99,48 +141,116 @@
                                 <i class="fa fa-close text-danger"></i>
                             {% endif %}
                         {% endif %}
-                        </div>
+                    </div>
+                </td>
+                {% if user.is_authenticated %}
+                    <td><a class="btn btn-light"
+                           href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}"
+                    >Run</a>
                     </td>
-                    {% if user.is_authenticated %}
-                        <td><a class="btn btn-light"
-                               href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}">Run</a>
-                        </td>
-                        <td><a class="btn btn-light"
-                               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send
-                            Email</a></td>
-                        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
-                        <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
-                    {% endif %}
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
-        <script>
-            const data = '{{qs_json}}'
+                    <td>
+                    <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+                        <div class="btn-group" role="group">
+                        <div class="dropdown">
+                            <a class="btn btn-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <i class="fa-solid fa-ellipsis-v"></i>
+                            </a>
 
-            const rdata = JSON.parse(data.replace(/&quot;/g, '"'))
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item"
+                                       href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}"
+                                >Send Email</a>
+                                </li>
+                                <li><a class="dropdown-item"
+                                       href="{% url 'admin:uploader_uploadedfile_change' uploadedfile.id %}"
+                                >Edit in Admin</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}"
+                                    >
+                                        Switch <i class="fa-solid fa-microscope"></i> /
+                                        <i class="fa-regular fa-eye"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="{% url 'uploader:delete_media_file' uploadedfile.id %}"
+                                       onclick="return confirm('Are you sure you want to delete {{ uploadedfile }}?');"
+                                    >
+                                        Delete
+                                    </a>
 
-            const input = document.getElementById('search_here');
 
-            let filteredArr = []
+                            </ul>
+                        </div>
+                        </div><div class="btn-group" role="group">
+                        <div class="dropdown">
+                            <a class="btn btn-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <i class="bi bi-bookmark-plus"></i>
+                            </a>
 
-            input.addEventListener('keyup', (e) => {
-                for (const element_id in rdata) {
-                    if (rdata[element_id].includes(e.target.value)) {
-                        const el = document.getElementById("row" + element_id);
-                        el.classList.remove("d-none");
-                    } else {
-                        document.getElementById("row" + element_id).classList.add('d-none');
+                            <ul class="dropdown-menu">
+                                {% for collection in collections %}
+                                <li><a class="dropdown-item"
+                                       href="{% url 'uploader:add_to_collection' collection.id uploadedfile.id %}?next={{ request.path|urlencode }}"
+                                >{{ collection }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    </div>
+                    </td>
 
-                    }
+                    <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
+                    <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+    <script>
+        const data = '{{qs_json}}'
+
+        const rdata = JSON.parse(data.replace(/&quot;/g, '"'))
+
+        const input = document.getElementById('search_here');
+
+        let filteredArr = []
+
+        input.addEventListener('keyup', (e) => {
+            for (const element_id in rdata) {
+                if (rdata[element_id].includes(e.target.value)) {
+                    const el = document.getElementById("row" + element_id);
+                    el.classList.remove("d-none");
+                } else {
+                    document.getElementById("row" + element_id).classList.add('d-none');
+
                 }
-            })
+            }
+        })
 
-            {# show tooltip #}
-            {#$(document).ready(function () {#}
-            {#    $('[data-toggle="_status_to_uploaded_filetooltip"]').tooltip();#}
-            {# });#}
-        </script>
-    </div>
+        {# show tooltip #}
+        {#$(document).ready(function () {#}
+        {#    $('[data-toggle="_status_to_uploaded_filetooltip"]').tooltip();#}
+        {# });#}
+    </script>
+
+    {#            <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"#}
+    {#                    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"#}
+    {#                    crossorigin="anonymous"></script>#}
+    {#            <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"#}
+    {#                    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"#}
+    {#                    crossorigin="anonymous"></script>#}
+    <script>
+        {# show tooltip #}
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+</div>
 {% endblock %}

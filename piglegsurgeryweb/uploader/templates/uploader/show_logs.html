@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block body%}
+<div class="container">
+    <H2 id="headline">{{ headline }} </H2>
+    <p>
+        {{ text }}
+    </p>
+    {% if next_text %}
+        <a class="btn btn-primary" href="{{ next }}">{{next_text}}</a>
+    {%  else %}
+        <a class="btn btn-primary" href="{{ next }}">Ok</a>
+    {% endif %}
+    {% if next_secondary %}
+    <a class="btn btn-secondary" href="{{ next_secondary }}">{{next_text_secondary}}</a>
+    {% endif %}
+
+
+        <nav id="lognav" class="navbar navbar-light bg-light px-3">
+            <a class="navbar-brand" href="#">List of logs</a>
+            <ul class="nav nav-pills">
+                {%  for key, value in key_value.items %}
+                <li class="nav-item">
+                    <a class="nav-link scroll-link" href="#{{ key }}end">{{ key }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+
+    {%  for key, value in key_value.items %}
+      <h4 id="{{ key }}start" class="mt-3">{{ key }}</h4>
+        <p>
+            {% autoescape off %}
+            {{ value }}
+            {% endautoescape %}
+        </p>
+        <a id="{{ key }}end" href="#headline" class="btn btn-secondary">Go to nav</a>
+    {% endfor %}
+</div>
+<script>
+    document.querySelectorAll('.scroll-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent default anchor click behavior
+
+        const targetId = this.getAttribute('href'); // Get the target anchor
+        const target = document.querySelector(targetId);
+
+        if (target) {
+            const targetPosition = target.getBoundingClientRect().top; // Position of target relative to viewport
+            const offsetPosition = targetPosition + window.pageYOffset - window.innerHeight + target.offsetHeight; // Adjust scroll position
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth' // Optional: for smooth scrolling
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

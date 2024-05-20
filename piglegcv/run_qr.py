@@ -16,20 +16,35 @@ from qreader import QReader
 from tools import load_json, save_json
 
 
+SID_MODEL = None
+SID_MODEL_DEVICE = None
+
+
+def get_sid_model(device):
+    global SID_MODEL_DEVICE
+    global SID_MODEL
+    if SID_MODEL and (SID_MODEL_DEVICE==device):
+        return SID_MODEL
+    else:
+        single_model_path = (
+                Path(__file__).parent
+                / "resources/single_image_detector/mdl_sid_2.pth"
+            # Path(__file__).parent / "resources/single_image_detector/mdl.pth"
+        )
+        _model = torch.load(single_model_path, map_location=torch.device(device))
+        single_image_model = _model["model"]
+        single_image_model.cfg = _model["my_params"]
+        SID_MODEL = single_image_model
+        SID_MODEL_DEVICE = device
+
+        return single_image_model
+
 def get_bboxes(
     img,
     device="cpu",
     image_file: Optional[Path] = None,
 ):
-    single_model_path = (
-        Path(__file__).parent
-        / "resources/single_image_detector/mdl_sid_2.pth"
-        # Path(__file__).parent / "resources/single_image_detector/mdl.pth"
-    )
-    _model = torch.load(single_model_path, map_location=torch.device(device))
-    single_image_model = _model["model"]
-    single_image_model.cfg = _model["my_params"]
-
+    single_image_model = get_sid_model(device)
     bboxes, masks = inference_detector(single_image_model, img)
     img_results = None
     # if image_file is not None:
