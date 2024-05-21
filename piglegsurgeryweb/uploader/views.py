@@ -590,10 +590,30 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     if video is not None:
         video.review_assigned_at = now
         if student_id:
-            video.review_assigned_to = _get_owner(student_id)
+            video.review_assigned_to = Owner.objects.get(id=student_id)
         video.save()
 
     return video
+
+def students_list_view(request, days:Optional[int]=14):
+
+    uploaded_files = UploadedFile.objects.filter(uploaded_at__gte=django.utils.timezone.now()-timedelta(days=days))
+    # get all owners of uploaded_files
+    owners = Owner.objects.filter(uploadedfile__in=uploaded_files).distinct()
+
+    logger.debug
+    context = {
+        "headline": "Students list",
+        "owners": owners,
+    }
+    return render(request, "uploader/owners.html", context)
+
+def assigned_to_student(request, owner_hash: str):
+    owner = get_object_or_404(Owner, hash=owner_hash)
+    uploaded_files = UploadedFile.objects.filter(review_assigned_to=owner)
+
+    context = _general_report_list(request, uploaded_files)
+    return render(request, "uploader/report_list.html", context)
 
 def go_to_video_for_annotation(request, annotator_hash:Optional[str]=None):
     logger.debug(f"{annotator_hash=}")
