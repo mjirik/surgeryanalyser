@@ -899,7 +899,7 @@ def upload_mediafile(request):
             if mediafile_path.suffix.lower() in [".mp4", ".avi", ".mov"]:
                 make_images_from_video(
                    mediafile_path , mediafile_path.parent, filemask=str(mediafile_path) + ".jpg", n_frames=1)
-            async_task("uploader.tasks.email_media_recived", owner, absolute_uri=request.build_absolute_uri("/"))
+            async_task("uploader.tasks.email_media_recived", serverfile, absolute_uri=request.build_absolute_uri("/"))
 
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
