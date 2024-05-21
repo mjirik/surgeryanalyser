@@ -15,8 +15,10 @@
 
 
                     <div class="card">
-                        {% if owner.uploadedfile_set.all.first.preview.url %}
-                        <img src="{{ owner.uploadedfile_set.all.first.preview.url }}" alt="Thumbnail" class="card-img-top">
+                        {%  if owner.uploadedfile_set.all.first.preview %}
+                            {% if owner.uploadedfile_set.all.first.preview.url %}
+                            <img src="{{ owner.uploadedfile_set.all.first.preview.url }}" alt="Thumbnail" class="card-img-top">
+                            {% endif %}
                         {% endif %}
 {#{% else %}#}
 {#    <p>No thumbnail available</p>#}
