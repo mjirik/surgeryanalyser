@@ -36,6 +36,11 @@ urlpatterns = [
         name="owners_reports_list",
     ),  # used for debugging purposes
     path(
+        "assigned_to/<str:owner_hash>/",
+        views.assigned_to_student,
+        name="assigned_to",
+    ),  # used for debugging purposes
+    path(
         "ths6eei8sadfwebw7s8d6s5e4vs8eqpzmg4710awo/",
         views.report_list,
         name="web_reports",
@@ -68,5 +73,6 @@ urlpatterns = [
     path("add_to_collection/<int:collection_id>/<int:filename_id>/", views.add_uploaded_file_to_collection, name="add_to_collection"),
     path("categories/", views.categories_view, name="categories"),
     path("category/<int:category_id>/", views.category_view, name="show_category"),
-    path("mediafile/rotate_right/<str:mediafile_hash>/", views.rotate_mediafile_right, name="rotate_mediafile_right")
+    path("mediafile/rotate_right/<str:mediafile_hash>/", views.rotate_mediafile_right, name="rotate_mediafile_right"),
+    path("students_list/<int:days>/", views.students_list_view, name="students_list"),
 ]

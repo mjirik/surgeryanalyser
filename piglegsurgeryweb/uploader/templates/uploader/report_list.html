@@ -108,7 +108,7 @@
                     {% endif %}
                     {% if uploadedfile.review_assigned_to %}
                         <div data-toggle="tooltip" data-placement="top"
-                             title="Assigned to: {{ uploadedfile.review_assigned_to }} at
+                             title="Assigned to: {{ uploadedfile.review_assigned_to.email }} at
                                      {{ uploadedfile.review_assigned_at|date:'Y-m-d H:i' }}"
                         >
                             <i class="fa fa-user"></i>

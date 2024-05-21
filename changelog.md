@@ -6,6 +6,7 @@ Actual version: "0.0.0"
 
 * [added] Video rotation
 * [fixed] More stable stitch split detection by fixing 1D-smoothing  for small number of labels
+* [fixed] Student email assignment
 
 ## 2024-03
 
