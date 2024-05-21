@@ -892,10 +892,14 @@ def upload_mediafile(request):
             owner = _get_owner(serverfile.email)
             from .media_tools import make_images_from_video
             mediafile_path = Path(serverfile.mediafile.path)
+
+            serverfile.owner = owner
+            serverfile.mediafile = str(mediafile_path)
+            serverfile.save()
             if mediafile_path.suffix.lower() in [".mp4", ".avi", ".mov"]:
                 make_images_from_video(
                    mediafile_path , mediafile_path.parent, filemask=str(mediafile_path) + ".jpg", n_frames=1)
-            async_task("uploader.tasks.email_media_recived", serverfile, absolute_uri=request.build_absolute_uri("/"))
+            async_task("uploader.tasks.email_media_recived", owner, absolute_uri=request.build_absolute_uri("/"))
 
             # email_media_recived(serverfile)
             # print(f"user id={request.user.id}")
