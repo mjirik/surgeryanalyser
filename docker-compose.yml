@@ -50,15 +50,17 @@ services:
       - "./.jupyter:/root/.jupyter"
     networks:
       - piglegnet
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    runtime: nvidia
+
+# this caused error: container_error:
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - capabilities: [gpu]
+#    environment:
+#      - NVIDIA_VISIBLE_DEVICES=all
+#      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+#    runtime: nvidia
 
 #  redis:
 #    image: redis:7.0.11-alpine
