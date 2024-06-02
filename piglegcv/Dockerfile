@@ -1,4 +1,5 @@
-FROM nvcr.io/nvidia/pytorch:22.05-py3
+#FROM nvcr.io/nvidia/pytorch:22.05-py3
+FROM nvcr.io/nvidia/pytorch:24.05-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 
