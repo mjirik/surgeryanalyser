@@ -8,8 +8,10 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y \
-	ca-certificates python3-dev git wget sudo ninja-build
-RUN ln -sv /usr/bin/python3 /usr/bin/python
+	ca-certificates python3-dev git wget sudo ninja-build \
+
+# removed in 24.05-py3
+# RUN ln -sv /usr/bin/python3 /usr/bin/python
 
 # create a non-root user
 ARG USER_ID=1000
