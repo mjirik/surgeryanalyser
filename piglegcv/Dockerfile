@@ -8,7 +8,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y \
-	ca-certificates python3-dev git wget sudo ninja-build \
+	ca-certificates python3-dev git wget sudo ninja-build
 
 # removed in 24.05-py3
 # RUN ln -sv /usr/bin/python3 /usr/bin/python
