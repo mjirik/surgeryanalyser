@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   dev_piglegweb:
     container_name: "${PIGLEG_IMAGE_PREFIX}piglegweb"
@@ -48,11 +48,13 @@ services:
       - "./.jupyter:/home/appuser/.jupyter"
     networks:
       - dev_piglegnet
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
 
 #  redis:
 #    image: redis:7.0.11-alpine
