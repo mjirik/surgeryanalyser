@@ -1,6 +1,6 @@
-FROM nvcr.io/nvidia/pytorch:23.05-py3
+# FROM nvcr.io/nvidia/pytorch:23.05-py3
 # FROM nvcr.io/nvidia/pytorch:24.05-py3
-# FROM nvcr.io/nvidia/pytorch:22.05-py3
+FROM nvcr.io/nvidia/pytorch:22.05-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 	ca-certificates python3-dev git wget sudo ninja-build
 
 # removed in 24.05-py3
-# RUN ln -sv /usr/bin/python3 /usr/bin/python
+ RUN ln -sv /usr/bin/python3 /usr/bin/python
 
 # create a non-root user
 ARG USER_ID=1000
