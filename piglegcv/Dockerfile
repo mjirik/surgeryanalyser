@@ -35,10 +35,8 @@ RUN pip install --user opencv-python==4.5.5.64
 # We used fallowing line to fix the RuntimeError: nms_impl: implementation for device cuda:0 not found
 #     MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install mmcv-full==1.5.2
 RUN git clone --branch v1.5.2 https://github.com/open-mmlab/mmcv.git
-RUN cd mmcv &&\
-    pip install --user -r requirements/optional.txt &&\
-    MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install -e .
-RUN cd ..
+RUN cd mmcv && pip install --user -r requirements/optional.txt
+RUN cd mmcv && MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install -e .
 
 RUN git clone --branch v2.25.0 https://github.com/open-mmlab/mmdetection
 RUN cd mmdetection &&\
