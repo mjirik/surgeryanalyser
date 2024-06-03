@@ -403,9 +403,16 @@ class DoComputerVision:
                     qr_data = bad_qr_data
                     break
                 else:
-                    qr_data = run_qr.bbox_info_extraction_from_frame(
-                        frame, device=self.device, debug_image_file=debug_image_file
-                    )
+                    try:
+                        qr_data = run_qr.bbox_info_extraction_from_frame(
+                            frame, device=self.device, debug_image_file=debug_image_file
+                        )
+                    except IndexError as e:
+                        logger.error(f"Error in bbox_info_extraction_from_frame: {e}")
+                        logger.error(traceback.format_exc())
+                        logger.debug(f"{type(frame)=}")
+                        logger.debug(f"{frame.shape=}")
+                    qr_data = bad_qr_data
                     bad_last_frame = frame
                     bad_qr_data = qr_data
                     if len(qr_data["incision_bboxes"]) > 0:
