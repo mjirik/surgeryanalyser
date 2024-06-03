@@ -414,6 +414,7 @@ class DoComputerVision:
                         logger.debug(f"{frame.shape=}")
                         qr_data = bad_qr_data
                         frame = bad_last_frame
+                        break
                     bad_last_frame = frame
                     bad_qr_data = qr_data
                     if len(qr_data["incision_bboxes"]) > 0:
