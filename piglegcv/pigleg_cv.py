@@ -384,6 +384,9 @@ class DoComputerVision:
     ):
         # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
         # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
+        # remember at least some frame for the case that no incision is found and we will run out of frames
+        bad_last_frame = None
+        bad_qr_data = None
         if self.is_video:
             # frame_from_end = 0
             for i in range(n_detection_tries):
@@ -394,18 +397,26 @@ class DoComputerVision:
                     reference_frame_position_from_end=frame_from_end,
                     step=frame_from_end_step
                 )
-                qr_data = run_qr.bbox_info_extraction_from_frame(
-                    frame, device=self.device, debug_image_file=debug_image_file
-                )
-                if len(qr_data["incision_bboxes"]) > 0:
-                    logger.debug(
-                        f"Found incision bbox in frame {frame_from_end} from the end."
-                    )
+                if frame is None:
+                    logger.debug("Frame is None.")
+                    frame = bad_last_frame
+                    qr_data = bad_qr_data
                     break
                 else:
-                    frame_from_end = (
-                        local_meta["reference_frame_position_from_end"] + frame_from_end_step
+                    qr_data = run_qr.bbox_info_extraction_from_frame(
+                        frame, device=self.device, debug_image_file=debug_image_file
                     )
+                    bad_last_frame = frame
+                    bad_qr_data = qr_data
+                    if len(qr_data["incision_bboxes"]) > 0:
+                        logger.debug(
+                            f"Found incision bbox in frame {frame_from_end} from the end."
+                        )
+                        break
+                    else:
+                        frame_from_end = (
+                            local_meta["reference_frame_position_from_end"] + frame_from_end_step
+                        )
             logger.debug(
                 f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
             )
