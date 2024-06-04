@@ -1,6 +1,6 @@
+FROM nvcr.io/nvidia/pytorch:22.05-py3
 # FROM nvcr.io/nvidia/pytorch:23.05-py3
 # FROM nvcr.io/nvidia/pytorch:24.05-py3
-FROM nvcr.io/nvidia/pytorch:22.05-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -24,6 +24,7 @@ WORKDIR /home/appuser
 
 RUN pip list
 
+# TODO check if this is needed
 ENV PATH="/home/appuser/.local/bin:${PATH}"
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
 	python3 get-pip.py --user && \
@@ -40,29 +41,18 @@ RUN cd mmcv && pip install --user -r requirements/optional.txt
 RUN cd mmcv && MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install -e .
 
 RUN git clone --branch v2.25.0 https://github.com/open-mmlab/mmdetection
-RUN cd mmdetection &&\
-    pip install --user -r requirements/build.txt &&\
-    pip install --user -v -e .
-RUN cd ..
+RUN cd mmdetection && pip install --user -r requirements/build.txt &&
+RUN cd mmdetection && pip install --user -v -e .
 
 RUN git clone --branch v0.27.0 https://github.com/open-mmlab/mmpose.git
-RUN cd mmpose &&\
-    pip install --user -r requirements.txt &&\
-    pip install --user -v -e .
-RUN cd ..
+RUN cd mmpose && pip install --user -r requirements.txt &&
+RUN cd mmpose && pip install --user -v -e .
 
 RUN git clone --branch v0.13.0 https://github.com/open-mmlab/mmtracking.git
-RUN cd mmtracking &&\
-    pip install --user -r requirements.txt &&\
-    pip install --user -v -e .
-RUN cd ..
+RUN cd mmtracking && pip install --user -r requirements.txt &&
+RUN cd mmtracking && pip install --user -v -e .
 
 RUN pip list
-
-#RUN git clone https://github.com/open-mmlab/mmtracking.git &&\
-#    cd mmtracking &&\
-#    pip install -r requirements.txt --ignore-installed llvmlite &&\ 
-#    pip install -v -e .
 
 #########
 #PyZbar
