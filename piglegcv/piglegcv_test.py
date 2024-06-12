@@ -55,3 +55,10 @@ def test_do_the_test(path_mask, expected):
     with open(outputdirp / "piglegcv_log.txt") as f:
         if "ERROR" in f.read():
             assert False, "Error in piglegcv_log.txt"
+
+
+def test_create_operating_area():
+    img_pth = Path("./pigleg_test.mp4")
+    outputdir = f"./expected_output_after_tracking"
+    outputdirp = Path(outputdir)
+    # pigleg_cv.DoComputerVision(img_pth, outputdir, meta=None)

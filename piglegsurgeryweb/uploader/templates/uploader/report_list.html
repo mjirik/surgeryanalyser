@@ -166,6 +166,10 @@
                                        href="{% url 'admin:uploader_uploadedfile_change' uploadedfile.id %}"
                                 >Edit in Admin</a>
                                 </li>
+                                <li><a class="dropdown-item"
+                                       href="{% url 'uploader:show_mediafile_logs' uploadedfile.hash %}"
+                                >Log</a>
+                                </li>
                                 <li>
                                     <a class="dropdown-item"
                                        href="{% url 'uploader:swap_is_microsurgery' uploadedfile.id %}?next_anchor=row{{ uploadedfile.id }}"

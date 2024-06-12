@@ -506,7 +506,19 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             #     stars=form.cleaned_data["stars"],
             #     annotator=annotator,
             # )
+
             annotation.save()
+            # json_annotation = dict(
+            #     updated_at = str(annotation.updated_at),
+            #     annotator = str(annotation.annotator),
+            #     annotation = str(annotation.annotation),
+            # )
+            from django.core.serializers import serialize
+            # dump as json file
+            with open(Path(serverfile.outputdir) / f"annotation_{idx}.json", "w") as f:
+                # json.dump(json_annotation, f)
+                f.write(serialize("json", [annotation]))
+
 
             logger.debug("preparing async_task for add_row_to_spreadsheet_and_update_zip")
             async_task(
@@ -892,6 +904,10 @@ def upload_mediafile(request):
             owner = _get_owner(serverfile.email)
             from .media_tools import make_images_from_video
             mediafile_path = Path(serverfile.mediafile.path)
+
+            serverfile.owner = owner
+            serverfile.mediafile = str(mediafile_path)
+            serverfile.save()
             if mediafile_path.suffix.lower() in [".mp4", ".avi", ".mov"]:
                 make_images_from_video(
                    mediafile_path , mediafile_path.parent, filemask=str(mediafile_path) + ".jpg", n_frames=1)

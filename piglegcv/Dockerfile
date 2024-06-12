@@ -1,4 +1,6 @@
 FROM nvcr.io/nvidia/pytorch:22.05-py3
+# FROM nvcr.io/nvidia/pytorch:23.05-py3
+# FROM nvcr.io/nvidia/pytorch:24.05-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -8,7 +10,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && apt-get install -y \
 	ca-certificates python3-dev git wget sudo ninja-build
-RUN ln -sv /usr/bin/python3 /usr/bin/python
+
+# removed in 24.05-py3
+ RUN ln -sv /usr/bin/python3 /usr/bin/python
 
 # create a non-root user
 ARG USER_ID=1000
@@ -20,6 +24,7 @@ WORKDIR /home/appuser
 
 RUN pip list
 
+# TODO check if this is needed
 ENV PATH="/home/appuser/.local/bin:${PATH}"
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
 	python3 get-pip.py --user && \
@@ -32,35 +37,22 @@ RUN pip install --user opencv-python==4.5.5.64
 # We used fallowing line to fix the RuntimeError: nms_impl: implementation for device cuda:0 not found
 #     MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install mmcv-full==1.5.2
 RUN git clone --branch v1.5.2 https://github.com/open-mmlab/mmcv.git
-RUN cd mmcv &&\
-    pip install --user -r requirements/optional.txt &&\
-    MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install -e .
-RUN cd ..
+RUN cd mmcv && pip install --user -r requirements/optional.txt
+RUN cd mmcv && MMCV_WITH_OPS=1 FORCE_CUDA=1 pip install -e .
 
 RUN git clone --branch v2.25.0 https://github.com/open-mmlab/mmdetection
-RUN cd mmdetection &&\
-    pip install --user -r requirements/build.txt &&\
-    pip install --user -v -e .
-RUN cd ..
+RUN cd mmdetection && pip install --user -r requirements/build.txt
+RUN cd mmdetection && pip install --user -v -e .
 
 RUN git clone --branch v0.27.0 https://github.com/open-mmlab/mmpose.git
-RUN cd mmpose &&\
-    pip install --user -r requirements.txt &&\
-    pip install --user -v -e .
-RUN cd ..
+RUN cd mmpose && pip install --user -r requirements.txt
+RUN cd mmpose && pip install --user -v -e .
 
 RUN git clone --branch v0.13.0 https://github.com/open-mmlab/mmtracking.git
-RUN cd mmtracking &&\
-    pip install --user -r requirements.txt &&\
-    pip install --user -v -e .
-RUN cd ..
+RUN cd mmtracking && pip install --user -r requirements.txt
+RUN cd mmtracking && pip install --user -v -e .
 
 RUN pip list
-
-#RUN git clone https://github.com/open-mmlab/mmtracking.git &&\
-#    cd mmtracking &&\
-#    pip install -r requirements.txt --ignore-installed llvmlite &&\ 
-#    pip install -v -e .
 
 #########
 #PyZbar

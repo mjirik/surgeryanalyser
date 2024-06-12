@@ -2,6 +2,10 @@
 
 Actual version: "0.0.0"
 
+## 2024-06
+
+* [added] Create stitch start and stitch end annotation buttons
+
 ## 2024-05
 
 * [added] Video rotation

@@ -331,7 +331,15 @@
                             {% if edit_review %}
                                 <button id="add-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
                                         data-toggle="tooltip" data-placement="top" title="Shortcut: Alt + t">
-                                    Add Timed Annotation (Alt + t)
+                                    Add Timed Annotation
+                                </button>
+                                <button id="add-stitch-start-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
+                                        data-toggle="tooltip" data-placement="top" title="Add stitch start (Alt + s)">
+                                    <i class="bi bi-arrow-bar-right"></i>
+                                </button>
+                                <button id="add-stitch-end-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
+                                        data-toggle="tooltip" data-placement="top" title="Add stitch end (Alt + e)">
+                                    <i class="bi bi-arrow-bar-left"></i>
                                 </button>
                                 {{ from.annotation.errors }}
                                 {{ from.annotation.group.value }}
@@ -540,6 +548,68 @@
         });
     });
 
+    document.getElementById('add-stitch-start-time-btn').addEventListener('click', function () {
+        var video = document.getElementById('my-video');
+        var currentTime = video.currentTime; // Get current time in seconds
+
+        // Format the time correctly
+        var hours = Math.floor(currentTime / 3600);
+        var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+        var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+
+        var formattedTime =
+            (hours < 10 ? "0" + hours : hours) + ":" +
+            (minutes < 10 ? "0" + minutes : minutes) + ":" +
+            (seconds < 10 ? "0" + seconds : seconds);
+
+        var textArea = document.getElementById('id_annotation');
+        textArea.value += (textArea.value ? "\n" : "") + formattedTime + " stitch_start"; // Append formatted time to text area
+        textArea.focus(); // Set focus on the text area
+        textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
+    });
+
+
+    document.getElementById('add-stitch-end-time-btn').addEventListener('click', function () {
+        var video = document.getElementById('my-video');
+        var currentTime = video.currentTime; // Get current time in seconds
+
+        // Format the time correctly
+        var hours = Math.floor(currentTime / 3600);
+        var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+        var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+
+        var formattedTime =
+            (hours < 10 ? "0" + hours : hours) + ":" +
+            (minutes < 10 ? "0" + minutes : minutes) + ":" +
+            (seconds < 10 ? "0" + seconds : seconds);
+
+        var textArea = document.getElementById('id_annotation');
+        textArea.value += (textArea.value ? "\n" : "") + formattedTime + " stitch_end"; // Append formatted time to text area
+        textArea.focus(); // Set focus on the text area
+        textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
+    });
+
+    {# add keyboard shortuct #}
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('keydown', function (event) {
+            // Check if Alt is pressed along with the 'T' key
+            if (event.altKey && event.key === 's') {
+                event.preventDefault(); // Prevent any default action triggered by this combination
+                document.getElementById('add-stitch-start-time-btn').click(); // Trigger the button click
+            }
+        });
+    });
+
+    {# add keyboard shortuct #}
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('keydown', function (event) {
+            // Check if Alt is pressed along with the 'T' key
+            if (event.altKey && event.key === 'e') {
+                event.preventDefault(); // Prevent any default action triggered by this combination
+                document.getElementById('add-stitch-end-time-btn').click(); // Trigger the button click
+            }
+        });
+    });
 
     {# show tooltip #}
     {#$(document).ready(function () {#}

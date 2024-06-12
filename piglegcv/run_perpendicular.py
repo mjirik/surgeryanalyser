@@ -172,8 +172,9 @@ def get_frame_to_process(
         return np.asarray(img)
     else:
         cap = cv2.VideoCapture(str(filename))
+        totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         if reference_frame_position_from_end >= 0:
-            last_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) - 1
+            last_frame = totalframecount - 1
         else:
             last_frame = 0
         logger.debug(f"{last_frame=}")
@@ -182,13 +183,12 @@ def get_frame_to_process(
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - reference_frame_position_from_end)
         ret, img = cap.read()
         fps = int(cap.get(cv2.CAP_PROP_FPS))
-        totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         if n_tries is None:
             n_tries = totalframecount
         else:
             n_tries = n_tries + reference_frame_position_from_end
         # i = 0
-        while (not ret) and (reference_frame_position_from_end < n_tries):
+        while (not ret) and (np.abs(reference_frame_position_from_end) < n_tries):
             logger.debug(
                 f"Last frame capture error, frame " +
                 f"{last_frame - reference_frame_position_from_end}, {last_frame=}, {reference_frame_position_from_end=}"

@@ -6,6 +6,7 @@
         <div class="container">
             <a class="btn btn-secondary" href="{% url 'uploader:students_list' 7 %}">7 days</a>
             <a class="btn btn-secondary" href="{% url 'uploader:students_list' 30 %}">30 days</a>
+            <a class="btn btn-secondary" href="{% url 'uploader:students_list' 90 %}">90 days</a>
             <a class="btn btn-secondary" href="{% url 'uploader:students_list' 365 %}">365 days</a>
         </div>
 
@@ -15,8 +16,10 @@
 
 
                     <div class="card">
-                        {% if owner.uploadedfile_set.all.first.preview.url %}
-                        <img src="{{ owner.uploadedfile_set.all.first.preview.url }}" alt="Thumbnail" class="card-img-top">
+                        {%  if owner.uploadedfile_set.all.first.preview %}
+                            {% if owner.uploadedfile_set.all.first.preview.url %}
+                            <img src="{{ owner.uploadedfile_set.all.first.preview.url }}" alt="Thumbnail" class="card-img-top">
+                            {% endif %}
                         {% endif %}
 {#{% else %}#}
 {#    <p>No thumbnail available</p>#}

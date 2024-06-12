@@ -605,6 +605,9 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/assigned_to/{serverfile.owner.hash}">See all your assignments</a> .</p>\n'
+        f"<p></p>"
+        f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
         f"<p></p>"
         f"<p>Best regards</p>\n"
@@ -672,6 +675,9 @@ def email_media_recived(serverfile: UploadedFile, absolute_uri: str):
         f"<p></p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f"<p></p>"
+        f"<p></p>"
+        f'<p> <a href="{absolute_uri}/uploader/assigned_to/{serverfile.owner.hash}">See all your assignments</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
         f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
