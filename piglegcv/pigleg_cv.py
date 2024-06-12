@@ -293,7 +293,15 @@ class DoComputerVision:
 
     def prepare_operation_area_bbox(self):
         _, points_per_tool, _ = convert_track_bboxes_to_center_points(str(self.outputdir))
-        points_all_tools = np.concatenate(points_per_tool, axis=0)
+        logger.debug(f"{len(points_per_tool)=}")
+        logger.debug(f"{points_per_tool=}")
+        logger.debug(f"{points_per_tool[0]=}")
+        logger.debug(f"{points_per_tool[1]=}")
+        
+        points_all_tools = []
+        for tool_points in points_per_tool:
+            points_all_tools.extend(tool_points)
+        # points_all_tools = np.concatenate(points_per_tool, axis=0)
         from .run_report import find_incision_bbox_with_highest_activity
         incision_bboxes = self.meta["qr_data"]["incision_bboxes"]
         oa_bbox = find_incision_bbox_with_highest_activity(points_all_tools, incision_bboxes)
