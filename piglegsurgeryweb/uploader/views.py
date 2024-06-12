@@ -506,7 +506,19 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             #     stars=form.cleaned_data["stars"],
             #     annotator=annotator,
             # )
+
             annotation.save()
+            # json_annotation = dict(
+            #     updated_at = str(annotation.updated_at),
+            #     annotator = str(annotation.annotator),
+            #     annotation = str(annotation.annotation),
+            # )
+            from django.core.serializers import serialize
+            # dump as json file
+            with open(Path(serverfile.outputdir) / f"annotation_{idx}.json", "w") as f:
+                # json.dump(json_annotation, f)
+                f.write(serialize("json", [annotation]))
+
 
             logger.debug("preparing async_task for add_row_to_spreadsheet_and_update_zip")
             async_task(

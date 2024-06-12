@@ -1,16 +1,16 @@
 version: '3.8'
 services:
   dev_piglegweb:
-    container_name: "${PIGLEG_IMAGE_PREFIX}piglegweb"
-    image: "${PIGLEG_IMAGE_PREFIX}piglegweb:latest"
+    container_name: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegweb"
+    image: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegweb:latest"
     build: docker
     ports:
-      - '${PIGLEG_PORT}:8000'
+      - '${PIGLEG_PORT:-8100}:8000'
       # outer:inner
     environment:
       - PIGLEGCV_HOSTNAME=dev_piglegcv
       - PIGLEGCV_PORT=5000
-      - PIGLEG_SPREADSHEET_URL="${PIGLEG_SPREADSHEET_URL}"
+#      - PIGLEG_SPREADSHEET_URL="${PIGLEG_SPREADSHEET_URL}"
     env_file:
       # there should be PIGLEG_SPREADSHEET_URL
       - ".env.dev"
@@ -19,32 +19,25 @@ services:
     #      - DOCKERLOGNAME="devel"
     #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
-      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
-      - "${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media"
-      - "${PIGLEG_LOG_DIR}:/home/appuser/pigleg/logs"
+      - "${PIGLEG_ROOT_DIR:-./}:/webapps/piglegsurgery"
+      - "${PIGLEG_MEDIA_DIR:-./piglegsurgeryweb/media_symlink}:/webapps/piglegsurgery/piglegsurgeryweb/media"
+      - "${PIGLEG_LOG_DIR:-./logs_dev}:/home/appuser/pigleg/logs"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
     networks:
       - dev_piglegnet
   dev_piglegcv:
-    container_name: "${PIGLEG_IMAGE_PREFIX}piglegcv"
-    image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
+    container_name: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegcv"
+    image: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegcv:latest"
     build: piglegcv
     env_file:
-      # there should be PIGLEG_DEVICE
       - ".env.dev"
-    #    command: nvidia-smi
-    #    runtime: nvidia
     ports:
       - '5000'
-        # - '8888:8888'
-        #- '8808:8888'
-      - '${PIGLEG_JUPYTER_PORT}:8888'
-    #    environment:
-    #      - DOCKERLOGNAME=""
+      - '${PIGLEG_JUPYTER_PORT:-8808}:8888'
     volumes:
-      - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
-      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
-      - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
+      - "${PIGLEG_ROOT_DIR:-./}:/webapps/piglegsurgery"
+      - "${PIGLEG_MEDIA_DIR:-./piglegsurgeryweb/media_symlink}:/webapps/piglegsurgery/piglegsurgeryweb/media"
+      - "${PIGLEG_LOG_DIR:-./logs_dev}:/home/appuser/pigleg/logs"
       - "./.jupyter:/home/appuser/.jupyter"
     networks:
       - dev_piglegnet
@@ -56,17 +49,6 @@ services:
               device_ids: ['0']
               capabilities: [gpu]
 
-#  redis:
-#    image: redis:7.0.11-alpine
-#    container_name: redis
-#    restart: always
-#    expose:
-#      - 6379
-#    command: >
-#      --loglevel warning
-##      --requirepass password
-#    volumes:
-#      - redis-data:/data:Z
 volumes:
   dev_piglegweb:
     driver: local

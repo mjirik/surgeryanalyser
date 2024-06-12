@@ -52,7 +52,7 @@ def test_create_video_report():
     object_names = ["a", "b", "c"]
     video_size = [1376, 776]
     dpi = 400
-    fig, ax, ds_max = run_report.create_video_report_figure(
+    fig, ax, ds_max, cumulative_measurements = run_report.create_video_report_figure(
         frame_ids,
         data_pixels,
         source_fps,

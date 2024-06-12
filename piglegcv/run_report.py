@@ -78,6 +78,25 @@ def plot_skeleton(img, joints, threshold, thickness):
     # plt.imshow(img)
     # plt.show()
 
+def find_incision_bbox_with_highest_activity(bboxes, points):
+    """
+    Find incision bbox with highest activity. If no activity is found, return the largest incision bbox.
+
+    :param bboxes: incision bounding boxes
+    :param points: points to be checked
+    :return:
+    """
+    if len(bboxes) == 0:
+        return None
+    max_activity = 0
+    max_bbox = _find_largest_incision_bbox(bboxes)
+    for bbox in bboxes:
+        activity = count_points_in_bbox(points, bbox)
+        if activity > max_activity:
+            max_activity = activity
+            max_bbox = bbox
+    return max_bbox
+
 
 def calculate_operation_zone_presence(points: np.ndarray, bbox: np.ndarray):
     """
@@ -97,7 +116,7 @@ class RelativePresenceInOperatingArea(object):
     def __init__(self):
         self.operating_area_bbox = None
 
-    def set_operation_area_based_on_bboxes(self, bboxes):
+    def set_operation_area_based_on_bbox(self, bbox):
         """Create operating area based on largest incision bbox.
 
         :param bboxes: incision bounding boxes
@@ -105,12 +124,17 @@ class RelativePresenceInOperatingArea(object):
         :return:
         """
         self.operating_area_bbox = None
-        if len(bboxes) > 0:
+        # if len(bboxes) > 0:
+        if bbox is not None:
 
             # self.operating_area_bbox = _make_bbox_square_and_larger(_find_largest_incision_bbox(bboxes), multiplicator=1.)
-            self.operating_area_bbox = make_bbox_larger(
-                _find_largest_incision_bbox(bboxes), multiplicator=2.0
-            )
+            self.operating_area_bbox = bbox
+            # self.operating_area_bbox = make_bbox_larger(
+            #     # _find_largest_incision_bbox(bboxes), multiplicator=2.0
+            #     # find_incision_bbox_with_highest_activity(bboxes, points), multiplicator = 2.0
+            #     bbox, multiplicator=2.0
+            # )
+
 
     def calculate_presence(self, points):
         if self.operating_area_bbox is not None:
@@ -575,6 +599,10 @@ def create_video_report_figure(
     ax2.set_ylabel(vel_label)
 
     ds_max = 0
+    ds_per_class = []
+    dt_per_class = []
+    t_per_class = []
+    # object_names = []
     for frame_ids_per_class, data_pixel_per_class, object_color, object_name in zip(
         frame_ids, data_pixels, object_colors, object_names
     ):
@@ -615,6 +643,10 @@ def create_video_report_figure(
                 linewidth=0.2,
             )
 
+            ds_per_class.append(ds)
+            dt_per_class.append(dt)
+            t_per_class.append(t)
+
             logger.debug(f"{object_color=}, {object_name=}")
             # logger.debug(f"{t=}, {ds_cumsum=}")
 
@@ -630,9 +662,14 @@ def create_video_report_figure(
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     # ax2.legend(loc="upper left")
+    cumulative_measurements = {
+        "ds_per_class": ds_per_class,
+        "dt_per_class": dt_per_class,
+        "t_per_class": t_per_class,
+    }
 
     logger.debug("main_video_report: OK")
-    return fig, ax, ds_max
+    return fig, ax, ds_max, cumulative_measurements
 
 
 def _qr_data_processing(json_data: dict, fps):
@@ -695,7 +732,7 @@ def _scissors_frames(scissors_frames: dict, fps, peak_distance_s=10) -> list:
 #####################################
 
 
-def bboxes_to_points(outputdir: str, confidence_score_thr: float = 0.0):
+def convert_track_bboxes_to_center_points(outputdir: str, confidence_score_thr: float = 0.0) -> Tuple[list, list, list]:
     json_data = load_json("{}/tracks.json".format(outputdir))
     sort_data = json_data["tracks"] if "tracks" in json_data else []
 
@@ -868,6 +905,7 @@ def main_report(
         cut_frames: list = [],
         is_microsurgery: bool = False,
         test_first_seconds: bool = False,
+        oa_bbox: Optional[list] = None,
 ):
     """
 
@@ -1027,15 +1065,17 @@ def main_report(
         # scisors_frames - frames with visible scissors qr code
         bboxes = np.asarray(meta["incision_bboxes"])
         relative_presence = RelativePresenceInOperatingArea()
-        relative_presence.set_operation_area_based_on_bboxes(bboxes)
-
-        frame_ids, data_pixels, sort_data = bboxes_to_points(
+        frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
             outputdir, confidence_score_thr
         )
+
+        # oa_bbox = find_incision_bbox_with_highest_activity(bboxes, data_pixels)
+        relative_presence.set_operation_area_based_on_bbox(oa_bbox)
+
         cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
 
         # just for 4 first objects
-        fig, ax, ds_max = create_video_report_figure(
+        fig, ax, ds_max, cumulative_measurements = create_video_report_figure(
             frame_ids[:4],
             data_pixels[:4],
             fps,
@@ -1047,6 +1087,7 @@ def main_report(
             dpi=300,
             cut_frames=cut_frames,
         )
+        save_json(cumulative_measurements, f"{outputdir}/cumulative_measurements.json")
 
         img_first = None
         video_frame_first = None

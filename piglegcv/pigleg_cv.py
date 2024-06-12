@@ -14,7 +14,6 @@ import cv2
 import loguru
 import numpy as np
 import run_qr
-import tools
 from incision_detection_mmdet import run_incision_detection
 from loguru import logger
 from media_tools import make_images_from_video
@@ -24,7 +23,7 @@ import sklearn
 
 # from run_mmpose import main_mmpose
 from run_qr import main_qr
-from run_report import bboxes_to_points, main_report
+from run_report import convert_track_bboxes_to_center_points, main_report
 
 # try:
 #    from .run_tracker_lite import main_tracker
@@ -41,7 +40,13 @@ from run_tracker_bytetrack import main_tracker_bytetrack, main_tracker_bytetrack
 
 # from sklearn.cluster import MeanShift, estimate_bandwidth, SpectralClustering, KMeans, DBSCAN
 from sklearn.cluster import KMeans
-from tools import draw_bboxes_plt, save_json
+
+try:
+    import tools
+    from tools import save_json
+except ImportError:
+    from .tools import save_json
+    from . import tools
 
 
 # from sklearn.mixture import GaussianMixture
@@ -120,6 +125,7 @@ class DoComputerVision:
         self.n_stitches: int = int(n_stitches)
         self.results = None
         self.force_tracker = force_tracker
+        self.operating_area_bbox = None
         self.is_video: bool = (
             False
             if Path(self.filename).suffix.lower()
@@ -285,6 +291,17 @@ class DoComputerVision:
             force_tracker=self.force_tracker
         )
 
+    def prepare_operation_area_bbox(self):
+        _, points_per_tool, _ = convert_track_bboxes_to_center_points(str(self.outputdir))
+        points_all_tools = np.concatenate(points_per_tool, axis=0)
+        from .run_report import find_incision_bbox_with_highest_activity
+        incision_bboxes = self.meta["qr_data"]["incision_bboxes"]
+        oa_bbox = find_incision_bbox_with_highest_activity(points_all_tools, incision_bboxes)
+        # make bbox larger
+        oa_bbox = tools.make_bbox_larger(oa_bbox, 2.0)
+        self.operating_area_bbox = find_incision_bbox_with_highest_activity(points_all_tools, incision_bboxes)
+        return self.operating_area_bbox
+
     def run_video_processing(self):
 
         """
@@ -340,13 +357,18 @@ class DoComputerVision:
         logger.debug(
             f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}"
         )
+        oa_bbox = self.prepare_operation_area_bbox()
 
         s = time.time()
-        self._find_stitch_ends_in_tracks(
-            n_clusters=self.n_stitches,
-            plot_clusters=True,
-            clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
-        )
+
+        stitch_split_frames = self._find_stitch_ends_in_annotation()
+
+        if len(stitch_split_frames) == 0:
+            self._find_stitch_ends_in_tracks(
+                n_clusters=self.n_stitches,
+                plot_clusters=True,
+                clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
+            )
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
         logger.debug(f"{self.meta['stitch_split_frames']=}")
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
@@ -612,6 +634,8 @@ class DoComputerVision:
         self.meta["stitch_split_frames"] = []
         self.meta["stitch_split_s"] = []
 
+        oa_bbox=self.operating_area_bbox
+
         if self.is_microsurgery:
             tool_index = [1,2]
             trim_tool_index = [0,1,2]
@@ -623,7 +647,6 @@ class DoComputerVision:
             n_clusters = int(n_clusters)
 
             # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
-            bboxes_to_points(str(self.outputdir))
             # split_frames = []
             split_s, split_frames = find_stitch_ends_in_tracks(
                 self.outputdir,
@@ -633,7 +656,8 @@ class DoComputerVision:
                 metadata=self.meta,
                 plot_clusters=plot_clusters,
                 clusters_image_path=clusters_image_path,
-                trim_tool_indexes=trim_tool_index
+                trim_tool_indexes=trim_tool_index,
+                oa_bbox=oa_bbox
             )
             # self.meta["qr_data"]["stitch_split_frames"] = split_frames
             self.meta["stitch_split_frames"] = split_frames
@@ -645,6 +669,49 @@ class DoComputerVision:
             print(traceback.format_exc())
         return []
 
+    def _find_stitch_ends_in_annotation(self) -> List:
+        stitch_split_s = []
+        fn = self.outputdir / "annotation_0.json"
+        if fn.exists():
+            with open(fn, "r") as f:
+                data = json.load(f)
+
+        if "annotation" in data:
+            text_annotation = data["annotation"]
+            # typically the annotation looks like:
+            # 00:00:40 stitch_start
+            # 00:02:10 stitch_end
+            # 00:02:24 stitch_start
+            # 00:03:45 stitch_end
+
+            # find all stitch_start and stitch_end
+            stitch_events = []
+            for line in text_annotation.split("\n"):
+                if "stitch_start" in line or "stitch_end" in line:
+                    # parse time
+
+                    hours, minutes, seconds = line.split(" ")[0].split(":")
+                    seconds_total = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+                    rest_of_line = line.split(" ")[1:]
+
+                    stitch_events.append([seconds_total, rest_of_line])
+
+            # sort by time
+            stitch_events = sorted(stitch_events, key=lambda x: x[0])
+            logger.debug(f"{stitch_events=}")
+
+            # take just the time
+            stitch_split_s = [x[0] for x in stitch_events]
+        fps = self.meta["fps"]
+        # convert to frames
+        stitch_split_frames = [int(x * fps) for x in stitch_split_s]
+
+
+        # TODO implement
+        self.meta["stitch_split_frames"] = stitch_split_frames
+        self.meta["stitch_split_s"] = stitch_split_s
+        return stitch_split_frames
+
     def _make_report(self, cut_frames=[]):
         #                            cut_frames=self.meta["stitch_split_frames"]
         #                            )
@@ -655,6 +722,7 @@ class DoComputerVision:
             is_microsurgery=self.is_microsurgery,
             cut_frames=cut_frames,
             test_first_seconds=self.test_first_seconds,
+            oa_bbox=self.operating_area_bbox
         )
         return self.results
 
@@ -701,11 +769,11 @@ def do_computer_vision(
     ).run()
 
 
-def _get_X_px_fr_more_tools(data: dict, incision_bboxes: list, tool_indexes:List[int], time_axis=2) -> np.ndarray:
+def _get_X_px_fr_more_tools(data: dict, oa_bbox: Union[list, None], tool_indexes:List[int], time_axis=2) -> np.ndarray:
     # merge several tools
     X_px_fr_list = []
     for trim_tool_index in tool_indexes:
-        X_px_fr_list.append(_get_X_px_fr(data, incision_bboxes, trim_tool_index))
+        X_px_fr_list.append(_get_X_px_fr(data, oa_bbox, trim_tool_index))
 
     logger.debug(f"{X_px_fr_list=}")
     # merge the lists
@@ -716,7 +784,7 @@ def _get_X_px_fr_more_tools(data: dict, incision_bboxes: list, tool_indexes:List
     return X_px_fr
 
 
-def _get_X_px_fr(data:dict, incision_bboxes:list, tool_index:int) -> np.ndarray:
+def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarray:
     """Get X vector in pixels and frames filtered to the incision area."""
     if "data_pixels" in data:
         X_px = np.asarray(data["data_pixels"][tool_index])
@@ -727,10 +795,12 @@ def _get_X_px_fr(data:dict, incision_bboxes:list, tool_index:int) -> np.ndarray:
     time_fr = np.asarray(data["frame_ids"][tool_index]).reshape(-1, 1)
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
 
-    if len(incision_bboxes) > 0:
+    if oa_bbox is not None:
 
+        # TODO where is the funciton located?
         X_px_fr_tmp = tools.filter_points_in_bbox(
-            X_px_fr, tools.make_bbox_larger(incision_bboxes[0], 2.0)
+            # X_px_fr, tools.make_bbox_larger(incision_bbox, 2.0)
+            X_px_fr, oa_bbox
         )
         logger.debug(f"{X_px_fr.shape=}, {X_px_fr_tmp.shape=}")
         X_px_fr = X_px_fr_tmp
@@ -746,7 +816,7 @@ def _get_metadata(outputdir, metadata=None):
     assert points_path.exists()
     
     with open(points_path, "r") as f:
-        data = json.load(f)
+        track_points = json.load(f)
 
     if metadata is None:
         meta_path = outputdir / "meta.json"
@@ -765,7 +835,7 @@ def _get_metadata(outputdir, metadata=None):
         f"find stitch end, pix_size={metadata['qr_data']['pix_size']}, fps={metadata['fps']}"
     )
 
-    return data, metadata, incision_bboxes
+    return track_points, metadata, incision_bboxes
 
 def _smooth_in_1D(X, labels, time_axis=2, n_neighbors=100): 
     clf = sklearn.neighbors.KNeighborsClassifier(n_neighbors=n_neighbors)
@@ -799,6 +869,7 @@ def find_stitch_ends_in_tracks(
     metadata=None,
     plot_clusters=False,
     clusters_image_path: Optional[Path] = None,
+    oa_bbox=None
 ):
     """
     Find stitch ends in tracks.
@@ -821,9 +892,8 @@ def find_stitch_ends_in_tracks(
         trim_tool_indexes = [trim_tool_indexes]
     
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
-    data, metadata, incision_bboxes = _get_metadata(outputdir, metadata)
-
-    X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, tool_indexes, time_axis=time_axis)
+    data, metadata, _ = _get_metadata(outputdir, metadata)
+    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, tool_indexes, time_axis=time_axis)
     # pix_size is in [m] to normaliza data a bit we use [mm]
     axis_normalization = np.asarray(
         [
@@ -864,7 +934,7 @@ def find_stitch_ends_in_tracks(
     # print(f"{splits_s=}")
     # print(f"{splits_frames=}")
 
-    X_px_fr = _get_X_px_fr_more_tools(data, incision_bboxes, trim_tool_indexes, time_axis=time_axis)
+    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, trim_tool_indexes, time_axis=time_axis)
     X2 = X_px_fr * axis_normalization
 
     actual_split_i = 0
