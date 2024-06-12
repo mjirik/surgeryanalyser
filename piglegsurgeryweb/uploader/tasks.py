@@ -97,18 +97,32 @@ def _run_media_processing_rest_api(
 
 def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     outputdir = Path(serverfile.outputdir)
+    # get temp dir
+    datetime_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    tempdir = Path(settings.MEDIA_ROOT) / f"temp_{datetime_str}_{outputdir.name}"
+    tempdir.mkdir(parents=True, exist_ok=True)
+
+
 
     # delete outputdir but keep tracks.json
     if outputdir.exists() and outputdir.is_dir():
-        tracks_json_path = outputdir / "tracks.json"
-        tracks_json_tmp_path = outputdir.parent / "tracks.json.tmp"
-        tracks_json_tmp_path.unlink(missing_ok=True)
-        if tracks_json_path.exists():
-            shutil.move(tracks_json_path, tracks_json_tmp_path)
+        files_to_keep = [outputdir / "tracks.json"] + list(outputdir.glob("annotation_*.json"))
+        for fn in files_to_keep:
+            shutil.move(fn, tempdir)
+
+        # tracks_json_path = outputdir / "tracks.json"
+        # tracks_json_tmp_path = tempdir.parent / "tracks.json.tmp"
+        # tracks_json_tmp_path.unlink(missing_ok=True)
+        # if tracks_json_path.exists():
+        #     shutil.move(tracks_json_path, tracks_json_tmp_path)
         shutil.rmtree(outputdir, ignore_errors=True)
-        if tracks_json_tmp_path.exists():
-            outputdir.mkdir(parents=True, exist_ok=True)
-            shutil.move(tracks_json_tmp_path, tracks_json_path)
+        # if tracks_json_tmp_path.exists():
+        #     outputdir.mkdir(parents=True, exist_ok=True)
+        #     shutil.move(tracks_json_tmp_path, tracks_json_path)
+
+        for fn in tempdir.glob("*"):
+            shutil.move(fn, outputdir)
+        shutil.rmtree(tempdir, ignore_errors=True)
     else:
         outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
