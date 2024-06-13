@@ -97,15 +97,14 @@ def _run_media_processing_rest_api(
 
 def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     outputdir = Path(serverfile.outputdir)
-
-
+    logger.debug(f"outputdir={outputdir}")
 
     # delete outputdir but keep tracks.json
     if outputdir.exists() and outputdir.is_dir():
         # get temp dir
         datetime_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         tempdir = Path(settings.MEDIA_ROOT) / f"temp_{datetime_str}_{str(serverfile.hash[:6])}"
-        logger.debug(f"tempdir={tempdir}")
+        logger.debug(f"tempdir={tempdir}, {tempdir.exists()}")
         tempdir.mkdir(parents=True, exist_ok=True)
 
         files_to_keep = [outputdir / "tracks.json"] + list(outputdir.glob("annotation_*.json"))
