@@ -117,6 +117,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
         # if tracks_json_path.exists():
         #     shutil.move(tracks_json_path, tracks_json_tmp_path)
         shutil.rmtree(outputdir, ignore_errors=True)
+        outputdir.mkdir(parents=True, exist_ok=True)
         # if tracks_json_tmp_path.exists():
         #     outputdir.mkdir(parents=True, exist_ok=True)
         #     shutil.move(tracks_json_tmp_path, tracks_json_path)
@@ -127,6 +128,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     else:
         outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
+    logger.debug(f"outputdir={outputdir}, {outputdir.exists()=}")
     logger_id = logger.add(
         str(Path(serverfile.outputdir) / "webapp_log.txt"),
         format=log_format,
