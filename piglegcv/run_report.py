@@ -654,6 +654,7 @@ def create_video_report_figure(
     # Draw vlines on scissors QR code visible
     # logger.debug(f"{cut_frames=}")
     t = (1.0 / source_fps) * np.array(cut_frames)
+    logger.debug(f"{t=}, {source_fps=}, {cut_frames=}")
     linestyles = [(0, (4, 8)), (6, (4, 8))]
     colors = ["g", 'r']
     for i, frt in enumerate(t):
@@ -993,7 +994,7 @@ def main_report(
             int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
             int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         ]
-
+        logger.debug(f"{filename=}, {fps=}, {size_input_video=} ")
 
         meta_qr = meta["qr_data"]
         pix_size = meta_qr["pix_size"]
@@ -1073,15 +1074,15 @@ def main_report(
         # oa_bbox = find_incision_bbox_with_highest_activity(bboxes, data_pixels)
         relative_presence.set_operation_area_based_on_bbox(oa_bbox)
 
-        cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
+        # cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
 
         # just for 4 first objects
         fig, ax, ds_max, cumulative_measurements = create_video_report_figure(
             frame_ids[:4],
             data_pixels[:4],
-            fps,
-            pix_size,
-            is_qr_detected,
+            source_fps = fps,
+            pix_size = pix_size,
+            qr_init=is_qr_detected,
             object_colors=object_colors[:4],
             object_names=object_names[:4],
             video_size=size_output_fig,

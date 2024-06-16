@@ -301,7 +301,6 @@ class DoComputerVision:
         points_all_tools = []
         for tool_points in points_per_tool:
             points_all_tools.extend(tool_points)
-        # points_all_tools = np.concatenate(points_per_tool, axis=0)
         incision_bboxes = self.meta["qr_data"]["incision_bboxes"]
         oa_bbox = find_incision_bbox_with_highest_activity(points_all_tools, incision_bboxes)
         # make bbox larger
@@ -711,6 +710,7 @@ class DoComputerVision:
 
         # take just the time
         stitch_split_s = [x[0] for x in stitch_events]
+        logger.debug(f"{stitch_split_s=}")
 
         fps = self.meta["fps"]
         # convert to frames
