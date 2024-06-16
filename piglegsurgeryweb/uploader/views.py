@@ -513,9 +513,11 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             #     annotator = str(annotation.annotator),
             #     annotation = str(annotation.annotation),
             # )
+            annotation_filename = Path(serverfile.outputdir) / f"annotation_{review_idx}.json"
+            logger.debug(f"{annotation_filename=}")
             from django.core.serializers import serialize
             # dump as json file
-            with open(Path(serverfile.outputdir) / f"annotation_{idx}.json", "w") as f:
+            with open(annotation_filename, "w") as f:
                 # json.dump(json_annotation, f)
                 f.write(serialize("json", [annotation]))
 

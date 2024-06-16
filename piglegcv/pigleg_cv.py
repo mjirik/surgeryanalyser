@@ -23,7 +23,7 @@ import sklearn
 
 # from run_mmpose import main_mmpose
 from run_qr import main_qr
-from run_report import convert_track_bboxes_to_center_points, main_report
+from run_report import convert_track_bboxes_to_center_points, main_report, find_incision_bbox_with_highest_activity
 
 # try:
 #    from .run_tracker_lite import main_tracker
@@ -302,7 +302,6 @@ class DoComputerVision:
         for tool_points in points_per_tool:
             points_all_tools.extend(tool_points)
         # points_all_tools = np.concatenate(points_per_tool, axis=0)
-        from .run_report import find_incision_bbox_with_highest_activity
         incision_bboxes = self.meta["qr_data"]["incision_bboxes"]
         oa_bbox = find_incision_bbox_with_highest_activity(points_all_tools, incision_bboxes)
         # make bbox larger
@@ -683,39 +682,40 @@ class DoComputerVision:
         if fn.exists():
             with open(fn, "r") as f:
                 data = json.load(f)
+        else:
+            return []
 
-        if "annotation" in data:
-            text_annotation = data["annotation"]
-            # typically the annotation looks like:
-            # 00:00:40 stitch_start
-            # 00:02:10 stitch_end
-            # 00:02:24 stitch_start
-            # 00:03:45 stitch_end
+        try:
+            text_annotation = data[0]['fields']['annotation']
+        except KeyError:
+            logger.debug(traceback.format_exc())
+            logger.debug(f"No annotation found in the file. {fn=}")
+            return []
+        # find all stitch_start and stitch_end
+        stitch_events = []
+        for line in text_annotation.split("\n"):
+            if "stitch_start" in line or "stitch_end" in line:
+                # parse time
 
-            # find all stitch_start and stitch_end
-            stitch_events = []
-            for line in text_annotation.split("\n"):
-                if "stitch_start" in line or "stitch_end" in line:
-                    # parse time
+                hours, minutes, seconds = line.split(" ")[0].split(":")
+                seconds_total = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+                rest_of_line = " ".join(line.split(" ")[1:])
+                if (len(rest_of_line) > 0) and (rest_of_line[-1] == "\r"):
+                    rest_of_line = rest_of_line[:-1]
 
-                    hours, minutes, seconds = line.split(" ")[0].split(":")
-                    seconds_total = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
-                    rest_of_line = line.split(" ")[1:]
+                stitch_events.append([seconds_total, rest_of_line])
 
-                    stitch_events.append([seconds_total, rest_of_line])
+        # sort by time
+        stitch_events = sorted(stitch_events, key=lambda x: x[0])
+        # logger.debug(f"{stitch_events=}")
 
-            # sort by time
-            stitch_events = sorted(stitch_events, key=lambda x: x[0])
-            logger.debug(f"{stitch_events=}")
+        # take just the time
+        stitch_split_s = [x[0] for x in stitch_events]
 
-            # take just the time
-            stitch_split_s = [x[0] for x in stitch_events]
         fps = self.meta["fps"]
         # convert to frames
         stitch_split_frames = [int(x * fps) for x in stitch_split_s]
 
-
-        # TODO implement
         self.meta["stitch_split_frames"] = stitch_split_frames
         self.meta["stitch_split_s"] = stitch_split_s
         return stitch_split_frames
