@@ -108,6 +108,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
         tempdir.mkdir(parents=True, exist_ok=True)
 
         files_to_keep = [outputdir / "tracks.json"] + list(outputdir.glob("annotation_*.json"))
+        logger.debug(f"{files_to_keep=}")
         for fn in files_to_keep:
             shutil.move(fn, tempdir)
 
@@ -126,6 +127,8 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
             shutil.move(fn, outputdir)
         shutil.rmtree(tempdir, ignore_errors=True)
     else:
+        if not outputdir.is_dir():
+            outputdir.unlink()
         outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
     logger.debug(f"outputdir={outputdir}, {outputdir.exists()=}")
