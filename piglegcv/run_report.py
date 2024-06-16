@@ -78,7 +78,7 @@ def plot_skeleton(img, joints, threshold, thickness):
     # plt.imshow(img)
     # plt.show()
 
-def find_incision_bbox_with_highest_activity(bboxes, points):
+def find_incision_bbox_with_highest_activity(points, bboxes):
     """
     Find incision bbox with highest activity. If no activity is found, return the largest incision bbox.
 
@@ -86,6 +86,7 @@ def find_incision_bbox_with_highest_activity(bboxes, points):
     :param points: points to be checked
     :return:
     """
+    logger.debug(f"{bboxes=}")
     if len(bboxes) == 0:
         return None
     max_activity = 0
