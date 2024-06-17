@@ -997,7 +997,7 @@ def main_report(
         logger.debug(f"{filename=}, {fps=}, {size_input_video=} ")
 
         meta_qr = meta["qr_data"]
-        pix_size = meta_qr["pix_size"]
+        pix_size_m = meta_qr["pix_size"]
 
         if ruler_size_in_units is None:
             ruler_size_in_units = 10 if meta["is_microsurgery"] else 5
@@ -1037,8 +1037,8 @@ def main_report(
             ]
 
         shape = (size_output_img[1], size_output_img[0], 3)
-        logger.debug(f"{pix_size=}, {resize_factor=}, {ruler_size_in_units=}, {visualization_length_unit=}")
-        ruler_adder = tools.AddRulerInTheFrame(shape, pix_size_m=pix_size / resize_factor,
+        logger.debug(f"{pix_size_m=}, {resize_factor=}, {ruler_size_in_units=}, {visualization_length_unit=}")
+        ruler_adder = tools.AddRulerInTheFrame(shape, pix_size_m=pix_size_m / resize_factor,
                                          ruler_size=ruler_size_in_units,
                                          unit=visualization_length_unit)
         logger.debug(f"{ruler_adder.mask.shape=}, {shape=}")
@@ -1063,7 +1063,7 @@ def main_report(
         # input QR data
         # if meta is None:
         #     meta = load_json('{}/meta.json'.format(outputdir))
-        pix_size, is_qr_detected, scissors_frames = _qr_data_processing(meta, fps)
+        pix_size_m, is_qr_detected, scissors_frames = _qr_data_processing(meta, fps)
         # scisors_frames - frames with visible scissors qr code
         bboxes = np.asarray(meta["incision_bboxes"])
         relative_presence = RelativePresenceInOperatingArea()
@@ -1076,9 +1076,11 @@ def main_report(
         median_position = np.median(data_pixels[0], axis=0)
         # create bbox from median_position
 
-        half_size_of_bbox = 25
+        half_size_of_bbox_m = 0.0025
 
-        half_size_of_bbox_px = half_size_of_bbox / (pix_size / resize_factor)
+        # pixelsize = unit_conversion(pix_size_m, "m", unit)
+        half_size_of_bbox_px = half_size_of_bbox_m / (pix_size_m / resize_factor)
+        logger.debug(f"{half_size_of_bbox_px=}, {half_size_of_bbox_m=}, {pix_size_m=}, {resize_factor=}")
 
         median_bbox = np.array([
             median_position[0] - half_size_of_bbox_px,
@@ -1099,7 +1101,7 @@ def main_report(
             frame_ids[:4],
             data_pixels[:4],
             source_fps = fps,
-            pix_size = pix_size,
+            pix_size = pix_size_m,
             qr_init=is_qr_detected,
             object_colors=object_colors[:4],
             object_names=object_names[:4],
@@ -1221,7 +1223,7 @@ def main_report(
             i += 1
 
         # video_duration_s = float((i - 1) / fps)
-        logger.debug(f"pix_size={pix_size}")
+        logger.debug(f"pix_size={pix_size_m}")
         logger.debug(f"frameshape={im.shape}")
         logger.debug(f"confidence_score_thr={confidence_score_thr}")
         cap.release()
@@ -1266,7 +1268,7 @@ def main_report(
                 logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                 # do the report images and stats fo whole video
                 data_results = make_stats_and_images_for_one_tool_in_one_video_part(
-                    frame_ids, data_pixel, img_first, fps, pix_size, is_qr_detected, object_color, object_name,
+                    frame_ids, data_pixel, img_first, fps, pix_size_m, is_qr_detected, object_color, object_name,
                     outputdir, frame_idx_start, frame_idx_stop, simplename, stitch_name, i, relative_presence, relative_presence_median,
                     oa_bbox_linecolor_rgb, object_full_name, video_part_duration_frames,
                     data_results=data_results
@@ -1307,7 +1309,7 @@ def main_report(
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                     # do the report images and stats for each stitch
                     data_results = make_stats_and_images_for_one_tool_in_one_video_part(frame_ids, data_pixel, img_first, fps,
-                                                                                        pix_size, is_qr_detected, object_color,
+                                                                                        pix_size_m, is_qr_detected, object_color,
                                                                                         object_name, outputdir, frame_idx_start,
                                                                                         frame_idx_stop, simplename, stitch_name, i,
                                                                                         relative_presence, relative_presence_median, oa_bbox_linecolor_rgb,
