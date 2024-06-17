@@ -1067,9 +1067,27 @@ def main_report(
         # scisors_frames - frames with visible scissors qr code
         bboxes = np.asarray(meta["incision_bboxes"])
         relative_presence = RelativePresenceInOperatingArea()
+        relative_presence_median = RelativePresenceInOperatingArea()
         frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
             outputdir, confidence_score_thr
         )
+
+        # calculate median from data_pixels of first tool
+        median_position = np.median(data_pixels[0], axis=0)
+        # create bbox from median_position
+
+        half_size_of_bbox = 25
+
+        half_size_of_bbox_px = half_size_of_bbox / (pix_size / resize_factor)
+
+        median_bbox = np.array([
+            median_position[0] - half_size_of_bbox_px,
+            median_position[1] - half_size_of_bbox_px,
+            median_position[0] + half_size_of_bbox_px,
+            median_position[1] + half_size_of_bbox_px,
+        ])
+        relative_presence_median.set_operation_area_based_on_bbox(median_bbox)
+
 
         # oa_bbox = find_incision_bbox_with_highest_activity(bboxes, data_pixels)
         relative_presence.set_operation_area_based_on_bbox(oa_bbox)
@@ -1318,7 +1336,9 @@ def main_report(
 def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected,
                                                          object_color, object_name, outputdir, frame_idx_start, frame_idx_stop,
                                                          simplename, stitch_name, i,
-                                                         relative_presence: RelativePresenceInOperatingArea, oa_bbox_linecolor_rgb,
+                                                         relative_presence: RelativePresenceInOperatingArea,
+                                                         relative_presence_median: RelativePresenceInOperatingArea,
+                                                         oa_bbox_linecolor_rgb,
                                                          object_full_name, video_part_duration_frames, data_results) ->dict:
 
     video_duration_s = float(video_part_duration_frames) / float(fps)
@@ -1343,12 +1363,16 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
     oz_presence = relative_presence.calculate_presence(
         data_pixel[frame_idx_start:frame_idx_stop]
     )
+    oz_median_presence = relative_presence_median.calculate_presence(
+        data_pixel[frame_idx_start:frame_idx_stop]
+    )
     image_presence = relative_presence.draw_image(
         img_first.copy(),
         data_pixel[frame_idx_start:frame_idx_stop],
         bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
         bbox_linewidth=1
     )
+
     cv2.imwrite(
         str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
         image_presence,
@@ -1367,6 +1391,9 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
         ) if video_duration_s > 0 else 0.0
         data_results[f"{object_full_name} area presence [%]"] = float(
             100.0 * oz_presence
+        )
+        data_results[f"{object_full_name} median area presence [%]"] = float(
+            100.0 * oz_median_presence
         )
 
     oa_bbox = None
