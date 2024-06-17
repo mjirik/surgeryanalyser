@@ -304,8 +304,12 @@ class DoComputerVision:
         incision_bboxes = self.meta["qr_data"]["incision_bboxes"]
         oa_bbox = find_incision_bbox_with_highest_activity(points_all_tools, incision_bboxes)
         # make bbox larger
-        oa_bbox = tools.make_bbox_larger(oa_bbox, 2.0)
-        self.operating_area_bbox = find_incision_bbox_with_highest_activity(points_all_tools, incision_bboxes)
+        if oa_bbox is not None:
+            oa_bbox = tools.make_bbox_larger(oa_bbox, 2.0)
+        else:
+            # TODO here could be some kind of median box calculated from all the tools
+            oa_bbox = None
+        self.operating_area_bbox = oa_bbox
         return self.operating_area_bbox
 
     def run_video_processing(self):
