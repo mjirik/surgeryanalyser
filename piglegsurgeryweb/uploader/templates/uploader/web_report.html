@@ -110,11 +110,81 @@
 
 {% block body %}
 <div class="container pb-4">
-    <h2> Report: {{ mediafile }} </h2>
+
+
+
+    <div style="display: flex; justify-content: space-between">
+
+        <h2> Report: {{ mediafile }} </h2>
+
+        <div class="dropdown mt-3">
+            {#                                <div class="dropdown d-inline-block">#}
+            <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+                Add to collection
+            </a>
+
+            <ul class="dropdown-menu">
+                {% for collection in collections %}
+                <li>
+                    <a class="dropdown-item"
+                       href="{% url 'uploader:add_to_collection' collection.id serverfile.id %}">
+                        <i class="bi bi-lock"></i>
+                        {{ collection.name }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="dropdown mt-3">
+            {#                                <div class="dropdown d-inline-block">#}
+            <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-three-dots"></i>
+            </a>
+
+            <ul class="dropdown-menu">
+                {% if request.user.is_staff %}
+
+                    <li>
+                        <a class="dropdown-item"
+                             href="{% url 'admin:uploader_uploadedfile_change' serverfile.id %}">
+                            <i class="bi bi-lock"></i>
+                            Edit in admin
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                {% endif %}
+                <li>
+
+                    {#                                            download mediafile#}
+                    <div class="dropdown">
+
+{#                    <a class="dropdown-item"#}
+{#                       href="{{ mediafile.mediafile.url }}" download>#}
+{#                        <i class="bi bi-download"></i> Add to collection#}
+{#                    </a>#}
+                </li>
+                <li>
+                    <a class="dropdown-item text-danger"
+{#                       href="{% url 'caidapp:delete_mediafile' mediafile.id %}"#}
+                       onclick="return confirm('Delete file {{ mediafile }}?')">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+
+                </li>
+            </ul>
+        </div>
+    </div>
     <div class="container">
     <a class="btn btn-secondary" href="{% url 'uploader:rotate_mediafile_right'  serverfile.hash %}"
        data-toggle="tooltip" data-placement="top" title="actual rotation: {{ serverfile.rotation }}°"
     ><i class="bi bi-arrow-clockwise"></i></a>
+
+
 
     </div>
 

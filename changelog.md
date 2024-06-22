@@ -6,6 +6,7 @@ Actual version: "0.0.0"
 
 * [added] Create stitch start and stitch end annotation buttons
 * [added] Stream videos
+* [added] Add mediafile to collection
 
 ## 2024-05
 

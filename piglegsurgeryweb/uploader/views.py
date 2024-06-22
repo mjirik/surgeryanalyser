@@ -103,7 +103,8 @@ def add_uploaded_file_to_collection(request, collection_id, filename_id):
     uploaded_file = get_object_or_404(models.UploadedFile, id=filename_id)
     collection.uploaded_files.add(uploaded_file)
     # return redirect(reverse("uploader:show_collection_reports_list", kwargs={"collection_id": collection_id}))
-    return redirect(reverse("uploader:web_reports", kwargs={}))
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+    # return redirect(reverse("uploader:web_reports", kwargs={}))
 
 def resend_report_email(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
@@ -347,6 +348,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "static_analysis_image": static_analysis_image,
         "review_number": len(serverfile.mediafileannotation_set.all()),
         "reviews": reviews,
+        "collections": models.Collection.objects.all(),
     }
 
     return context
