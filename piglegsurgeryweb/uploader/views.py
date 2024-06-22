@@ -1038,3 +1038,57 @@ def _make_html_from_log(logpath: Path):
         key_value.update(
             {"Log": '<p class="text-monospace">' + "<br>".join(lines) + "</p>"}
         )
+from django.http import StreamingHttpResponse, Http404
+from django.shortcuts import get_object_or_404
+# from .models import UploadedFile
+import os
+
+def stream_video(request, uploadedfile_hash:str, i=None):
+    uploaded_file = get_object_or_404(UploadedFile, hash=uploadedfile_hash)
+
+    logger.debug(f"{uploaded_file=}, {i=}")
+
+
+    if i is None:
+        video_path = uploaded_file.mediafile.path
+    else:
+        # remove starting "_" from the video name
+        video_list = [ element for element in Path(uploaded_file.outputdir).glob("*.mp4") if not element.name.startswith("_")]
+        logger.debug(f"{video_list=}")
+        video_path = str(video_list[i])
+
+    logger.debug(f"{video_path=}")
+    if not os.path.exists(video_path):
+        raise Http404()
+
+    def file_iterator(file_name, chunk_size=8192, offset=0, length=None):
+        with open(file_name, 'rb') as f:
+            f.seek(offset, os.SEEK_SET)
+            remaining = length
+            while True:
+                bytes_length = chunk_size if remaining is None else min(remaining, chunk_size)
+                data = f.read(bytes_length)
+                if not data:
+                    break
+                if remaining:
+                    remaining -= len(data)
+                yield data
+
+    file_size = os.path.getsize(video_path)
+    content_type = 'video/mp4'
+    range_header = request.META.get('HTTP_RANGE', '').strip()
+    range_match = re.match(r'bytes=(\d+)-(\d+)?', range_header)
+    if range_match:
+        first_byte, last_byte = range_match.groups()
+        first_byte = int(first_byte)
+        last_byte = int(last_byte) if last_byte else file_size - 1
+        length = last_byte - first_byte + 1
+        response = StreamingHttpResponse(file_iterator(video_path, offset=first_byte, length=length), status=206,
+                                         content_type=content_type)
+        response['Content-Range'] = f'bytes {first_byte}-{last_byte}/{file_size}'
+    else:
+        response = StreamingHttpResponse(file_iterator(video_path), content_type=content_type)
+        response['Content-Length'] = str(file_size)
+    response['Accept-Ranges'] = 'bytes'
+
+    return response

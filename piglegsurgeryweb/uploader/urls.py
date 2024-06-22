@@ -75,4 +75,6 @@ urlpatterns = [
     path("category/<int:category_id>/", views.category_view, name="show_category"),
     path("mediafile/rotate_right/<str:mediafile_hash>/", views.rotate_mediafile_right, name="rotate_mediafile_right"),
     path("students_list/<int:days>/", views.students_list_view, name="students_list"),
+    path("stream_video/<str:uploadedfile_hash>/", views.stream_video, name="stream_video"),
+    path("stream_ith_video/<str:uploadedfile_hash>/<int:i>", views.stream_video, name="stream_ith_video"),
 ]

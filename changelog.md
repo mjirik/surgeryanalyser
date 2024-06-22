@@ -5,6 +5,7 @@ Actual version: "0.0.0"
 ## 2024-06
 
 * [added] Create stitch start and stitch end annotation buttons
+* [added] Stream videos
 
 ## 2024-05
 

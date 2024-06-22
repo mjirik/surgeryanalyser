@@ -132,6 +132,7 @@
                     <div class="accordion-body">
                         {% for videofile_url in alternative_videofiles_url %}
                             <div class="video-container pt-3">
+{#                                {{ serverfile.hash }}#}
                                 <video
                                         id="my-raw-video"
                                         {#                                    class="video-js embed-responsive"#}
@@ -143,7 +144,8 @@
                                         poster="{{ videofile_url }}.jpg"
                                         class="my-video rotate{{ serverfile.rotation }}"
                                 >
-                                    <source src="{{ videofile_url }}" type="video/mp4"/>
+                                    <source src="{% url 'uploader:stream_video' serverfile.hash %}" type="video/mp4">
+{#                                    <source src="{{ videofile_url }}" type="video/mp4"/>#}
                                     {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
                                     <p class="vjs-no-js">
                                         To view this video please enable JavaScript, and consider upgrading to a
@@ -181,7 +183,9 @@
                                     poster="{{ videofile_url }}.jpg"
                                     class="my-video"
                             >
-                                <source src="{{ videofile_url }}" type="video/mp4"/>
+                                <source src="{% url 'uploader:stream_ith_video' serverfile.hash 0 %}" type="video/mp4">
+{#                                    Your browser does not support the video tag.#}
+{#                                <source src="{{ videofile_url }}" type="video/mp4"/>#}
                                 {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
                                 <p class="vjs-no-js">
                                     To view this video please enable JavaScript, and consider upgrading to a
