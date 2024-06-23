@@ -449,6 +449,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
             "processing_ok": serverfile.processing_ok,
             "processing_message": serverfile.processing_message,
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "collections": [str(collection) for collection in serverfile.collection_set.all()],
         }
     )
 

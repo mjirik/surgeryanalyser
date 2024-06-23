@@ -102,9 +102,13 @@ def add_uploaded_file_to_collection(request, collection_id, filename_id):
     collection = get_object_or_404(models.Collection, id=collection_id)
     uploaded_file = get_object_or_404(models.UploadedFile, id=filename_id)
     collection.uploaded_files.add(uploaded_file)
-    # return redirect(reverse("uploader:show_collection_reports_list", kwargs={"collection_id": collection_id}))
     return redirect(request.META.get('HTTP_REFERER', '/'))
-    # return redirect(reverse("uploader:web_reports", kwargs={}))
+
+def remove_uploaded_file_from_collection(request, collection_id, filename_id):
+    collection = get_object_or_404(models.Collection, id=collection_id)
+    uploaded_file = get_object_or_404(models.UploadedFile, id=filename_id)
+    collection.uploaded_files.remove(uploaded_file)
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 def resend_report_email(request, filename_id):
     serverfile = get_object_or_404(UploadedFile, pk=filename_id)
@@ -334,6 +338,13 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
             html = html_path.read_text()
 
     reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
+
+
+    # get collections with serverfile
+    collections_with = models.Collection.objects.filter(uploaded_files=serverfile)
+    # get collections without serverfile
+    collections_without = models.Collection.objects.exclude(uploaded_files=serverfile)
+
     context = {
         "serverfile": serverfile,
         "mediafile": Path(serverfile.mediafile.name).name,
@@ -348,7 +359,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "static_analysis_image": static_analysis_image,
         "review_number": len(serverfile.mediafileannotation_set.all()),
         "reviews": reviews,
-        "collections": models.Collection.objects.all(),
+        "collections_with": collections_with,
+        "collections_without": collections_without,
     }
 
     return context

@@ -116,67 +116,85 @@
     <div style="display: flex; justify-content: space-between">
 
         <h2> Report: {{ mediafile }} </h2>
+        <div class="btn-group">
 
-        <div class="dropdown mt-3">
-            {#                                <div class="dropdown d-inline-block">#}
-            <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
-               data-bs-toggle="dropdown" aria-expanded="false">
-                Add to collection
-            </a>
+            <div class="dropdown mt-3">
+                {#                                <div class="dropdown d-inline-block">#}
+                <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    Collections
+                </a>
 
-            <ul class="dropdown-menu">
-                {% for collection in collections %}
-                <li>
-                    <a class="dropdown-item"
-                       href="{% url 'uploader:add_to_collection' collection.id serverfile.id %}">
-                        <i class="bi bi-lock"></i>
-                        {{ collection.name }}
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+                <ul class="dropdown-menu">
 
-        <div class="dropdown mt-3">
-            {#                                <div class="dropdown d-inline-block">#}
-            <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
-               data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-three-dots"></i>
-            </a>
-
-            <ul class="dropdown-menu">
-                {% if request.user.is_staff %}
-
-                    <li>
-                        <a class="dropdown-item"
-                             href="{% url 'admin:uploader_uploadedfile_change' serverfile.id %}">
-                            <i class="bi bi-lock"></i>
-                            Edit in admin
-                        </a>
-                    </li>
+                    {% for collection in collections_with %}
+                        <li>
+                            <a class="dropdown-item"
+                               onclick="return confirm('Remove from collection {{ collection }}?')"
+                               href="{% url 'uploader:remove_from_collection' collection.id serverfile.id %}">
+                                <i class="bi bi-dash"></i>
+                                {{ collection.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                {% endif %}
-                <li>
+                    {% for collection in collections_without %}
+                        <li>
+                            <a class="dropdown-item"
+                               href="{% url 'uploader:add_to_collection' collection.id serverfile.id %}">
+                                <i class="bi bi-plus"></i>
+                                {{ collection.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                    {#            separator#}
+                </ul>
 
-                    {#                                            download mediafile#}
-                    <div class="dropdown">
+            </div>
 
-{#                    <a class="dropdown-item"#}
-{#                       href="{{ mediafile.mediafile.url }}" download>#}
-{#                        <i class="bi bi-download"></i> Add to collection#}
-{#                    </a>#}
-                </li>
-                <li>
-                    <a class="dropdown-item text-danger"
-{#                       href="{% url 'caidapp:delete_mediafile' mediafile.id %}"#}
-                       onclick="return confirm('Delete file {{ mediafile }}?')">
-                        <i class="bi bi-trash"></i> Delete
-                    </a>
+            <div class="dropdown mt-3">
+                {#                                <div class="dropdown d-inline-block">#}
+                <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots"></i>
+                </a>
 
-                </li>
-            </ul>
+                <ul class="dropdown-menu">
+                    {% if request.user.is_staff %}
+
+                        <li>
+                            <a class="dropdown-item"
+                               href="{% url 'admin:uploader_uploadedfile_change' serverfile.id %}">
+                                <i class="bi bi-lock"></i>
+                                Edit in admin
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                    {% endif %}
+                    <li>
+
+                        {#                                            download mediafile#}
+                        <div class="dropdown">
+
+                            {#                    <a class="dropdown-item"#}
+                            {#                       href="{{ mediafile.mediafile.url }}" download>#}
+                            {#                        <i class="bi bi-download"></i> Add to collection#}
+                            {#                    </a>#}
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger"
+                                {#                       href="{% url 'caidapp:delete_mediafile' mediafile.id %}"#}
+                           onclick="return confirm('Delete file {{ mediafile }}?')">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
     <div class="container">
