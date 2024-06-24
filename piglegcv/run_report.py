@@ -962,6 +962,10 @@ class MainReport:
             if flag:
                 self.img_first = img.copy()
 
+            self.meta["resized video fps"] = self.fps
+            self.meta["resized video size"] = self.size_input_video
+            self.meta["resized video frame count"] = self.frame_cnt
+
         cap.release()
 
     def run(self,
