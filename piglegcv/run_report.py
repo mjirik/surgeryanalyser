@@ -117,6 +117,27 @@ class RelativePresenceInOperatingArea(object):
     def __init__(self):
         self.operating_area_bbox = None
 
+
+    def draw_operatin_area_bbox(self, image:np.ndarray, linecolor=(0, 255, 128), linewidth=2, output_resize_factor=1.0):
+        """
+        Draw operating area bbox into image.
+
+        :param image: image to be drawn
+        :param linecolor: color of the line
+        :param linewidth: width of the line
+        :param output_resize_factor: resize factor used if the image use different size than the detection points
+        """
+
+        oa_bbox_resized = np.asarray(
+            self.operating_area_bbox.copy()
+        )
+        #                 print(oa_bbox_resized)
+        oa_bbox_resized = oa_bbox_resized * output_resize_factor
+        return draw_bbox_into_image(
+            image, oa_bbox_resized, linecolor=linecolor, linewidth=linewidth
+        )
+
+
     def set_operation_area_based_on_bbox(self, bbox):
         """Create operating area based on largest incision bbox.
 
@@ -674,7 +695,7 @@ def create_video_report_figure(
     return fig, ax, ds_max, cumulative_measurements
 
 
-def _qr_data_processing(json_data: dict, fps):
+def _qr_data_processing(json_data: dict):
     """
     Get id of frame with finished knot based on `qr_scissors_frames` key in input dictionary.
 
@@ -888,369 +909,439 @@ def draw_track_object(
 
     return img
 
+class MainReport:
+
+    def __init__(self,
+                 filename,
+                 outputdir,
+                 meta: dict,
+                 # meta: dict,
+                 # object_colors=None,
+                 # object_names=None,
+                 # concat_axis=1,
+                 # circle_radius=16.0,
+                 # expected_video_width=1110,
+                 # expected_video_height=420,
+                 # visualization_length_unit=None,
+                 # ruler_size_in_units=None,
+                 # confidence_score_thr=0.0,
+                 # oa_bbox_linecolor_rgb=[200, 200, 0],
+                 # cut_frames: list = [],
+                 # is_microsurgery: bool = False,
+                 # test_first_seconds: bool = False,
+                 # oa_bbox: Optional[list] = None,
+                 ):
+        self.filename = Path(filename)
+        self.outputdir = Path(outputdir)
+        self.meta = meta
+
+        self.pix_size_m, self.is_qr_detected, self.scissors_frames = _qr_data_processing(meta)
 
 
-def main_report(
-        filename,
-        outputdir,
-        meta: dict,
-        object_colors=None,
-        object_names=None,
-        concat_axis=1,
-        circle_radius=16.0,
-        expected_video_width=1110,
-        expected_video_height=420,
-        visualization_length_unit=None,
-        ruler_size_in_units=None,
-        confidence_score_thr=0.0,
-        oa_bbox_linecolor_rgb=[200, 200, 0],
-        cut_frames: list = [],
-        is_microsurgery: bool = False,
-        test_first_seconds: bool = False,
-        oa_bbox: Optional[list] = None,
-):
-    """
+        cap = cv2.VideoCapture(str(filename))
+        self.frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        assert cap.isOpened(), f"Failed to load video file {filename}"
 
-    :param filename:
-    :param outputdir:
-    :param object_colors:
-    :param object_names:
-    :param concat_axis: axis of original video and graph concatenation. 0 for vertical, 1 for horizontal
-    :param cut_frames: list of frames where the stitch cut is detected.
-    :return:
-    """
-    # normální tracking
-    # 0: Needle holder
-    # 1: Forceps
-    # 2: Scissors
-    # 10: Needle holder bbox
-    # 11: Forceps bbox
-    # 12: Scissors bbox
-    # 13: Left hand bbox
-    # 14: Right hand bbox
-    # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+        if cap.isOpened():
 
-    # microsurgery
-    # 0: Needle holder
-    # 1: Forceps
-    # 2: Forceps curved
-    # 3: Scissors
-    # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
-
-    logger.debug(f"{is_microsurgery=}, {cut_frames=}")
-    if object_colors is None:
-        if is_microsurgery:  # udelat lepe, ale jak
-            object_colors = ["b", "r", "m", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"]
-            object_names = [
-                "Needle holder",
-                "Forceps",
-                "Forceps curved",
-                "Scissors",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "Needle holder bbox",
-                "Forceps bbox",
-                "Scissors bbox",
-                "Left hand bbox",
-                "Right hand bbox",
+            # output video
+            self.fps = int(cap.get(cv2.CAP_PROP_FPS))
+            self.size_input_video = [
+                int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
             ]
-        else:
-            object_colors = ["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"]
-            object_names = [
-                "Needle holder",
-                "Forceps",
-                "Scissors",
-                "Scissors",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "Needle holder bbox",
-                "Forceps bbox",
-                "Scissors bbox",
-                "Left hand bbox",
-                "Right hand bbox",
-            ]
+            logger.debug(f"{filename=}, {self.fps=}, {self.size_input_video=} ")
 
-    filename = str(filename)
-    outputdir = str(outputdir)
+        cap.release()
 
-    cap = cv2.VideoCapture(filename)
-    frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    assert cap.isOpened(), f"Failed to load video file {filename}"
+    def run(self,
+            object_colors=None,
+            object_names=None,
+            concat_axis=1,
+            circle_radius=16.0,
+            expected_video_width=1110,
+            expected_video_height=420,
+            visualization_length_unit=None,
+            ruler_size_in_units=None,
+            confidence_score_thr=0.0,
+            oa_bbox_linecolor_rgb=[200, 200, 0],
+            cut_frames: list = [],
+            is_microsurgery: bool = False,
+            test_first_seconds: bool = False,
+            oa_bbox: Optional[list] = None,
+            median_oa_bbox_linecolor_rgb=[100, 100, 100],
+            ):
+        """
 
-    progress = tools.ProgressPrinter(frame_cnt)
-    if cap.isOpened():
+        :param filename:
+        :param outputdir:
+        :param object_colors:
+        :param object_names:
+        :param concat_axis: axis of original video and graph concatenation. 0 for vertical, 1 for horizontal
+        :param cut_frames: list of frames where the stitch cut is detected.
+        :return:
+        """
+        # normální tracking
+        # 0: Needle holder
+        # 1: Forceps
+        # 2: Scissors
+        # 10: Needle holder bbox
+        # 11: Forceps bbox
+        # 12: Scissors bbox
+        # 13: Left hand bbox
+        # 14: Right hand bbox
+        # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
 
-        # output video
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
-        size_input_video = [
-            int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
-        ]
-        logger.debug(f"{filename=}, {fps=}, {size_input_video=} ")
+        # microsurgery
+        # 0: Needle holder
+        # 1: Forceps
+        # 2: Forceps curved
+        # 3: Scissors
+        # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+        filename = str(self.filename)
+        outputdir = str(self.outputdir)
+        meta = self.meta
 
-        meta_qr = meta["qr_data"]
-        pix_size_m = meta_qr["pix_size"]
-
-        if ruler_size_in_units is None:
-            ruler_size_in_units = 10 if meta["is_microsurgery"] else 5
-        if visualization_length_unit is None:
-            visualization_length_unit = "mm" if meta_qr["is_microsurgery"] else "cm"
-        logger.debug(f"{ruler_size_in_units=}, {visualization_length_unit=}")
-
-
-        if concat_axis == 1:
-            size_output_fig = [
-                int(expected_video_width / 2),
-                int(expected_video_height),
-            ]
-            # if the output is smaller than input video, the number is below 1.0
-            resize_factor = float(expected_video_height) / float(size_input_video[1])
-            size_output_img = [
-                int(resize_factor * size_input_video[0]),
-                int(expected_video_height),
-            ]
-            size_output_video = [
-                size_output_img[0] + size_output_fig[0],
-                int(expected_video_height),
-            ]
-        else:
-            size_output_fig = [
-                int(expected_video_width),
-                int(expected_video_height / 2),
-            ]
-            resize_factor = float(expected_video_width) / float(size_input_video[0])
-            size_output_img = [
-                int(expected_video_width),
-                int(resize_factor * size_input_video[1]),
-            ]
-            size_output_video = [
-                int(expected_video_width),
-                size_output_img[1] + size_output_fig[1],
-            ]
-
-        shape = (size_output_img[1], size_output_img[0], 3)
-        logger.debug(f"{pix_size_m=}, {resize_factor=}, {ruler_size_in_units=}, {visualization_length_unit=}")
-        ruler_adder = tools.AddRulerInTheFrame(shape, pix_size_m=pix_size_m / resize_factor,
-                                         ruler_size=ruler_size_in_units,
-                                         unit=visualization_length_unit)
-        logger.debug(f"{ruler_adder.mask.shape=}, {shape=}")
-
-        logger.debug(
-            f"size_input_video: {size_input_video}, size_output_video: {size_output_video}, size_output_img: {size_output_img}, resize_factor: {resize_factor}"
-        )
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        output_video_fn_tmp = Path(f"{outputdir}/pigleg_results.avi")
-        output_video_fn = Path(outputdir + "/pigleg_results.mp4")
-        video_writer = cv2.VideoWriter(
-            str(output_video_fn_tmp), fourcc, fps, size_output_video
-        )
-
-        # input hand poses data
-        json_data = load_json("{}/hand_poses.json".format(outputdir))
-        hand_poses = json_data["hand_poses"] if "hand_poses" in json_data else []
-
-        M = len(hand_poses)
-        logger.debug("MMpose data M=", M)
-
-        # input QR data
-        # if meta is None:
-        #     meta = load_json('{}/meta.json'.format(outputdir))
-        pix_size_m, is_qr_detected, scissors_frames = _qr_data_processing(meta, fps)
-        # scisors_frames - frames with visible scissors qr code
-        bboxes = np.asarray(meta["incision_bboxes"])
-        relative_presence = RelativePresenceInOperatingArea()
-        relative_presence_median = RelativePresenceInOperatingArea()
-        frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
-            outputdir, confidence_score_thr
-        )
-
-        # calculate median from data_pixels of first tool
-        median_position = np.median(data_pixels[0], axis=0)
-        # create bbox from median_position
-
-        half_size_of_bbox_m = 0.0025
-
-        # pixelsize = unit_conversion(pix_size_m, "m", unit)
-        half_size_of_bbox_px = half_size_of_bbox_m / (pix_size_m / resize_factor)
-        logger.debug(f"{half_size_of_bbox_px=}, {half_size_of_bbox_m=}, {pix_size_m=}, {resize_factor=}")
-
-        median_bbox = np.array([
-            median_position[0] - half_size_of_bbox_px,
-            median_position[1] - half_size_of_bbox_px,
-            median_position[0] + half_size_of_bbox_px,
-            median_position[1] + half_size_of_bbox_px,
-        ])
-        relative_presence_median.set_operation_area_based_on_bbox(median_bbox)
+        logger.debug(f"{is_microsurgery=}, {cut_frames=}")
+        if object_colors is None:
+            if is_microsurgery:  # udelat lepe, ale jak
+                object_colors = ["b", "r", "m", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"]
+                object_names = [
+                    "Needle holder",
+                    "Forceps",
+                    "Forceps curved",
+                    "Scissors",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Needle holder bbox",
+                    "Forceps bbox",
+                    "Scissors bbox",
+                    "Left hand bbox",
+                    "Right hand bbox",
+                ]
+            else:
+                object_colors = ["b", "r", "g", "g", "", "", "", "", "", "", "b", "r", "g", "w", "w"]
+                object_names = [
+                    "Needle holder",
+                    "Forceps",
+                    "Scissors",
+                    "Scissors",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Needle holder bbox",
+                    "Forceps bbox",
+                    "Scissors bbox",
+                    "Left hand bbox",
+                    "Right hand bbox",
+                ]
 
 
-        # oa_bbox = find_incision_bbox_with_highest_activity(bboxes, data_pixels)
-        relative_presence.set_operation_area_based_on_bbox(oa_bbox)
+        cap = cv2.VideoCapture(str(filename))
+        # frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        assert cap.isOpened(), f"Failed to load video file {filename}"
 
-        # cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
+        progress = tools.ProgressPrinter(self.frame_cnt)
+        if cap.isOpened():
 
-        # just for 4 first objects
-        fig, ax, ds_max, cumulative_measurements = create_video_report_figure(
-            frame_ids[:4],
-            data_pixels[:4],
-            source_fps = fps,
-            pix_size = pix_size_m,
-            qr_init=is_qr_detected,
-            object_colors=object_colors[:4],
-            object_names=object_names[:4],
-            video_size=size_output_fig,
-            dpi=300,
-            cut_frames=cut_frames,
-        )
-        save_json(cumulative_measurements, f"{outputdir}/cumulative_measurements.json")
+            # output video
+            # fps = int(cap.get(cv2.CAP_PROP_FPS))
+            # # size_input_video = [
+            # #     int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            # #     int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+            # # ]
+            # logger.debug(f"{filename=}, {fps=}, {size_input_video=} ")
 
-        img_first = None
-        video_frame_first = None
-        i = 0
-        while cap.isOpened():
-            flag, img = cap.read()
-            if not flag:
-                break
+            pix_size_m, is_qr_detected, scissors_frames = _qr_data_processing(meta)
 
-            if img_first is None:
-                img_first = img.copy()
+            # meta_qr = meta["qr_data"]
+            # pix_size_m = meta_qr["pix_size"]
+            # meta_qr = self.meta_qr
+            # pix_size_m = self.pix_size_m
 
-            # img_skimage = skimage.transform.resize(
-            #     img, size_output_img[::-1], preserve_range=True
-            # ).astype(img.dtype)
-            # resize with cv2
-            img = cv2.resize(img, size_output_img, interpolation=cv2.INTER_AREA)
-            # logger.debug(f"{img.shape=}, {img_skimage.shape=}")
+            if ruler_size_in_units is None:
+                ruler_size_in_units = 10 if meta["is_microsurgery"] else 5
+            if visualization_length_unit is None:
+                visualization_length_unit = "mm" if meta["qr_data"]["is_microsurgery"] else "cm"
+            logger.debug(f"{ruler_size_in_units=}, {visualization_length_unit=}")
 
-            if relative_presence.operating_area_bbox is not None:
-                oa_bbox_resized = np.asarray(
-                    relative_presence.operating_area_bbox.copy()
-                )
-                #                 print(oa_bbox_resized)
-                oa_bbox_resized = oa_bbox_resized * resize_factor
-                img = draw_bbox_into_image(
-                    img, oa_bbox_resized, linecolor=oa_bbox_linecolor_rgb[::-1]
-                )
 
-            if not (i % 50):
-                logger.debug(
-                    f"Report on frame {i} done, {progress.get_progress_string(float(i))}"
-                )
+            if concat_axis == 1:
+                size_output_fig = [
+                    int(expected_video_width / 2),
+                    int(expected_video_height),
+                ]
+                # if the output is smaller than input video, the number is below 1.0
+                output_video_resize_factor = float(expected_video_height) / float(self.size_input_video[1])
+                size_output_img = [
+                    int(output_video_resize_factor * self.size_input_video[0]),
+                    int(expected_video_height),
+                ]
+                size_output_video = [
+                    size_output_img[0] + size_output_fig[0],
+                    int(expected_video_height),
+                ]
+            else:
+                size_output_fig = [
+                    int(expected_video_width),
+                    int(expected_video_height / 2),
+                ]
+                output_video_resize_factor = float(expected_video_width) / float(self.size_input_video[0])
+                size_output_img = [
+                    int(expected_video_width),
+                    int(output_video_resize_factor * self.size_input_video[1]),
+                ]
+                size_output_video = [
+                    int(expected_video_width),
+                    size_output_img[1] + size_output_fig[1],
+                ]
 
-            if test_first_seconds:
-                if i > 100:
+            shape = (size_output_img[1], size_output_img[0], 3)
+            logger.debug(f"{self.pix_size_m=}, {output_video_resize_factor=}, {ruler_size_in_units=}, {visualization_length_unit=}")
+            ruler_adder = tools.AddRulerInTheFrame(shape, pix_size_m=self.pix_size_m / output_video_resize_factor,
+                                             ruler_size=ruler_size_in_units,
+                                             unit=visualization_length_unit)
+            logger.debug(f"{ruler_adder.mask.shape=}, {shape=}")
+
+            logger.debug(
+                f"size_input_video: {self.size_input_video}, size_output_video: {size_output_video}, size_output_img: {size_output_img}, resize_factor: {output_video_resize_factor}"
+            )
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            output_video_fn_tmp = Path(f"{outputdir}/pigleg_results.avi")
+            output_video_fn = Path(outputdir + "/pigleg_results.mp4")
+            video_writer = cv2.VideoWriter(
+                str(output_video_fn_tmp), fourcc, self.fps, size_output_video
+            )
+
+            # input hand poses data
+            json_data = load_json("{}/hand_poses.json".format(outputdir))
+            hand_poses = json_data["hand_poses"] if "hand_poses" in json_data else []
+
+            M = len(hand_poses)
+            logger.debug("MMpose data M=", M)
+
+            # input QR data
+            # if meta is None:
+            #     meta = load_json('{}/meta.json'.format(outputdir))
+            # pix_size_m, is_qr_detected, scissors_frames = _qr_data_processing(meta, fps)
+            # scisors_frames - frames with visible scissors qr code
+            bboxes = np.asarray(meta["incision_bboxes"])
+            relative_presence = RelativePresenceInOperatingArea()
+            relative_presence_median = RelativePresenceInOperatingArea()
+            frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
+                outputdir, confidence_score_thr
+            )
+
+            # calculate median from data_pixels of first tool
+            median_position = np.median(data_pixels[0], axis=0)
+            # create bbox from median_position
+
+            half_size_of_bbox_m = 0.0025
+
+            # pixelsize = unit_conversion(pix_size_m, "m", unit)
+            half_size_of_bbox_px = half_size_of_bbox_m / (self.pix_size_m / output_video_resize_factor)
+            logger.debug(f"{half_size_of_bbox_px=}, {half_size_of_bbox_m=}, {self.pix_size_m=}, {output_video_resize_factor=}")
+
+            median_bbox = np.array([
+                median_position[0] - half_size_of_bbox_px,
+                median_position[1] - half_size_of_bbox_px,
+                median_position[0] + half_size_of_bbox_px,
+                median_position[1] + half_size_of_bbox_px,
+            ])
+            relative_presence_median.set_operation_area_based_on_bbox(median_bbox)
+
+
+            # oa_bbox = find_incision_bbox_with_highest_activity(bboxes, data_pixels)
+            relative_presence.set_operation_area_based_on_bbox(oa_bbox)
+
+            # cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
+
+            # just for 4 first objects
+            fig, ax, ds_max, cumulative_measurements = create_video_report_figure(
+                frame_ids[:4],
+                data_pixels[:4],
+                source_fps = self.fps,
+                pix_size = self.pix_size_m,
+                qr_init=self.is_qr_detected,
+                object_colors=object_colors[:4],
+                object_names=object_names[:4],
+                video_size=size_output_fig,
+                dpi=300,
+                cut_frames=cut_frames,
+            )
+            save_json(cumulative_measurements, f"{outputdir}/cumulative_measurements.json")
+
+            img_first = None
+            video_frame_first = None
+            i = 0
+            while cap.isOpened():
+                flag, img = cap.read()
+                if not flag:
                     break
 
-            # object tracking
-            if i < len(sort_data):
+                if img_first is None:
+                    img_first = img.copy()
 
-                for track_object in sort_data[i]:
-                    # TODO Zdeněk - vykreslovat bboxy rukou, zatím nevykreslovat bbox nástroje a myslet na to, že to může být mikrochirurgie
+                # img_skimage = skimage.transform.resize(
+                #     img, size_output_img[::-1], preserve_range=True
+                # ).astype(img.dtype)
+                # resize with cv2
+                img = cv2.resize(img, size_output_img, interpolation=cv2.INTER_AREA)
+                # logger.debug(f"{img.shape=}, {img_skimage.shape=}")
 
-                    if len(track_object) >= 6:
-                        # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
-                        box = (
-                            np.array(track_object[0:4]) * resize_factor
-                        )  # to size uniform video frame
-                        confidence_score = track_object[4]
-                        class_id = track_object[5]
-                        object_name = object_names[class_id]
-                        object_color = object_colors[class_id]
+                if relative_presence.operating_area_bbox is not None:
+                    img = relative_presence.draw_operatin_area_bbox(img, linecolor=oa_bbox_linecolor_rgb[::-1], output_resize_factor=output_video_resize_factor)
+                    # oa_bbox_resized = np.asarray(
+                    #     relative_presence.operating_area_bbox.copy()
+                    # )
+                    # #                 print(oa_bbox_resized)
+                    # oa_bbox_resized = oa_bbox_resized * output_video_resize_factor
+                    # img = draw_bbox_into_image(
+                    #     img, oa_bbox_resized, linecolor=oa_bbox_linecolor_rgb[::-1]
+                    # )
 
-                        img = draw_track_object(
-                            img,
-                            box,
-                            class_id,
-                            object_name,
-                            object_color,
-                            font_scale=0.5 / resize_factor,
-                            thickness=int(2.0 / resize_factor),
-                            circle_radius=int(circle_radius / resize_factor),
-                        )
+                # if relative_presence_median.operating_area_bbox is not None:
+                #     img = relative_presence_median.draw_operatin_area_bbox(img, linecolor=median_oa_bbox_linecolor_rgb[::-1], output_resize_factor=output_video_resize_factor)
 
-            # hand pose tracking
-            if (i < M) and (hand_poses[i] != []):
-                    plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
+                if not (i % 50):
+                    logger.debug(
+                        f"Report on frame {i} done, {progress.get_progress_string(float(i))}"
+                    )
 
-            t_i = 1.0 / fps * i
-            lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label="Track", linewidth=2)
-            im_graph = plot3(fig)
-            # fix the video size if it is not correct
-            # if not im_graph.shape[:2] == tuple(size_output_frame[::-1]):
-            # im_graph = skimage.transform.resize(
-            #     im_graph, size_output_fig[::-1], preserve_range=True
-            # ).astype(img.dtype)
-            im_graph = cv2.resize(
-                im_graph, size_output_fig, interpolation=cv2.INTER_AREA
-            )
-            im_graph = cv2.cvtColor(
-                im_graph, cv2.COLOR_RGB2BGR
-            )  # matplotlib generate RGB channels but cv2 BGR
-            ax.lines.pop(-1)
-            im_graph = im_graph[:, :, :3]
-            if is_qr_detected:
+                if test_first_seconds:
+                    if i > 100:
+                        break
 
-                # if ruler_size_mm is None:
-                #     ruler_size_mm = 10 if meta["is_microsurgery"] else 50
-                # if visualization_length_unit is None:
-                #     visualization_length_unit = "mm" if meta["is_microsurgery"] else "cm"
-                # pixelsize=unit_conversion(pix_size, "m", visualization_length_unit)
-                # ruler_size = int(unit_conversion(ruler_size_mm, "mm", visualization_length_unit))
-                # logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
-                img = ruler_adder.add_in_the_frame(img)
-                # img = insert_ruler_in_image(
-                #     img,
-                #     pixelsize=pixelsize,
-                #     ruler_size=ruler_size,
-                #     unit=visualization_length_unit,
-                # )
-            im = np.concatenate((img, im_graph), axis=concat_axis)
-            if video_frame_first is None:
-                video_frame_first = im.copy()
-                jpg_pth = Path(outputdir) / "pigleg_results.mp4.jpg"
-                if jpg_pth.exists():
-                    jpg_pth.unlink()
-                cv2.imwrite(str(jpg_pth), video_frame_first)
-            video_writer.write(im)
+                # object tracking
+                if i < len(sort_data):
 
-            i += 1
+                    for track_object in sort_data[i]:
+                        # TODO Zdeněk - vykreslovat bboxy rukou, zatím nevykreslovat bbox nástroje a myslet na to, že to může být mikrochirurgie
 
-        # video_duration_s = float((i - 1) / fps)
-        logger.debug(f"pix_size={pix_size_m}")
-        logger.debug(f"frameshape={im.shape}")
-        logger.debug(f"confidence_score_thr={confidence_score_thr}")
-        cap.release()
-        video_writer.release()
-        cmd = f"ffmpeg -i {str(output_video_fn_tmp)} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {str(output_video_fn)}"
-        os.system(cmd)
+                        if len(track_object) >= 6:
+                            # struktura track boxu: [x1, y1, x2, y2, confidence_score, class_id]
+                            box = (
+                                np.array(track_object[0:4]) * output_video_resize_factor
+                            )  # to size uniform video frame
+                            confidence_score = track_object[4]
+                            class_id = track_object[5]
+                            object_name = object_names[class_id]
+                            object_color = object_colors[class_id]
 
-        #############
+                            img = draw_track_object(
+                                img,
+                                box,
+                                class_id,
+                                object_name,
+                                object_color,
+                                font_scale=0.5 / output_video_resize_factor,
+                                thickness=int(2.0 / output_video_resize_factor),
+                                circle_radius=int(circle_radius / output_video_resize_factor),
+                            )
 
-        # graph report
+                # hand pose tracking
+                if (i < M) and (hand_poses[i] != []):
+                        plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
 
+                t_i = 1.0 / self.fps * i
+                lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label="Track", linewidth=2)
+                im_graph = plot3(fig)
+                # fix the video size if it is not correct
+                # if not im_graph.shape[:2] == tuple(size_output_frame[::-1]):
+                # im_graph = skimage.transform.resize(
+                #     im_graph, size_output_fig[::-1], preserve_range=True
+                # ).astype(img.dtype)
+                im_graph = cv2.resize(
+                    im_graph, size_output_fig, interpolation=cv2.INTER_AREA
+                )
+                im_graph = cv2.cvtColor(
+                    im_graph, cv2.COLOR_RGB2BGR
+                )  # matplotlib generate RGB channels but cv2 BGR
+                ax.lines.pop(-1)
+                im_graph = im_graph[:, :, :3]
+                if self.is_qr_detected:
+
+                    # if ruler_size_mm is None:
+                    #     ruler_size_mm = 10 if meta["is_microsurgery"] else 50
+                    # if visualization_length_unit is None:
+                    #     visualization_length_unit = "mm" if meta["is_microsurgery"] else "cm"
+                    # pixelsize=unit_conversion(pix_size, "m", visualization_length_unit)
+                    # ruler_size = int(unit_conversion(ruler_size_mm, "mm", visualization_length_unit))
+                    # logger.debug(f"{pixelsize=}, {ruler_size=}, {visualization_length_unit=}")
+                    img = ruler_adder.add_in_the_frame(img)
+                    # img = insert_ruler_in_image(
+                    #     img,
+                    #     pixelsize=pixelsize,
+                    #     ruler_size=ruler_size,
+                    #     unit=visualization_length_unit,
+                    # )
+                im = np.concatenate((img, im_graph), axis=concat_axis)
+                if video_frame_first is None:
+                    video_frame_first = im.copy()
+                    jpg_pth = Path(outputdir) / "pigleg_results.mp4.jpg"
+                    if jpg_pth.exists():
+                        jpg_pth.unlink()
+                    cv2.imwrite(str(jpg_pth), video_frame_first)
+                video_writer.write(im)
+
+                i += 1
+
+            # video_duration_s = float((i - 1) / fps)
+            logger.debug(f"pix_size={self.pix_size_m}")
+            logger.debug(f"frameshape={im.shape}")
+            logger.debug(f"confidence_score_thr={confidence_score_thr}")
+            cap.release()
+            video_writer.release()
+            cmd = f"ffmpeg -i {str(output_video_fn_tmp)} -ac 2 -y -b:v 2000k -c:a aac -c:v libx264 -b:a 160k -vprofile high -bf 0 -strict experimental -f mp4 {str(output_video_fn)}"
+            os.system(cmd)
+
+            #############
+
+            # graph report
+
+            data_results = self.go_over_tools_and_split_video_by_stitches(cut_frames, data_pixels, frame_ids, img_first,
+                                                                          oa_bbox_linecolor_rgb, object_colors,
+                                                                          object_names, outputdir, relative_presence,
+                                                                          relative_presence_median)
+            # save_json(data_results, os.path.join(outputdir, "results.json"))
+
+            # TODO unlink but wait for finishing ffmpeg
+            if output_video_fn.exists():
+                output_video_fn_tmp.unlink()
+
+            print(f"main_report: Video file {filename} is processed!")
+            return data_results
+        else:
+            print(f"main_report: Video file {filename} is not opended!")
+            return {}
+
+        ##save perpendicular
+        # data_results = load_json(os.path.join(outputdir, "results.json"))
+        # perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
+
+    def go_over_tools_and_split_video_by_stitches(self, cut_frames, data_pixels, frame_ids, img_first,
+                                                  oa_bbox_linecolor_rgb, object_colors, object_names, outputdir,
+                                                  relative_presence, relative_presence_median):
         # plot graphs and store statistic
         data_results = {}
-
         # go over cut_frames and do the time lenght of each stitch
-        for cut_id in range(0, int(len(cut_frames)/2)):
+        for cut_id in range(0, int(len(cut_frames) / 2)):
             cut_frame_idx = int(cut_id * 2)
             cut_frame = cut_frames[cut_frame_idx]
             cut_frame_next = cut_frames[cut_frame_idx + 1]
             video_part_duration_frames = cut_frame_next - cut_frame
-            data_results[f"Stitch {cut_id} duration [s]"] = video_part_duration_frames / fps
-            data_results[f"Stitch {cut_id} duration [%]"] = video_part_duration_frames / frame_cnt * 100
-
-
+            data_results[f"Stitch {cut_id} duration [s]"] = video_part_duration_frames / self.fps
+            data_results[f"Stitch {cut_id} duration [%]"] = video_part_duration_frames / self.frame_cnt * 100
         # for each tool
         for i, (frame_ids, data_pixel, object_color, object_name) in enumerate(
-            zip(frame_ids, data_pixels, object_colors, object_names)
+                zip(frame_ids, data_pixels, object_colors, object_names)
         ):
 
             if frame_ids != []:
@@ -1262,20 +1353,22 @@ def main_report(
                 frame_idx_stop = len(frame_ids) - 1
                 object_full_name = f"{object_name}"
                 stitch_name = "all"
-                video_part_duration_frames = cut_frames[-1] - cut_frames[0] if len(cut_frames) > 0 else frame_cnt
+                video_part_duration_frames = cut_frames[-1] - cut_frames[0] if len(cut_frames) > 0 else self.frame_cnt
                 # j_before = 0
 
                 logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                 # do the report images and stats fo whole video
                 data_results = make_stats_and_images_for_one_tool_in_one_video_part(
-                    frame_ids, data_pixel, img_first, fps, pix_size_m, is_qr_detected, object_color, object_name,
-                    outputdir, frame_idx_start, frame_idx_stop, simplename, stitch_name, i, relative_presence, relative_presence_median,
+                    frame_ids, data_pixel, img_first, self.fps, self.pix_size_m, self.is_qr_detected, object_color,
+                    object_name,
+                    outputdir, frame_idx_start, frame_idx_stop, simplename, stitch_name, i, relative_presence,
+                    relative_presence_median,
                     oa_bbox_linecolor_rgb, object_full_name, video_part_duration_frames,
                     data_results=data_results
                 )
                 # for cut_id, cut_frame in enumerate([0] + cut_frames):
                 # for each stitch in each tool
-                for cut_id in range(0, int(len(cut_frames)/2)):
+                for cut_id in range(0, int(len(cut_frames) / 2)):
                     cut_frame_idx = int(cut_id * 2)
                     cut_frame = cut_frames[cut_frame_idx]
 
@@ -1296,7 +1389,6 @@ def main_report(
                             frame_idx_stop = j
                             break
 
-
                     # if cut_id > 0:
                     #     object_full_name = f"{object_name} stitch {cut_id}"
                     #     stitch_name = f"stitch_{cut_id}"
@@ -1308,31 +1400,24 @@ def main_report(
                     #             break
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                     # do the report images and stats for each stitch
-                    data_results = make_stats_and_images_for_one_tool_in_one_video_part(frame_ids, data_pixel, img_first, fps,
-                                                                                        pix_size_m, is_qr_detected, object_color,
-                                                                                        object_name, outputdir, frame_idx_start,
-                                                                                        frame_idx_stop, simplename, stitch_name, i,
-                                                                                        relative_presence, relative_presence_median, oa_bbox_linecolor_rgb,
+                    data_results = make_stats_and_images_for_one_tool_in_one_video_part(frame_ids, data_pixel,
+                                                                                        img_first, self.fps,
+                                                                                        self.pix_size_m,
+                                                                                        self.is_qr_detected,
+                                                                                        object_color,
+                                                                                        object_name, outputdir,
+                                                                                        frame_idx_start,
+                                                                                        frame_idx_stop, simplename,
+                                                                                        stitch_name, i,
+                                                                                        relative_presence,
+                                                                                        relative_presence_median,
+                                                                                        oa_bbox_linecolor_rgb,
                                                                                         object_full_name,
                                                                                         video_part_duration_frames,
                                                                                         data_results=data_results)
 
                     # save statistic to file
-        # save_json(data_results, os.path.join(outputdir, "results.json"))
-
-        # TODO unlink but wait for finishing ffmpeg
-        if output_video_fn.exists():
-            output_video_fn_tmp.unlink()
-
-        print(f"main_report: Video file {filename} is processed!")
         return data_results
-    else:
-        print(f"main_report: Video file {filename} is not opended!")
-        return {}
-
-    ##save perpendicular
-    # data_results = load_json(os.path.join(outputdir, "results.json"))
-    # perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
 
 
 def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected,
@@ -1365,9 +1450,6 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
     oz_presence = relative_presence.calculate_presence(
         data_pixel[frame_idx_start:frame_idx_stop]
     )
-    oz_median_presence = relative_presence_median.calculate_presence(
-        data_pixel[frame_idx_start:frame_idx_stop]
-    )
     image_presence = relative_presence.draw_image(
         img_first.copy(),
         data_pixel[frame_idx_start:frame_idx_stop],
@@ -1379,6 +1461,23 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
         str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
         image_presence,
     )
+
+
+    oz_presence_median = relative_presence_median.calculate_presence(
+        data_pixel[frame_idx_start:frame_idx_stop]
+    )
+    image_presence = relative_presence_median.draw_image(
+        img_first.copy(),
+        data_pixel[frame_idx_start:frame_idx_stop],
+        bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
+        bbox_linewidth=1
+    )
+
+    cv2.imwrite(
+        str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence_median.jpg"),
+        image_presence,
+    )
+
     if len(res) > 0:
         [T, L, V, unit] = res
         logger.debug(f"{video_duration_s=}")
@@ -1395,7 +1494,7 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
             100.0 * oz_presence
         )
         data_results[f"{object_full_name} median area presence [%]"] = float(
-            100.0 * oz_median_presence
+            100.0 * oz_presence_median
         )
 
     oa_bbox = None
@@ -1415,5 +1514,6 @@ def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, i
 
 
 if __name__ == "__main__":
+    main_report = MainReport(sys.argv[1], sys.argv[2], meta={})
     # main_report('/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/output.mp4', '/home/zdenek/mnt/pole/data-ntis/projects/cv/pigleg/detection/plot/data/')
-    main_report(sys.argv[1], sys.argv[2], meta={}, concat_axis=1, confidence_score_thr=0.7)
+    main_report.run(concat_axis=1, confidence_score_thr=0.7)

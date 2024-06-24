@@ -105,9 +105,12 @@ def test_main_report():
         if ~fnp.exists():
             shutil.copy(fnp, outputdir)
 
-    run_report.main_report(
+    main_report = run_report.MainReport(
         str(filename),
         str(outputdir),
+        meta={}
+    )
+    main_report.run(
         object_colors=["b", "r", "g", "m"],
         object_names=["Needle holder", "Tweezers", "Scissors", "None"],
         concat_axis=1,
@@ -150,9 +153,10 @@ def test_main_report_micro():
 
     meta = run_report.load_json(Path(test_data_dir / "meta.json"))
 
-    run_report.main_report(
+    run_report.MainReport(
         str(filename),
         str(outputdir),
+    ).run(
         is_microsurgery=True,
         # object_colors=["b", "r", "g", "m"],
         # object_names=["Needle holder", "Tweezers", "Scissors", "None"],

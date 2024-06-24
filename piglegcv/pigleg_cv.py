@@ -23,7 +23,8 @@ import sklearn
 
 # from run_mmpose import main_mmpose
 from run_qr import main_qr
-from run_report import convert_track_bboxes_to_center_points, main_report, find_incision_bbox_with_highest_activity
+from run_report import convert_track_bboxes_to_center_points, find_incision_bbox_with_highest_activity
+import run_report
 
 # try:
 #    from .run_tracker_lite import main_tracker
@@ -727,10 +728,13 @@ class DoComputerVision:
     def _make_report(self, cut_frames=[]):
         #                            cut_frames=self.meta["stitch_split_frames"]
         #                            )
-        self.results = main_report(
+        main_report = run_report.MainReport(
             self.filename,
             self.outputdir,
             meta=self.meta,
+        )
+
+        self.results = main_report.run(
             is_microsurgery=self.is_microsurgery,
             cut_frames=cut_frames,
             test_first_seconds=self.test_first_seconds,
