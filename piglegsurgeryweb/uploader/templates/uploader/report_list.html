@@ -145,7 +145,7 @@
                 </td>
                 {% if user.is_authenticated %}
                     <td><a class="btn btn-light"
-                           href="{% url 'uploader:run' uploadedfile.id %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}"
+                           href="{% url 'uploader:run' uploadedfile.hash %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}"
                     >Run</a>
                     </td>
                     <td>

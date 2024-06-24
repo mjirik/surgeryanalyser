@@ -776,7 +776,7 @@ def run_collection(request, collection_id):
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
     collection_len = len(collection.uploaded_files.all())
     for uploaded_file in collection.uploaded_files.all():
-        _ = _run(request, uploaded_file.id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+        _ = _run(request, uploaded_file.hash, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
     # next_url = None
 
     # if "next" in request.GET:
@@ -792,10 +792,10 @@ def run_collection(request, collection_id):
     # return redirect("uploader:web_reports")
 
 
-def run(request, filename_id):
+def run(request, filename_hash:str):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
-    serverfile = _run(request, filename_id, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+    serverfile = _run(request, filename_hash, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
     return _render_run(request, serverfile)
 
 
@@ -805,8 +805,8 @@ def run(request, filename_id):
 #     return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=int(PIGLEGCV_PORT_DEVEL))
 
 
-def _run(request, filename_id, hostname="127.0.0.1", port=5000):
-    serverfile = get_object_or_404(UploadedFile, pk=filename_id)
+def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000):
+    serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
 
 
     serverfile.started_at = django.utils.timezone.now()

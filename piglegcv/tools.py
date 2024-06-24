@@ -144,7 +144,10 @@ def draw_bbox_into_image(
 ) -> np.ndarray:
     if bbox is not None:
         bbox = np.asarray(bbox)
-        x1, y1, x2, y2, confidence = bbox.astype(int).tolist()
+        if len(bbox) == 4:
+            bbox = np.append(bbox, -1.0)
+        confidence = bbox[4]
+        x1, y1, x2, y2, _ = bbox.astype(int).tolist()
         cv2.rectangle(img, (x1, y1), (x2, y2), linecolor, linewidth)
         if show_confidence:
             cv2.putText(

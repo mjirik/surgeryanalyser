@@ -172,6 +172,12 @@
                             </a>
                         </li>
                         <li>
+{#                        run #}
+                            <a class="dropdown-item"
+                               href="{% url 'uploader:run' serverfile.hash %}">
+                                <i class="bi bi-play"></i> Run
+                        </li>
+                        <li>
                             <hr class="dropdown-divider">
                         </li>
                     {% endif %}

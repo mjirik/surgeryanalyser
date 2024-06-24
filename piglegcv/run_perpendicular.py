@@ -177,9 +177,7 @@ def get_frame_to_process(
             last_frame = totalframecount - 1
         else:
             last_frame = 0
-        logger.debug(f"{last_frame=}")
-        logger.debug(f"{reference_frame_position_from_end=}")
-        logger.debug(f"{step=}")
+        logger.debug(f"last_frame/reference_frame_position_from_end/step: {last_frame} / {reference_frame_position_from_end=} / {step=}")
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - reference_frame_position_from_end)
         ret, img = cap.read()
         fps = int(cap.get(cv2.CAP_PROP_FPS))

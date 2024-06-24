@@ -13,7 +13,7 @@ urlpatterns = [
     path("message/", views.message, name="message"),
     path("message/<str:headline>/<str:text>/<str:next>/<str:next_text>/", views.message, name="message_with_next"),
     path(
-        "<int:filename_id>/run/", views.run, name="run"
+        "<str:filename_hash>/run/", views.run, name="run"
     ),  # used for debugging purposes
     # path('<int:filename_id>/run_development/', views.run_development, name='run_development'), # used for debugging purposes
     path(

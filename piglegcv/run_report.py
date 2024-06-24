@@ -114,11 +114,14 @@ def calculate_operation_zone_presence(points: np.ndarray, bbox: np.ndarray):
 
 
 class RelativePresenceInOperatingArea(object):
-    def __init__(self):
-        self.operating_area_bbox = None
+    def __init__(self, bbox=None, bbox_linecolor_rgb=(0, 255, 128), bbox_linewidth=2, name="operating area"):
+        self.operating_area_bbox = bbox
+        self.bbox_linecolor_rgb = bbox_linecolor_rgb
+        self.bbox_linewidth = bbox_linewidth
+        self.name = copy.copy(name)
 
 
-    def draw_operatin_area_bbox(self, image:np.ndarray, linecolor=(0, 255, 128), linewidth=2, output_resize_factor=1.0):
+    def draw_operating_area_bbox(self, image:np.ndarray, output_resize_factor=1.0):
         """
         Draw operating area bbox into image.
 
@@ -134,7 +137,7 @@ class RelativePresenceInOperatingArea(object):
         #                 print(oa_bbox_resized)
         oa_bbox_resized = oa_bbox_resized * output_resize_factor
         return draw_bbox_into_image(
-            image, oa_bbox_resized, linecolor=linecolor, linewidth=linewidth
+            image, oa_bbox_resized, linecolor=self.bbox_linecolor_rgb, linewidth=self.bbox_linewidth
         )
 
 
@@ -165,11 +168,13 @@ class RelativePresenceInOperatingArea(object):
             return 0
 
     def draw_image(
-        self, img: np.ndarray, points: np.ndarray, bbox_linecolor=(0, 255, 128), bbox_linewidth=2
+        self, img: np.ndarray, points: np.ndarray, # bbox_linecolor=(0, 255, 128), bbox_linewidth=2
     ):
-        img = draw_bbox_into_image(
-            img, self.operating_area_bbox, linecolor=bbox_linecolor
-        )
+        if self.operating_area_bbox is not None:
+            img = self.draw_operating_area_bbox(img)
+        # img = draw_bbox_into_image(
+        #     img, self.operating_area_bbox, linecolor=self.bbox_linecolor, linewidth=self.bbox_linewidth
+        # )
         points = np.asarray(points)
         bbox = np.asarray(self.operating_area_bbox)
         #     x, y = points[:, 0], points[:, 1]
@@ -934,6 +939,7 @@ class MainReport:
         self.filename = Path(filename)
         self.outputdir = Path(outputdir)
         self.meta = meta
+        self.img_first = None
 
         self.pix_size_m, self.is_qr_detected, self.scissors_frames = _qr_data_processing(meta)
 
@@ -951,6 +957,10 @@ class MainReport:
                 int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
             ]
             logger.debug(f"{filename=}, {self.fps=}, {self.size_input_video=} ")
+
+            flag, img = cap.read()
+            if flag:
+                self.img_first = img.copy()
 
         cap.release()
 
@@ -1133,8 +1143,7 @@ class MainReport:
             # pix_size_m, is_qr_detected, scissors_frames = _qr_data_processing(meta, fps)
             # scisors_frames - frames with visible scissors qr code
             bboxes = np.asarray(meta["incision_bboxes"])
-            relative_presence = RelativePresenceInOperatingArea()
-            relative_presence_median = RelativePresenceInOperatingArea()
+            oa_relative_presence = RelativePresenceInOperatingArea(oa_bbox, bbox_linecolor_rgb=oa_bbox_linecolor_rgb[::-1], name="area presence")
             frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
                 outputdir, confidence_score_thr
             )
@@ -1155,11 +1164,13 @@ class MainReport:
                 median_position[0] + half_size_of_bbox_px,
                 median_position[1] + half_size_of_bbox_px,
             ])
-            relative_presence_median.set_operation_area_based_on_bbox(median_bbox)
+            relative_presence_median = RelativePresenceInOperatingArea(median_bbox, bbox_linecolor_rgb=median_oa_bbox_linecolor_rgb[::-1], name="median area presence")
+
+            oa_relative_presences = [oa_relative_presence, relative_presence_median]
 
 
             # oa_bbox = find_incision_bbox_with_highest_activity(bboxes, data_pixels)
-            relative_presence.set_operation_area_based_on_bbox(oa_bbox)
+            # relative_presence.set_operation_area_based_on_bbox()
 
             # cut_frames = merge_cut_frames(scissors_frames, cut_frames, fps)
 
@@ -1196,8 +1207,8 @@ class MainReport:
                 img = cv2.resize(img, size_output_img, interpolation=cv2.INTER_AREA)
                 # logger.debug(f"{img.shape=}, {img_skimage.shape=}")
 
-                if relative_presence.operating_area_bbox is not None:
-                    img = relative_presence.draw_operatin_area_bbox(img, linecolor=oa_bbox_linecolor_rgb[::-1], output_resize_factor=output_video_resize_factor)
+                if oa_relative_presence.operating_area_bbox is not None:
+                    img = oa_relative_presence.draw_operating_area_bbox(img)
                     # oa_bbox_resized = np.asarray(
                     #     relative_presence.operating_area_bbox.copy()
                     # )
@@ -1306,10 +1317,11 @@ class MainReport:
 
             # graph report
 
-            data_results = self.go_over_tools_and_split_video_by_stitches(cut_frames, data_pixels, frame_ids, img_first,
-                                                                          oa_bbox_linecolor_rgb, object_colors,
-                                                                          object_names, outputdir, relative_presence,
-                                                                          relative_presence_median)
+
+            data_results = self.go_over_tools_and_split_video_by_stitches(cut_frames, data_pixels, frame_ids,
+                                                                          object_colors,
+                                                                          object_names, oa_relative_presences
+                                                                          )
             # save_json(data_results, os.path.join(outputdir, "results.json"))
 
             # TODO unlink but wait for finishing ffmpeg
@@ -1326,10 +1338,14 @@ class MainReport:
         # data_results = load_json(os.path.join(outputdir, "results.json"))
         # perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
 
-    def go_over_tools_and_split_video_by_stitches(self, cut_frames, data_pixels, frame_ids, img_first,
-                                                  oa_bbox_linecolor_rgb, object_colors, object_names, outputdir,
-                                                  relative_presence, relative_presence_median):
+    def go_over_tools_and_split_video_by_stitches(self, cut_frames, data_pixels, frame_ids,
+                                                  object_colors, object_names,
+                                                  oa_relative_presences,
+                                                  knot_frames=None
+                                                  ):
         # plot graphs and store statistic
+        # relative_presence, relative_presence_median = oa_relative_presences
+        # relative_presences =
         data_results = {}
         # go over cut_frames and do the time lenght of each stitch
         for cut_id in range(0, int(len(cut_frames) / 2)):
@@ -1346,8 +1362,8 @@ class MainReport:
 
             if frame_ids != []:
                 # frame_ids = [ 5,6,10, ... 54,59]
-                simplename = object_name.lower().strip().replace(" ", "_")
                 # print(cut_frames)
+                # simplename = object_name.lower().strip().replace(" ", "_")
 
                 frame_idx_start = int(0)
                 frame_idx_stop = len(frame_ids) - 1
@@ -1358,19 +1374,22 @@ class MainReport:
 
                 logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                 # do the report images and stats fo whole video
-                data_results = make_stats_and_images_for_one_tool_in_one_video_part(
-                    frame_ids, data_pixel, img_first, self.fps, self.pix_size_m, self.is_qr_detected, object_color,
+                data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+                    frame_ids, data_pixel,
+                    object_color,
                     object_name,
-                    outputdir, frame_idx_start, frame_idx_stop, simplename, stitch_name, i, relative_presence,
-                    relative_presence_median,
-                    oa_bbox_linecolor_rgb, object_full_name, video_part_duration_frames,
+                    frame_idx_start, frame_idx_stop,
+                    stitch_name, i,
+                    oa_relative_presences,
+                    object_full_name, video_part_duration_frames,
                     data_results=data_results
                 )
+
                 # for cut_id, cut_frame in enumerate([0] + cut_frames):
                 # for each stitch in each tool
                 for cut_id in range(0, int(len(cut_frames) / 2)):
                     cut_frame_idx = int(cut_id * 2)
-                    cut_frame = cut_frames[cut_frame_idx]
+                    # cut_frame = cut_frames[cut_frame_idx]
 
                     object_full_name = f"{object_name} stitch {cut_id}"
                     stitch_name = f"stitch_{cut_id}"
@@ -1400,117 +1419,132 @@ class MainReport:
                     #             break
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                     # do the report images and stats for each stitch
-                    data_results = make_stats_and_images_for_one_tool_in_one_video_part(frame_ids, data_pixel,
-                                                                                        img_first, self.fps,
-                                                                                        self.pix_size_m,
-                                                                                        self.is_qr_detected,
-                                                                                        object_color,
-                                                                                        object_name, outputdir,
-                                                                                        frame_idx_start,
-                                                                                        frame_idx_stop, simplename,
-                                                                                        stitch_name, i,
-                                                                                        relative_presence,
-                                                                                        relative_presence_median,
-                                                                                        oa_bbox_linecolor_rgb,
-                                                                                        object_full_name,
-                                                                                        video_part_duration_frames,
-                                                                                        data_results=data_results)
+                    data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+                        frame_ids, data_pixel,
+                        # self.fps, self.pix_size_m, self.is_qr_detected,
+                        object_color,
+                        object_name,
+                        frame_idx_start, frame_idx_stop,
+                        stitch_name, i,
+                        oa_relative_presences,
+                        object_full_name,
+                        video_part_duration_frames,
+                        data_results=data_results
+                    )
 
                     # save statistic to file
         return data_results
 
 
-def make_stats_and_images_for_one_tool_in_one_video_part(frame_id, data_pixel, img_first, fps, pix_size, is_qr_detected,
-                                                         object_color, object_name, outputdir, frame_idx_start, frame_idx_stop,
-                                                         simplename, stitch_name, i,
-                                                         relative_presence: RelativePresenceInOperatingArea,
-                                                         relative_presence_median: RelativePresenceInOperatingArea,
-                                                         oa_bbox_linecolor_rgb,
-                                                         object_full_name, video_part_duration_frames, data_results) ->dict:
-
-    video_duration_s = float(video_part_duration_frames) / float(fps)
-    res = create_pdf_report_for_one_tool(
-        frame_id[frame_idx_start:frame_idx_stop],
-        data_pixel[frame_idx_start:frame_idx_stop],
-        img_first,
-        fps,
-        pix_size,
-        is_qr_detected,
-        object_color,
-        object_name,
-        os.path.join(
-            outputdir,
-            f"graph_{i}c_{simplename}_trajectory_{stitch_name}.jpg",
-        ),
-        os.path.join(
-            outputdir, f"fig_{i}a_{simplename}_graph_{stitch_name}.jpg"
-        ),
-    )
-
-    oz_presence = relative_presence.calculate_presence(
-        data_pixel[frame_idx_start:frame_idx_stop]
-    )
-    image_presence = relative_presence.draw_image(
-        img_first.copy(),
-        data_pixel[frame_idx_start:frame_idx_stop],
-        bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
-        bbox_linewidth=1
-    )
-
-    cv2.imwrite(
-        str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence.jpg"),
-        image_presence,
-    )
 
 
-    oz_presence_median = relative_presence_median.calculate_presence(
-        data_pixel[frame_idx_start:frame_idx_stop]
-    )
-    image_presence = relative_presence_median.draw_image(
-        img_first.copy(),
-        data_pixel[frame_idx_start:frame_idx_stop],
-        bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
-        bbox_linewidth=1
-    )
 
-    cv2.imwrite(
-        str(Path(outputdir) / f"{simplename}_{stitch_name}_area_presence_median.jpg"),
-        image_presence,
-    )
+    def make_stats_and_images_for_one_tool_in_one_video_part(self, frame_id, data_pixel,
+                                                             # fps, pix_size, is_qr_detected,
+                                                             object_color, object_name,
+                                                             # outputdir,
+                                                             frame_idx_start, frame_idx_stop,
+                                                             stitch_name, i,
+                                                             relative_presences: List[RelativePresenceInOperatingArea],
+                                                             # relative_presence_median: RelativePresenceInOperatingArea,
+                                                             # oa_bbox_linecolor_rgb,
+                                                             object_full_name, video_part_duration_frames, data_results
+                                                             ) ->dict:
 
-    if len(res) > 0:
-        [T, L, V, unit] = res
-        logger.debug(f"{video_duration_s=}")
-        logger.debug(f"{T=}, {L=}, {V=}, {unit=}")
-        logger.debug(f"{type(T)=}, {type(L)=}, {type(V)=}, {type(unit)=}")
-        data_results[f"{object_full_name} length [{unit}]"] = L
-        data_results[f"{object_full_name} visibility [s]"] = T
-        data_results[f"{object_full_name} velocity"] = V
-        data_results[f"{object_full_name} unit"] = unit
-        data_results[f"{object_full_name} visibility [%]"] = float(
-            100.0 * (T / video_duration_s)
-        ) if video_duration_s > 0 else 0.0
-        data_results[f"{object_full_name} area presence [%]"] = float(
-            100.0 * oz_presence
-        )
-        data_results[f"{object_full_name} median area presence [%]"] = float(
-            100.0 * oz_presence_median
+        img_first = self.img_first
+        simplename = object_name.lower().strip().replace(" ", "_")
+
+        video_duration_s = float(video_part_duration_frames) / float(self.fps)
+        res = create_pdf_report_for_one_tool(
+            frame_id[frame_idx_start:frame_idx_stop],
+            data_pixel[frame_idx_start:frame_idx_stop],
+            img_first,
+            self.fps,
+            self.pix_size_m,
+            self.is_qr_detected,
+            object_color,
+            object_name,
+            os.path.join(
+                self.outputdir,
+                f"graph_{i}c_{simplename}_trajectory_{stitch_name}.jpg",
+            ),
+            os.path.join(
+                self.outputdir, f"fig_{i}a_{simplename}_graph_{stitch_name}.jpg"
+            ),
         )
 
-    oa_bbox = None
-    if simplename == "needle_holder":
-        logger.debug("adding operating area to the heatmap")
-        oa_bbox = relative_presence.operating_area_bbox
+        for relative_presence in relative_presences:
+            oz_presence = self.draw_area_presence(data_pixel,
+                                                  str(Path(
+                                                      self.outputdir) / f"{simplename}_{stitch_name}_{relative_presence.name.replace(' ', '_')}.jpg"),
+                                                  frame_idx_start, frame_idx_stop, img_first,
+                                                  relative_presence)
+            data_results[f"{object_full_name} {relative_presence.name} [%]"] = float(100.0 * oz_presence)
 
-    create_heatmap_report_plt(
-        data_pixel[frame_idx_start:frame_idx_stop],
-        image=img_first,
-        filename=Path(outputdir)
-                 / f"fig_{i}b_{simplename}_heatmap_{stitch_name}.jpg",
-        bbox=oa_bbox,
-        bbox_linecolor=oa_bbox_linecolor_rgb,
-    )
-    return data_results
+        # oz_presence_median = relative_presence_median.calculate_presence(
+        #     data_pixel[frame_idx_start:frame_idx_stop]
+        # )
+        # image_presence = relative_presence_median.draw_image(
+        #     img_first.copy(),
+        #     data_pixel[frame_idx_start:frame_idx_stop],
+        #     bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
+        #     bbox_linewidth=1
+        # )
+
+        # cv2.imwrite(
+        #     str(Path(self.outputdir) / f"{simplename}_{stitch_name}_area_presence_median.jpg"),
+        #     image_presence,
+        # )
+
+        if len(res) > 0:
+            [T, L, V, unit] = res
+            logger.debug(f"{video_duration_s=}")
+            logger.debug(f"{T=}, {L=}, {V=}, {unit=}")
+            logger.debug(f"{type(T)=}, {type(L)=}, {type(V)=}, {type(unit)=}")
+            data_results[f"{object_full_name} length [{unit}]"] = L
+            data_results[f"{object_full_name} visibility [s]"] = T
+            data_results[f"{object_full_name} velocity"] = V
+            data_results[f"{object_full_name} unit"] = unit
+            data_results[f"{object_full_name} visibility [%]"] = float(
+                100.0 * (T / video_duration_s)
+            ) if video_duration_s > 0 else 0.0
+            # data_results[f"{object_full_name} median area presence [%]"] = float(
+            #     100.0 * oz_presence_median
+            # )
+
+
+
+        oa_bbox = None
+        if simplename == "needle_holder":
+            logger.debug("adding operating area to the heatmap")
+            oa_bbox = relative_presences[0].operating_area_bbox
+
+        create_heatmap_report_plt(
+            data_pixel[frame_idx_start:frame_idx_stop],
+            image=img_first,
+            filename=Path(self.outputdir)
+                     / f"fig_{i}b_{simplename}_heatmap_{stitch_name}.jpg",
+            bbox=oa_bbox,
+            bbox_linecolor=relative_presences[0].bbox_linecolor_rgb[::-1],
+        )
+        return data_results
+
+    def draw_area_presence(self, data_pixel, filename, frame_idx_start, frame_idx_stop, img_first,
+                           relative_presence:RelativePresenceInOperatingArea):
+        oz_presence = relative_presence.calculate_presence(
+            data_pixel[frame_idx_start:frame_idx_stop]
+        )
+        image_presence = relative_presence.draw_image(
+            img_first.copy(),
+            data_pixel[frame_idx_start:frame_idx_stop],
+            # bbox_linecolor=relative_presence.bbox_linecolor_rgb[::-1],
+            # bbox_linewidth=1
+        )
+        cv2.imwrite(
+            str(filename),
+            image_presence,
+        )
+        return oz_presence
 
 
 if __name__ == "__main__":

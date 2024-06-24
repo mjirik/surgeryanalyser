@@ -344,8 +344,10 @@ class DoComputerVision:
             frame_from_end=-1,
             frame_from_end_step=-5
         )
-        logger.debug(f"{self.frame_at_beginning=}, {type(self.frame_at_beginning)=}")
+        logger.debug(f"{type(self.frame_at_beginning)=}")
+
         if self.frame_at_beginning is not None:
+            logger.debug(f"{self.frame_at_beginning.shape=}, {self.frame_at_beginning[0]=}")
             cv2.imwrite(str(self.outputdir / "_frame_at_beginning_with_incision.jpg"), self.frame_at_beginning)
         self.run_image_processing()
 
@@ -372,14 +374,22 @@ class DoComputerVision:
 
         s = time.time()
 
+        self._find_stitch_ends_in_tracks(
+            n_clusters=self.n_stitches,
+            plot_clusters=True,
+            clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
+        )
         stitch_split_frames = self._find_stitch_ends_in_annotation()
 
         if len(stitch_split_frames) == 0:
-            self._find_stitch_ends_in_tracks(
-                n_clusters=self.n_stitches,
-                plot_clusters=True,
-                clusters_image_path=self.outputdir / "_stitch_clusters.jpg",
-            )
+            self.meta["stitch_split_frames"] = self.meta["tracker_stitch_split_frames"]
+            self.meta["stitch_split_s"] = self.meta["tracker_stitch_split_s"]
+            self.meta["stitch_split_frames_source"] = "tracker"
+        else:
+            self.meta["stitch_split_frames"] = self.meta["annotation_stitch_split_frames"]
+            self.meta["stitch_split_s"] = self.meta["annotation_stitch_split_s"]
+            self.meta["stitch_split_frames_source"] = "annotation"
+
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
         logger.debug(f"{self.meta['stitch_split_frames']=}")
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
@@ -388,6 +398,7 @@ class DoComputerVision:
         self._make_report(cut_frames=self.meta["stitch_split_frames"])
         set_progress(70)
         if "stitch_scores" in self.meta:
+            logger.debug(f"{self.meta['stitch_scores']=}")
             if len(self.meta["stitch_scores"]) > 0:
                 self.results["Stitches linearity score [%]"] = self.meta["stitch_scores"][0]["r_score"] * 100
                 self.results["Stitches parallelism score [%]"] = self.meta["stitch_scores"][0]["s_score"] * 100
@@ -671,8 +682,8 @@ class DoComputerVision:
                 oa_bbox=oa_bbox
             )
             # self.meta["qr_data"]["stitch_split_frames"] = split_frames
-            self.meta["stitch_split_frames"] = split_frames
-            self.meta["stitch_split_s"] = split_s
+            self.meta["tracker_stitch_split_frames"] = split_frames
+            self.meta["tracker_stitch_split_s"] = split_s
             return split_frames
         except Exception as e:
             logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
@@ -681,7 +692,6 @@ class DoComputerVision:
         return []
 
     def _find_stitch_ends_in_annotation(self) -> List:
-        stitch_split_s = []
         fn = self.outputdir / "annotation_0.json"
         if fn.exists():
             with open(fn, "r") as f:
@@ -697,6 +707,7 @@ class DoComputerVision:
             return []
         # find all stitch_start and stitch_end
         stitch_events = []
+        knot_events = []
         for line in text_annotation.split("\n"):
             if "stitch_start" in line or "stitch_end" in line:
                 # parse time
@@ -708,6 +719,16 @@ class DoComputerVision:
                     rest_of_line = rest_of_line[:-1]
 
                 stitch_events.append([seconds_total, rest_of_line])
+            if "knot_start" in line:
+                hours, minutes, seconds = line.split(" ")[0].split(":")
+                seconds_total = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
+                rest_of_line = " ".join(line.split(" ")[1:])
+                if (len(rest_of_line) > 0) and (rest_of_line[-1] == "\r"):
+                    rest_of_line = rest_of_line[:-1]
+
+                knot_events.append([seconds_total, rest_of_line])
+
+
 
         # sort by time
         stitch_events = sorted(stitch_events, key=lambda x: x[0])
@@ -721,8 +742,16 @@ class DoComputerVision:
         # convert to frames
         stitch_split_frames = [int(x * fps) for x in stitch_split_s]
 
-        self.meta["stitch_split_frames"] = stitch_split_frames
-        self.meta["stitch_split_s"] = stitch_split_s
+        logger.debug(f"{fps=}, {stitch_split_s}")
+        self.meta["annotation_stitch_split_frames"] = stitch_split_frames
+        self.meta["annotation_stitch_split_s"] = stitch_split_s
+
+
+        knot_events = sorted(stitch_events, key=lambda x: x[0])
+        knot_split_s = [x[0] for x in knot_events]
+        knot_split_frames = [int(x * fps) for x in knot_split_s]
+        self.meta["knot_split_frames"] = knot_split_frames
+        self.meta["knot_split_s"] = knot_split_s
         return stitch_split_frames
 
     def _make_report(self, cut_frames=[]):
