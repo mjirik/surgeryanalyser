@@ -1271,7 +1271,7 @@ class MainReport:
                     # cut_frame = cut_frames[cut_frame_idx]
 
                     object_full_name = f"{object_name} stitch {cut_id}"
-                    stitch_name = f"stitch_{cut_id}"
+                    stitch_name = f"stitch {cut_id}"
 
                     cut_frame = cut_frames[cut_frame_idx]
                     cut_frame_next = cut_frames[cut_frame_idx + 1]
@@ -1316,7 +1316,7 @@ class MainReport:
                     )
 
                     if cut_id < len(knot_frames):
-                        stitch_name = f"knot_{cut_id}"
+                        stitch_name = f"knot {cut_id}"
                         data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
                             frame_ids, data_pixel,
                             # self.fps, self.pix_size_m, self.is_qr_detected,
