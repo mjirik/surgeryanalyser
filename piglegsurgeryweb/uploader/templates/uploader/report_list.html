@@ -116,8 +116,9 @@
                     {% endif %}
                     {% if uploadedfile.mediafileannotation_set.all %}
                         <div data-toggle="tooltip" data-placement="top"
-                             title="Annotated by {{ uploadedfile.mediafileannotation_set.1.annotator.email }} at
-                                     {{ uploadedfile.mediafileannotation_set.0.updated_at|date:'Y-m-d H:i' }}"
+                             title="Annotation count: {{ uploadedfile.mediafileannotation_set.count }}. Latest annotation at
+                                   {{ uploadedfile.latest_annotation.updated_at|date:'Y-m-d H:i' }} by {{ uploadedfile.latest_annotation.annotator.email }}.
+                                   Annotation: {{ uploadedfile.latest_annotation.annotation }}"
                         >
                             <i class="bi bi-card-text"></i>
                         </div>

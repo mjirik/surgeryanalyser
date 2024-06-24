@@ -66,6 +66,9 @@ class UploadedFile(models.Model):
     def __str__(self):
         return str(Path(self.mediafile.name).name)
 
+    def latest_annotation(self):
+        return self.mediafileannotation_set.order_by("-updated_at").first()
+
 class Collection(models.Model):
     name = models.CharField(max_length=255, blank=True, default="")
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
