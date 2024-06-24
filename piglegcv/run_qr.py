@@ -277,7 +277,8 @@ def bbox_info_extraction_from_frame(
                 a = np.array(qr_bbox[0])
                 b = np.array(qr_bbox[1])
                 pix_size_best = qr_size / np.linalg.norm(a - b)
-                w = bbox[-1]
+                # w = bbox[-1] # this give us the latest coordinate like 214.06 which is wrong
+                w = 0.5
                 pix_sizes.append(pix_size_best)
                 pix_sizes_weights.append(w)
                 pix_sizes_methods.append("QR bbox poly")
