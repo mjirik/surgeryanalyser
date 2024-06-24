@@ -747,7 +747,7 @@ class DoComputerVision:
         self.meta["annotation_stitch_split_s"] = stitch_split_s
 
 
-        knot_events = sorted(stitch_events, key=lambda x: x[0])
+        knot_events = sorted(knot_events, key=lambda x: x[0])
         knot_split_s = [x[0] for x in knot_events]
         knot_split_frames = [int(x * fps) for x in knot_split_s]
         self.meta["knot_split_frames"] = knot_split_frames

@@ -572,132 +572,6 @@ def plot3(fig):
 
 
 # ds_threshold [m]
-def create_video_report_figure(
-    frame_ids,
-    data_pixels,
-    source_fps,
-    pix_size:Optional[float],
-    qr_init: bool,
-    object_colors: List[str],
-    object_names: List[str],
-    video_size,
-    ds_threshold=0.1,
-    dpi=300,
-    cut_frames=None,
-    visualization_unit="cm",
-):
-    # frame_ids[:4],
-    # data_pixels[:4],
-    # fps,
-    # pix_size,
-    # is_qr_detected,
-
-    if pix_size is None:
-        pix_size = 1.0
-        logger.debug("Variable pix_size is None. Setting pix_size=1.0")
-
-    if cut_frames is None:
-        cut_frames = []
-    logger.debug(f"{cut_frames=}")
-    logger.debug(f"{object_names=}")
-    logger.debug(f"{object_colors=}")
-    # logger.debug(f"{frame_ids=}")
-    # logger.debug(f"{data_pixels=}")
-    ## second graph
-    # fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
-    fig = plt.figure()
-
-    # fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
-    ax = fig.add_subplot()
-    fig.subplots_adjust(top=0.85)
-    ax.set_title("Object Track Analysis")
-    ax.set_xlabel("Time [sec]")
-    # ax.set_ylabel('Data')
-    # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
-    # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
-    if qr_init:
-        track_label = f"Track [{visualization_unit}]"
-        vel_label = f"Velocity [{visualization_unit}/sec]"
-    else:
-        track_label = "Track [pix]"
-        vel_label = "Velocity [pix/sec]"
-    ax.set_ylabel(track_label)
-    ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-    ax2.set_ylabel(vel_label)
-
-    ds_max = 0
-    ds_per_class = []
-    dt_per_class = []
-    t_per_class = []
-    # object_names = []
-    for frame_ids_per_class, data_pixel_per_class, object_color, object_name in zip(
-        frame_ids, data_pixels, object_colors, object_names
-    ):
-        logger.debug(f"{object_name=}, {len(frame_ids_per_class)=}, {len(data_pixel_per_class)=}")
-        if frame_ids_per_class != []:
-            data_pixel_per_class = np.array(data_pixel_per_class)
-            data = pix_size * data_pixel_per_class
-            t = 1.0 / source_fps * np.array(frame_ids_per_class)
-            # t_i = 1.0/source_fps * i
-            dxy = data[1:] - data[:-1]
-            ds = np.sqrt(np.sum(dxy * dxy, axis=1))
-            if not qr_init:
-                ds_threshold = 200.0
-
-            ds[ds > ds_threshold] = 0.0
-            ds = unit_conversion(ds, "m", output_unit=visualization_unit)
-            dt = t[1:] - t[:-1]
-            t = t[0:-1]
-
-            # chech double data
-            ind = dt != 0.0
-            ds = ds[ind]
-            dt = dt[ind]
-            t = t[ind]
-
-            # print(dt)
-            # L = np.sum(ds)
-            # T = np.sum(dt)
-            ds_cumsum = np.cumsum(ds)
-            if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
-                ds_max = ds_cumsum[-1]
-            ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
-            ax2.plot(
-                t,
-                gaussian_filter(ds / dt, sigma=2),
-                ":" + object_color,
-                label=object_name,
-                linewidth=0.2,
-            )
-
-            ds_per_class.append(ds)
-            dt_per_class.append(dt)
-            t_per_class.append(t)
-
-            logger.debug(f"{object_color=}, {object_name=}")
-            # logger.debug(f"{t=}, {ds_cumsum=}")
-
-    # Draw vlines on scissors QR code visible
-    # logger.debug(f"{cut_frames=}")
-    t = (1.0 / source_fps) * np.array(cut_frames)
-    logger.debug(f"{t=}, {source_fps=}, {cut_frames=}")
-    linestyles = [(0, (4, 8)), (6, (4, 8))]
-    colors = ["g", 'r']
-    for i, frt in enumerate(t):
-        plt.axvline(frt, c=colors[i%2], linestyle=linestyles[i%2],
-                    # linewidth=1
-                    )
-
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    # ax2.legend(loc="upper left")
-    cumulative_measurements = {
-        "ds_per_class": ds_per_class,
-        "dt_per_class": dt_per_class,
-        "t_per_class": t_per_class,
-    }
-
-    logger.debug("main_video_report: OK")
-    return fig, ax, ds_max, cumulative_measurements
 
 
 def _qr_data_processing(json_data: dict):
@@ -1156,10 +1030,10 @@ class MainReport:
             median_position = np.median(data_pixels[0], axis=0)
             # create bbox from median_position
 
-            half_size_of_bbox_m = 0.0025
+            half_size_of_bbox_m = 0.025
 
             # pixelsize = unit_conversion(pix_size_m, "m", unit)
-            half_size_of_bbox_px = half_size_of_bbox_m / (self.pix_size_m / output_video_resize_factor)
+            half_size_of_bbox_px = half_size_of_bbox_m / (self.pix_size_m / 1.0)
             logger.debug(f"{half_size_of_bbox_px=}, {half_size_of_bbox_m=}, {self.pix_size_m=}, {output_video_resize_factor=}")
 
             median_bbox = np.array([
@@ -1190,6 +1064,7 @@ class MainReport:
                 video_size=size_output_fig,
                 dpi=300,
                 cut_frames=cut_frames,
+                knot_frames=self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else []
             )
             save_json(cumulative_measurements, f"{outputdir}/cumulative_measurements.json")
 
@@ -1212,7 +1087,7 @@ class MainReport:
                 # logger.debug(f"{img.shape=}, {img_skimage.shape=}")
 
                 if oa_relative_presence.operating_area_bbox is not None:
-                    img = oa_relative_presence.draw_operating_area_bbox(img)
+                    img = oa_relative_presence.draw_operating_area_bbox(img, output_resize_factor=output_video_resize_factor)
                     # oa_bbox_resized = np.asarray(
                     #     relative_presence.operating_area_bbox.copy()
                     # )
@@ -1345,11 +1220,11 @@ class MainReport:
     def go_over_tools_and_split_video_by_stitches(self, cut_frames, data_pixels, frame_ids,
                                                   object_colors, object_names,
                                                   oa_relative_presences,
-                                                  knot_frames=None
                                                   ):
         # plot graphs and store statistic
         # relative_presence, relative_presence_median = oa_relative_presences
         # relative_presences =
+        knot_frames = self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else []
         data_results = {}
         # go over cut_frames and do the time lenght of each stitch
         for cut_id in range(0, int(len(cut_frames) / 2)):
@@ -1385,7 +1260,7 @@ class MainReport:
                     frame_idx_start, frame_idx_stop,
                     stitch_name, i,
                     oa_relative_presences,
-                    object_full_name, video_part_duration_frames,
+                    video_part_duration_frames,
                     data_results=data_results
                 )
 
@@ -1408,9 +1283,14 @@ class MainReport:
                     for j, frame_id in enumerate(frame_ids):
                         if frame_id <= cut_frame:
                             frame_idx_start = j
+                        if cut_id < len(knot_frames):
+                            # there is a knot in the stitch
+                            if frame_id <= knot_frames[cut_id]:
+                                frame_idx_knot_start = j
                         if frame_id >= cut_frame_next:
                             frame_idx_stop = j
                             break
+
 
                     # if cut_id > 0:
                     #     object_full_name = f"{object_name} stitch {cut_id}"
@@ -1431,10 +1311,23 @@ class MainReport:
                         frame_idx_start, frame_idx_stop,
                         stitch_name, i,
                         oa_relative_presences,
-                        object_full_name,
                         video_part_duration_frames,
                         data_results=data_results
                     )
+
+                    if cut_id < len(knot_frames):
+                        stitch_name = f"knot_{cut_id}"
+                        data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+                            frame_ids, data_pixel,
+                            # self.fps, self.pix_size_m, self.is_qr_detected,
+                            object_color,
+                            object_name,
+                            frame_idx_start, frame_idx_stop,
+                            stitch_name, i,
+                            oa_relative_presences,
+                            video_part_duration_frames,
+                            data_results=data_results
+                        )
 
                     # save statistic to file
         return data_results
@@ -1452,11 +1345,12 @@ class MainReport:
                                                              relative_presences: List[RelativePresenceInOperatingArea],
                                                              # relative_presence_median: RelativePresenceInOperatingArea,
                                                              # oa_bbox_linecolor_rgb,
-                                                             object_full_name, video_part_duration_frames, data_results
+                                                             video_part_duration_frames, data_results
                                                              ) ->dict:
 
         img_first = self.img_first
         simplename = object_name.lower().strip().replace(" ", "_")
+        object_full_name = f"{object_name} {stitch_name}"
 
         video_duration_s = float(video_part_duration_frames) / float(self.fps)
         res = create_pdf_report_for_one_tool(
@@ -1549,6 +1443,145 @@ class MainReport:
             image_presence,
         )
         return oz_presence
+
+    def create_video_report_figure(
+            self,):
+        pass
+
+def create_video_report_figure(
+            frame_ids,
+            data_pixels,
+            source_fps,
+            pix_size:Optional[float],
+            qr_init: bool,
+            object_colors: List[str],
+            object_names: List[str],
+            video_size,
+            ds_threshold=0.1,
+            dpi=300,
+            cut_frames=None,
+            knot_frames=None,
+            visualization_unit="cm",
+    ):
+        # frame_ids[:4],
+        # data_pixels[:4],
+        # fps,
+        # pix_size,
+        # is_qr_detected,
+
+        if pix_size is None:
+            pix_size = 1.0
+            logger.debug("Variable pix_size is None. Setting pix_size=1.0")
+
+        if cut_frames is None:
+            cut_frames = []
+        logger.debug(f"{cut_frames=}")
+        logger.debug(f"{object_names=}")
+        logger.debug(f"{object_colors=}")
+        # logger.debug(f"{frame_ids=}")
+        # logger.debug(f"{data_pixels=}")
+        ## second graph
+        # fig = plt.figure(figsize=(video_size[0]/dpi, video_size[1]/dpi), dpi=dpi)
+        fig = plt.figure()
+
+        # fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
+        ax = fig.add_subplot()
+        fig.subplots_adjust(top=0.85)
+        ax.set_title("Object Track Analysis")
+        ax.set_xlabel("Time [sec]")
+        # ax.set_ylabel('Data')
+        # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
+        # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
+        if qr_init:
+            track_label = f"Track [{visualization_unit}]"
+            vel_label = f"Velocity [{visualization_unit}/sec]"
+        else:
+            track_label = "Track [pix]"
+            vel_label = "Velocity [pix/sec]"
+        ax.set_ylabel(track_label)
+        ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
+        ax2.set_ylabel(vel_label)
+
+        ds_max = 0
+        ds_per_class = []
+        dt_per_class = []
+        t_per_class = []
+        # object_names = []
+        for frame_ids_per_class, data_pixel_per_class, object_color, object_name in zip(
+                frame_ids, data_pixels, object_colors, object_names
+        ):
+            logger.debug(f"{object_name=}, {len(frame_ids_per_class)=}, {len(data_pixel_per_class)=}")
+            if frame_ids_per_class != []:
+                data_pixel_per_class = np.array(data_pixel_per_class)
+                data = pix_size * data_pixel_per_class
+                t = 1.0 / source_fps * np.array(frame_ids_per_class)
+                # t_i = 1.0/source_fps * i
+                dxy = data[1:] - data[:-1]
+                ds = np.sqrt(np.sum(dxy * dxy, axis=1))
+                if not qr_init:
+                    ds_threshold = 200.0
+
+                ds[ds > ds_threshold] = 0.0
+                ds = unit_conversion(ds, "m", output_unit=visualization_unit)
+                dt = t[1:] - t[:-1]
+                t = t[0:-1]
+
+                # chech double data
+                ind = dt != 0.0
+                ds = ds[ind]
+                dt = dt[ind]
+                t = t[ind]
+
+                # print(dt)
+                # L = np.sum(ds)
+                # T = np.sum(dt)
+                ds_cumsum = np.cumsum(ds)
+                if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
+                    ds_max = ds_cumsum[-1]
+                ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
+                ax2.plot(
+                    t,
+                    gaussian_filter(ds / dt, sigma=2),
+                    ":" + object_color,
+                    label=object_name,
+                    linewidth=0.2,
+                    )
+
+                ds_per_class.append(ds)
+                dt_per_class.append(dt)
+                t_per_class.append(t)
+
+                logger.debug(f"{object_color=}, {object_name=}")
+                # logger.debug(f"{t=}, {ds_cumsum=}")
+
+        # Draw vlines on scissors QR code visible
+        # logger.debug(f"{cut_frames=}")
+        t = (1.0 / source_fps) * np.array(cut_frames)
+        logger.debug(f"{t=}, {source_fps=}, {cut_frames=}")
+        linestyles = [(0, (4, 8)), (6, (4, 8))]
+        colors = ["g", 'r']
+        for i, frt in enumerate(t):
+            plt.axvline(frt, c=colors[i%2], linestyle=linestyles[i%2],
+                        # linewidth=1
+                        )
+
+        t = (1.0 / source_fps) * np.array(knot_frames)
+        for i, frt in enumerate(t):
+            plt.axvline(frt, c='0.6', linestyle=(3, (4, 8)),
+                        # linewidth=1
+                        )
+        fig.tight_layout()  # otherwise the right y-label is slightly clipped
+        # ax2.legend(loc="upper left")
+        cumulative_measurements = {
+            "ds_per_class": ds_per_class,
+            "dt_per_class": dt_per_class,
+            "t_per_class": t_per_class,
+        }
+
+        logger.debug("main_video_report: OK")
+        return fig, ax, ds_max, cumulative_measurements
+
+
 
 
 if __name__ == "__main__":
