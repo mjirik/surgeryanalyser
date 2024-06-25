@@ -513,20 +513,9 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
                 if ann == annotation:
                     new_review_idx = idx
 
-
-            # annotation = MediaFileAnnotation(
-            #     uploaded_file=serverfile,
-            #     annotation=form.cleaned_data["annotation"],
-            #     stars=form.cleaned_data["stars"],
-            #     annotator=annotator,
-            # )
-
             annotation.save()
-            # json_annotation = dict(
-            #     updated_at = str(annotation.updated_at),
-            #     annotator = str(annotation.annotator),
-            #     annotation = str(annotation.annotation),
-            # )
+
+            # probably not necessary because all annotations are saved just before the run
             annotation_filename = Path(serverfile.outputdir) / f"annotation_{review_idx}.json"
             logger.debug(f"{annotation_filename=}")
             from django.core.serializers import serialize

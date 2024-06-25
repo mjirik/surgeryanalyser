@@ -132,6 +132,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
         outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT
     logger.debug(f"outputdir={outputdir}, {outputdir.exists()=}")
+    save_annotations_to_json(serverfile)
     logger_id = logger.add(
         str(Path(serverfile.outputdir) / "webapp_log.txt"),
         format=log_format,
@@ -888,3 +889,18 @@ def call_async_run_processing(serverfile, absolute_uri):
         timeout=settings.PIGLEGCV_TIMEOUT,
         hook="uploader.tasks.email_report_from_task",
     )
+
+
+def save_annotations_to_json(serverfile: UploadedFile):
+    for idx, annotation in enumerate(serverfile.mediafileannotation_set.all()):
+
+        annotation.save()
+
+        annotation_filename = Path(serverfile.outputdir) / f"annotation_{idx}.json"
+        logger.debug(f"{annotation_filename=}")
+        from django.core.serializers import serialize
+
+        # dump as json file
+        with open(annotation_filename, "w") as f:
+            # json.dump(json_annotation, f)
+            f.write(serialize("json", [annotation]))
