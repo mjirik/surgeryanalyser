@@ -1250,6 +1250,7 @@ class MainReport:
             video_part_duration_frames = cut_frame_next - cut_frame
             data_results[f"Stitch {cut_id} duration [s]"] = video_part_duration_frames / self.fps
             data_results[f"Stitch {cut_id} duration [%]"] = video_part_duration_frames / self.frame_cnt * 100
+            data_results[f"Stitch {cut_id} start at [s]"] = cut_frame / self.fps
         # for each tool
         for i, (frame_ids, data_pixel, object_color, object_name) in enumerate(
                 zip(frame_ids, data_pixels, object_colors, object_names)
@@ -1333,12 +1334,18 @@ class MainReport:
 
                     if cut_id < len(knot_frames):
                         stitch_name = f"knot {cut_id}"
+                        knot_frame = knot_frames[cut_id]
+
+                        knot_part_duration_frames = cut_frame_next - knot_frame
+                        data_results[f"Knot {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
+                        data_results[f"Knot {cut_id} start at [s]"] = knot_frame / self.fps
+
                         data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
                             frame_ids, data_pixel,
                             # self.fps, self.pix_size_m, self.is_qr_detected,
                             object_color,
                             object_name,
-                            frame_idx_start, frame_idx_stop,
+                            frame_idx_knot_start, frame_idx_stop,
                             stitch_name, i,
                             oa_relative_presences,
                             video_part_duration_frames,
