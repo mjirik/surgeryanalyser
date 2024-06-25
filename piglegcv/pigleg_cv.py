@@ -692,7 +692,9 @@ class DoComputerVision:
         return []
 
     def _find_stitch_ends_in_annotation(self) -> List:
+        logger.debug("Finding stitch ends in annotation...")
         fn = self.outputdir / "annotation_0.json"
+        logger.debug(f"{fn=}, {fn.exists()}")
         if fn.exists():
             with open(fn, "r") as f:
                 data = json.load(f)
@@ -703,7 +705,7 @@ class DoComputerVision:
             text_annotation = data[0]['fields']['annotation']
         except KeyError:
             logger.debug(traceback.format_exc())
-            logger.debug(f"No annotation found in the file. {fn=}")
+            logger.warning(f"No annotation found in the file. {fn=}")
             return []
         # find all stitch_start and stitch_end
         stitch_events = []

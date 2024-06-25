@@ -13,6 +13,10 @@ python worker.py 2>&1 | \
    rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_2.txt 1M &
 python worker.py 2>&1 | \
    rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_3.txt 1M &
+python worker.py 2>&1 | \
+   rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_4.txt 1M &
+python worker.py 2>&1 | \
+   rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_5.txt 1M &
 
 python app.py 2>&1 | \
 #   tee >(rotatelogs -n 3 logs/piglegcv_app_${DOCKERLOGNAME}_log.txt.bck 1M) | \
