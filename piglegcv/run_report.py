@@ -290,6 +290,7 @@ def create_pdf_report_for_one_tool(
     ds_threshold=0.1,
     dpi=300,
     visualization_unit="cm",
+    v_threshold_m_s=0.020
 ):
     """
 
@@ -305,6 +306,8 @@ def create_pdf_report_for_one_tool(
     :param output_file_name2:
     :param ds_threshold:  in [m]
     :param dpi:
+    :param visualization_unit:
+    :param v_threshold_m_s: threshold of velocity for counting in [m/s]
     :return:
     """
 
@@ -320,6 +323,8 @@ def create_pdf_report_for_one_tool(
 
         ds[ds > ds_threshold] = 0.0
         ds = unit_conversion(ds, "m", output_unit=visualization_unit)
+        # v_threshold = 20 # [cm/s]
+        v_threshold = unit_conversion(v_threshold_m_s, "m", output_unit=visualization_unit)
         dt = t[1:] - t[:-1]
         t = t[0:-1]
 
@@ -335,9 +340,19 @@ def create_pdf_report_for_one_tool(
         T = len(frame_ids) / float(source_fps)
         logger.debug(f"{object_name=}")
         logger.debug(f"tool: {T=} , {source_fps=}, {len(frame_ids)=}")
-        logger.debug(f"whole vieo part: {t[-1] - t[0]} sec, {t[0]=}, {t[-1]=}")
+        logger.debug(f"whole video part: {t[-1] - t[0]} sec, {t[0]=}, {t[-1]=}")
         ds_dt_filtered = gaussian_filter(ds / dt, sigma=2)
         V = np.mean(ds_dt_filtered)
+        Vstd = np.std(ds_dt_filtered)
+        # count how many times the ds_td_filtered goes above 0.1
+        Vcount = 0
+        v_prev = ds_dt_filtered[0]
+        for v in ds_dt_filtered:
+            if (v > v_threshold) and (v_prev < v_threshold):
+                Vcount += 1
+            v_prev = v
+
+
 
         fig = plt.figure()
         fig.suptitle(
@@ -430,7 +445,7 @@ def create_pdf_report_for_one_tool(
             V = unit_conversion(V, visualization_unit, "m")
             unit = "m"
 
-        return [T, L, V, unit]
+        return [T, L, V, Vstd, Vcount, unit]
 
     else:
         logger.debug("main_report: No data to report")
@@ -1397,13 +1412,15 @@ class MainReport:
         # )
 
         if len(res) > 0:
-            [T, L, V, unit] = res
+            [T, L, V, Vstd, Vcount, unit] = res
             logger.debug(f"{video_duration_s=}")
             logger.debug(f"{T=}, {L=}, {V=}, {unit=}")
             logger.debug(f"{type(T)=}, {type(L)=}, {type(V)=}, {type(unit)=}")
             data_results[f"{object_full_name} length [{unit}]"] = L
             data_results[f"{object_full_name} visibility [s]"] = T
             data_results[f"{object_full_name} velocity"] = V
+            data_results[f"{object_full_name} velocity std"] = Vstd
+            data_results[f"{object_full_name} velocity above threshold"] = Vcount
             data_results[f"{object_full_name} unit"] = unit
             data_results[f"{object_full_name} visibility [%]"] = float(
                 100.0 * (T / video_duration_s)
