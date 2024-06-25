@@ -1030,7 +1030,7 @@ class MainReport:
             median_position = np.median(data_pixels[0], axis=0)
             # create bbox from median_position
 
-            half_size_of_bbox_m = 0.025
+            half_size_of_bbox_m = 0.04
 
             # pixelsize = unit_conversion(pix_size_m, "m", unit)
             half_size_of_bbox_px = half_size_of_bbox_m / (self.pix_size_m / 1.0)
@@ -1042,6 +1042,7 @@ class MainReport:
                 median_position[0] + half_size_of_bbox_px,
                 median_position[1] + half_size_of_bbox_px,
             ])
+            logger.debug(f"{median_bbox=}")
             relative_presence_median = RelativePresenceInOperatingArea(median_bbox, bbox_linecolor_rgb=median_oa_bbox_linecolor_rgb[::-1], name="median area presence")
 
             oa_relative_presences = [oa_relative_presence, relative_presence_median]
@@ -1372,9 +1373,10 @@ class MainReport:
         )
 
         for relative_presence in relative_presences:
+            fn = Path(self.outputdir) / f"{simplename}_{stitch_name.replace(' ', '_')}_{relative_presence.name.replace(' ', '_')}.jpg"
+            logger.debug(f"draw relative presence: {fn}")
             oz_presence = self.draw_area_presence(data_pixel,
-                                                  str(Path(
-                                                      self.outputdir) / f"{simplename}_{stitch_name}_{relative_presence.name.replace(' ', '_')}.jpg"),
+                                                  str(fn),
                                                   frame_idx_start, frame_idx_stop, img_first,
                                                   relative_presence)
             data_results[f"{object_full_name} {relative_presence.name} [%]"] = float(100.0 * oz_presence)
