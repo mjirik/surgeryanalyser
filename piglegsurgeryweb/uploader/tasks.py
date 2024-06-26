@@ -127,7 +127,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
             shutil.move(fn, outputdir)
         shutil.rmtree(tempdir, ignore_errors=True)
     else:
-        if not outputdir.is_dir():
+        if outputdir.exists(): # then it is a file
             outputdir.unlink()
         outputdir.mkdir(parents=True, exist_ok=True)
     log_format = loguru._defaults.LOGURU_FORMAT

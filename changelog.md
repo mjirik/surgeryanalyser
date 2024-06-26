@@ -7,6 +7,8 @@ Actual version: "0.0.0"
 * [added] Create stitch start and stitch end annotation buttons
 * [added] Stream videos
 * [added] Add mediafile to collection
+* [fixed] Status message contains last line of the log on error
+* [added] Velocity std, count of high velocities in output
 
 ## 2024-05
 
