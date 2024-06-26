@@ -384,7 +384,11 @@ def add_status_to_uploaded_file(serverfile:UploadedFile):
                 is_ok = False
                 status = "Log file is empty."
                 return is_ok, status
-            last_line = lines[-1]
+            # find last not empty line
+            for last_line in reversed(lines):
+                if last_line.strip():
+                    break
+            # last_line = lines[-1]
             if "Work finished" in last_line:
                 is_ok = True
                 status = "Work finished."
