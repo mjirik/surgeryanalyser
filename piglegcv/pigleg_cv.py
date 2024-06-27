@@ -711,9 +711,9 @@ class DoComputerVision:
         stitch_events = []
         knot_events = []
         for line in text_annotation.split("\n"):
+            line = line.strip()
             if "stitch_start" in line or "stitch_end" in line:
                 # parse time
-
                 hours, minutes, seconds = line.split(" ")[0].split(":")
                 seconds_total = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
                 rest_of_line = " ".join(line.split(" ")[1:])
