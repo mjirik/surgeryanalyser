@@ -391,6 +391,8 @@ class DoComputerVision:
             self.meta["stitch_split_frames_source"] = "annotation"
 
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
+
+
         logger.debug(f"{self.meta['stitch_split_frames']=}")
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
@@ -684,6 +686,7 @@ class DoComputerVision:
             # self.meta["qr_data"]["stitch_split_frames"] = split_frames
             self.meta["tracker_stitch_split_frames"] = split_frames
             self.meta["tracker_stitch_split_s"] = split_s
+            logger.debug(f"find in tracks : {split_frames=}")
             return split_frames
         except Exception as e:
             logger.error(f"Error in find_stitch_ends_in_tracks: {e}")
@@ -701,18 +704,25 @@ class DoComputerVision:
         else:
             return []
 
+        logger.debug(f"{data=}")
+
         try:
             text_annotation = data[0]['fields']['annotation']
         except KeyError:
             logger.debug(traceback.format_exc())
             logger.warning(f"No annotation found in the file. {fn=}")
             return []
+
+        logger.debug(f"{text_annotation=}")
         # find all stitch_start and stitch_end
         stitch_events = []
         knot_events = []
-        for line in text_annotation.split("\n"):
+        lines = text_annotation.split("\n")
+        logger.debug(f"{len(lines)=}")
+        for line in lines:
             line = line.strip()
             if "stitch_start" in line or "stitch_end" in line:
+                logger.debug("Found stitch event")
                 # parse time
                 hours, minutes, seconds = line.split(" ")[0].split(":")
                 seconds_total = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
@@ -722,6 +732,7 @@ class DoComputerVision:
 
                 stitch_events.append([seconds_total, rest_of_line])
             if "knot_start" in line:
+                logger.debug("Found knot event")
                 hours, minutes, seconds = line.split(" ")[0].split(":")
                 seconds_total = int(hours) * 3600 + int(minutes) * 60 + int(seconds)
                 rest_of_line = " ".join(line.split(" ")[1:])
@@ -730,8 +741,8 @@ class DoComputerVision:
 
                 knot_events.append([seconds_total, rest_of_line])
 
-
-
+        logger.debug(f"{stitch_events=}")
+        logger.debug(f"{knot_events=}")
         # sort by time
         stitch_events = sorted(stitch_events, key=lambda x: x[0])
         # logger.debug(f"{stitch_events=}")
