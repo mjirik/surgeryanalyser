@@ -1333,6 +1333,7 @@ class MainReport:
                     )
 
                     if cut_id < len(knot_frames):
+                        # knotting time statistics
                         stitch_name = f"knot {cut_id}"
                         knot_frame = knot_frames[cut_id]
 
@@ -1346,6 +1347,26 @@ class MainReport:
                             object_color,
                             object_name,
                             frame_idx_knot_start, frame_idx_stop,
+                            stitch_name, i,
+                            oa_relative_presences,
+                            video_part_duration_frames,
+                            data_results=data_results
+                        )
+
+                        # piercing time statistics
+                        stitch_name = f"piercing {cut_id}"
+                        knot_frame = knot_frames[cut_id]
+
+                        knot_part_duration_frames = cut_frame_next - knot_frame
+                        data_results[f"Piercing {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
+                        data_results[f"Piercing {cut_id} start at [s]"] = knot_frame / self.fps
+
+                        data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+                            frame_ids, data_pixel,
+                            # self.fps, self.pix_size_m, self.is_qr_detected,
+                            object_color,
+                            object_name,
+                            frame_idx_start, frame_idx_knot_start,
                             stitch_name, i,
                             oa_relative_presences,
                             video_part_duration_frames,
@@ -1376,6 +1397,7 @@ class MainReport:
         object_full_name = f"{object_name} {stitch_name}"
 
         video_duration_s = float(video_part_duration_frames) / float(self.fps)
+        v_threshold_m_s = 0.030
         res = create_pdf_report_for_one_tool(
             frame_id[frame_idx_start:frame_idx_stop],
             data_pixel[frame_idx_start:frame_idx_stop],
@@ -1392,6 +1414,7 @@ class MainReport:
             os.path.join(
                 self.outputdir, f"fig_{i}a_{simplename}_graph_{stitch_name}.jpg"
             ),
+            v_threshold_m_s=0.020
         )
 
         for relative_presence in relative_presences:
@@ -1428,6 +1451,7 @@ class MainReport:
             data_results[f"{object_full_name} velocity"] = V
             data_results[f"{object_full_name} velocity std"] = Vstd
             data_results[f"{object_full_name} velocity above threshold"] = Vcount
+            data_results[f"{object_full_name} velocity threshold [m/s]"] = v_threshold_m_s
             data_results[f"{object_full_name} unit"] = unit
             data_results[f"{object_full_name} visibility [%]"] = float(
                 100.0 * (T / video_duration_s)
