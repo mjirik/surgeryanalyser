@@ -44,7 +44,7 @@ def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
         except Exception as e:
             import traceback
             backup_fn = output_json.with_suffix(".bak.json")
-            backup_fn.unlink(minimal=True)
+            backup_fn.unlink(missing_ok=True)
             output_json.rename(backup_fn)
             logger.error(traceback.format_exc())
             logger.error(f"JSON {output_json} is corrupted. Making backup and creating new one.")
