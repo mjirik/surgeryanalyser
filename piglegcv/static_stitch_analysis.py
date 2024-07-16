@@ -12,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 try:
     from dynamic_stitch_analysis import get_subsegment_of_tracks_points
+    from structure_tools import save_json, load_json
 except ImportError:
     from .dynamic_stitch_analysis import get_subsegment_of_tracks_points
+    from .structure_tools import save_json, load_json
 
 
 def make_stitch_bboxes_global(bbox_incision, bboxes_stitches):
@@ -117,8 +119,8 @@ class StaticStitchAnalysis:
                 "static_label": stitch_label,
                 "static_bbox": bboxes_stitches_global[stitch_id]
             }
-            with open(self.outputdir / f"tracks_points_stitch_{i}.json", "w") as f:
-                json.dump(meta, f, indent=4)
+
+            save_json(meta, self.outputdir / f"tracks_points_stitch_{i}.json")
 
         return meta
 
