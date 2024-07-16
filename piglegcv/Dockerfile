@@ -1,6 +1,4 @@
 FROM nvcr.io/nvidia/pytorch:22.05-py3
-# FROM nvcr.io/nvidia/pytorch:23.05-py3
-# FROM nvcr.io/nvidia/pytorch:24.05-py3
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -149,12 +147,12 @@ COPY ./tools.py .
 COPY ./run_services.sh .
 COPY ./incision_detection_mmdet.py .
 COPY ./run_tracker_bytetrack.py .
-COPY ./stitch_detection_mmdet.py .
-COPY ./stitch_detection_mmdet_config.py .
-COPY ./media_tools.py .
-COPY ./static_stitch_analysis.py .
-COPY ./dynamic_stitch_analysis.py .
-COPY ./structure_tools.py .
+# COPY ./stitch_detection_mmdet.py .
+# COPY ./stitch_detection_mmdet_config.py .
+# COPY ./media_tools.py .
+# COPY ./static_stitch_analysis.py .
+# COPY ./dynamic_stitch_analysis.py .
+# COPY ./structure_tools.py .
 COPY ./*.py .
 
 # USER root
