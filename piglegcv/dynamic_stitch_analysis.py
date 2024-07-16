@@ -1,10 +1,11 @@
 import numpy as np
 from scipy.interpolate import interp1d
+from typing import Optional
 
 
 
 
-def get_subsegment_of_tracks_points(tracks_points: dict, start_frame:int, stop_frame: int) -> dict:
+def get_subsegment_of_tracks_points(tracks_points: dict, start_frame:Optional[int], stop_frame: Optional[int]) -> dict:
     """Take smaller part of tracks_points related to the segment betwen start_frame and stop_frame."""
     frame_ids = tracks_points["frame_ids"]
     data_pixels = tracks_points["data_pixels"]

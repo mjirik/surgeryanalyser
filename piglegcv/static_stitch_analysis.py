@@ -82,9 +82,9 @@ class StaticStitchAnalysis:
         tracks_points.keys()
         meta["stitch_static"] = [None] * int(len(stitch_split_frames) / 2)
 
-        for i in range(0, len(stitch_split_frames), 2):
-            start_frame = stitch_split_frames[i]
-            stop_frame = stitch_split_frames[i + 1]
+        for dynamic_stitch_id in range(0, int(len(stitch_split_frames) / 2)):
+            start_frame = stitch_split_frames[2*dynamic_stitch_id]
+            stop_frame = stitch_split_frames[(2*dynamic_stitch_id) + 1]
             tracks_points_subsegment = get_subsegment_of_tracks_points(tracks_points, start_frame, stop_frame)
 
             needle_holder_points_px = np.asarray(tracks_points_subsegment["data_pixels"][tool_id])
@@ -101,7 +101,7 @@ class StaticStitchAnalysis:
                 plt.plot(needle_holder_points_px[:, 0], needle_holder_points_px[:, 1], "b.")
                 plt.plot(med[0], med[1], "rx")
                 if self.save_debug_images:
-                    plt.savefig(self.outputdir / f"_static_dynamic_stitch_{i}.png")
+                    plt.savefig(self.outputdir / f"_static_dynamic_stitch_{dynamic_stitch_id}.png")
                 if self.show:
                     plt.show()
 
@@ -113,14 +113,15 @@ class StaticStitchAnalysis:
             static_id = np.argmin(distances)
 
             stitch_label = stitch_json["stitch_labels"][static_id]
-            stitch_id = static_id
-            meta["stitch_static"][i] = {
-                "static_id": stitch_id,
+            # stitch_id = static_id
+            meta["stitch_static"][dynamic_stitch_id] = {
+                "dynamic_id": dynamic_stitch_id,
+                "static_id": static_id,
                 "static_label": stitch_label,
-                "static_bbox": bboxes_stitches_global[stitch_id]
+                "static_bbox": bboxes_stitches_global[static_id]
             }
 
-            save_json(meta, self.outputdir / f"tracks_points_stitch_{i}.json")
+            save_json(meta, self.outputdir / f"tracks_points_stitch_{dynamic_stitch_id}.json")
 
         return meta
 
