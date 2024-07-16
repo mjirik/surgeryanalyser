@@ -95,7 +95,7 @@ class StaticStitchAnalysis:
 
             if self.save_debug_images:
                 plt.figure(figsize=(10, 10))
-                plt.imshow()
+                plt.imshow(img)
                 plt.plot(needle_holder_points_px[:, 0], needle_holder_points_px[:, 1], "b.")
                 plt.plot(med[0], med[1], "rx")
                 plt.savefig(self.outputdir / f"_static_dynamic_stitch_{i}.png")
