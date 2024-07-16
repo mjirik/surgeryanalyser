@@ -13,11 +13,7 @@ services:
       - PIGLEGCV_PORT=5000
       - PIGLEG_SPREADSHEET_URL="${PIGLEG_SPREADSHEET_URL}"
     env_file:
-      # there should be PIGLEG_SPREADSHEET_URL
       - ".env.prod"
-#      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
-#      - PIGLEGCV_PORT_DEVEL=5000
-#      - DOCKERLOGNAME="devel"
 #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
@@ -26,6 +22,7 @@ services:
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
     networks:
       - piglegnet
+
   piglegcv:
     container_name: "${PIGLEG_IMAGE_PREFIX}piglegcv"
     image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
@@ -34,18 +31,12 @@ services:
     env_file:
       # there should be PIGLEG_DEVICE
       - ".env.prod"
-#    command: nvidia-smi
-#    runtime: nvidia
     ports:
       - '5000'
-#      - '8888'
-#      - '8808:8888'
       - '${PIGLEG_JUPYTER_PORT}:8888'
-#    environment:
-#      - DOCKERLOGNAME=""
     volumes:
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
-      - '${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media'
+      - "${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media"
       - "${PIGLEG_LOG_DIR}:/home/appuser/logs"
       - "./.jupyter:/root/.jupyter"
     networks:
@@ -57,42 +48,6 @@ services:
             - driver: nvidia
               device_ids: [ '1' ]
               capabilities: [ gpu ]
-#    runtime: nvidia
-#    environment:
-#      - NVIDIA_VISIBLE_DEVICES=all
-#      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-#
-#
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              device_ids: ['0']
-#              capabilities: [gpu]
-
-# this caused error: container_error:
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - capabilities: [gpu]
-#    environment:
-#      - NVIDIA_VISIBLE_DEVICES=all
-#      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-#    runtime: nvidia
-
-#  redis:
-#    image: redis:7.0.11-alpine
-#    container_name: redis
-#    restart: always
-#    expose:
-#      - 6379
-#    command: >
-#      --loglevel warning
-##      --requirepass password
-#    volumes:
-#      - redis-data:/data:Z
 volumes:
   piglegweb:
     driver: local
