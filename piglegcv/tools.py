@@ -14,10 +14,9 @@ import cv2
 
 
 try:
-    from media_tools import load_json, save_json
+    from structure_tools import save_json, load_json
 except ImportError:
-    from .media_tools import load_json, save_json
-
+    from .structure_tools import save_json, load_json
 
 # Function to handle serialization
 
