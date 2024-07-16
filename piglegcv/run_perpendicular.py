@@ -367,6 +367,8 @@ def main_perpendicular(
         bboxes_stitches, labels_stitches = run_stitch_detection(
             image, f"{outputdir}/stitch_detection_{i}.json", device=device
         )
+
+
         # score
         stitch_score = run_stitch_analyser(
             image,

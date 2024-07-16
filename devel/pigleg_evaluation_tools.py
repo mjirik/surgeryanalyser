@@ -79,6 +79,10 @@ def new_dataframe_with_one_row_per_stitch(dfs: pd.DataFrame, stitch_count:int = 
         dfone = dfone.copy()
         rename = {col: col.replace(f"titch {searched_stitch_id}", "titch") for col in cols }
         dfone = dfone.rename(columns=rename)
+        rename = {col: col.replace(f"not {searched_stitch_id}", "not") for col in cols }
+        dfone = dfone.rename(columns=rename)
+        rename = {col: col.replace(f"iercing {searched_stitch_id}", "iercing") for col in cols }
+        dfone = dfone.rename(columns=rename)
         dfone["stitch_id"] = searched_stitch_id
         df_stitches = pd.concat([df_stitches, dfone], axis=0)
 

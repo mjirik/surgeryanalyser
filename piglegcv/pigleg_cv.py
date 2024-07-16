@@ -354,16 +354,17 @@ class DoComputerVision:
         logger.debug(
             f"Single frame processing on cropped mediafile finished in {time.time() - s}s."
         )
-        self.meta["duration_s_run_image_processing"] = float(time.time() - s)
-        logger.debug(f"Image processing finished in {time.time() - s}s.")
-
         self.meta["is_microsurgery"] = self.is_microsurgery
         self.meta["n_stitches_by_user"] = self.n_stitches
 
+        self.meta["duration_s_run_image_processing"] = float(time.time() - s)
+        logger.debug(f"Image processing finished in {time.time() - s}s.")
         s = time.time()
+
         self._run_tracking()
         self.meta["duration_s_tracking"] = float(time.time() - s)
         logger.debug(f"Tracker finished in {time.time() - s}s.")
+        s = time.time()
         set_progress(50)
 
         logger.debug(f"filename={self.filename}, outputdir={self.outputdir}")
@@ -371,8 +372,6 @@ class DoComputerVision:
             f"filename={Path(self.filename).exists()}, outputdir={Path(self.outputdir).exists()}"
         )
         oa_bbox = self.prepare_operation_area_bbox()
-
-        s = time.time()
 
         self._find_stitch_ends_in_tracks(
             n_clusters=self.n_stitches,

@@ -288,6 +288,7 @@ def run_incision_detection(
 
 
 def save_incision_cropped_images(img, local_output_data_dir, bboxes, suffix=""):
+    """Crop incisions from image and save them to local_output_data_dir."""
     logger.debug(f"number of detected incisions = {len(bboxes)}")
     imgs = []
     bbox_sizes = []  # used for resolution evaluation

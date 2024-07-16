@@ -152,6 +152,8 @@ COPY ./run_tracker_bytetrack.py .
 COPY ./stitch_detection_mmdet.py .
 COPY ./stitch_detection_mmdet_config.py .
 COPY ./media_tools.py .
+COPY ./static_stitch_analysis.py .
+COPY ./dynamic_stitch_analysis.py .
 COPY ./*.py .
 
 # USER root

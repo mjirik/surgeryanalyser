@@ -43,6 +43,7 @@ def parse_args():
     return args
 
 
+
 # def main(args):
 def run_stitch_detection(img, json_file, confidence_treshold = 0.5, device="cuda"):
 

@@ -20,9 +20,11 @@ import scipy.signal
 try:
     import tools
     from tools import draw_bbox_into_image
+    import static_stitch_analysis
+    import dynamic_stitch_analysis
 except ImportError:
     from .tools import draw_bbox_into_image
-    from . import tools
+    from . import tools, static_stitch_analysis, dynamic_stitch_analysis
 from typing import List, Optional, Tuple
 
 
@@ -312,7 +314,7 @@ def create_pdf_report_for_one_tool(
     """
 
     if len(frame_ids) > 1:
-        
+
         data_pixel = np.array(data_pixel)
         data = pix_size * data_pixel
         t = np.array(frame_ids) / float(source_fps)
@@ -829,6 +831,9 @@ class MainReport:
         self.outputdir = Path(outputdir)
         self.meta = meta
         self.img_first = None
+        self.data_pixels = None
+        self.frame_ids = None
+        self.sort_data = None
 
         self.pix_size_m, self.is_qr_detected, self.scissors_frames = _qr_data_processing(meta)
 
@@ -856,6 +861,12 @@ class MainReport:
             self.meta["resized video frame count"] = self.frame_cnt
 
         cap.release()
+
+    def extract_tracking_information(self, confidence_score_thr: float = 0.0):
+        outputdir = str(self.outputdir)
+        self.frame_ids, self.data_pixels, self.sort_data = convert_track_bboxes_to_center_points(
+            outputdir, confidence_score_thr
+        )
 
     def run(self,
             object_colors=None,
@@ -946,6 +957,8 @@ class MainReport:
                     "Right hand bbox",
                 ]
 
+        ssa = static_stitch_analysis.StaticStitchAnalysis(self.outputdir, save_debug_images=True)
+        self.meta = ssa.pair_static_and_dynamic(self.meta, tool_id=1) # forceps is used for pairing
 
         cap = cv2.VideoCapture(str(filename))
         # frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -1037,12 +1050,13 @@ class MainReport:
             # scisors_frames - frames with visible scissors qr code
             bboxes = np.asarray(meta["incision_bboxes"])
             oa_relative_presence = RelativePresenceInOperatingArea(oa_bbox, bbox_linecolor_rgb=oa_bbox_linecolor_rgb[::-1], name="area presence")
-            frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
-                outputdir, confidence_score_thr
-            )
+            # frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
+            #     outputdir, confidence_score_thr
+            # )
+            self.extract_tracking_information(confidence_score_thr=confidence_score_thr)
 
             # calculate median from data_pixels of first tool
-            median_position = np.median(data_pixels[0], axis=0)
+            median_position = np.median(self.data_pixels[0], axis=0)
             # create bbox from median_position
 
             half_size_of_bbox_m = 0.04
@@ -1070,8 +1084,8 @@ class MainReport:
 
             # just for 4 first objects
             fig, ax, ds_max, cumulative_measurements = create_video_report_figure(
-                frame_ids[:4],
-                data_pixels[:4],
+                self.frame_ids[:4],
+                self.data_pixels[:4],
                 source_fps = self.fps,
                 pix_size = self.pix_size_m,
                 qr_init=self.is_qr_detected,
@@ -1126,9 +1140,9 @@ class MainReport:
                         break
 
                 # object tracking
-                if i < len(sort_data):
+                if i < len(self.sort_data):
 
-                    for track_object in sort_data[i]:
+                    for track_object in self.sort_data[i]:
                         # TODO Zdeněk - vykreslovat bboxy rukou, zatím nevykreslovat bbox nástroje a myslet na to, že to může být mikrochirurgie
 
                         if len(track_object) >= 6:
@@ -1213,10 +1227,22 @@ class MainReport:
             # graph report
 
 
-            data_results = self.go_over_tools_and_split_video_by_stitches(cut_frames, data_pixels, frame_ids,
+            data_results = self.go_over_tools_and_split_video_by_stitches(cut_frames,
+                                                                          # data_pixels, frame_ids,
                                                                           object_colors,
                                                                           object_names, oa_relative_presences
                                                                           )
+
+
+            # find distances between two tools
+            tool_id1 = 0
+            tool_id2 = 1
+
+            # find distances between two tools
+
+            knot_frames = self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else []
+
+
             # save_json(data_results, os.path.join(outputdir, "results.json"))
 
             # TODO unlink but wait for finishing ffmpeg
@@ -1233,10 +1259,13 @@ class MainReport:
         # data_results = load_json(os.path.join(outputdir, "results.json"))
         # perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
 
-    def go_over_tools_and_split_video_by_stitches(self, cut_frames, data_pixels, frame_ids,
+    def go_over_tools_and_split_video_by_stitches(self, cut_frames,
+                                                  # data_pixels, frame_ids,
                                                   object_colors, object_names,
                                                   oa_relative_presences,
                                                   ):
+
+
         # plot graphs and store statistic
         # relative_presence, relative_presence_median = oa_relative_presences
         # relative_presences =
@@ -1245,24 +1274,26 @@ class MainReport:
         # go over cut_frames and do the time lenght of each stitch
         for cut_id in range(0, int(len(cut_frames) / 2)):
             cut_frame_idx = int(cut_id * 2)
-            cut_frame = cut_frames[cut_frame_idx]
-            cut_frame_next = cut_frames[cut_frame_idx + 1]
-            video_part_duration_frames = cut_frame_next - cut_frame
+            cut_frame_start = cut_frames[cut_frame_idx]
+            cut_frame_stop = cut_frames[cut_frame_idx + 1]
+            video_part_duration_frames = cut_frame_stop - cut_frame_start
             data_results[f"Stitch {cut_id} duration [s]"] = video_part_duration_frames / self.fps
             data_results[f"Stitch {cut_id} duration [%]"] = video_part_duration_frames / self.frame_cnt * 100
-            data_results[f"Stitch {cut_id} start at [s]"] = cut_frame / self.fps
+            data_results[f"Stitch {cut_id} start at [s]"] = cut_frame_start / self.fps
         # for each tool
-        for i, (frame_ids, data_pixel, object_color, object_name) in enumerate(
-                zip(frame_ids, data_pixels, object_colors, object_names)
+        for tool_id, (object_color, object_name) in enumerate(
+                zip(object_colors, object_names)
         ):
+            # frame_ids_tool = frame_ids[tool_id]
+            # data_pixel = data_pixels[tool_id]
 
-            if frame_ids != []:
+            if self.frame_ids[tool_id] != []:
                 # frame_ids = [ 5,6,10, ... 54,59]
                 # print(cut_frames)
                 # simplename = object_name.lower().strip().replace(" ", "_")
 
                 frame_idx_start = int(0)
-                frame_idx_stop = len(frame_ids) - 1
+                frame_idx_stop = len(self.frame_ids[tool_id]) - 1
                 object_full_name = f"{object_name}"
                 stitch_name = "all"
                 video_part_duration_frames = cut_frames[-1] - cut_frames[0] if len(cut_frames) > 0 else self.frame_cnt
@@ -1271,11 +1302,12 @@ class MainReport:
                 logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                 # do the report images and stats fo whole video
                 data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
-                    frame_ids, data_pixel,
+                    # frame_ids_tool, data_pixel,
                     object_color,
                     object_name,
-                    frame_idx_start, frame_idx_stop,
-                    stitch_name, i,
+                    # frame_idx_start, frame_idx_stop,
+                    self.frame_ids[tool_id][0], self.frame_ids[tool_id][-1], # TODO tady by to asi mělo být přes celé video, nikoliv jen přes přítomnost nástroje
+                    stitch_name, tool_id,
                     oa_relative_presences,
                     video_part_duration_frames,
                     data_results=data_results
@@ -1290,21 +1322,21 @@ class MainReport:
                     object_full_name = f"{object_name} stitch {cut_id}"
                     stitch_name = f"stitch {cut_id}"
 
-                    cut_frame = cut_frames[cut_frame_idx]
-                    cut_frame_next = cut_frames[cut_frame_idx + 1]
-                    video_part_duration_frames = cut_frame_next - cut_frame
+                    cut_frame_start = cut_frames[cut_frame_idx]
+                    cut_frame_stop = cut_frames[cut_frame_idx + 1]
+                    video_part_duration_frames = cut_frame_stop - cut_frame_start
 
                     # frame_idx_start = int(cut_frames[cut_frame_idx])
                     # frame_idx_stop = int(cut_frames[cut_frame_idx + 1])
 
-                    for j, frame_id in enumerate(frame_ids):
-                        if frame_id <= cut_frame:
+                    for j, frame_id in enumerate(self.frame_ids[tool_id]):
+                        if frame_id <= cut_frame_start:
                             frame_idx_start = j
                         if cut_id < len(knot_frames):
                             # there is a knot in the stitch
                             if frame_id <= knot_frames[cut_id]:
                                 frame_idx_knot_start = j
-                        if frame_id >= cut_frame_next:
+                        if frame_id >= cut_frame_stop:
                             frame_idx_stop = j
                             break
 
@@ -1321,12 +1353,13 @@ class MainReport:
                     logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
                     # do the report images and stats for each stitch
                     data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
-                        frame_ids, data_pixel,
+                        # frame_ids_tool, data_pixel,
                         # self.fps, self.pix_size_m, self.is_qr_detected,
                         object_color,
                         object_name,
-                        frame_idx_start, frame_idx_stop,
-                        stitch_name, i,
+                        # frame_idx_start, frame_idx_stop,
+                        cut_frame_start, cut_frame_stop,
+                        stitch_name, tool_id,
                         oa_relative_presences,
                         video_part_duration_frames,
                         data_results=data_results
@@ -1337,17 +1370,18 @@ class MainReport:
                         stitch_name = f"knot {cut_id}"
                         knot_frame = knot_frames[cut_id]
 
-                        knot_part_duration_frames = cut_frame_next - knot_frame
+                        knot_part_duration_frames = cut_frame_stop - knot_frame
                         data_results[f"Knot {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
                         data_results[f"Knot {cut_id} start at [s]"] = knot_frame / self.fps
 
                         data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
-                            frame_ids, data_pixel,
+                            # frame_ids_tool, data_pixel,
                             # self.fps, self.pix_size_m, self.is_qr_detected,
                             object_color,
                             object_name,
-                            frame_idx_knot_start, frame_idx_stop,
-                            stitch_name, i,
+                            # frame_idx_knot_start, frame_idx_stop,
+                            cut_frame_start, cut_frame_stop,
+                            stitch_name, tool_id,
                             oa_relative_presences,
                             video_part_duration_frames,
                             data_results=data_results
@@ -1357,17 +1391,18 @@ class MainReport:
                         stitch_name = f"piercing {cut_id}"
                         knot_frame = knot_frames[cut_id]
 
-                        knot_part_duration_frames = cut_frame_next - knot_frame
+                        knot_part_duration_frames = cut_frame_stop - knot_frame
                         data_results[f"Piercing {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
                         data_results[f"Piercing {cut_id} start at [s]"] = knot_frame / self.fps
 
                         data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
-                            frame_ids, data_pixel,
+                            # frame_ids_tool, data_pixel,
                             # self.fps, self.pix_size_m, self.is_qr_detected,
                             object_color,
                             object_name,
-                            frame_idx_start, frame_idx_knot_start,
-                            stitch_name, i,
+                            # frame_idx_start, frame_idx_knot_start,
+                            cut_frame_start, cut_frame_stop,
+                            stitch_name, tool_id,
                             oa_relative_presences,
                             video_part_duration_frames,
                             data_results=data_results
@@ -1378,14 +1413,21 @@ class MainReport:
 
 
 
+    # def _calculate_dist_between_tools(self, frame_ids, data_pixels, instrument1_id:int, instrument2_id):
 
 
-    def make_stats_and_images_for_one_tool_in_one_video_part(self, frame_id, data_pixel,
+
+
+
+
+    def make_stats_and_images_for_one_tool_in_one_video_part(self,
+                                                             # frame_id, data_pixel,
                                                              # fps, pix_size, is_qr_detected,
                                                              object_color, object_name,
                                                              # outputdir,
-                                                             frame_idx_start, frame_idx_stop,
-                                                             stitch_name, i,
+                                                             # frame_idx_start, frame_idx_stop,
+                                                             start_frame, stop_frame,
+                                                             stitch_name, tool_id,
                                                              relative_presences: List[RelativePresenceInOperatingArea],
                                                              # relative_presence_median: RelativePresenceInOperatingArea,
                                                              # oa_bbox_linecolor_rgb,
@@ -1396,11 +1438,24 @@ class MainReport:
         simplename = object_name.lower().strip().replace(" ", "_")
         object_full_name = f"{object_name} {stitch_name}"
 
+        track_points_general = {
+            "frame_ids": self.frame_ids,
+            "data_pixels": self.data_pixels,
+        }
+
+        track_points = dynamic_stitch_analysis.get_subsegment_of_tracks_points(track_points_general, start_frame, stop_frame)
+
+
+        frame_id_cut = track_points["frame_ids"]
+        data_pixel_cut = track_points["data_pixels"]
+
         video_duration_s = float(video_part_duration_frames) / float(self.fps)
         v_threshold_m_s = 0.030
         res = create_pdf_report_for_one_tool(
-            frame_id[frame_idx_start:frame_idx_stop],
-            data_pixel[frame_idx_start:frame_idx_stop],
+            # frame_id[frame_idx_start:frame_idx_stop],
+            # data_pixel[frame_idx_start:frame_idx_stop],
+            frame_id_cut[tool_id],
+            data_pixel_cut[tool_id],
             img_first,
             self.fps,
             self.pix_size_m,
@@ -1409,10 +1464,10 @@ class MainReport:
             object_name,
             os.path.join(
                 self.outputdir,
-                f"graph_{i}c_{simplename}_trajectory_{stitch_name}.jpg",
+                f"graph_{tool_id}c_{simplename}_trajectory_{stitch_name}.jpg",
             ),
             os.path.join(
-                self.outputdir, f"fig_{i}a_{simplename}_graph_{stitch_name}.jpg"
+                self.outputdir, f"fig_{tool_id}a_{simplename}_graph_{stitch_name}.jpg"
             ),
             v_threshold_m_s=0.020
         )
@@ -1420,26 +1475,13 @@ class MainReport:
         for relative_presence in relative_presences:
             fn = Path(self.outputdir) / f"{simplename}_{stitch_name.replace(' ', '_')}_{relative_presence.name.replace(' ', '_')}.jpg"
             logger.debug(f"draw relative presence: {fn}")
-            oz_presence = self.draw_area_presence(data_pixel,
+            oz_presence = self.draw_area_presence(data_pixel_cut[tool_id],
                                                   str(fn),
-                                                  frame_idx_start, frame_idx_stop, img_first,
+                                                  # frame_idx_start, frame_idx_stop,
+                                                  None, None,
+                                                  img_first,
                                                   relative_presence)
             data_results[f"{object_full_name} {relative_presence.name} [%]"] = float(100.0 * oz_presence)
-
-        # oz_presence_median = relative_presence_median.calculate_presence(
-        #     data_pixel[frame_idx_start:frame_idx_stop]
-        # )
-        # image_presence = relative_presence_median.draw_image(
-        #     img_first.copy(),
-        #     data_pixel[frame_idx_start:frame_idx_stop],
-        #     bbox_linecolor=oa_bbox_linecolor_rgb[::-1],
-        #     bbox_linewidth=1
-        # )
-
-        # cv2.imwrite(
-        #     str(Path(self.outputdir) / f"{simplename}_{stitch_name}_area_presence_median.jpg"),
-        #     image_presence,
-        # )
 
         if len(res) > 0:
             [T, L, V, Vstd, Vcount, unit] = res
@@ -1468,10 +1510,11 @@ class MainReport:
             oa_bbox = relative_presences[0].operating_area_bbox
 
         create_heatmap_report_plt(
-            data_pixel[frame_idx_start:frame_idx_stop],
+            data_pixel_cut[tool_id],
+            # data_pixel[frame_idx_start:frame_idx_stop],
             image=img_first,
             filename=Path(self.outputdir)
-                     / f"fig_{i}b_{simplename}_heatmap_{stitch_name}.jpg",
+                     / f"fig_{tool_id}b_{simplename}_heatmap_{stitch_name}.jpg",
             bbox=oa_bbox,
             bbox_linecolor=relative_presences[0].bbox_linecolor_rgb[::-1],
         )

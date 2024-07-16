@@ -2,6 +2,12 @@
 
 Actual version: "0.0.0"
 
+
+## 2024-07
+
+* [added] relation to between static and dynamic analysis of the stitch created
+* [changed] re-worked passing of tracking information into deeper functions
+
 ## 2024-06
 
 * [added] Create stitch start and stitch end annotation buttons
