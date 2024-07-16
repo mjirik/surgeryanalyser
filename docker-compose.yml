@@ -29,8 +29,8 @@ services:
     build:
       context: ./piglegcv
     env_file:
-      # there should be PIGLEG_DEVICE
       - ".env.prod"
+      # there should be PIGLEG_DEVICE
     ports:
       - '5000'
       - '${PIGLEG_JUPYTER_PORT}:8888'
