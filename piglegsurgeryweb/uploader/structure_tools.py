@@ -37,9 +37,17 @@ def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
     # os.makedirs(os.path.dirname(output_json), exist_ok=True)
     dct = {}
     if update and output_json.exists():
-        with open(output_json, "r") as output_file:
-            dct = json.load(output_file)
-        logger.debug(f"old keys: {list(dct.keys())}")
+        try:
+            with open(output_json, "r") as output_file:
+                dct = json.load(output_file)
+            logger.debug(f"old keys: {list(dct.keys())}")
+        except Exception as e:
+            import traceback
+            backup_fn = output_json.with_suffix(".bak.json")
+            backup_fn.unlink(minimal=True)
+            output_json.rename(backup_fn)
+            logger.error(traceback.format_exc())
+            logger.error(f"JSON {output_json} is corrupted. Making backup and creating new one.")
     dct.update(data)
     logger.debug(f"updated keys: {list(dct.keys())}")
     with open(output_json, "w") as output_file:
