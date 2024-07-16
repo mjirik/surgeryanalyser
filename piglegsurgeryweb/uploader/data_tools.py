@@ -167,6 +167,19 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
+# Function to handle serialization
+def serialize(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()  # Convert numpy arrays to lists
+    elif isinstance(obj, (set, complex)):
+        return list(obj)  # Convert sets and complex numbers to lists
+    elif isinstance(obj, bytes):
+        return obj.decode()  # Convert bytes to string
+    else:
+        return str(obj)  # Convert other non-serializable types to string
+
+# # Serialize structure to JSON
+# json_data = json.dumps(structure, default=serialize, indent=2)
 
 def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
     logger.debug(f"Writing '{output_json}'")
@@ -183,7 +196,10 @@ def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
     logger.debug(f"updated keys: {list(dct.keys())}")
     with open(output_json, "w") as output_file:
         try:
-            json.dump(dct, output_file, indent=4, cls=NumpyEncoder)
+            json.dump(dct, output_file, indent=4,
+                      # cls=NumpyEncoder,  # here is necessary to solve all types of objects
+                      default=serialize # here we are solving only the non serializable objects
+                      )
         except Exception as e:
             logger.error(f"Error writing json file {output_json}: {e}")
             logger.error(f"Data: {dct}")

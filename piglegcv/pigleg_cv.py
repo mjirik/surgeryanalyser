@@ -295,9 +295,10 @@ class DoComputerVision:
     def prepare_operation_area_bbox(self):
         _, points_per_tool, _ = convert_track_bboxes_to_center_points(str(self.outputdir))
         logger.debug(f"{len(points_per_tool)=}")
-        logger.debug(f"{points_per_tool=}")
-        logger.debug(f"{points_per_tool[0]=}")
-        logger.debug(f"{points_per_tool[1]=}")
+        # logger.debug(f"{points_per_tool=}")
+
+        logger.debug(f"{tools.array_stats_to_str(points_per_tool[0])}")
+        logger.debug(f"{tools.array_stats_to_str(points_per_tool[1])}")
 
         points_all_tools = []
         for tool_points in points_per_tool:
@@ -856,10 +857,13 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Union[list, None], tool_indexes
     for trim_tool_index in tool_indexes:
         X_px_fr_list.append(_get_X_px_fr(data, oa_bbox, trim_tool_index))
 
-    logger.debug(f"{X_px_fr_list=}")
+    logger.debug(f"{len(X_px_fr_list)=}")
     # merge the lists
     X_px_fr = np.concatenate(X_px_fr_list, axis=0)
     logger.debug(f"{X_px_fr.shape=}")
+    # log sample of x_px_fr_list
+    ln = len(X_px_fr) if len(X_px_fr) < 10 else 10
+    logger.debug(f"{X_px_fr[:ln]=}")
     #sort by time_axis
     X_px_fr = X_px_fr[X_px_fr[:, time_axis].argsort()]
     return X_px_fr
@@ -878,7 +882,6 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
 
     if oa_bbox is not None:
 
-        # TODO where is the funciton located?
         X_px_fr_tmp = tools.filter_points_in_bbox(
             # X_px_fr, tools.make_bbox_larger(incision_bbox, 2.0)
             X_px_fr, oa_bbox

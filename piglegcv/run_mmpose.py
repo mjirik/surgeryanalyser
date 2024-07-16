@@ -54,11 +54,6 @@ def printKeypoints(pose_results, _file):
         _file.write("None\n")
 
 
-# def save_json(data: dict, output_json: str):
-#     os.makedirs(os.path.dirname(output_json), exist_ok=True)
-#     with open(output_json, "w") as output_file:
-#         json.dump(data, output_file)
-
 
 ###############################
 def main_mmpose(filename, outputdir, device=None):

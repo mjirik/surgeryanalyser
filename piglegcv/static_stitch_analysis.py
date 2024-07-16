@@ -89,18 +89,21 @@ class StaticStitchAnalysis:
             print(needle_holder_points_px.shape)
             med = np.median(needle_holder_points_px, axis=0)
 
-            img = self.get_img()
-            if img is None:
-                return
 
-            if self.save_debug_images:
-                plt.figure(figsize=(10, 10))
+            if self.save_debug_images or self.show:
+                img = self.get_img()
+                if img is None:
+                    return
+                fig = plt.figure(figsize=(10, 10))
                 plt.imshow(img)
                 plt.plot(needle_holder_points_px[:, 0], needle_holder_points_px[:, 1], "b.")
                 plt.plot(med[0], med[1], "rx")
-                plt.savefig(self.outputdir / f"_static_dynamic_stitch_{i}.png")
+                if self.save_debug_images:
+                    plt.savefig(self.outputdir / f"_static_dynamic_stitch_{i}.png")
                 if self.show:
                     plt.show()
+
+                plt.close(fig)
 
             # closest stitch bbox
             distances = np.linalg.norm(bboxes_stitches_global_centroid - med, axis=1)
@@ -132,7 +135,7 @@ class StaticStitchAnalysis:
     def draw_stitches(self, bboxes_stitches_global, bboxes_stitches_global_centroid):
         import skimage.io
 
-        plt.figure(figsize=(10, 10))
+        fig = plt.figure(figsize=(10, 10))
         img = self.get_img()
         if img is None:
             return
@@ -154,6 +157,8 @@ class StaticStitchAnalysis:
             plt.show()
         if self.save_debug_images:
             plt.savefig(self.outputdir / "_stitches.png")
+
+        plt.close(fig)
 
 
 

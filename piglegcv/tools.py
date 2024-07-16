@@ -13,61 +13,13 @@ from PIL import Image
 import cv2
 
 
-def save_json(data: dict, output_json: Union[str, Path], update: bool = True):
-    logger.debug(f"Writing '{output_json}'")
-
-    output_json = Path(output_json)
-    output_json.parent.mkdir(exist_ok=True, parents=True)
-    # os.makedirs(os.path.dirname(output_json), exist_ok=True)
-    dct = {}
-    if update and output_json.exists():
-        with open(output_json, "r") as output_file:
-            dct = json.load(output_file)
-        logger.debug(f"old keys: {list(dct.keys())}")
-    dct.update(data)
-    logger.debug(f"updated keys: {list(dct.keys())}")
-    with open(output_json, "w") as output_file:
-        try:
-            json.dump(dct, output_file, indent=4, cls=NumpyEncoder)
-        except Exception as e:
-            logger.error(f"Error writing json file {output_json}: {e}")
-            logger.error(f"Data: {dct}")
-            print_nested_dict_with_types(dct, 4)
-            
-            raise e
+try:
+    from media_tools import load_json, save_json
+except ImportError:
+    from .media_tools import load_json, save_json
 
 
-def load_json(filename: Union[str, Path]):
-    filename = Path(filename)
-    if os.path.isfile(filename):
-        with open(filename, "r") as fr:
-            try:
-                data = json.load(fr)
-            except ValueError as e:
-                return {}
-            return data
-    else:
-        return {}
-
-class NumpyEncoder(json.JSONEncoder):
-    """ Special json encoder for numpy types """    
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)    
-
-
-def print_nested_dict_with_types(d: dict, indent: int = 0):
-    for k, v in d.items():
-        if isinstance(v, dict):
-            logger.debug(f"{' ' * indent}{k}:")
-            print_nested_dict_with_types(v, indent + 2)
-        else:
-            logger.debug(f"{' ' * indent}{k}: {type(v)}")    
+# Function to handle serialization
 
 
 def remove_complex_types(d: dict):
@@ -190,6 +142,15 @@ def count_points_in_bbox(points, bbox):
         ):
             count += 1
     return count
+
+def array_stats_to_str(arr:np.array, axis:Optional[int] = None):
+    arr = np.asarray(arr)
+    if axis is None:
+        axis = np.argmin(arr.shape)
+
+    string = f"shape: {arr.shape}, min: {np.min(arr, axis=axis)}, max: {np.max(arr, axis=axis)}, mean: {np.mean(arr, axis=axis)}"
+    # , std: {np.std(arr, axis=axis)}"
+    return string
 
 
 def filter_points_in_bbox(points, bbox):
