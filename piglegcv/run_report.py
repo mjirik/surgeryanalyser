@@ -1359,7 +1359,6 @@ class MainReport:
                         # frame_idx_start, frame_idx_stop,
                         start_frame, stop_frame,
                         # self.frame_ids[tool_id][0], self.frame_ids[tool_id][-1],
-                        # TODO tady by to asi mělo být přes celé video, nikoliv jen přes přítomnost nástroje
                         stitch_name.lower(), tool_id,
                         oa_relative_presences,
                         video_part_duration_frames,
@@ -1401,7 +1400,7 @@ class MainReport:
         #             object_color,
         #             object_name,
         #             # frame_idx_start, frame_idx_stop,
-        #             self.frame_ids[tool_id][0], self.frame_ids[tool_id][-1], # TODO tady by to asi mělo být přes celé video, nikoliv jen přes přítomnost nástroje
+        #             self.frame_ids[tool_id][0], self.frame_ids[tool_id][-1], # tady by to asi mělo být přes celé video, nikoliv jen přes přítomnost nástroje
         #             stitch_name, tool_id,
         #             oa_relative_presences,
         #             video_part_duration_frames,
