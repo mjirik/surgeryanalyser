@@ -107,18 +107,27 @@ class StaticStitchAnalysis:
 
                 plt.close(fig)
 
+            if len(bboxes_stitches_global) > 0:
             # closest stitch bbox
-            distances = np.linalg.norm(bboxes_stitches_global_centroid - med, axis=1)
+                distances = np.linalg.norm(bboxes_stitches_global_centroid - med, axis=1)
 
-            static_id = np.argmin(distances)
+                static_id = np.argmin(distances)
 
-            stitch_label = stitch_json["stitch_labels"][static_id]
-            # stitch_id = static_id
+                stitch_label = stitch_json["stitch_labels"][static_id]
+                static_bbox = bboxes_stitches_global[static_id]
+                # stitch_id = static_id
+            else:
+                static_id = None
+                stitch_label = None
+                static_bbox = None
+
+            logger.debug(f"Dynamic stitch {dynamic_stitch_id} is closest to static stitch {static_id}")
+
             meta["stitch_static"][dynamic_stitch_id] = {
                 "dynamic_id": dynamic_stitch_id,
                 "static_id": static_id,
                 "static_label": stitch_label,
-                "static_bbox": bboxes_stitches_global[static_id]
+                "static_bbox": static_bbox,
             }
 
             save_json(meta, self.outputdir / f"tracks_points_stitch_{dynamic_stitch_id}.json")
