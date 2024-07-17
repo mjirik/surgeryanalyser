@@ -1258,12 +1258,15 @@ class MainReport:
     def relative_position_of_instruments(
             self, cut_frames, data_results,
             tool_id1 = 0,  # needleholder
-            tool_id2 = 1  # forceps
+            tool_id2 = 1,  # forceps
+            threshold_m = 0.03, # 3 cm
     ):
         # find distances between two tools
-        tool_id1 = 0  # needleholder
-        tool_id2 = 1  # forceps
+        # tool_id1 = 0  # needleholder
+        # tool_id2 = 1  # forceps
+        data_results["Needle holder to forceps distance threshold [m]"] = threshold_m
         video_parts = self.get_video_parts_parameters(cut_frames)
+
         for (name, cut_id, start_frame, stop_frame) in video_parts:
             track_points_general = {
                 "frame_ids": self.frame_ids,
@@ -1287,7 +1290,7 @@ class MainReport:
             data_results[
                 f"{long_name} needle holder to forceps average distance [m]"] = dynamic_analysis.average_distance()
             data_results[
-                f"{long_name} needle holder to forceps time below threshold [s]"] = dynamic_analysis.seconds_below_threshold()
+                f"{long_name} needle holder to forceps time below threshold [s]"] = dynamic_analysis.seconds_below_threshold(threshold_m)
 
     def get_video_parts_parameters(self, cut_frames:List[int], include_whole_video=False)->List[Tuple[str, int, int, int]]:
         # # find distances between two tools
