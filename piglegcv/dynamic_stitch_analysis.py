@@ -80,16 +80,17 @@ class InstrumentDistance:
         # check the shape
         if len(frame_ids1) != len(coordinates1) or len(frame_ids2) != len(coordinates2):
             raise ValueError("frame_ids and coordinates must have the same length")
-        if coordinates1.shape[1] != 2 or coordinates2.shape[1] != 2:
-            logger.debug(f"coordinates1.shape={coordinates1.shape}, coordinates2.shape={coordinates2.shape}")
-            logger.warning("Coordinates must have shape (n, 2)")
-        else:
+
+        if (coordinates1.shape[1] == 2) and (coordinates2.shape[1] == 2) and (coordinates1.shape[0] > 2) and (coordinates2.shape[0] > 2):
             self.instrument1 = Interpolation(frame_ids1, np.asarray(coordinates1) * pix_size, fps)
             self.instrument2 = Interpolation(frame_ids2, np.asarray(coordinates2) * pix_size, fps)
 
             # Determine the common range of frame_ids
             self.min_frame = max(min(frame_ids1), min(frame_ids2))
             self.max_frame = min(max(frame_ids1), max(frame_ids2))
+        else:
+            logger.debug(f"coordinates1.shape={coordinates1.shape}, coordinates2.shape={coordinates2.shape}")
+            logger.warning("Coordinates must have shape (n, 2), n > 2")
 
     def average_distance(self, ignore_no_data_for_s=1):
         if self.instrument1 is None or self.instrument2 is None:
