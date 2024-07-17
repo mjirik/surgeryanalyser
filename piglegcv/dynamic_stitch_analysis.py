@@ -114,7 +114,7 @@ class InstrumentDistance:
 
     def frames_below_threshold(self, threshold, seconds_sensitivity=1):
         if self.instrument1 is None or self.instrument2 is None:
-            return np.nan
+            return 0
         count = 0
 
         for frame_id in range(self.min_frame, self.max_frame + 1):
