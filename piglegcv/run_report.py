@@ -1268,6 +1268,7 @@ class MainReport:
         video_parts = self.get_video_parts_parameters(cut_frames)
 
         for (name, cut_id, start_frame, stop_frame) in video_parts:
+            part_duration_s = (stop_frame - start_frame) / self.fps
             track_points_general = {
                 "frame_ids": self.frame_ids,
                 "data_pixels": self.data_pixels,
@@ -1288,9 +1289,11 @@ class MainReport:
                 pix_size=self.pix_size_m,
             )
             data_results[
-                f"{long_name} needle holder to forceps average distance [m]"] = dynamic_analysis.average_distance()
+                f"Needle holder to forceps {long_name.lower()} average distance [m]"] = dynamic_analysis.average_distance()
             data_results[
-                f"{long_name} needle holder to forceps time below threshold [s]"] = dynamic_analysis.seconds_below_threshold(threshold_m)
+                f"Needle holder to forceps {long_name.lower()} below threshold [s]"] = dynamic_analysis.seconds_below_threshold(threshold_m)
+            data_results[
+                f"Needle holder to forceps {long_name.lower()} below threshold [%]"] = 100 * (dynamic_analysis.seconds_below_threshold(threshold_m) / part_duration_s)
 
     def get_video_parts_parameters(self, cut_frames:List[int], include_whole_video=False)->List[Tuple[str, int, int, int]]:
         # # find distances between two tools
