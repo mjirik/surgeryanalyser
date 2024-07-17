@@ -1,6 +1,9 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from typing import Optional
+from loguru import logger
+
+
 
 
 
@@ -66,15 +69,31 @@ class Interpolation:
 
 class InstrumentDistance:
     def __init__(self, frame_ids1, coordinates1, frame_ids2, coordinates2, fps:float, pix_size:float):
-        self.instrument1 = Interpolation(frame_ids1, np.asarray(coordinates1) * pix_size, fps)
-        self.instrument2 = Interpolation(frame_ids2, np.asarray(coordinates2) * pix_size, fps)
+        coordinates1 = np.asarray(coordinates1)
+        coordinates2 = np.asarray(coordinates2)
         self.fps = fps
+        self.instrument1 = None
+        self.instrument2 = None
+        self.min_frame = None
+        self.max_frame = None
 
-        # Determine the common range of frame_ids
-        self.min_frame = max(min(frame_ids1), min(frame_ids2))
-        self.max_frame = min(max(frame_ids1), max(frame_ids2))
+        # check the shape
+        if len(frame_ids1) != len(coordinates1) or len(frame_ids2) != len(coordinates2):
+            raise ValueError("frame_ids and coordinates must have the same length")
+        if coordinates1.shape[1] != 2 or coordinates2.shape[1] != 2:
+            logger.debug(f"coordinates1.shape={coordinates1.shape}, coordinates2.shape={coordinates2.shape}")
+            logger.warning("Coordinates must have shape (n, 2)")
+        else:
+            self.instrument1 = Interpolation(frame_ids1, np.asarray(coordinates1) * pix_size, fps)
+            self.instrument2 = Interpolation(frame_ids2, np.asarray(coordinates2) * pix_size, fps)
+
+            # Determine the common range of frame_ids
+            self.min_frame = max(min(frame_ids1), min(frame_ids2))
+            self.max_frame = min(max(frame_ids1), max(frame_ids2))
 
     def average_distance(self, ignore_no_data_for_s=1):
+        if self.instrument1 is None or self.instrument2 is None:
+            return np.nan
 
         total_distance = 0
         valid_frame_count = 0
@@ -94,6 +113,8 @@ class InstrumentDistance:
         return total_distance / valid_frame_count
 
     def frames_below_threshold(self, threshold, seconds_sensitivity=1):
+        if self.instrument1 is None or self.instrument2 is None:
+            return np.nan
         count = 0
 
         for frame_id in range(self.min_frame, self.max_frame + 1):
@@ -108,5 +129,7 @@ class InstrumentDistance:
         return count
 
     def seconds_below_threshold(self, threshold, seconds_sensitivity=1):
+        if self.instrument1 is None or self.instrument2 is None:
+            return np.nan
         frame_count = self.frames_below_threshold(threshold, seconds_sensitivity)
         return frame_count / self.fps
