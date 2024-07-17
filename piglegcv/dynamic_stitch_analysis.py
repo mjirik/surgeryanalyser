@@ -37,6 +37,10 @@ class Interpolation:
         self.coordinates = np.array(coordinates)
         self.fps = fps
 
+        # check the shape
+        if self.coordinates.shape[1] != 2:
+            raise ValueError("Coordinates must have shape (n, 2)")
+
         # Interpolators for x and y coordinates
         self.interpolator_x = interp1d(self.frame_ids, self.coordinates[:, 0], kind='linear', fill_value='extrapolate')
         self.interpolator_y = interp1d(self.frame_ids, self.coordinates[:, 1], kind='linear', fill_value='extrapolate')
@@ -61,9 +65,9 @@ class Interpolation:
 
 
 class InstrumentDistance:
-    def __init__(self, frame_ids1, coordinates1, frame_ids2, coordinates2, fps):
-        self.instrument1 = Interpolation(frame_ids1, coordinates1, fps)
-        self.instrument2 = Interpolation(frame_ids2, coordinates2, fps)
+    def __init__(self, frame_ids1, coordinates1, frame_ids2, coordinates2, fps:float, pix_size:float):
+        self.instrument1 = Interpolation(frame_ids1, np.asarray(coordinates1) * pix_size, fps)
+        self.instrument2 = Interpolation(frame_ids2, np.asarray(coordinates2) * pix_size, fps)
         self.fps = fps
 
         # Determine the common range of frame_ids

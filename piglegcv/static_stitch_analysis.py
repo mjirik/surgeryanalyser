@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import skimage.io
@@ -37,9 +37,12 @@ class StaticStitchAnalysis:
         self.outputdir = Path(outputdir)
         self.save_debug_images = save_debug_images
         self.show = show
+        self.meta = None
+        self.results = {}
 
 
-    def pair_static_and_dynamic(self, meta:Optional[dict]=None, tool_id=1):
+    # function will return two dicts
+    def pair_static_and_dynamic(self, meta:Optional[dict]=None, tool_id=1) -> Tuple[dict, dict]:
         """
         Run static stitch analysis.
 
@@ -54,6 +57,7 @@ class StaticStitchAnalysis:
                     meta = json.load(f)
             else:
                 meta = {}
+
 
         stitch_json_fn = outputdir / "stitch_detection_0.json"
         with open(stitch_json_fn, "r") as f:
@@ -130,9 +134,11 @@ class StaticStitchAnalysis:
                 "static_bbox": static_bbox,
             }
 
-            save_json(meta, self.outputdir / f"tracks_points_stitch_{dynamic_stitch_id}.json")
+            self.results[f"Static quality stitch {dynamic_stitch_id}"] = stitch_label
 
-        return meta
+            # save_json(meta, self.outputdir / f"tracks_points_stitch_{dynamic_stitch_id}.json")
+
+        return meta, self.results
 
     def get_img(self):
         image_fns = list(self.outputdir.glob("__cropped.*.jpg"))

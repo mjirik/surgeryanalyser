@@ -834,6 +834,7 @@ class MainReport:
         self.data_pixels = None
         self.frame_ids = None
         self.sort_data = None
+        self.results = None
 
         self.pix_size_m, self.is_qr_detected, self.scissors_frames = _qr_data_processing(meta)
 
@@ -884,7 +885,7 @@ class MainReport:
             test_first_seconds: bool = False,
             oa_bbox: Optional[list] = None,
             median_oa_bbox_linecolor_rgb=[100, 100, 100],
-            ):
+            ) -> dict:
         """
 
         :param filename:
@@ -958,7 +959,7 @@ class MainReport:
                 ]
 
         ssa = static_stitch_analysis.StaticStitchAnalysis(self.outputdir, save_debug_images=True)
-        self.meta = ssa.pair_static_and_dynamic(self.meta, tool_id=1) # forceps is used for pairing
+        self.meta, results_static = ssa.pair_static_and_dynamic(self.meta, tool_id=1) # forceps is used for pairing
 
         cap = cv2.VideoCapture(str(filename))
         # frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -1233,15 +1234,10 @@ class MainReport:
                                                                           object_names, oa_relative_presences
                                                                           )
 
+            # update data_results by static results
+            data_results.update(results_static)
 
-            # find distances between two tools
-            tool_id1 = 0
-            tool_id2 = 1
-
-            # find distances between two tools
-
-            knot_frames = self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else []
-
+            self.relative_position_of_instruments(cut_frames, data_results)
 
             # save_json(data_results, os.path.join(outputdir, "results.json"))
 
@@ -1259,6 +1255,68 @@ class MainReport:
         # data_results = load_json(os.path.join(outputdir, "results.json"))
         # perpendicular_data = load_json(os.path.join(outputdir, "perpendicular.json"))
 
+    def relative_position_of_instruments(
+            self, cut_frames, data_results,
+            tool_id1 = 0,  # needleholder
+            tool_id2 = 1  # forceps
+    ):
+        # find distances between two tools
+        tool_id1 = 0  # needleholder
+        tool_id2 = 1  # forceps
+        video_parts = self.get_video_parts_parameters(cut_frames)
+        for (name, cut_id, start_frame, stop_frame) in video_parts:
+            track_points_general = {
+                "frame_ids": self.frame_ids,
+                "data_pixels": self.data_pixels,
+            }
+            if cut_id == -1:
+                long_name = f"{name}"
+            else:
+                long_name = f"{name} {cut_id}"
+            track_points_per_video_part = dynamic_stitch_analysis.get_subsegment_of_tracks_points(track_points_general,
+                                                                                                  start_frame,
+                                                                                                  stop_frame)
+            tpvp = track_points_per_video_part
+
+            dynamic_analysis = dynamic_stitch_analysis.InstrumentDistance(
+                tpvp["frame_ids"][tool_id1], tpvp["data_pixels"][tool_id1],
+                tpvp["frame_ids"][tool_id2], tpvp["data_pixels"][tool_id2],
+                self.fps,
+                pix_size=self.pix_size_m,
+            )
+            data_results[
+                f"{long_name} needle holder to forceps average distance [m]"] = dynamic_analysis.average_distance()
+            data_results[
+                f"{long_name} needle holder to forceps time below threshold [s]"] = dynamic_analysis.seconds_below_threshold()
+
+    def get_video_parts_parameters(self, cut_frames:List[int], include_whole_video=False)->List[Tuple[str, int, int, int]]:
+        # # find distances between two tools
+        video_parts = []
+        if include_whole_video:
+            frame_count = self.meta["resized video frame count"]
+            video_parts.append(("Video", -1, 0, frame_count))
+
+        knot_frames = self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else []
+        for cut_id in range(0, int(len(cut_frames) / 2)):
+            cut_frame_idx = int(cut_id * 2)
+            cut_frame_start = cut_frames[cut_frame_idx]
+            cut_frame_stop = cut_frames[cut_frame_idx + 1]
+
+            name = f"Stitch"
+            video_parts.append((name, cut_id, cut_frame_start, cut_frame_stop))
+
+            if cut_id < len(knot_frames):
+                # there is a knot in the stitch
+                knot_frame = knot_frames[cut_id]
+                if (knot_frame < cut_frame_stop) and (knot_frame > cut_frame_start):
+                    # piercing
+                    name = f"Piercing"
+                    video_parts.append((name, cut_id, cut_frame_start, knot_frame))
+                    # knotting
+                    name = f"Knot"
+                    video_parts.append((name, cut_id, knot_frame, cut_frame_stop))
+        return video_parts
+
     def go_over_tools_and_split_video_by_stitches(self, cut_frames,
                                                   # data_pixels, frame_ids,
                                                   object_colors, object_names,
@@ -1271,144 +1329,179 @@ class MainReport:
         # relative_presences =
         knot_frames = self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else []
         data_results = {}
-        # go over cut_frames and do the time lenght of each stitch
-        for cut_id in range(0, int(len(cut_frames) / 2)):
-            cut_frame_idx = int(cut_id * 2)
-            cut_frame_start = cut_frames[cut_frame_idx]
-            cut_frame_stop = cut_frames[cut_frame_idx + 1]
-            video_part_duration_frames = cut_frame_stop - cut_frame_start
-            data_results[f"Stitch {cut_id} duration [s]"] = video_part_duration_frames / self.fps
-            data_results[f"Stitch {cut_id} duration [%]"] = video_part_duration_frames / self.frame_cnt * 100
-            data_results[f"Stitch {cut_id} start at [s]"] = cut_frame_start / self.fps
-        # for each tool
-        for tool_id, (object_color, object_name) in enumerate(
-                zip(object_colors, object_names)
-        ):
-            # frame_ids_tool = frame_ids[tool_id]
-            # data_pixel = data_pixels[tool_id]
 
-            if self.frame_ids[tool_id] != []:
-                # frame_ids = [ 5,6,10, ... 54,59]
-                # print(cut_frames)
-                # simplename = object_name.lower().strip().replace(" ", "_")
+        for name, cut_id, start_frame, stop_frame in self.get_video_parts_parameters(cut_frames, include_whole_video=True):
+            if name == "Video":
+                object_full_name = f"{name} {name.lower()}"
+                stitch_name = f"{name}"
+            else:
+                object_full_name = f"{name} {name.lower()} {cut_id}"
+                stitch_name = f"{name} {cut_id}"
+            logger.debug(f"per stitch analysis {object_full_name=} {start_frame=} {stop_frame=}")
+            video_part_duration_frames = stop_frame - start_frame
+            data_results[f"{stitch_name} duration [s]"] = video_part_duration_frames / self.fps
+            data_results[f"{stitch_name} start at [s]"] = start_frame / self.fps
 
-                frame_idx_start = int(0)
-                frame_idx_stop = len(self.frame_ids[tool_id]) - 1
-                object_full_name = f"{object_name}"
-                stitch_name = "all"
-                video_part_duration_frames = cut_frames[-1] - cut_frames[0] if len(cut_frames) > 0 else self.frame_cnt
-                # j_before = 0
+            for tool_id, (object_color, object_name) in enumerate(
+                    zip(object_colors, object_names)
+            ):
+                # frame_ids_tool = frame_ids[tool_id]
+                # data_pixel = data_pixels[tool_id]
 
-                logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
-                # do the report images and stats fo whole video
-                data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
-                    # frame_ids_tool, data_pixel,
-                    object_color,
-                    object_name,
-                    # frame_idx_start, frame_idx_stop,
-                    self.frame_ids[tool_id][0], self.frame_ids[tool_id][-1], # TODO tady by to asi mělo být přes celé video, nikoliv jen přes přítomnost nástroje
-                    stitch_name, tool_id,
-                    oa_relative_presences,
-                    video_part_duration_frames,
-                    data_results=data_results
-                )
-
-                # for cut_id, cut_frame in enumerate([0] + cut_frames):
-                # for each stitch in each tool
-                for cut_id in range(0, int(len(cut_frames) / 2)):
-                    cut_frame_idx = int(cut_id * 2)
-                    # cut_frame = cut_frames[cut_frame_idx]
-
-                    object_full_name = f"{object_name} stitch {cut_id}"
-                    stitch_name = f"stitch {cut_id}"
-
-                    cut_frame_start = cut_frames[cut_frame_idx]
-                    cut_frame_stop = cut_frames[cut_frame_idx + 1]
-                    video_part_duration_frames = cut_frame_stop - cut_frame_start
-
-                    # frame_idx_start = int(cut_frames[cut_frame_idx])
-                    # frame_idx_stop = int(cut_frames[cut_frame_idx + 1])
-
-                    for j, frame_id in enumerate(self.frame_ids[tool_id]):
-                        if frame_id <= cut_frame_start:
-                            frame_idx_start = j
-                        if cut_id < len(knot_frames):
-                            # there is a knot in the stitch
-                            if frame_id <= knot_frames[cut_id]:
-                                frame_idx_knot_start = j
-                        if frame_id >= cut_frame_stop:
-                            frame_idx_stop = j
-                            break
-
-
-                    # if cut_id > 0:
-                    #     object_full_name = f"{object_name} stitch {cut_id}"
-                    #     stitch_name = f"stitch_{cut_id}"
-                    #     for j, frame in enumerate(frame_ids):
-                    #         if frame > cut_frame:
-                    #             frame_idx_start = j_before
-                    #             frame_idx_stop = j
-                    #             j_before = j
-                    #             break
-                    logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
-                    # do the report images and stats for each stitch
+                if self.frame_ids[tool_id] != []:
                     data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
                         # frame_ids_tool, data_pixel,
-                        # self.fps, self.pix_size_m, self.is_qr_detected,
                         object_color,
                         object_name,
                         # frame_idx_start, frame_idx_stop,
-                        cut_frame_start, cut_frame_stop,
-                        stitch_name, tool_id,
+                        start_frame, stop_frame,
+                        # self.frame_ids[tool_id][0], self.frame_ids[tool_id][-1],
+                        # TODO tady by to asi mělo být přes celé video, nikoliv jen přes přítomnost nástroje
+                        stitch_name.lower(), tool_id,
                         oa_relative_presences,
                         video_part_duration_frames,
                         data_results=data_results
                     )
 
-                    if cut_id < len(knot_frames):
-                        # knotting time statistics
-                        stitch_name = f"knot {cut_id}"
-                        knot_frame = knot_frames[cut_id]
-
-                        knot_part_duration_frames = cut_frame_stop - knot_frame
-                        data_results[f"Knot {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
-                        data_results[f"Knot {cut_id} start at [s]"] = knot_frame / self.fps
-
-                        data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
-                            # frame_ids_tool, data_pixel,
-                            # self.fps, self.pix_size_m, self.is_qr_detected,
-                            object_color,
-                            object_name,
-                            # frame_idx_knot_start, frame_idx_stop,
-                            cut_frame_start, cut_frame_stop,
-                            stitch_name, tool_id,
-                            oa_relative_presences,
-                            video_part_duration_frames,
-                            data_results=data_results
-                        )
-
-                        # piercing time statistics
-                        stitch_name = f"piercing {cut_id}"
-                        knot_frame = knot_frames[cut_id]
-
-                        knot_part_duration_frames = cut_frame_stop - knot_frame
-                        data_results[f"Piercing {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
-                        data_results[f"Piercing {cut_id} start at [s]"] = knot_frame / self.fps
-
-                        data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
-                            # frame_ids_tool, data_pixel,
-                            # self.fps, self.pix_size_m, self.is_qr_detected,
-                            object_color,
-                            object_name,
-                            # frame_idx_start, frame_idx_knot_start,
-                            cut_frame_start, cut_frame_stop,
-                            stitch_name, tool_id,
-                            oa_relative_presences,
-                            video_part_duration_frames,
-                            data_results=data_results
-                        )
-
-                    # save statistic to file
+        # # go over cut_frames and do the time lenght of each stitch
+        # for cut_id in range(0, int(len(cut_frames) / 2)):
+        #     cut_frame_idx = int(cut_id * 2)
+        #     cut_frame_start = cut_frames[cut_frame_idx]
+        #     cut_frame_stop = cut_frames[cut_frame_idx + 1]
+        #     video_part_duration_frames = cut_frame_stop - cut_frame_start
+        #     data_results[f"Stitch {cut_id} duration [s]"] = video_part_duration_frames / self.fps
+        #     # data_results[f"Stitch {cut_id} duration [%]"] = video_part_duration_frames / self.frame_cnt * 100
+        #     data_results[f"Stitch {cut_id} start at [s]"] = cut_frame_start / self.fps
+        # # for each tool
+        # for tool_id, (object_color, object_name) in enumerate(
+        #         zip(object_colors, object_names)
+        # ):
+        #     # frame_ids_tool = frame_ids[tool_id]
+        #     # data_pixel = data_pixels[tool_id]
+        #
+        #     if self.frame_ids[tool_id] != []:
+        #         # frame_ids = [ 5,6,10, ... 54,59]
+        #         # print(cut_frames)
+        #         # simplename = object_name.lower().strip().replace(" ", "_")
+        #
+        #         frame_idx_start = int(0)
+        #         frame_idx_stop = len(self.frame_ids[tool_id]) - 1
+        #         object_full_name = f"{object_name}"
+        #         stitch_name = "all"
+        #         video_part_duration_frames = cut_frames[-1] - cut_frames[0] if len(cut_frames) > 0 else self.frame_cnt
+        #         # j_before = 0
+        #
+        #         logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
+        #         # do the report images and stats fo whole video
+        #         data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+        #             # frame_ids_tool, data_pixel,
+        #             object_color,
+        #             object_name,
+        #             # frame_idx_start, frame_idx_stop,
+        #             self.frame_ids[tool_id][0], self.frame_ids[tool_id][-1], # TODO tady by to asi mělo být přes celé video, nikoliv jen přes přítomnost nástroje
+        #             stitch_name, tool_id,
+        #             oa_relative_presences,
+        #             video_part_duration_frames,
+        #             data_results=data_results
+        #         )
+        #
+        #
+        #         # for cut_id, cut_frame in enumerate([0] + cut_frames):
+        #         # for each stitch in each tool
+        #         for cut_id in range(0, int(len(cut_frames) / 2)):
+        #             cut_frame_idx = int(cut_id * 2)
+        #             # cut_frame = cut_frames[cut_frame_idx]
+        #
+        #             object_full_name = f"{object_name} stitch {cut_id}"
+        #             stitch_name = f"stitch {cut_id}"
+        #
+        #             cut_frame_start = cut_frames[cut_frame_idx]
+        #             cut_frame_stop = cut_frames[cut_frame_idx + 1]
+        #             video_part_duration_frames = cut_frame_stop - cut_frame_start
+        #
+        #             # frame_idx_start = int(cut_frames[cut_frame_idx])
+        #             # frame_idx_stop = int(cut_frames[cut_frame_idx + 1])
+        #
+        #             for j, frame_id in enumerate(self.frame_ids[tool_id]):
+        #                 if frame_id <= cut_frame_start:
+        #                     frame_idx_start = j
+        #                 if cut_id < len(knot_frames):
+        #                     # there is a knot in the stitch
+        #                     if frame_id <= knot_frames[cut_id]:
+        #                         frame_idx_knot_start = j
+        #                 if frame_id >= cut_frame_stop:
+        #                     frame_idx_stop = j
+        #                     break
+        #
+        #
+        #             # if cut_id > 0:
+        #             #     object_full_name = f"{object_name} stitch {cut_id}"
+        #             #     stitch_name = f"stitch_{cut_id}"
+        #             #     for j, frame in enumerate(frame_ids):
+        #             #         if frame > cut_frame:
+        #             #             frame_idx_start = j_before
+        #             #             frame_idx_stop = j
+        #             #             j_before = j
+        #             #             break
+        #             logger.debug(f"per stitch analysis {object_full_name=} {frame_idx_start=} {frame_idx_stop=}")
+        #             # do the report images and stats for each stitch
+        #             data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+        #                 # frame_ids_tool, data_pixel,
+        #                 # self.fps, self.pix_size_m, self.is_qr_detected,
+        #                 object_color,
+        #                 object_name,
+        #                 # frame_idx_start, frame_idx_stop,
+        #                 cut_frame_start, cut_frame_stop,
+        #                 stitch_name, tool_id,
+        #                 oa_relative_presences,
+        #                 video_part_duration_frames,
+        #                 data_results=data_results
+        #             )
+        #
+        #             if cut_id < len(knot_frames):
+        #                 # knotting time statistics
+        #                 stitch_name = f"knot {cut_id}"
+        #                 knot_frame = knot_frames[cut_id]
+        #
+        #                 knot_part_duration_frames = cut_frame_stop - knot_frame
+        #                 data_results[f"Knot {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
+        #                 data_results[f"Knot {cut_id} start at [s]"] = knot_frame / self.fps
+        #
+        #                 data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+        #                     # frame_ids_tool, data_pixel,
+        #                     # self.fps, self.pix_size_m, self.is_qr_detected,
+        #                     object_color,
+        #                     object_name,
+        #                     # frame_idx_knot_start, frame_idx_stop,
+        #                     cut_frame_start, knot_frame,
+        #                     stitch_name, tool_id,
+        #                     oa_relative_presences,
+        #                     video_part_duration_frames,
+        #                     data_results=data_results
+        #                 )
+        #
+        #                 # piercing time statistics
+        #                 stitch_name = f"piercing {cut_id}"
+        #                 knot_frame = knot_frames[cut_id]
+        #
+        #                 knot_part_duration_frames = knot_frame - cut_frame_start
+        #                 data_results[f"Piercing {cut_id} duration [s]"] = knot_part_duration_frames / self.fps
+        #                 data_results[f"Piercing {cut_id} start at [s]"] = knot_frame / self.fps
+        #
+        #                 data_results = self.make_stats_and_images_for_one_tool_in_one_video_part(
+        #                     # frame_ids_tool, data_pixel,
+        #                     # self.fps, self.pix_size_m, self.is_qr_detected,
+        #                     object_color,
+        #                     object_name,
+        #                     # frame_idx_start, frame_idx_knot_start,
+        #                     cut_frame_start, cut_frame_stop,
+        #                     stitch_name, tool_id,
+        #                     oa_relative_presences,
+        #                     video_part_duration_frames,
+        #                     data_results=data_results
+        #                 )
+        #
+        #             # save statistic to file
         return data_results
 
 

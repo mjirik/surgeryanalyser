@@ -7,6 +7,7 @@ Actual version: "0.0.0"
 
 * [added] relation to between static and dynamic analysis of the stitch created
 * [changed] re-worked passing of tracking information into deeper functions
+* [added] relative position of instruments
 
 ## 2024-06
 
