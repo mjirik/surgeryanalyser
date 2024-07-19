@@ -81,7 +81,12 @@ class InstrumentDistance:
         if len(frame_ids1) != len(coordinates1) or len(frame_ids2) != len(coordinates2):
             raise ValueError("frame_ids and coordinates must have the same length")
 
-        if (coordinates1.shape[1] == 2) and (coordinates2.shape[1] == 2) and (coordinates1.shape[0] > 2) and (coordinates2.shape[0] > 2):
+        logger.debug(f"{coordinates1.shape=}, {coordinates2.shape=}")
+        if (
+                (len(coordinates1.shape)) == 2 and (len(coordinates2.shape) == 2) and
+                (coordinates1.shape[1] == 2) and (coordinates2.shape[1] == 2) and
+                (coordinates1.shape[0] > 2) and (coordinates2.shape[0] > 2)
+        ):
             self.instrument1 = Interpolation(frame_ids1, np.asarray(coordinates1) * pix_size, fps)
             self.instrument2 = Interpolation(frame_ids2, np.asarray(coordinates2) * pix_size, fps)
 
