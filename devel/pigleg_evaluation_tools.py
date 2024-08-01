@@ -1,5 +1,7 @@
 import pandas as pd
 from typing import List
+import numpy as np
+
 
 def rows_with_missing_values_for_stitch(dfs, stitch_id:int):
     """Return a list of rows with missing values."""
@@ -92,3 +94,37 @@ def new_dataframe_with_one_row_per_stitch(dfs: pd.DataFrame, stitch_count:int = 
     return dfst
 
 
+def normalize_by_percentiles(dfst: pd.DataFrame, qlo:float = 0.2, qhi:float = 0.8) -> pd.DataFrame:
+    """Normalize columns by quantile 20 and 80 to 0.2 and 0.8"""
+
+    dfnorm = dfst.copy()
+    for col in dfnorm.columns:
+        if dfnorm[col].dtype == np.float64:
+            dfnorm[col] = 0. + (0.5 * (dfnorm[col] - dfnorm[col].quantile(0.5)) /
+                                (dfnorm[col].quantile(qlo) - dfnorm[col].quantile(qhi))
+                                )
+    return dfnorm
+
+
+def add_overall_score(dfnorm: pd.DataFrame, selected_columns_and_weights: list) -> pd.DataFrame:
+    """Return a new dataframe with overall score.
+
+    dfnorm: normalized dataframe to range around zero
+    selected_columns_and_weights: list of column names (odd positions) and weights (even positions). Weights might be
+    negative.
+    """
+
+    # suma of weights
+    wsum = sum([abs(selected_columns_and_weights[i]) for i in range(1, len(selected_columns_and_weights), 2)])
+    print(wsum)
+    # calculate wighted average from selected_columns_and_weights
+    dfnorm = dfnorm.reset_index(drop=True)
+
+    dfnorm["overall_score"] = 0
+
+    for i in range(0, len(selected_columns_and_weights), 2):
+        col = selected_columns_and_weights[i]
+        weight = selected_columns_and_weights[i + 1] / wsum
+        dfnorm["overall_score"] += dfnorm[col] * weight
+        # print(col, weight)
+    return dfnorm
