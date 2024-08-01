@@ -130,7 +130,7 @@ class StaticStitchAnalysis:
             meta["stitch_static"][dynamic_stitch_id] = {
                 "dynamic_id": dynamic_stitch_id,
                 "static_id": static_id,
-                "static_label": stitch_label,
+                "static_label": stitch_label, # lower is better
                 "static_bbox": static_bbox,
             }
 
