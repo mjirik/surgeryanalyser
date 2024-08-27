@@ -107,7 +107,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
         logger.debug(f"tempdir={tempdir}, {tempdir.exists()}")
         tempdir.mkdir(parents=True, exist_ok=True)
 
-        files_to_keep = [outputdir / "tracks.json"] + list(outputdir.glob("annotation_*.json"))
+        files_to_keep = list(outputdir.glob("tracks.json")) + list(outputdir.glob("annotation_*.json"))
         logger.debug(f"{files_to_keep=}")
         for fn in files_to_keep:
             shutil.move(fn, tempdir)
