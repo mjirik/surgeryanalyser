@@ -139,6 +139,7 @@ class DoComputerVision:
             )
             else True
         )
+        self.do_crop = False
 
         logger.debug(f"{self.is_microsurgery=}")
 
@@ -390,6 +391,9 @@ class DoComputerVision:
             self.meta["stitch_split_s"] = self.meta["annotation_stitch_split_s"]
             self.meta["stitch_split_frames_source"] = "annotation"
 
+        if len(self.meta["stitch_split_frames"]) == 0:
+            self._calculate_knot_split_frames_in_the_middle_of_stitches()
+
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
 
 
@@ -551,7 +555,7 @@ class DoComputerVision:
 
         filter_str = ""
 
-        if crop_bbox is not None:
+        if self.do_crop and (crop_bbox is not None):
             if crop_bbox[4] > crop_bbox_score_threshold:
                 cr_out_w = int(crop_bbox[2] - crop_bbox[0])
                 cr_out_h = int(crop_bbox[3] - crop_bbox[1])
@@ -765,7 +769,19 @@ class DoComputerVision:
         knot_split_frames = [int(x * fps) for x in knot_split_s]
         self.meta["knot_split_frames"] = knot_split_frames
         self.meta["knot_split_s"] = knot_split_s
+        self.meta["knot_split_source"] = "annotation"
         return stitch_split_frames
+
+    def _calculate_knot_split_frames_in_the_middle_of_stitches(self) -> List[int]:
+
+        stitch_split_frames = self.meta["stitch_split_frames"]
+        knot_split_frames = []
+        for i in range(1, len(stitch_split_frames)):
+            knot_split_frames.append((stitch_split_frames[i-1] + stitch_split_frames[i]) // 2)
+        self.meta["knot_split_frames"] = knot_split_frames
+        self.meta["knot_split_s"] = [float(x) / float(self.meta["fps"]) for x in knot_split_frames]
+        self.meta["knot_split_source"] = "calculation"
+        return knot_split_frames
 
     def _make_report(self, cut_frames=[]):
         #                            cut_frames=self.meta["stitch_split_frames"]

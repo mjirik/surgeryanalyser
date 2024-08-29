@@ -3,6 +3,11 @@
 Actual version: "0.0.0"
 
 
+## 2024-08
+
+* [added] If no knot start is annotated it is calculated by the stitch start and stitch end
+* [changed] Scene crop is turned off
+
 ## 2024-07
 
 * [added] relation to between static and dynamic analysis of the stitch created
