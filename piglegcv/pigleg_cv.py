@@ -391,13 +391,14 @@ class DoComputerVision:
             self.meta["stitch_split_s"] = self.meta["annotation_stitch_split_s"]
             self.meta["stitch_split_frames_source"] = "annotation"
 
-        if len(self.meta["stitch_split_frames"]) == 0:
+        if "knot_split_frames" not in self.meta or len(self.meta["knot_split_frames"]) == 0:
             self._calculate_knot_split_frames_in_the_middle_of_stitches()
 
         self.meta["duration_s_stitch_ends"] = float(time.time() - s)
 
 
         logger.debug(f"{self.meta['stitch_split_frames']=}")
+        logger.debug(f"{self.meta['knot_split_frames']=}")
         logger.debug(f"Stitch ends found in {time.time() - s}s.")
 
         s = time.time()
