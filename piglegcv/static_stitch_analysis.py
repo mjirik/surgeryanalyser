@@ -60,81 +60,85 @@ class StaticStitchAnalysis:
 
 
         stitch_json_fn = outputdir / "stitch_detection_0.json"
-        with open(stitch_json_fn, "r") as f:
-            stitch_json = json.load(f)
-
-        bbox_incision = meta["incision_bboxes"][0]
-        bboxes_stitches = stitch_json["stitch_bboxes"]
-        bboxes_stitches_global = make_stitch_bboxes_global(bbox_incision, bboxes_stitches)
-
-        # bboxes_stitches_global_centroid
-        bboxes_stitches_global_centroid = np.array([
-            [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2]
-            for bbox in bboxes_stitches_global
-        ])
-
-        self.draw_stitches(bboxes_stitches_global, bboxes_stitches_global_centroid)
-
-
-        stitch_split_frames = meta["stitch_split_frames"]
-
         tracks_points_fn = outputdir / "tracks_points.json"
+        if stitch_json_fn.exists() and tracks_points_fn.exists():
 
-        with open(tracks_points_fn, "r") as f:
-            tracks_points = json.load(f)
+            with open(stitch_json_fn, "r") as f:
+                stitch_json = json.load(f)
 
-        tracks_points.keys()
-        meta["stitch_static"] = [None] * int(len(stitch_split_frames) / 2)
+            bbox_incision = meta["incision_bboxes"][0]
+            bboxes_stitches = stitch_json["stitch_bboxes"]
+            bboxes_stitches_global = make_stitch_bboxes_global(bbox_incision, bboxes_stitches)
 
-        for dynamic_stitch_id in range(0, int(len(stitch_split_frames) / 2)):
-            start_frame = stitch_split_frames[2*dynamic_stitch_id]
-            stop_frame = stitch_split_frames[(2*dynamic_stitch_id) + 1]
-            tracks_points_subsegment = get_subsegment_of_tracks_points(tracks_points, start_frame, stop_frame)
+            # bboxes_stitches_global_centroid
+            bboxes_stitches_global_centroid = np.array([
+                [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2]
+                for bbox in bboxes_stitches_global
+            ])
 
-            needle_holder_points_px = np.asarray(tracks_points_subsegment["data_pixels"][tool_id])
-            print(needle_holder_points_px.shape)
-            med = np.median(needle_holder_points_px, axis=0)
+            self.draw_stitches(bboxes_stitches_global, bboxes_stitches_global_centroid)
 
 
-            if self.save_debug_images or self.show:
-                img = self.get_img()
-                if img is None:
-                    return
-                fig = plt.figure(figsize=(10, 10))
-                plt.imshow(img)
-                plt.plot(needle_holder_points_px[:, 0], needle_holder_points_px[:, 1], "b.")
-                plt.plot(med[0], med[1], "rx")
-                if self.save_debug_images:
-                    plt.savefig(self.outputdir / f"_static_dynamic_stitch_{dynamic_stitch_id}.png")
-                if self.show:
-                    plt.show()
+            stitch_split_frames = meta["stitch_split_frames"]
 
-                plt.close(fig)
 
-            if len(bboxes_stitches_global) > 0:
-            # closest stitch bbox
-                distances = np.linalg.norm(bboxes_stitches_global_centroid - med, axis=1)
+            with open(tracks_points_fn, "r") as f:
+                tracks_points = json.load(f)
 
-                static_id = np.argmin(distances)
+            tracks_points.keys()
+            meta["stitch_static"] = [None] * int(len(stitch_split_frames) / 2)
 
-                stitch_label = stitch_json["stitch_labels"][static_id]
-                static_bbox = bboxes_stitches_global[static_id]
-                # stitch_id = static_id
-            else:
-                static_id = None
-                stitch_label = None
-                static_bbox = None
+            for dynamic_stitch_id in range(0, int(len(stitch_split_frames) / 2)):
+                start_frame = stitch_split_frames[2*dynamic_stitch_id]
+                stop_frame = stitch_split_frames[(2*dynamic_stitch_id) + 1]
+                tracks_points_subsegment = get_subsegment_of_tracks_points(tracks_points, start_frame, stop_frame)
 
-            logger.debug(f"Dynamic stitch {dynamic_stitch_id} is closest to static stitch {static_id}")
+                needle_holder_points_px = np.asarray(tracks_points_subsegment["data_pixels"][tool_id])
+                print(needle_holder_points_px.shape)
+                med = np.median(needle_holder_points_px, axis=0)
 
-            meta["stitch_static"][dynamic_stitch_id] = {
-                "dynamic_id": dynamic_stitch_id,
-                "static_id": static_id,
-                "static_label": stitch_label, # lower is better
-                "static_bbox": static_bbox,
-            }
 
-            self.results[f"Static quality stitch {dynamic_stitch_id}"] = stitch_label
+                if self.save_debug_images or self.show:
+                    img = self.get_img()
+                    if img is None:
+                        return
+                    fig = plt.figure(figsize=(10, 10))
+                    plt.imshow(img)
+                    plt.plot(needle_holder_points_px[:, 0], needle_holder_points_px[:, 1], "b.")
+                    plt.plot(med[0], med[1], "rx")
+                    if self.save_debug_images:
+                        plt.savefig(self.outputdir / f"_static_dynamic_stitch_{dynamic_stitch_id}.png")
+                    if self.show:
+                        plt.show()
+
+                    plt.close(fig)
+
+                if len(bboxes_stitches_global) > 0:
+                # closest stitch bbox
+                    distances = np.linalg.norm(bboxes_stitches_global_centroid - med, axis=1)
+
+                    static_id = np.argmin(distances)
+
+                    stitch_label = stitch_json["stitch_labels"][static_id]
+                    static_bbox = bboxes_stitches_global[static_id]
+                    # stitch_id = static_id
+                else:
+                    static_id = None
+                    stitch_label = None
+                    static_bbox = None
+
+                logger.debug(f"Dynamic stitch {dynamic_stitch_id} is closest to static stitch {static_id}")
+
+                meta["stitch_static"][dynamic_stitch_id] = {
+                    "dynamic_id": dynamic_stitch_id,
+                    "static_id": static_id,
+                    "static_label": stitch_label, # lower is better
+                    "static_bbox": static_bbox,
+                }
+
+                self.results[f"Static quality stitch {dynamic_stitch_id}"] = stitch_label
+        else:
+            logger.warning("No stitch detection found")
 
             # save_json(meta, self.outputdir / f"tracks_points_stitch_{dynamic_stitch_id}.json")
 
