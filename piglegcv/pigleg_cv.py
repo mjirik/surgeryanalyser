@@ -45,9 +45,11 @@ from sklearn.cluster import KMeans
 try:
     import tools
     from tools import save_json
+    import movement_evaluation
 except ImportError:
     from .tools import save_json
     from . import tools
+    from . import movement_evaluation
 
 
 # from sklearn.mixture import GaussianMixture
@@ -414,6 +416,7 @@ class DoComputerVision:
 
         self.meta["duration_s_report"] = float(time.time() - s)
         self.meta["processed_at"]=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.do_ai_movement_evaluation()
         self._save_results()
 
         set_progress(99)
@@ -422,6 +425,12 @@ class DoComputerVision:
 
         logger.debug("Report based on video is finished.")
         logger.debug("Video processing finished")
+
+    def do_ai_movement_evaluation(self):
+
+        me = movement_evaluation.MovementEvaluation(self.results, self.meta, self.filename)
+        additional_results = me.evaluate()
+        self.results.update(additional_results)
 
     def _get_frame_to_process_ideally_with_incision(
         self,
