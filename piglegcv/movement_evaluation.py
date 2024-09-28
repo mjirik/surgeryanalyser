@@ -9,7 +9,7 @@ except ImportError:
     from . import pigleg_evaluation_tools as pet
 
 
-PREDICTION_MODEL_PATH = Path("model_best_SVR.pkl")
+PREDICTION_MODEL_PATH = Path("resources/movement_evaluation_models/model_best_SVR.pkl")
 PREDICTION_MODEL = None
 
 
