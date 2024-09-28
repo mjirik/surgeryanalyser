@@ -412,11 +412,11 @@ class DoComputerVision:
                 self.results["Stitches linearity score [%]"] = self.meta["stitch_scores"][0]["r_score"] * 100
                 self.results["Stitches parallelism score [%]"] = self.meta["stitch_scores"][0]["s_score"] * 100
                 self.results["Stitches perpendicular score [%]"] = self.meta["stitch_scores"][0]["p_score"] * 100
+        self.do_ai_movement_evaluation()
         # save statistic to file
 
         self.meta["duration_s_report"] = float(time.time() - s)
         self.meta["processed_at"]=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.do_ai_movement_evaluation()
         self._save_results()
 
         set_progress(99)

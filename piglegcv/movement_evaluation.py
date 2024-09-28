@@ -45,7 +45,7 @@ class MovementEvaluation:
         for stitch_id, prediction in zip(stitch_ids, predictions):
             # limit prediction to range  [0, 5]
             prediction = max(0, min(5, prediction))
-            additional_results[f"AI movement evaluation {stitch_id}"] = prediction
+            additional_results[f"AI movement evaluation {stitch_id} [%]"] = 20. * prediction
         return additional_results
 
 
