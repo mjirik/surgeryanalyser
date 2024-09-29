@@ -429,6 +429,7 @@ class DoComputerVision:
     def do_ai_movement_evaluation(self):
 
         me = movement_evaluation.MovementEvaluation(self.results, self.meta, self.filename)
+        me.init_by_dict(self.results)
         additional_results = me.evaluate()
         self.results.update(additional_results)
 

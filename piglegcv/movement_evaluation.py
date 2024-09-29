@@ -14,15 +14,26 @@ PREDICTION_MODEL = None
 
 
 class MovementEvaluation:
-    def __init__(self, results:dict, meta:dict, mediafile_path:Path):
+    def __init__(self):
+        self.results = None
+    
+    def init_by_path(results_path:Path):
+        with open(results_path, "r") as f:
+            
+            results = json.load(f)
+            
+        self.init_by_dict(results)
+    
+    def init_by_dict(results:dict):
         self.results = results
-        self.meta = meta
-        self.mediafile_path = Path(mediafile_path)
+        # self.meta = meta
+        # self.mediafile_path = Path(mediafile_path)
 
         novy = {}
-        novy.update(self.meta)
+        # novy.update(self.meta)
         novy.update(self.results)
-        novy["filename"] = self.mediafile_path.name
+        # novy["filename"] = self.mediafile_path.name
+        # logger.debug(novy)
 
         df_novy = pd.DataFrame(novy, index=[0])
 
@@ -45,7 +56,7 @@ class MovementEvaluation:
         for stitch_id, prediction in zip(stitch_ids, predictions):
             # limit prediction to range  [0, 5]
             prediction = max(0, min(5, prediction))
-            additional_results[f"AI movement evaluation {stitch_id} [%]"] = 20. * prediction
+            additional_results[f"AI movement evaluation stitch {stitch_id} [%]"] = 20. * prediction
         return additional_results
 
 
@@ -64,10 +75,14 @@ def movement_evaluation_prediction(dfst: pd.DataFrame) -> pd.DataFrame:
     clf = model["model"]
     data_cols = model["data_cols"]
     sample_id_cols = model["sample_id_cols"]
-
     predicted_columns = model["predicted_columns"]
+    logger.debug(f"{data_cols=}")
+    logger.debug(f"{sample_id_cols=}")
+    logger.debug(f"{predicted_columns=}")
+
+    
     logger.debug(dfst.shape)
-    dfst_nna = dfst.dropna(subset=data_cols + sample_id_cols + predicted_columns
+    dfst_nna = dfst.dropna(subset=data_cols #+ sample_id_cols + predicted_columns
                            ).reset_index()
     dfst_nna = dfst_nna.copy()
     logger.debug(dfst_nna.shape)
