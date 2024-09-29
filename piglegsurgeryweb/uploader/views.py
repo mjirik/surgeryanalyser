@@ -345,8 +345,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     for i in range(int(serverfile.stitch_count)):
         per_stitch_report.append({
             "stitch_id": i,
-            "advices": prepare_advices(results, i),
-            "ai_movement_evaluation": results.get(f"AI movement evaluation stitch {i} [%]", None),
+            "advices": prepare_advices(loaded_results, i),
+            "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
         })
 
     logger.debug(f"{per_stitch_report=}")

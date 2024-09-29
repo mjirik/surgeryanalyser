@@ -486,11 +486,16 @@
 
     {% if serverfile.finished_at %}
 
+
         {% if per_stitch_report %}
         <div>
                 {{ per_stitch_report }}
+
                 {% for stitch_report in per_stitch_report %}
                     <h3>Stitch {{ stitch_report.stitch_id }}</h3>
+                    {% if stitch_report.ai_movement_evaluation %}
+                        <p>AI movement evaluation: {{ stitch_report.ai_movement_evaluation }}</p>
+                    {% endif  %}
 {#                    items #}
                     <ul>
                         {% for advice in stitch_report.advices %}
