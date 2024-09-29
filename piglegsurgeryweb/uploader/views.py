@@ -385,6 +385,7 @@ def is_hi_than(value, threshold):
     return value > threshold
 
 def prepare_advices(results: dict, stitch_id:int) -> list:
+    logger.warning(f"{results=}")
     advices = []
 
     # set varibale fn to function which will return true if the value will be lower then some threshold
@@ -409,7 +410,9 @@ def prepare_advices(results: dict, stitch_id:int) -> list:
         key, fn, threshold, advice = rule_and_advice
         if key in results:
             if fn(results[key], threshold):
-                advices.append[advice]
+                advices.append(advice)
+        else:
+            logger.warning(f"Key '{key}' not found in results")
     return advices
 
 def download_sample_image(request):
