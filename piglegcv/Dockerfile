@@ -111,6 +111,7 @@ RUN mkdir -p ./resources/tracker_model_bytetrack
 RUN mkdir -p ./resources/tracker_model_bytetrack_hands_tools
 RUN mkdir -p ./resources/tracker_model_bytetrack_microsurgery
 RUN mkdir -p ./resources/yolov7_qrdet
+RUN mkdir -p ./resources/movement_evaluation_models
 #
 COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
 COPY ./resources/single_image_detector/mdl_sid_2.pth ./resources/single_image_detector
@@ -121,6 +122,7 @@ COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_byt
 COPY ./resources/tracker_model_bytetrack_hands_tools/* ./resources/tracker_model_bytetrack_hands_tools/
 COPY ./resources/tracker_model_bytetrack_microsurgery/* ./resources/tracker_model_bytetrack_microsurgery/
 COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
+COPY ./resources/movement_evaluation_models/* ./resources/movement_evaluation_models
 #
 #COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
 #COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
