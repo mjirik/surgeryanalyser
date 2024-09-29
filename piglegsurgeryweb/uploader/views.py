@@ -339,6 +339,15 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
 
+    per_stitch_report = []
+
+
+    for i in range(int(serverfile.stitch_count)):
+        per_stitch_report.append({
+            "stitch_id": i,
+            "advices": prepare_advices(results, i)
+        })
+
 
     # get collections with serverfile
     collections_with = models.Collection.objects.filter(uploaded_files=serverfile)
@@ -355,6 +364,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "alternative_videofiles_url": [serverfile.mediafile.url],
         "results": results,
         "edit_review": edit_review,
+        "per_stitch_report": per_stitch_report,
         "myhtml": html,
         "static_analysis_image": static_analysis_image,
         "review_number": len(serverfile.mediafileannotation_set.all()),
@@ -365,6 +375,40 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     return context
 
+
+def is_lo_than(value, threshold):
+    return value < threshold
+
+def is_hi_than(value, threshold):
+    return value > threshold
+
+def prepare_advices(results: dict, stitch_id:int) -> list:
+    advices = []
+
+    # set varibale fn to function which will return true if the value will be lower then some threshold
+    fn = lambda x, threshold: x < threshold
+
+    adv0 = "Try to keep your instruments closer to the incision to avoid unnecessary large movements."
+    adv1 = "Try to move the instruments at a constant speed. Careless, rapid movements can result in unnecessary large movements. "
+
+    rules_and_advices = [
+        (f"Stitch {stitch_id} duration [s]", is_hi_than, 65.30, "The stitch duration is too long. Try to make the stitch faster."),
+    # ),(# "Needle holder stitch area presence [%]" ,
+        (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 91.43, "The needle holder visibility in area around stitch is too low. " + adv0),
+        (f"Needle holder stitch {stitch_id} length [m]", is_hi_than, 2.67, "The needle holder trajectory length is too long. " + adv0),
+        (f"Needle holder stitch {stitch_id} visibility [%]", is_lo_than, 84.25, "The needle holder visibility is too low. " + adv0),
+        (f"Needle holder stitch {stitch_id} velocity above threshold" , is_hi_than, 20.18, "Too much sudden moves of the needle holder detected. " + adv1),
+        (f"Forceps stitch {stitch_id} median area presence [%]" , is_hi_than, 86.23 , "The forceps visibility in area around stitch is too low. " + adv0)
+        ]
+    # "Knot duration [s]",
+    # "Needle holder to forceps stitch below threshold [s]"
+
+    for rule_and_advice in rules_and_advices:
+        key, fn, threshold, advice = rule_and_advice
+        if key in results:
+            if fn(results[key], threshold):
+                advices.append[advice]
+    return advices
 
 def download_sample_image(request):
     """Download uploaded file."""

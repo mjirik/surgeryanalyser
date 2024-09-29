@@ -485,6 +485,21 @@
 
 
     {% if serverfile.finished_at %}
+
+        {% if per_stitch_report %}
+        <div>
+                {% for stitch_report in per_stitch_report %}
+                    <h3>Stitch {{ stitch_report.stitch_id }}</h3>
+{#                    items #}
+                    <ul>
+                        {% for advice in stitch_report.advices %}
+                            <li>{{ advice }}</li>
+                        {% endfor %}
+                    </ul>
+
+                {% endfor %}
+        </div>
+        {% endif %}
     <div>
         <h3>Statistics</h3>
         {% if myhtml %}
