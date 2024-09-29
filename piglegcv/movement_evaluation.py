@@ -3,6 +3,7 @@ import numpy as np
 import pickle
 from loguru import logger
 from pathlib import Path
+import json
 try:
     import pigleg_evaluation_tools as pet
 except ImportError:
@@ -16,24 +17,19 @@ PREDICTION_MODEL = None
 class MovementEvaluation:
     def __init__(self):
         self.results = None
+        self.dfst = None
     
-    def init_by_path(results_path:Path):
+    def init_by_path(self, results_path: Path):
         with open(results_path, "r") as f:
             
             results = json.load(f)
             
         self.init_by_dict(results)
     
-    def init_by_dict(results:dict):
+    def init_by_dict(self, results: dict):
         self.results = results
-        # self.meta = meta
-        # self.mediafile_path = Path(mediafile_path)
-
         novy = {}
-        # novy.update(self.meta)
         novy.update(self.results)
-        # novy["filename"] = self.mediafile_path.name
-        # logger.debug(novy)
 
         df_novy = pd.DataFrame(novy, index=[0])
 
@@ -42,8 +38,6 @@ class MovementEvaluation:
             keep_cols=[],
             # keep_cols=["filename", "annotation_annotation_annotation"]
         )
-
-
 
     def evaluate(self):
         self.dfst = movement_evaluation_prediction(self.dfst)
@@ -58,7 +52,6 @@ class MovementEvaluation:
             prediction = max(0, min(5, prediction))
             additional_results[f"AI movement evaluation stitch {stitch_id} [%]"] = 20. * prediction
         return additional_results
-
 
 
 def movement_evaluation_prediction(dfst: pd.DataFrame) -> pd.DataFrame:
