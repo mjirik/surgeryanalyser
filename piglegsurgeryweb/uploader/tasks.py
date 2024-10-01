@@ -187,11 +187,15 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     logger.debug("Processing finished")
     logger.remove(logger_id)
 
-def get_graph_path_for_report(serverfile: UploadedFile):
-    return Path(serverfile.outputdir) / "report_graph.html"
+def get_graph_path_for_report(serverfile: UploadedFile, stitch_id: Optional[int] = None):
+    if stitch_id is not None:
+        html_path = Path(serverfile.outputdir) / f"report_graph_{stitch_id}.html"
+    else:
+        html_path = Path(serverfile.outputdir) / "report_graph.html"
+    return html_path
 
 def get_normalization_path():
-    normalization_path = settings.MEDIA_ROOT /  "generated/normalization.json"
+    normalization_path = settings.MEDIA_ROOT / "generated/normalization.json"
     return normalization_path
 
 def _make_graphs(uploadedfile: UploadedFile):
