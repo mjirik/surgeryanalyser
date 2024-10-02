@@ -29,6 +29,9 @@ class StitchDataFrame():
 
         dfst = pandas.read_excel(fn)
 
+        annotators = ["Carina", "Ana", "Mira"]
+        dfst[relevant_column] = dfst[annotators].mean(axis=1)
+
         # check devel/2024-09_make_visual_for_students.ipynb
         dfst = add_group_column(dfst, movement_evaluation_col=relevant_column, expert_threshold=3.7894)
         self.dfst:pd.DataFrame = dfst.copy().reset_index(drop=True)
