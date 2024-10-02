@@ -136,7 +136,7 @@ RUN sudo rm /etc/apt/sources.list.d/nvidia-ml.list
 RUN sudo apt-get update --yes
 RUN sudo apt-get install --yes apache2-utils
 
-RUN conda install -n piglegsurgery --yes -c conda-forge plotly=5.18.0 statsmodels
+RUN conda install -n piglegsurgery --yes -c conda-forge plotly=5.18.0 statsmodels pandas=1.5.3 openpyxl
 
 RUN sudo mkdir -p /webapps/piglegsurgery/piglegsurgeryweb/static/
 RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/
