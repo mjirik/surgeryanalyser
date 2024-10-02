@@ -28,12 +28,17 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile, _hash
-from . import tasks, data_tools, models
+from . import tasks, data_tools, models, report_tools
 
 # Create your views here.
 
 
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
+
+STITCH_DATA_FRAME = report_tools.StitchDataFrame(
+    relevant_column="mean_movement_annotation",
+    filename_patch="*all_stitches_with_human_annotations*.xlsx",
+)
 
 
 def logout_view(request):
@@ -341,12 +346,19 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     per_stitch_report = []
 
-
     for i in range(int(serverfile.stitch_count)):
+
+
+
+        logger.debug(f"Stitch {i}")
+        STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
+        graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
+
         per_stitch_report.append({
             "stitch_id": i,
             "advices": prepare_advices(loaded_results, i),
             "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
+            'graphs_html': graphs_html,
         })
 
     logger.debug(f"{per_stitch_report=}")

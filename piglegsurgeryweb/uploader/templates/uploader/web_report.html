@@ -501,6 +501,13 @@
                         {% for advice in stitch_report.advices %}
                             <li>{{ advice }}</li>
                         {% endfor %}
+
+
+                        {% for graph_html in graphs_html %}
+                            {% autoescape off %}
+                                {{ graph_html }}
+                            {% endautoescape %}
+                        {% endfor %}
                     </ul>
 
                 {% endfor %}
