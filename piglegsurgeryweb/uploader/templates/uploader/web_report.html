@@ -503,7 +503,7 @@
                         {% endfor %}
 
 
-                        {% for graph_html in graphs_html %}
+                        {% for graph_html in stitch_report.graphs_html %}
                             {% autoescape off %}
                                 {{ graph_html }}
                             {% endautoescape %}
