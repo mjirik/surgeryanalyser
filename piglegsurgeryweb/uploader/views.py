@@ -407,24 +407,33 @@ def prepare_advices(results: dict, stitch_id:int) -> list:
     adv1 = "Try to move the instruments at a constant speed. Careless, rapid movements can result in unnecessary large movements. "
 
     rules_and_advices = [
-        (f"Stitch {stitch_id} duration [s]", is_hi_than, 65.30, "The stitch duration is too long. Try to make the stitch faster."),
+        (f"Stitch {stitch_id} duration [s]", is_hi_than, 65.30, "The stitch duration is too long. ", "Try to make your movements more smooth and precise. "),
     # ),(# "Needle holder stitch area presence [%]" ,
-        (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 91.43, "The needle holder visibility in area around stitch is too low. " + adv0),
-        (f"Needle holder stitch {stitch_id} length [m]", is_hi_than, 2.67, "The needle holder trajectory length is too long. " + adv0),
-        (f"Needle holder stitch {stitch_id} visibility [%]", is_lo_than, 84.25, "The needle holder visibility is too low. " + adv0),
-        (f"Needle holder stitch {stitch_id} velocity above threshold" , is_hi_than, 20.18, "Too much sudden moves of the needle holder detected. " + adv1),
-        (f"Forceps stitch {stitch_id} median area presence [%]" , is_hi_than, 86.23 , "The forceps visibility in area around stitch is too low. " + adv0)
+    #     (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 91.43, "The needle holder visibility in area around stitch is too low. " + adv0),
+        (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 70., "The needle holder visibility in area around stitch is too low. ", adv0),  # arbitrary value
+        (f"Needle holder stitch {stitch_id} length [m]", is_hi_than, 2.67, "The needle holder trajectory length is too long. ", adv0),
+        (f"Needle holder stitch {stitch_id} visibility [%]", is_lo_than, 84.25, "The needle holder visibility is too low. ", adv0),
+        (f"Needle holder stitch {stitch_id} velocity above threshold" , is_hi_than, 20.18, "Too much sudden moves of the needle holder detected. ", adv1),
+        (f"Forceps stitch {stitch_id} median area presence [%]" , is_hi_than, 86.23 , "The forceps visibility in area around stitch is too low. ", adv0)
         ]
     # "Knot duration [s]",
     # "Needle holder to forceps stitch below threshold [s]"
 
+    advice_reason = {}
     for rule_and_advice in rules_and_advices:
-        key, fn, threshold, advice = rule_and_advice
+        key, fn, threshold, reason, advice = rule_and_advice
         if key in results:
             if fn(results[key], threshold):
-                advices.append(advice)
+                if advice in advice_reason:
+                    advice_reason[advice].append(reason)
+                else:
+                    advice_reason[advice] = [reason]
         else:
             logger.warning(f"Key '{key}' not found in results")
+
+    # Put the advice on one line fallowed by the reasons.
+    for advice in advice_reason:
+        advices.append(advice + " " + " ".join(advice_reason[advice]))
     return advices
 
 def download_sample_image(request):
