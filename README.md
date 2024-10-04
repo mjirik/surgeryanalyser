@@ -35,6 +35,19 @@ docker login nvcr.io
     wget https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_x_8x8_300e_coco/yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth
     ```
 
+### Get SSL Certificate
+
+1. comment second part in `nginx/nginx.conf`
+2. Comment entrypoint in `docker-compose.yml`
+3. Run docker by docker compose
+4. Get certificate
+    ```bash
+    docker compose --env-file .env.prod run --rm  certbot certonly --webroot --webroot-path /var/www/certboot -d suran.kky.zcu.cz
+    ```
+5. Uncomment second part in `nginx/nginx.conf`
+6. Uncomment entrypoint in `docker-compose.yml`
+7. Stop and start docker compose
+
 ## Run devel 
     
 ```shell
