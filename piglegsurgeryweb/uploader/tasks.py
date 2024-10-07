@@ -26,6 +26,7 @@ from django.template import defaultfilters
 from django.shortcuts import reverse
 from django.utils.html import strip_tags
 from django_q.models import Schedule
+from django.shortcuts import get_object_or_404
 from django_q.tasks import async_task, queue_size, schedule
 from loguru import logger
 from oauth2client.service_account import ServiceAccountCredentials
@@ -882,24 +883,14 @@ def list_files_in_drop_dir() -> list[Path]:
 
 
 def call_async_run_processing(serverfile, absolute_uri):
-    serverfile.started_at = django.utils.timezone.now()
-    serverfile.finished_at = None
-    serverfile.processing_ok = False
-    serverfile.processing_message = "Not finished yet."
-    serverfile.save()
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
     make_preview(serverfile)
     update_owner(serverfile)
-    async_task(
-        "uploader.tasks.run_processing",
-        serverfile,
-        absolute_uri,
-        PIGLEGCV_HOSTNAME,
-        int(PIGLEGCV_PORT),
-        timeout=settings.PIGLEGCV_TIMEOUT,
-        hook="uploader.tasks.email_report_from_task",
-    )
+
+    make_it_run(
+        serverfile, absolute_uri, PIGLEGCV_HOSTNAME, int(PIGLEGCV_PORT),
+        send_email=True)
 
 
 def save_annotations_to_json(serverfile: UploadedFile):
@@ -915,3 +906,39 @@ def save_annotations_to_json(serverfile: UploadedFile):
         with open(annotation_filename, "w") as f:
             # json.dump(json_annotation, f)
             f.write(serialize("json", [annotation]))
+
+
+def make_it_run(
+        serverfile: UploadedFile,
+        absolute_uri: str, hostname: str, port: int,
+        send_email:bool=False
+) -> UploadedFile:
+    kwargs = {}
+    if send_email:
+        # hook="uploader.tasks.email_report_from_task",
+        kwargs["hook"] = "uploader.tasks.email_report_from_task"
+    serverfile.started_at = django.utils.timezone.now()
+    serverfile.finished_at = None
+    serverfile.processing_ok = False
+    serverfile.processing_message = "Not finished yet."
+    serverfile.save()
+    logger.debug(f"hostname={hostname}, port={port}")
+    if serverfile.category.name == "Other":
+        serverfile.finished_at = django.utils.timezone.now()
+        serverfile.processing_ok = True
+        serverfile.processing_message = "Other category: Processing skipped."
+        serverfile.save()
+        email_report(serverfile, absolute_uri)
+
+    else:
+        async_task(
+            "uploader.tasks.run_processing",
+            serverfile,
+            absolute_uri,
+            hostname,
+            int(port),
+            timeout=settings.PIGLEGCV_TIMEOUT,
+            **kwargs,
+            # hook="uploader.tasks.email_report_from_task",
+        )
+    return serverfile

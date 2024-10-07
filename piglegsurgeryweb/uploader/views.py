@@ -1,10 +1,7 @@
 import json
-import os
 import re
-from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple, Union, List
-import shutil
+from typing import Optional, Tuple, List
 
 import django.utils
 from django.conf import settings
@@ -12,7 +9,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.shortcuts import redirect, render, reverse
 from django.views import generic
 from django.template.loader import render_to_string
 from django.core.paginator import Page, Paginator
@@ -22,18 +19,17 @@ from django.shortcuts import get_object_or_404
 import os
 
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
-from django_q.tasks import async_task, queue_size, schedule
+from django_q.tasks import async_task, queue_size
 from loguru import logger
 
 from .forms import AnnotationForm, UploadedFileForm
-from .models import MediaFileAnnotation, Owner, UploadedFile, _hash
-from .models_tools import randomString
-from .tasks import email_media_recived, make_preview, get_graph_path_for_owner, update_owner, import_files_from_drop_dir, call_async_run_processing
+from .models import Owner
+from .tasks import get_graph_path_for_owner, call_async_run_processing, make_it_run
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile, _hash
-from . import tasks, data_tools, models, report_tools
+from . import tasks, models, report_tools
 
 # Create your views here.
 
@@ -879,31 +875,9 @@ def run(request, filename_hash:str, send_email:bool=False):
 
 def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000, send_email=False):
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    absolute_uri = request.build_absolute_uri("/")
 
-    kwargs = {}
-    if send_email:
-        # hook="uploader.tasks.email_report_from_task",
-        kwargs["hook"] = "uploader.tasks.email_report_from_task"
-
-    serverfile.started_at = django.utils.timezone.now()
-    serverfile.finished_at = None
-    serverfile.processing_ok = False
-    serverfile.processing_message = "Not finished yet."
-    serverfile.save()
-
-    logger.debug(f"hostname={hostname}, port={port}")
-
-    async_task(
-        "uploader.tasks.run_processing",
-        serverfile,
-        request.build_absolute_uri("/"),
-        hostname,
-        port,
-        timeout=settings.PIGLEGCV_TIMEOUT,
-        **kwargs,
-        # hook="uploader.tasks.email_report_from_task",
-    )
-    return serverfile
+    return make_it_run(serverfile, absolute_uri, hostname, port, send_email)
     # return redirect("/uploader/upload/")
 
 
