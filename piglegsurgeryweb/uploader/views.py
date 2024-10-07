@@ -3,7 +3,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple, Union, List
 import shutil
 
 import django.utils
@@ -15,6 +15,11 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views import generic
 from django.template.loader import render_to_string
+from django.core.paginator import Page, Paginator
+from django.http import StreamingHttpResponse, Http404
+from django.shortcuts import get_object_or_404
+# from .models import UploadedFile
+import os
 
 # from .models_tools import get_hash_from_output_dir, get_outputdir_from_hash
 from django_q.tasks import async_task, queue_size, schedule
@@ -164,6 +169,10 @@ def _general_report_list(request, uploaded_file_set):
         files = sorted(uploaded_file_set, key=str)
     else:
         files = uploaded_file_set.order_by(order_by)
+    records_per_page = 40
+    paginator = Paginator(files, per_page=records_per_page)
+    page_obj, _, page_context = _prepare_page(paginator, request=request)
+
     qs_data = {}
     for e in files:
         qs_data[e.id] = (
@@ -178,12 +187,14 @@ def _general_report_list(request, uploaded_file_set):
     qs_json = json.dumps(qs_data)
     # logger.debug(qs_data)
     context = {
-        "uploadedfiles": files,
+        # "uploadedfiles": files,
+        "uploadedfiles": page_obj,
         "queue_size": queue_size(),
         "qs_json": qs_json,
         "page_reference": "web_reports",
         "order_by": order_by,
         "collections": models.Collection.objects.all(),
+        **page_context
     }
     return context
 
@@ -1101,20 +1112,16 @@ def show_logs(request, n_lines: int = 100):
     )
 
 
-def _make_html_from_log(logpath: Path):
-    logpath = opath / "log.txt"
-    if logpath.exists():
-        with open(logpath) as f:
-            lines = f.readlines()
-
-        lines = [_set_loglevel_color(line) for line in lines]
-        key_value.update(
-            {"Log": '<p class="text-monospace">' + "<br>".join(lines) + "</p>"}
-        )
-from django.http import StreamingHttpResponse, Http404
-from django.shortcuts import get_object_or_404
-# from .models import UploadedFile
-import os
+# def _make_html_from_log(logpath: Path):
+#     logpath = opath / "log.txt"
+#     if logpath.exists():
+#         with open(logpath) as f:
+#             lines = f.readlines()
+#
+#         lines = [_set_loglevel_color(line) for line in lines]
+#         key_value.update(
+#             {"Log": '<p class="text-monospace">' + "<br>".join(lines) + "</p>"}
+#         )
 
 def stream_video(request, uploadedfile_hash:str, i=None):
     uploaded_file = get_object_or_404(UploadedFile, hash=uploadedfile_hash)
@@ -1165,3 +1172,21 @@ def stream_video(request, uploadedfile_hash:str, i=None):
     response['Accept-Ranges'] = 'bytes'
 
     return response
+
+
+
+def _prepare_page(
+        paginator: Paginator, request: Optional = None, page_number: Optional[int] = None
+) -> Tuple[Page, List, dict]:
+    if page_number is None:
+        page_number = request.GET.get("page", 1)
+    logger.debug(f"{page_number=}")
+    elided_page_range = paginator.get_elided_page_range(page_number, on_each_side=3, on_ends=2)
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "page_obj": page_obj,
+        "elided_page_range": elided_page_range,
+    }
+
+    return page_obj, elided_page_range, context

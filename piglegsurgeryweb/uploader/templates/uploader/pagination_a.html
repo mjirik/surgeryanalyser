@@ -1,0 +1,24 @@
+
+<ul class="pagination">
+    {% for pg_number in elided_page_range %}
+        {% if pg_number != "…" %}
+            {% if pg_number == page_obj.number %}
+                <li class="active page-item">
+                    <a value={{ pg_number }} class="page-link" href="?page={{ pg_number }}">{{ pg_number }}</a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a value={{ pg_number }} class="page-link" href="?page={{ pg_number }}">{{ pg_number }}</a>
+                </li>
+            {% endif %}
+        {% else %}
+            <li class="page-item">
+                <span class="page-link">…</span>
+            </li>
+        {% endif %}
+    {% endfor %}
+</ul>
+
+
+
+

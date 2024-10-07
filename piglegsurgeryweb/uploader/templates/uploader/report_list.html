@@ -22,6 +22,9 @@
     {% endautoescape %}
     {% endif %}
     <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
+    <div class="mt-2">
+        {% include "uploader/pagination_a.html" %}
+    </div>
     <table class="table">
         <thead>
         <tr>
@@ -218,6 +221,9 @@
         </tbody>
     </table>
     <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+    <div class="mt-2">
+        {% include "uploader/pagination_a.html" %}
+    </div>
     <script>
         const data = '{{qs_json}}'
 
