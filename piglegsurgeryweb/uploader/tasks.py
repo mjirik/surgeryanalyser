@@ -923,7 +923,7 @@ def make_it_run(
     serverfile.processing_message = "Not finished yet."
     serverfile.save()
     logger.debug(f"hostname={hostname}, port={port}")
-    if serverfile.category.name == "Other":
+    if serverfile.category and serverfile.category.name == "Other":
         serverfile.finished_at = django.utils.timezone.now()
         serverfile.processing_ok = True
         serverfile.processing_message = "Other category: Processing skipped."
