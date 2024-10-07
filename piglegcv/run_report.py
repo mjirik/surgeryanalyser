@@ -1057,7 +1057,9 @@ class MainReport:
             self.extract_tracking_information(confidence_score_thr=confidence_score_thr)
 
             # calculate median from data_pixels of first tool
-            median_position = np.median(self.data_pixels[0], axis=0)
+            data_pixels_0 = np.asarray(self.data_pixels[0])
+            logger.debug(f"{data_pixels_0.shape=}")
+            median_position = np.median(data_pixels_0, axis=0)
             # create bbox from median_position
 
             half_size_of_bbox_m = 0.04
@@ -1066,7 +1068,8 @@ class MainReport:
             half_size_of_bbox_px = half_size_of_bbox_m / (self.pix_size_m / 1.0)
             logger.debug(f"{half_size_of_bbox_px=}, {half_size_of_bbox_m=}, {self.pix_size_m=}, {output_video_resize_factor=}")
 
-            if len(median_position) < 2:
+            # type of median_position is np.array
+            if (type(median_position) == np.ndarray) and len(median_position) > 1:
                 median_bbox = np.array([
                     median_position[0] - half_size_of_bbox_px,
                     median_position[1] - half_size_of_bbox_px,
