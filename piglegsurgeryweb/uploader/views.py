@@ -171,7 +171,7 @@ def _general_report_list(request, uploaded_file_set):
         files = uploaded_file_set.order_by(order_by)
     records_per_page = 40
     paginator = Paginator(files, per_page=records_per_page)
-    page_obj, _, page_context = _prepare_page(paginator, request=request)
+    page_obj, _, page_context = _prepare_page(paginator, request=request, page_number=records_per_page)
 
     qs_data = {}
     for e in files:
