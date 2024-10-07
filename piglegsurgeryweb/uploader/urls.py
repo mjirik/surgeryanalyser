@@ -15,6 +15,9 @@ urlpatterns = [
     path(
         "<str:filename_hash>/run/", views.run, name="run"
     ),  # used for debugging purposes
+    path(
+        "<str:filename_hash>/run_and_send_email/", views.run_and_send_email, name="run_and_send_email"
+    ),  # used for debugging purposes
     # path('<int:filename_id>/run_development/', views.run_development, name='run_development'), # used for debugging purposes
     path(
         "<int:filename_id>/resend_report_email/",

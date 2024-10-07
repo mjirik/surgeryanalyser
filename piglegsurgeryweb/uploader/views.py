@@ -169,7 +169,7 @@ def _general_report_list(request, uploaded_file_set):
         files = sorted(uploaded_file_set, key=str)
     else:
         files = uploaded_file_set.order_by(order_by)
-    records_per_page = 60
+    records_per_page = 100
     paginator = Paginator(files, per_page=records_per_page)
     page_obj, _, page_context = _prepare_page(paginator, request=request)
 
@@ -861,12 +861,14 @@ def run_collection(request, collection_id):
     return render(request, "uploader/thanks.html", context)
     # return redirect("uploader:web_reports")
 
+def run_and_send_email(request, filename_hash:str):
+    return run(request, filename_hash, send_email=True)
 
-def run(request, filename_hash:str):
+def run(request, filename_hash:str, send_email:bool=False):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
-    serverfile = _run(request, filename_hash, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
-    return _render_run(request, serverfile)
+    serverfile = _run(request, filename_hash, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT), send_email=send_email)
+    return _render_run(request, serverfile, )
 
 
 # def run_development(request, filename_id):
@@ -875,9 +877,13 @@ def run(request, filename_hash:str):
 #     return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=int(PIGLEGCV_PORT_DEVEL))
 
 
-def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000):
+def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000, send_email=False):
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
 
+    kwargs = {}
+    if send_email:
+        # hook="uploader.tasks.email_report_from_task",
+        kwargs["hook"] = "uploader.tasks.email_report_from_task"
 
     serverfile.started_at = django.utils.timezone.now()
     serverfile.finished_at = None
@@ -894,6 +900,7 @@ def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000):
         hostname,
         port,
         timeout=settings.PIGLEGCV_TIMEOUT,
+        **kwargs,
         # hook="uploader.tasks.email_report_from_task",
     )
     return serverfile
