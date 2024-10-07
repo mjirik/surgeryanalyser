@@ -264,6 +264,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     fn_results = Path(serverfile.outputdir) / "results.json"
     results = {}
+
+    loaded_results = None
     if fn_results.exists():
         with open(fn_results) as f:
             loaded_results = json.load(f)
@@ -357,20 +359,18 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     per_stitch_report = []
 
-    for i in range(int(serverfile.stitch_count)):
+    if loaded_results is not None:
+        for i in range(int(serverfile.stitch_count)):
+            logger.debug(f"Stitch {i}")
+            STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
+            graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
 
-
-
-        logger.debug(f"Stitch {i}")
-        STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
-        graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
-
-        per_stitch_report.append({
-            "stitch_id": i,
-            "advices": prepare_advices(loaded_results, i),
-            "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
-            'graphs_html': graphs_html,
-        })
+            per_stitch_report.append({
+                "stitch_id": i,
+                "advices": prepare_advices(loaded_results, i),
+                "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
+                'graphs_html': graphs_html,
+            })
 
     logger.debug(f"{per_stitch_report=}")
 
