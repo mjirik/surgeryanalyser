@@ -94,35 +94,43 @@ class StaticStitchAnalysis:
                 tracks_points_subsegment = get_subsegment_of_tracks_points(tracks_points, start_frame, stop_frame)
 
                 needle_holder_points_px = np.asarray(tracks_points_subsegment["data_pixels"][tool_id])
-                print(needle_holder_points_px.shape)
+                logger.debug(f"{needle_holder_points_px.shape=}")
                 med = np.median(needle_holder_points_px, axis=0)
+                logger.debug(f"Median of needle holder points: {med}")
 
+                try:
+                    if self.save_debug_images or self.show:
+                        img = self.get_img()
+                        if img is None:
+                            return
+                        fig = plt.figure(figsize=(10, 10))
+                        plt.imshow(img)
+                        plt.plot(needle_holder_points_px[:, 0], needle_holder_points_px[:, 1], "b.")
+                        plt.plot(med[0], med[1], "rx")
+                        if self.save_debug_images:
+                            plt.savefig(self.outputdir / f"_static_dynamic_stitch_{dynamic_stitch_id}.png")
+                        if self.show:
+                            plt.show()
 
-                if self.save_debug_images or self.show:
-                    img = self.get_img()
-                    if img is None:
-                        return
-                    fig = plt.figure(figsize=(10, 10))
-                    plt.imshow(img)
-                    plt.plot(needle_holder_points_px[:, 0], needle_holder_points_px[:, 1], "b.")
-                    plt.plot(med[0], med[1], "rx")
-                    if self.save_debug_images:
-                        plt.savefig(self.outputdir / f"_static_dynamic_stitch_{dynamic_stitch_id}.png")
-                    if self.show:
-                        plt.show()
+                        plt.close(fig)
 
-                    plt.close(fig)
+                    if len(bboxes_stitches_global) > 0:
+                    # closest stitch bbox
+                        distances = np.linalg.norm(bboxes_stitches_global_centroid - med, axis=1)
 
-                if len(bboxes_stitches_global) > 0:
-                # closest stitch bbox
-                    distances = np.linalg.norm(bboxes_stitches_global_centroid - med, axis=1)
+                        static_id = np.argmin(distances)
 
-                    static_id = np.argmin(distances)
-
-                    stitch_label = stitch_json["stitch_labels"][static_id]
-                    static_bbox = bboxes_stitches_global[static_id]
-                    # stitch_id = static_id
-                else:
+                        stitch_label = stitch_json["stitch_labels"][static_id]
+                        static_bbox = bboxes_stitches_global[static_id]
+                        # stitch_id = static_id
+                    else:
+                        static_id = None
+                        stitch_label = None
+                        static_bbox = None
+                except Exception as e:
+                    import traceback
+                    logger.debug(f"{traceback.format_exc()}")
+                    logger.warning(f"Problem in pairing static and dynamic stitch: {e}")
                     static_id = None
                     stitch_label = None
                     static_bbox = None
