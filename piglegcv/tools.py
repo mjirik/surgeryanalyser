@@ -147,9 +147,12 @@ def array_stats_to_str(arr:np.array, axis:Optional[int] = None):
     if axis is None:
         axis = np.argmin(arr.shape)
 
-    string = f"shape: {arr.shape}, min: {np.min(arr, axis=axis)}, max: {np.max(arr, axis=axis)}, mean: {np.mean(arr, axis=axis)}"
-    # , std: {np.std(arr, axis=axis)}"
-    return string
+    # check if array is empty
+    if arr.size == 0:
+        return "empty array"
+    else:
+        string = f"shape: {arr.shape}, min: {np.min(arr, axis=axis)}, max: {np.max(arr, axis=axis)}, mean: {np.mean(arr, axis=axis)}"
+        return string
 
 
 def filter_points_in_bbox(points, bbox):
