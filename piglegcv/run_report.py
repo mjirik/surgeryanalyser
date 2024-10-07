@@ -1066,12 +1066,15 @@ class MainReport:
             half_size_of_bbox_px = half_size_of_bbox_m / (self.pix_size_m / 1.0)
             logger.debug(f"{half_size_of_bbox_px=}, {half_size_of_bbox_m=}, {self.pix_size_m=}, {output_video_resize_factor=}")
 
-            median_bbox = np.array([
-                median_position[0] - half_size_of_bbox_px,
-                median_position[1] - half_size_of_bbox_px,
-                median_position[0] + half_size_of_bbox_px,
-                median_position[1] + half_size_of_bbox_px,
-            ])
+            if len(median_position) < 2:
+                median_bbox = np.array([
+                    median_position[0] - half_size_of_bbox_px,
+                    median_position[1] - half_size_of_bbox_px,
+                    median_position[0] + half_size_of_bbox_px,
+                    median_position[1] + half_size_of_bbox_px,
+                ])
+            else:
+                median_bbox = None
             logger.debug(f"{median_bbox=}")
             relative_presence_median = RelativePresenceInOperatingArea(median_bbox, bbox_linecolor_rgb=median_oa_bbox_linecolor_rgb[::-1], name="median area presence")
 
