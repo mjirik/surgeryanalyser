@@ -687,17 +687,23 @@ class DoComputerVision:
 
             # this will create "tracks_points.json" and it is called in the processing twice. The second call is later in self._make_report()
             # split_frames = []
-            split_s, split_frames = find_stitch_ends_in_tracks(
-                self.outputdir,
-                n_clusters=n_clusters,
-                tool_indexes=tool_index,
-                weight_of_later=weight_of_later,
-                metadata=self.meta,
-                plot_clusters=plot_clusters,
-                clusters_image_path=clusters_image_path,
-                trim_tool_indexes=trim_tool_index,
-                oa_bbox=oa_bbox
-            )
+            try:
+                split_s, split_frames = find_stitch_ends_in_tracks(
+                    self.outputdir,
+                    n_clusters=n_clusters,
+                    tool_indexes=tool_index,
+                    weight_of_later=weight_of_later,
+                    metadata=self.meta,
+                    plot_clusters=plot_clusters,
+                    clusters_image_path=clusters_image_path,
+                    trim_tool_indexes=trim_tool_index,
+                    oa_bbox=oa_bbox
+                )
+            except Exception as e:
+                logger.warning(traceback.format_exc())
+                logger.warning(f"Error in find_stitch_ends_in_tracks: {e}")
+                split_frames = []
+                split_s = []
             # self.meta["qr_data"]["stitch_split_frames"] = split_frames
             self.meta["tracker_stitch_split_frames"] = split_frames
             self.meta["tracker_stitch_split_s"] = split_s
