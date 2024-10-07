@@ -129,8 +129,13 @@ def google_spreadsheet_append(
     # remove NaN
     df_out2 = df_out.where(pd.notnull(df_out), None)
     df_out2 = df_out2.fillna("")
-    logger.debug(f"appended keys={list(df_out2.keys())}")
-    logger.debug(f"appended rows={df_out2.values.tolist()}")
+    # logger.debug(f"appended keys={list(df_out2.keys())}")
+    # logger.debug(f"appended rows={df_out2.values.tolist()}")
+    try:
+        logger.debug(f"sample of last 5 appended keys={list(df_out2.keys())[-5:]}")
+        logger.debug(f"sample of last 5 appended rows={df_out2.values.tolist()[-5:]}")
+    except Exception as e:
+        logger.error(f"Error in logging appended keys and rows. {e}")
     sheet_instance.append_rows(df_out2.values.tolist(), table_range="A1")
     
     

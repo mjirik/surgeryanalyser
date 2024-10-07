@@ -516,7 +516,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     pop_from_dict(novy, "qr_data_box")
 
     # novy = remove_iterables_from_dict(novy)
-    logger.debug(f"novy={novy}")
+    # logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
 
     google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
