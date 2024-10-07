@@ -398,7 +398,7 @@ def add_status_to_uploaded_file(serverfile:UploadedFile):
                 status = "Work finished."
             else:
                 is_ok = False
-                status = last_line
+                status = f"Last log message: {last_line}"
     serverfile.processing_ok = is_ok
     serverfile.processing_message = status
     serverfile.save()
@@ -883,6 +883,9 @@ def list_files_in_drop_dir() -> list[Path]:
 
 def call_async_run_processing(serverfile, absolute_uri):
     serverfile.started_at = django.utils.timezone.now()
+    serverfile.finished_at = None
+    serverfile.processing_ok = False
+    serverfile.processing_message = "Not finished yet."
     serverfile.save()
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
