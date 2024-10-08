@@ -83,6 +83,11 @@ def movement_evaluation_prediction(dfst: pd.DataFrame) -> pd.DataFrame:
 
 
     logger.debug(dfst.shape)
+    # check all data_cols. If they are not in dfst add them and set them to NaN
+    for col in data_cols:
+        if col not in dfst:
+            dfst[col] = 0.
+            logger.warning(f"Column {col} not in measurements for prediction. Added with zeros.")
     dfst_nna = dfst.dropna(subset=data_cols #+ sample_id_cols + predicted_columns
                            ).reset_index()
     dfst_nna = dfst_nna.copy()
