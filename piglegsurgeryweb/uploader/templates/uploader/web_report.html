@@ -104,11 +104,12 @@
         </a>
     </li>
     <li>
+    {{ actual_annotation }}
 {#    pop up warning on click on delete button #}
-    <a class="dropdown-item d-flex align-items-center"
-       href="{% url 'uploader:delete_annotation' actual_annotation.id %}" onclick="return confirm('Delete annotation {{ actual_annotation }}?')">
-        <i class="bi bi-trash"></i> Delete annotation
-    </a>
+{#    <a class="dropdown-item d-flex align-items-center"#}
+{#       href="{% url 'uploader:delete_annotation' actual_annotation.id %}" onclick="return confirm('Delete annotation {{ actual_annotation }}?')">#}
+{#        <i class="bi bi-trash"></i> Delete annotation#}
+{#    </a>#}
     </li>
 
 
