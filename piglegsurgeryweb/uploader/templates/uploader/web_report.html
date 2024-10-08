@@ -103,6 +103,13 @@
             <i class="bi bi-arrow-clockwise"></i> Edit in admin
         </a>
     </li>
+    <li>
+{#    pop up warning on click on delete button #}
+    <a class="dropdown-item d-flex align-items-center"
+       href="{% url 'uploader:delete_annotation' actual_annotation.id %}" onclick="return confirm('Delete annotation {{ actual_annotation }}?')">
+        <i class="bi bi-trash"></i> Delete annotation
+    </a>
+    </li>
 
 
 {% endblock %}
@@ -473,6 +480,7 @@
                                                                            uploaded_at={{ serverfile.uploaded_at |date:'Y-m-d H:i' }}"
                                                 ></i>
                                             {% endif %}
+
                                 {% endif %}
                             {% endif %}
                         </div>

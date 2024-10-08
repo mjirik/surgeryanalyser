@@ -33,6 +33,8 @@ urlpatterns = [
     path("web_report/<str:filename_hash>/<str:review_edit_hash>/", views.web_report, name="web_report"),
     path("web_report/<str:filename_hash>/<str:review_edit_hash>/<str:review_annotator_hash>/", views.web_report, name="web_report"),
 
+    path("annotation/delete/<int:annotation_id>/", views.delete_annotation, name="delete_annotation"),
+
     path(
         "owners_reports/<str:owner_hash>/",
         views.owners_reports_list,
