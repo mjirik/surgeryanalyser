@@ -103,14 +103,6 @@
             <i class="bi bi-arrow-clockwise"></i> Edit in admin
         </a>
     </li>
-    <li>
-    {{ actual_annotation }}
-{#    pop up warning on click on delete button #}
-{#    <a class="dropdown-item d-flex align-items-center"#}
-{#       href="{% url 'uploader:delete_annotation' actual_annotation.id %}" onclick="return confirm('Delete annotation {{ actual_annotation }}?')">#}
-{#        <i class="bi bi-trash"></i> Delete annotation#}
-{#    </a>#}
-    </li>
 
 
 {% endblock %}
@@ -183,11 +175,20 @@
 {#                        run #}
                             <a class="dropdown-item"
                                href="{% url 'uploader:run' serverfile.hash %}">
-                                <i class="bi bi-play"></i> Run
+                                <i class="bi bi-play"></i> Run </a>
                         </li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
+                        {% if actual_annotation %}
+                            <li>
+                                {#    pop up warning on click on delete button #}
+                                    <a class="dropdown-item d-flex align-items-center"
+                                       href="{% url 'uploader:delete_annotation' actual_annotation.id %}" onclick="return confirm('Delete annotation {{ actual_annotation }}?')">
+                                        <i class="bi bi-trash"></i> Delete annotation
+                                    </a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                     <li>
 
