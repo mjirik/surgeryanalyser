@@ -528,7 +528,7 @@ def delete_annotation(request, annotation_id:int):
     annotation = get_object_or_404(models.MediaFileAnnotation, id=annotation_id)
     uploaded_file = annotation.uploaded_file
     annotation.delete()
-    return redirect("uploader:web_report", filename_hash=uploaded_file.hash, eview_edit_hash=uploaded_file.review_edit_hash)
+    return redirect("uploader:web_report", filename_hash=uploaded_file.hash, review_edit_hash=uploaded_file.review_edit_hash)
 
 def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = None, review_annotator_hash: Optional[str] = None):
     # fn = get_outputdir_from_hash(hash)
