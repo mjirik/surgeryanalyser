@@ -39,8 +39,14 @@ class MovementEvaluation:
             # keep_cols=["filename", "annotation_annotation_annotation"]
         )
 
-    def evaluate(self):
-        self.dfst = movement_evaluation_prediction(self.dfst)
+    def evaluate(self) -> dict:
+        try:
+            new_dfst = movement_evaluation_prediction(self.dfst)
+        except KeyError as e:
+            logger.warning(f"Missing features for prediction of movement evaluation: {e}")
+            return {}
+        self.dfst = new_dfst
+
         predictions = list(self.dfst["prediction"])
         stitch_ids = list(self.dfst["stitch_id"])
         logger.debug(f'{predictions=}')
@@ -75,6 +81,7 @@ def movement_evaluation_prediction(dfst: pd.DataFrame) -> pd.DataFrame:
 
     
     logger.debug(dfst.shape)
+    # if all data_cols are in dfst the exception is caught in the function above
     dfst_nna = dfst.dropna(subset=data_cols #+ sample_id_cols + predicted_columns
                            ).reset_index()
     dfst_nna = dfst_nna.copy()
