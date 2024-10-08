@@ -317,7 +317,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     image_list = serverfile.bitmapimage_set.all()
 
-    videofiles = Path(serverfile.outputdir).glob("*.mp4")
+    videofiles = list(Path(serverfile.outputdir).glob("*.mp4"))
+    show_alternative = len(videofiles) == 0
     # videofile = Path(serverfile.outputdir) / "pigleg_results.mp4"
     # if not videofile.exists():
     #     videofile = Path(serverfile.outputdir) / "video.mp4"
@@ -392,7 +393,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "reviews": reviews,
         "collections_with": collections_with,
         "collections_without": collections_without,
-        "show_alternative": False
+        "show_alternative": show_alternative
     }
 
     return context
@@ -469,6 +470,15 @@ def delete_media_file(request, filename_id):
 
 def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile):
     edit_review = True
+
+    videofiles = list(Path(serverfile.outputdir).glob("*.mp4"))
+    show_alternative = len(videofiles) == 0
+
+    reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
+    # get collections with serverfile
+    collections_with = models.Collection.objects.filter(uploaded_files=serverfile)
+    # get collections without serverfile
+    collections_without = models.Collection.objects.exclude(uploaded_files=serverfile)
     context = {
         "serverfile": serverfile,
         "mediafile": Path(serverfile.mediafile.name).name,
@@ -481,7 +491,11 @@ def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile)
         "edit_review": edit_review,
         # "myhtml": "<b>The report is not ready yet.</b>"
         # "static_analysis_image": static_analysis_image,
-        "show_alternative": True
+        "review_number": len(serverfile.mediafileannotation_set.all()),
+        "reviews": reviews,
+        "collections_with": collections_with,
+        "collections_without": collections_without,
+        "show_alternative": show_alternative,
 
     }
 
