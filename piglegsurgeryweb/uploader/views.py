@@ -593,7 +593,8 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             annotation.save()
 
             # probably not necessary because all annotations are saved just before the run
-            annotation_filename = Path(serverfile.outputdir) / f"annotation_{review_idx}.json"
+            # annotation_filename = Path(serverfile.outputdir) / f"annotation_{review_idx}.json"
+            annotation_filename = Path(serverfile.outputdir) / f"annotation_{new_review_idx}.json"
             logger.debug(f"{annotation_filename=}")
             from django.core.serializers import serialize
             # dump as json file
