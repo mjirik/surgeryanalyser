@@ -226,8 +226,8 @@
         <div class="accordion-item">
 {#            <div class="accordion-item">#}
                 <h2 class="accordion-header">
-                    <button class="accordion-button {% if show_alternative  %} {% else %} collapsed {% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRawVideo"
-                            aria-expanded="false" aria-controls="collapseRawVideo">
+                    <button class="accordion-button {% if show_alternative  %}{% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRawVideo"
+                            aria-expanded="{%  if show_alternative %}true{% else %}false{% endif %}" aria-controls="collapseRawVideo">
                         Raw video - no overlay
                     </button>
                 </h2>
@@ -267,7 +267,7 @@
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button {% if show_alternative  %} collapsed {% else %} {% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
-                        aria-expanded="true" aria-controls="collapseOne">
+                        aria-expanded="{%  if show_alternative %}false{% else %}true{% endif %}" aria-controls="collapseOne">
                     Dynamic analysis video
                 </button>
             </h2>
