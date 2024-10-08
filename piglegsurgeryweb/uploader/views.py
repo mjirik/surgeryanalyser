@@ -392,6 +392,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
         "reviews": reviews,
         "collections_with": collections_with,
         "collections_without": collections_without,
+        "show_alternative": False
     }
 
     return context
@@ -480,6 +481,8 @@ def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile)
         "edit_review": edit_review,
         # "myhtml": "<b>The report is not ready yet.</b>"
         # "static_analysis_image": static_analysis_image,
+        "show_alternative": True
+
     }
 
     return context
