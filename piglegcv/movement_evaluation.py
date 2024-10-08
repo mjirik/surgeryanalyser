@@ -4,6 +4,7 @@ import pickle
 from loguru import logger
 from pathlib import Path
 import json
+import traceback
 try:
     import pigleg_evaluation_tools as pet
 except ImportError:
@@ -43,6 +44,7 @@ class MovementEvaluation:
         try:
             new_dfst = movement_evaluation_prediction(self.dfst)
         except KeyError as e:
+            logger.debug(traceback.format_exc())
             logger.warning(f"Missing features for prediction of movement evaluation: {e}")
             return {}
         self.dfst = new_dfst
@@ -79,14 +81,20 @@ def movement_evaluation_prediction(dfst: pd.DataFrame) -> pd.DataFrame:
     logger.debug(f"{sample_id_cols=}")
     logger.debug(f"{predicted_columns=}")
 
-    
+
     logger.debug(dfst.shape)
-    # if all data_cols are in dfst the exception is caught in the function above
     dfst_nna = dfst.dropna(subset=data_cols #+ sample_id_cols + predicted_columns
                            ).reset_index()
     dfst_nna = dfst_nna.copy()
-    logger.debug(dfst_nna.shape)
-    logger.debug(dfst_nna[data_cols].shape)
-    clf.predict(dfst_nna[data_cols])
-    dfst_nna["prediction"] = clf.predict(dfst_nna[data_cols])
+    logger.debug(f"{dfst_nna.shape=}")
+    logger.debug(f"{dfst_nna[data_cols].shape=}")
+    try:
+        # if all data_cols are in dfst the exception is caught in the function above
+        predictions = clf.predict(dfst_nna[data_cols])
+    except Exception as e:
+        logger.debug(traceback.format_exc())
+        logger.warning(f"Problem during movement evaluation prediction: {e}")
+        predictions = np.nan
+
+    dfst_nna["prediction"] = predictions
     return dfst_nna
