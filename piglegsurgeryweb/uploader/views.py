@@ -317,7 +317,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     image_list = serverfile.bitmapimage_set.all()
 
-    videofiles = list(Path(serverfile.outputdir).glob("*.mp4"))
+    videofiles = (Path(serverfile.outputdir).glob("*.mp4"))
+    videofiles = [vf for vf in videofiles if not vf.name.startswith("__")]
     show_alternative = len(videofiles) == 0
     # videofile = Path(serverfile.outputdir) / "pigleg_results.mp4"
     # if not videofile.exists():
@@ -471,7 +472,8 @@ def delete_media_file(request, filename_id):
 def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile):
     edit_review = True
 
-    videofiles = list(Path(serverfile.outputdir).glob("*.mp4"))
+    videofiles = (Path(serverfile.outputdir).glob("*.mp4"))
+    videofiles = [vf for vf in videofiles if not vf.name.startswith("__")]
     show_alternative = len(videofiles) == 0
 
     reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
