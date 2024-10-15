@@ -11,7 +11,9 @@ urlpatterns = [
     path("upload/", views.upload_mediafile, name="model_form_upload"),
     path("thanks/", views.thanks, name="thanks"),
     path("message/", views.message, name="message"),
-    path("message/<str:headline>/<str:text>/<str:next>/<str:next_text>/", views.message, name="message_with_next"),
+    path("message/h/<str:headline>/text/<str:text>/next/<str:next>/next_text/<str:next_text>/", views.message, name="message_with_next"),
+    path("message/h/<str:headline>/text/<str:text>/next_text/<str:next_text>/", views.message, name="message_with_next"),
+    path("download_original_video/<str:uploadedfile_hash>/", views.download_original_video, name="download_original_video"),
     path(
         "<str:filename_hash>/run/", views.run, name="run"
     ),  # used for debugging purposes
@@ -83,4 +85,8 @@ urlpatterns = [
     path("students_list/<int:days>/", views.students_list_view, name="students_list"),
     path("stream_video/<str:uploadedfile_hash>/", views.stream_video, name="stream_video"),
     path("stream_ith_video/<str:uploadedfile_hash>/<int:i>", views.stream_video, name="stream_ith_video"),
+    path("update_issue/file/<str:uploadedfile_hash>/", views.update_issue, name="issue"),
+    path("update_issue/file/<str:uploadedfile_hash>/user/<str:user_hash>/", views.update_issue, name="issue"),
+    path("update_issue/issue/<str:issue_hash>/", views.update_issue, name="issue"),
+    path("issues/", views.issues_view, name="issues"),
 ]

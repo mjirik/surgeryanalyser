@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block head %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    {{ form.media }}
+    <!-- Include jQuery -->
+
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="pagetitle">
+            <h1>{{ headline }}</h1>
+            <nav>
+            </nav>
+        </div><!-- End Page Title -->
+        <div class="section">
+            <div class="row">
+                <div class="col-md-8">
+                    {#                    <div class="card">#}
+                    {#                        <div class="card-body">#}
+
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {#                                {{ form.as_p }}#}
+                        {% for field in form %}
+                            <div class="form-group">
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {{ field.errors }}
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                        {#                {{ form.as_p }}#}
+                        <button class="btn btn-primary mt-2" id="btnUpload" type="submit">
+                            {{ button }}
+                        </button>
+                        {% if delete_button_url %}
+                            <a class="btn btn-danger mt-2"
+                               href="{{ delete_button_url }}"
+                                    {#                               href="{% url 'caidapp:delete_upload' uploadedarchive.id %}"#}
+                               onclick="return confirm('Delete {{ form.instance }}?')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        {% endif %}
+
+                    </form>
+                    {#                        </div>#}
+                    {#                    </div>#}
+                </div>
+                {% if text_note %}
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body mt-4">
+                                {{ text_note }}
+                            </div>
+                        </div>
+
+                    </div>
+                {% endif %}
+                {% if related_uploadedfile %}
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body mt-4">
+                                <a href="/uploader/web_report/{{ related_uploadedfile.hash }}/{{ related_uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}">
+                                    <img src="{{ related_uploadedfile.preview.url }}" class="img-fluid" alt="thumbnail">
+                                    Related upload</a>
+                            </div>
+                        </div>
+
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

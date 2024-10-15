@@ -77,6 +77,7 @@ RUN conda install -n piglegsurgery --yes -c conda-forge google-api-python-client
 RUN conda install -n piglegsurgery --yes -c conda-forge google-auth-httplib2=0.1 google-auth=2.19 oauth2client=4.1 google-auth-oauthlib=1.0
 RUN conda install -n piglegsurgery --yes -c conda-forge rich
 RUN conda install -n piglegsurgery --yes -c conda-forge rich django==3.2.23
+RUN conda install -n piglegsurgery --yes -c conda-forge django-widget-tweaks
 RUN conda list
 #RUN cd /webapps/scaffanweb_django
 # Make RUN commands use the new environment:

@@ -1,7 +1,13 @@
 from django import forms
 
-from .models import MediaFileAnnotation, UploadedFile
+from .models import MediaFileAnnotation, UploadedFile, Issue
 from loguru import logger
+
+
+class IssueForm(forms.ModelForm):
+    class Meta:
+        model = Issue
+        fields = ("description",)
 
 
 class UploadedFileForm(forms.ModelForm):

@@ -3,6 +3,11 @@
 Actual version: "0.0.0"
 
 
+## 2024-10
+
+* [added] AI based movement analysis
+* [added] Issue reporting
+
 ## 2024-08
 
 * [added] If no knot start is annotated it is calculated by the stitch start and stitch end

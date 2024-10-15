@@ -123,6 +123,14 @@ class MediaFileAnnotation(models.Model):
             else str(self.id) + ", " + str(self.uploaded_file)
         )
 
+# class for application issue / problems / suggestions reporting
+class Issue(models.Model):
+    hash = models.CharField(max_length=255, blank=True, default=_hash)
+    user = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
+    description = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField("Created at", default=datetime.now)
+    uploaded_file = models.ForeignKey(UploadedFile, on_delete=models.CASCADE, null=True, blank=True)
+
 
 class BitmapImage(models.Model):
     server_datafile = models.ForeignKey(UploadedFile, on_delete=models.CASCADE)

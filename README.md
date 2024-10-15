@@ -29,6 +29,7 @@ docker login nvcr.io
 * `piglegsurgery/.jupyter`
 * `piglegsurgery/.env.dev` with 
 * torch checkpoints
+* `/media/dnn-user/pigleg_drive/pigleg_media_symlink/generated_stats/all_stitches_with_human_annotations.2024-09-18_18-59-12.xlsx`
     ```bash
     mkdir -p piglegsurgery/resources/torch
     cd piglegsurgery/resources/torch

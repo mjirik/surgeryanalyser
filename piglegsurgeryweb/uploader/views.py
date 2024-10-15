@@ -13,7 +13,7 @@ from django.shortcuts import redirect, render, reverse
 from django.views import generic
 from django.template.loader import render_to_string
 from django.core.paginator import Page, Paginator
-from django.http import StreamingHttpResponse, Http404
+from django.http import StreamingHttpResponse, Http404, FileResponse
 from django.shortcuts import get_object_or_404
 # from .models import UploadedFile
 import os
@@ -29,7 +29,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile, _hash
-from . import tasks, models, report_tools
+from . import tasks, models, report_tools, forms
 
 # Create your views here.
 
@@ -400,6 +400,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     return context
 
 
+
 def is_lo_than(value, threshold):
     return value < threshold
 
@@ -767,7 +768,7 @@ def go_to_video_for_annotation(request, annotator_hash:Optional[str]=None):
         return redirect("uploader:message_with_next",
                         headline="No video for review",
                         text="No video for review found. Please try again later.",
-                        next=reverse("uploader:model_form_upload"),
+                        # next=reverse("uploader:model_form_upload"),
                         next_text="Ok"
                         )
 
@@ -975,6 +976,53 @@ def import_files_from_drop_dir_view(request):
     return render(request, "uploader/message.html", context )
 
 
+def update_issue(request, uploadedfile_hash:Optional[str]=None, issue_hash: Optional[str] = None, user_hash: Optional[str] = None):
+    if issue_hash:
+        issue = get_object_or_404(models.Issue, hash=issue_hash)
+        uploadedfile = issue.uploaded_file
+    else:
+        issue = None
+        uploadedfile = get_object_or_404(UploadedFile, hash=uploadedfile_hash)
+
+
+    text_note = ''
+
+    # Handle POST request
+    if request.method == "POST":
+        form = forms.IssueForm(request.POST, instance=issue)
+        if form.is_valid():
+            text_note = "post"
+            issue = form.save(commit=False)
+            issue.uploaded_file = uploadedfile
+            issue.save()
+            next_url = reverse("uploader:model_form_upload")
+            # encode url to be able to pass it as a parameter
+            import urllib
+            next_url = urllib.parse.quote(next_url)
+
+            # next = reverse("uploader:model_form_upload"),
+            return redirect("uploader:message_with_next",
+                            headline="Issue",
+                            text="Thank you for letting us know.",
+                            next_text="Ok"
+                            )
+        else:
+            return render(request, "uploader/update_form.html", {
+                'button': "Ok",
+                "form": form, 'related_uploadedfile': uploadedfile, 'text_note': text_note})
+
+    # Handle GET request (form rendering)
+    form = forms.IssueForm(instance=issue)
+    return render(request, "uploader/update_form.html", {
+        'button': "Ok",
+        "headline": "New issue", "form": form, 'related_uploadedfile': uploadedfile, 'text_note': text_note})
+
+@login_required(login_url="/admin/")
+def issues_view(report):
+    all_issues = models.Issue.objects.all()
+    return render(report, "uploader/issues.html", {"issues": all_issues})
+
+
 def upload_mediafile(request):
     if request.method == "POST":
         form = UploadedFileForm(
@@ -1131,19 +1179,42 @@ def show_logs(request, n_lines: int = 100):
 #             {"Log": '<p class="text-monospace">' + "<br>".join(lines) + "</p>"}
 #         )
 
-def stream_video(request, uploadedfile_hash:str, i=None):
+
+def download_original_video(request, uploadedfile_hash: str, ith_video:Optional[int]=None):
     uploaded_file = get_object_or_404(UploadedFile, hash=uploadedfile_hash)
 
-    logger.debug(f"{uploaded_file=}, {i=}")
+    logger.debug(f"{uploaded_file=}, {ith_video=}")
 
 
-    if i is None:
+    if ith_video is None:
         video_path = uploaded_file.mediafile.path
     else:
         # remove starting "_" from the video name
         video_list = [ element for element in Path(uploaded_file.outputdir).glob("*.mp4") if not element.name.startswith("_")]
         logger.debug(f"{video_list=}")
-        video_path = str(video_list[i])
+        video_path = str(video_list[ith_video])
+
+    logger.debug(f"{video_path=}")
+    if not os.path.exists(video_path):
+        raise Http404()
+
+    # return http response with the video
+    return FileResponse(open(video_path, 'rb'), as_attachment=True)
+
+
+def stream_video(request, uploadedfile_hash:str, ith_video:Optional[int]=None):
+    uploaded_file = get_object_or_404(UploadedFile, hash=uploadedfile_hash)
+
+    logger.debug(f"{uploaded_file=}, {ith_video=}")
+
+
+    if ith_video is None:
+        video_path = uploaded_file.mediafile.path
+    else:
+        # remove starting "_" from the video name
+        video_list = [ element for element in Path(uploaded_file.outputdir).glob("*.mp4") if not element.name.startswith("_")]
+        logger.debug(f"{video_list=}")
+        video_path = str(video_list[ith_video])
 
     logger.debug(f"{video_path=}")
     if not os.path.exists(video_path):

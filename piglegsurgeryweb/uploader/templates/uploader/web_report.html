@@ -118,7 +118,12 @@
         <h2> Report: {{ mediafile }} </h2>
         <div class="btn-group">
 
-            <div class="dropdown mt-3">
+            <div>
+                <a class="btn btn-secondary mt-3" href="{% url 'uploader:rotate_mediafile_right'  serverfile.hash %}"
+                   data-toggle="tooltip" data-placement="top" title="actual rotation: {{ serverfile.rotation }}°"
+                ><i class="bi bi-arrow-clockwise"></i></a>
+            </div>
+            <div class="dropdown mt-3 m-1">
                 {#                                <div class="dropdown d-inline-block">#}
                 <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">
@@ -210,19 +215,18 @@
                     </li>
                 </ul>
             </div>
+
+            <div>
+                <a class="btn btn-secondary mt-3 m-1" href="{% url 'uploader:issue' serverfile.hash %}"
+                   data-toggle="tooltip" data-placement="top" title="Report an issue"
+                >
+{#                    <i class="bi bi-"></i> #}
+                    Let us know </a>
+            </div>
         </div>
-    </div>
-    <div class="container">
-    <a class="btn btn-secondary" href="{% url 'uploader:rotate_mediafile_right'  serverfile.hash %}"
-       data-toggle="tooltip" data-placement="top" title="actual rotation: {{ serverfile.rotation }}°"
-    ><i class="bi bi-arrow-clockwise"></i></a>
-
-
-
     </div>
 
     <p>
-{{ show_alternative }}
     <div class="accordion pt-3" id="accordionExample">
         <div class="accordion-item">
 {#            <div class="accordion-item">#}
@@ -633,6 +637,7 @@
             <a class="btn btn-secondary" href="{{ next }}">Back</a>
         {% endif %}
         <a class="btn btn-secondary" href='{{ serverfile.mediafile.url }}' download> Download original file </a>
+        <a class="btn btn-secondary" href="{% url 'uploader:download_original_video' serverfile.hash %}">Download original file (dynamic server) </a>
         {% if serverfile.zip_file %}
             <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report </a>
         {% endif %}
