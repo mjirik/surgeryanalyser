@@ -217,7 +217,7 @@
             </div>
 
             <div>
-                <a class="btn btn-secondary mt-3 m-1" href="{% url 'uploader:issue' serverfile.hash %}"
+                <a class="btn btn-secondary mt-3 m-1" href="{% url 'uploader:issue' uploadedfile_hash=serverfile.hash %}"
                    data-toggle="tooltip" data-placement="top" title="Report an issue"
                 >
 {#                    <i class="bi bi-"></i> #}
