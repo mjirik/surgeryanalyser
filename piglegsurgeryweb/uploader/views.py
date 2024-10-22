@@ -319,7 +319,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     videofiles = (Path(serverfile.outputdir).glob("*.mp4"))
     videofiles = [vf for vf in videofiles if not vf.name.startswith("__")]
-    show_alternative = len(videofiles) == 0
+    # show_alternative = len(videofiles) == 0
+    show_alternative = True  # after discussion we want to show the original video as default
     # videofile = Path(serverfile.outputdir) / "pigleg_results.mp4"
     # if not videofile.exists():
     #     videofile = Path(serverfile.outputdir) / "video.mp4"
@@ -475,7 +476,8 @@ def _prepare_context_if_web_report_not_exists(request, serverfile: UploadedFile)
 
     videofiles = (Path(serverfile.outputdir).glob("*.mp4"))
     videofiles = [vf for vf in videofiles if not vf.name.startswith("__")]
-    show_alternative = len(videofiles) == 0
+    # show_alternative = len(videofiles) == 0
+    show_alternative = True  # after discussion we want to show the original video as default
 
     reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
     # get collections with serverfile
