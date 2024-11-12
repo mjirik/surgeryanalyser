@@ -20,6 +20,7 @@ import loguru
 import numpy as np
 import pandas as pd
 import requests
+import django.conf
 from django.conf import settings
 from django.core.mail import EmailMessage, send_mail
 from django.template import defaultfilters
@@ -27,8 +28,6 @@ from django.shortcuts import reverse
 from django.utils.html import strip_tags
 from django_q.models import Schedule
 from django.shortcuts import get_object_or_404
-# import settings
-from django.conf import settings
 from django_q.tasks import async_task, queue_size, schedule
 from loguru import logger
 from oauth2client.service_account import ServiceAccountCredentials
@@ -418,7 +417,7 @@ def _add_rows_to_spreadsheet_for_each_annotation(serverfile: UploadedFile, absol
 
 def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
 
-    creds_file = Path(settings.CREDS_JSON_FILE)  # 'piglegsurgery-1987db83b363.json'
+    creds_file = Path(django.conf.settings.CREDS_JSON_FILE)  # 'piglegsurgery-1987db83b363.json'
     if not creds_file.exists():
         logger.error(f"Credetials file does not exist. Expected path: {creds_file}")
         return
@@ -524,8 +523,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     # logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
     # save to xlsx to media dir
-    from django.conf import settings
-    xlsx_spreadsheet_path = settings.XLSX_SPREADSHEET_PATH
+    xlsx_spreadsheet_path = django.conf.settings.XLSX_SPREADSHEET_PATH
     xlsx_spreadsheet_path.parent.mkdir(parents=True, exist_ok=True)
     xlsx_spreadsheet_append(df_novy, xlsx_spreadsheet_path)
     # xlsx_spjson_path = Path(serverfile.outputdir) / "report.xlsx"
@@ -575,7 +573,7 @@ def make_preview(
         # if not input_file.exists():
         #     return
         filename = input_file.parent / (input_file.stem + ".preview.jpg")
-        filename_rel = filename.relative_to(settings.MEDIA_ROOT)
+        filename_rel = filename.relative_to(django.conf.settings.MEDIA_ROOT)
         # logger.debug(f"  {input_file=}")
         # logger.debug(f"    {filename=}")
         # logger.debug(f"{filename_rel=}")
@@ -824,7 +822,7 @@ def add_generated_images(serverfile: UploadedFile):
         # skip the files with __ in the beginning of the name
         if Path(fn).name.startswith("__"):
             continue
-        pth_rel = op.relpath(fn, settings.MEDIA_ROOT)
+        pth_rel = op.relpath(fn, django.conf.settings.MEDIA_ROOT)
         bi = BitmapImage(server_datafile=serverfile, bitmap_image=pth_rel)
         bi.save()
 
@@ -838,7 +836,7 @@ def make_zip(serverfile: UploadedFile):
         shutil.make_archive(pth_zip[:-4], "zip", serverfile.outputdir)
 
         serverfile.processed = True
-        pth_rel = op.relpath(pth_zip, settings.MEDIA_ROOT)
+        pth_rel = op.relpath(pth_zip, django.conf.settings.MEDIA_ROOT)
         serverfile.zip_file = pth_rel
         serverfile.save()
 
