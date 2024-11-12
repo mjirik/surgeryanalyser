@@ -14,7 +14,8 @@ conn = redis.from_url(redis_url)
 
 if __name__ == "__main__":
     logger.info("Starting worker")
-    worker = Worker(list(map(Queue, listen)), connection=conn)
+    queues = [Queue(name, connection=conn) for name in listen]
+    worker = Worker(queues, connection=conn)
     worker.work()
     # deprecated
     # with Connection(conn):
