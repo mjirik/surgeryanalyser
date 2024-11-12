@@ -818,6 +818,9 @@ def _filter_images(serverfile: UploadedFile):
 
     return filtered_in, filtered_out, static_analysis_image
 
+def redirect_to_spreadsheet_xlsx(request):
+    settings.XLSX_SPREADSHEET_URL
+    return redirect(settings.XLSX_SPREADSHEET_URL)
 
 def redirect_to_spreadsheet(request):
     # read env variable PIGLEGCV_SPREADSHEET_URL

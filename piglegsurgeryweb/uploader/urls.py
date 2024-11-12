@@ -61,6 +61,7 @@ urlpatterns = [
     ),
     path("logout/", views.logout_view, name="logout_view"),
     path("spreadsheet/", views.redirect_to_spreadsheet, name="spreadsheet"),
+    path("spreadsheet_xlsxl/", views.redirect_to_spreadsheet_xlsx, name="spreadsheet_xlsx"),
     # path("about_ev_cs/", views.about_ev_cs, name="about_ev_cs"),
     path("test/", views.test, name="test"),
     path("show_logs/<str:filename_hash>", views.show_mediafile_logs, name="show_mediafile_logs"),

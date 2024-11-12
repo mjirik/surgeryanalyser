@@ -36,6 +36,7 @@ from .data_tools import (
     google_spreadsheet_append,
     remove_empty_lists,
     remove_iterables_from_dict,
+    xlsx_spreadsheet_append,
 )
 from .media_tools import convert_avi_to_mp4, make_images_from_video, rescale, crop_square
 from .models import BitmapImage, UploadedFile, Owner
@@ -520,8 +521,17 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     # novy = remove_iterables_from_dict(novy)
     # logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
-
+    # save to xlsx to media dir
+    from django.conf import settings
+    xlsx_spreadsheet_path = settings.XLSX_SPREADSHEET_PATH
+    xlsx_spreadsheet_path.parent.mkdir(parents=True, exist_ok=True)
+    xlsx_spreadsheet_append(df_novy, xlsx_spreadsheet_path)
+    # xlsx_spjson_path = Path(serverfile.outputdir) / "report.xlsx"
+    # save to local xlsx file
+    xlsx_spreadsheet_append(df_novy, Path(serverfile.outputdir) / "report.xlsx")
     google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
+
+
 
 
 def pop_from_dict(d, key):

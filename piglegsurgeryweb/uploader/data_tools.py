@@ -62,6 +62,36 @@ def check_duplicate_columns_in_header(sheet_instance):
         
     return duplicates
 
+
+def xlsx_spreadsheet_append(data: Union[pd.DataFrame, dict], file_path: Union[str, Path] ) -> pd.DataFrame:
+    """
+    Append data to xlsx spreadsheet
+    :param file_path: path to xlsx file
+    :param data: data to append
+    :return: appended data
+    """
+    if type(data) == dict:
+        # df_novy = pd.DataFrame(data)
+        ## maybe this line is better
+        first_key = list(data.keys())[0]
+        if type(data[first_key]) == list:
+            df_novy = pd.DataFrame(data)
+        else:
+            df_novy = pd.DataFrame(data, index=[0])
+    else:
+        df_novy = data
+
+    # read the xlsx file
+    df = pd.read_excel(file_path)
+
+    # append the new data
+    df_out = pd.concat([df, df_novy], axis=0, ignore_index=True)
+
+    # save the appended data
+    df_out.to_excel(file_path, index=False)
+
+    return df_out
+
 def google_spreadsheet_append(
     title: str, creds, data: Union[pd.DataFrame, dict], scope=None, sheet_index=0
 ) -> pd.DataFrame:

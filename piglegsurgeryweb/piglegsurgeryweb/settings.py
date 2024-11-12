@@ -174,7 +174,9 @@ STATIC_ROOT = BASE_DIR / "static"
 # )
 # UPLOAD_PATH = os.path.join(MEDIA_ROOT, 'upload')
 UPLOAD_RELATIVE_PATH = "upload"
-
+XLSX_SPREADSHEET_HASH = os.getenv("PIGLEG_XLSX_SPREADSHEET_HASH", "mnewis8asdfw2w4asdfwnxlk")
+XLSX_SPREADSHEET_PATH = MEDIA_ROOT / XLSX_SPREADSHEET_HASH / "stats.xlsx"
+XLSX_SPREADSHEET_URL = f"/media/{XLSX_SPREADSHEET_HASH}/stats.xlsx"
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
