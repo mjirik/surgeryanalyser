@@ -2,6 +2,9 @@
 
 Actual version: "0.0.0"
 
+## 2024-11
+
+* [added] Add selected reports to collection
 
 ## 2024-10
 

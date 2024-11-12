@@ -22,11 +22,16 @@ WORKDIR /home/appuser
 
 RUN pip list
 
-# TODO check if this is needed
-ENV PATH="/home/appuser/.local/bin:${PATH}"
-RUN wget https://bootstrap.pypa.io/get-pip.py && \
-	python3 get-pip.py --user && \
-	rm get-pip.py
+## TODO check if this is needed
+#ENV PATH="/home/appuser/.local/bin:${PATH}"
+#RUN wget https://bootstrap.pypa.io/get-pip.py && \
+#	python3 get-pip.py --user && \
+#	rm get-pip.py
+
+
+# Update pip to a specific version
+RUN python3 -m pip install --upgrade pip==21.1 --user
+
 
 RUN sudo apt-get update && sudo apt-get install -y redis ffmpeg vim
 

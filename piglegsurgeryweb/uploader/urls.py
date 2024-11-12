@@ -89,4 +89,7 @@ urlpatterns = [
     path("update_issue/file/<str:uploadedfile_hash>/user/<str:user_hash>/", views.update_issue, name="issue"),
     path("update_issue/issue/<str:issue_hash>/", views.update_issue, name="issue"),
     path("issues/", views.issues_view, name="issues"),
+    path('add_mulitple_to_collection/<int:id_collection>', views.add_multiple_to_collection, name='add_multiple_to_collection'),
+    path('add_mulitple_to_collection/', views.add_multiple_to_collection,
+         name='add_multiple_to_collection'),
 ]

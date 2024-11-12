@@ -166,3 +166,11 @@ class AnnotationForm(forms.ModelForm):
         #     "annotation": "Write your annotation here.",
         #     "stars": "How many stars do you give to this video?",
         # }
+
+
+class UploadedFileSelectionForm(forms.ModelForm):
+    selected = forms.BooleanField(initial=False, required=False)
+
+    class Meta:
+        model = UploadedFile
+        fields = ()

@@ -22,8 +22,18 @@
     {% endautoescape %}
     {% endif %}
     <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>
+<form id="selectedReportsForm" method="post" action="{% url 'uploader:add_multiple_to_collection' %}">
+    {% csrf_token %}
     <div class="mt-2">
         {% include "uploader/pagination_a.html" %}
+                <!-- Dropdown for selecting a collection -->
+        <select name="collection_id" class="form-select">
+            <option value="">New Collection</option>
+            {% for collection in collections %}
+                <option value="{{ collection.id }}">{{ collection.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn btn-primary" onclick="submitSelectedReports()">Add to Collection</button>
     </div>
     <table class="table">
         <thead>
@@ -63,6 +73,7 @@
                     {% if order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
                 </th>
             {% endif %}
+            <th scope="col"><input type="checkbox" id="select_all" /></th>
         </tr>
         </thead>
         <tbody>
@@ -219,6 +230,7 @@
 
                     <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
                     <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
+                    <td><input type="checkbox" name="selected_reports" value="{{ uploadedfile.id }}" class="report-checkbox" /></td>
                 {% endif %}
             </tr>
         {% endfor %}
@@ -267,5 +279,36 @@
             $('[data-toggle="tooltip"]').tooltip();
         });
     </script>
+    <script>
+        document.getElementById("select_all").addEventListener("click", function() {
+            const checkboxes = document.querySelectorAll(".report-checkbox");
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+        });
+
+        function submitSelectedReports() {
+            const form = document.getElementById("selectedReportsForm");
+            const selectedReports = Array.from(document.querySelectorAll('.report-checkbox:checked')).map(cb => cb.value);
+
+            if (selectedReports.length === 0) {
+                alert("Please select at least one report.");
+                return;
+            }
+
+            // Add selected IDs as hidden inputs
+            selectedReports.forEach(id => {
+                const hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = "selected_reports";
+                hiddenInput.value = id;
+                form.appendChild(hiddenInput);
+            });
+
+            form.submit();
+        }
+    </script>
+</form>
 </div>
+
 {% endblock %}

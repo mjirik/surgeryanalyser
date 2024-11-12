@@ -1271,3 +1271,34 @@ def _prepare_page(
     }
 
     return page_obj, elided_page_range, context
+
+from django.shortcuts import redirect
+from django.http import JsonResponse
+from .models import UploadedFile  # Adjust as per your actual model name
+
+from typing import Union
+def add_multiple_to_collection(request, collection_id: Optional[int]=None):
+
+    if request.method == "POST":
+        selected_reports = request.POST.getlist('selected_reports')
+        reports = UploadedFile.objects.filter(id__in=selected_reports)
+        collection_id = request.POST.get('collection_id')
+        if collection_id== "":
+            number_of_collections = models.Collection.objects.count()
+            collection = models.Collection(name=f"Collection {number_of_collections + 1}")
+            collection.save()
+        else:
+            collection = get_object_or_404(models.Collection, id=int(collection_id))
+        for report in reports:
+            collection.uploaded_files.add(report)
+        collection.save()
+
+        # Process each selected report here
+        # for report in reports:
+        #
+        #     # Add processing logic here (e.g., mark as reviewed, generate report, etc.)
+        #     pass
+
+        # Redirect back or send a success response
+        return redirect('uploader:web_reports')  # Adjust as per your view name
+
