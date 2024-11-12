@@ -1,7 +1,9 @@
 import os
 
 import redis
-from rq import Connection, Queue, Worker
+from rq import Queue, Worker
+# from rq import Connection
+
 from loguru import logger
 
 listen = ["default"]
