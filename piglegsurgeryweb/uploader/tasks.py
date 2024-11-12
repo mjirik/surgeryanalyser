@@ -27,6 +27,8 @@ from django.shortcuts import reverse
 from django.utils.html import strip_tags
 from django_q.models import Schedule
 from django.shortcuts import get_object_or_404
+# import settings
+from django.conf import settings
 from django_q.tasks import async_task, queue_size, schedule
 from loguru import logger
 from oauth2client.service_account import ServiceAccountCredentials
