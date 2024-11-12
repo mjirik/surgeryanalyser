@@ -67,7 +67,7 @@ RUN pip install --user pyzbar
 RUN pip install --user yolov7-package
 
 RUN pip install --user filterpy==1.4.5 scikit-image==0.17.2 lap==0.4.0
-RUN pip install --user flask loguru rq
+RUN pip install --user flask loguru rq<2.0.0
 
 RUN sudo apt-get update
 ### to get rotatelogs
