@@ -70,6 +70,8 @@ def xlsx_spreadsheet_append(data: Union[pd.DataFrame, dict], file_path: Union[st
     :param data: data to append
     :return: appended data
     """
+    file_path = Path(file_path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
     if type(data) == dict:
         # df_novy = pd.DataFrame(data)
         ## maybe this line is better
@@ -81,11 +83,14 @@ def xlsx_spreadsheet_append(data: Union[pd.DataFrame, dict], file_path: Union[st
     else:
         df_novy = data
 
-    # read the xlsx file
-    df = pd.read_excel(file_path)
+    if file_path.exists():
+        # read the xlsx file
+        df = pd.read_excel(file_path)
 
-    # append the new data
-    df_out = pd.concat([df, df_novy], axis=0, ignore_index=True)
+        # append the new data
+        df_out = pd.concat([df, df_novy], axis=0, ignore_index=True)
+    else:
+        df_out = df_novy
 
     # save the appended data
     df_out.to_excel(file_path, index=False)
