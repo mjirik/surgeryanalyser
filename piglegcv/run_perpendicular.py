@@ -3,6 +3,7 @@ import math
 import os
 import sys
 from pathlib import Path
+import traceback
 
 import cv2
 import matplotlib.pyplot as plt
@@ -347,37 +348,42 @@ def main_perpendicular(
 
     meta["stitch_scores"] = []
     for i, image in enumerate(imgs):
-        # perpendicular analysis
-        incision_angle_evaluation(
-            image,
-            canny_sigma,
-            outputdir,
-            output_filename=f"perpendicular_incision_{i}.jpg",
-            json_file_name=f"perpendicular_{i}.json",
-        )
-        # expected stitches
-        expected_stitch_line = draw_expected_stitch_line(
-            image,
-            pixelsize_m,
-            blue_line_distance_m=0.005,
-            filename=f"{outputdir}/incision_stitch_{i}.jpg",
-            visualization=False,
-        )
-        # stitch detection
-        bboxes_stitches, labels_stitches = run_stitch_detection(
-            image, f"{outputdir}/stitch_detection_{i}.json", device=device
-        )
+        logger.debug(f"Processing incision {i} ...")
+        try:
+            # perpendicular analysis
+            incision_angle_evaluation(
+                image,
+                canny_sigma,
+                outputdir,
+                output_filename=f"perpendicular_incision_{i}.jpg",
+                json_file_name=f"perpendicular_{i}.json",
+            )
+            # expected stitches
+            expected_stitch_line = draw_expected_stitch_line(
+                image,
+                pixelsize_m,
+                blue_line_distance_m=0.005,
+                filename=f"{outputdir}/incision_stitch_{i}.jpg",
+                visualization=False,
+            )
+            # stitch detection
+            bboxes_stitches, labels_stitches = run_stitch_detection(
+                image, f"{outputdir}/stitch_detection_{i}.json", device=device
+            )
 
 
-        # score
-        stitch_score = run_stitch_analyser(
-            image,
-            bboxes_stitches,
-            labels_stitches,
-            expected_stitch_line,
-            f"{outputdir}/stitch_detection_{i}.jpg",
-        )
-        meta["stitch_scores"].append(stitch_score)
+            # score
+            stitch_score = run_stitch_analyser(
+                image,
+                bboxes_stitches,
+                labels_stitches,
+                expected_stitch_line,
+                f"{outputdir}/stitch_detection_{i}.jpg",
+            )
+            meta["stitch_scores"].append(stitch_score)
+        except Exception as e:
+            logger.warning(f"Error in incision {i}: {e}")
+            logger.warning(traceback.format_exc())
     # save_json(json_meta, f"{outputdir}/meta.json")
 
     # uncomment to run old incision detection
