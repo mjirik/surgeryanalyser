@@ -2,6 +2,7 @@ import json
 import re
 from pathlib import Path
 from typing import Optional, Tuple, List
+import traceback
 
 import django.utils
 from django.conf import settings
@@ -361,15 +362,20 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     if loaded_results is not None:
         for i in range(int(serverfile.stitch_count)):
             logger.debug(f"Stitch {i}")
-            STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
-            graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
+            try:
+                STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
+                graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
 
-            per_stitch_report.append({
-                "stitch_id": i,
-                "advices": prepare_advices(loaded_results, i),
-                "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
-                'graphs_html': graphs_html,
-            })
+                per_stitch_report.append({
+                    "stitch_id": i,
+                    "advices": prepare_advices(loaded_results, i),
+                    "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
+                    'graphs_html': graphs_html,
+                })
+
+            except Exception as e:
+                logger.error(f"Error in processing stitch {i}. {e}")
+                logger.error(traceback.format_exc())
 
     logger.debug(f"{per_stitch_report=}")
 
