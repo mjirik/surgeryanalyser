@@ -70,6 +70,9 @@
 
             <p class="m-3">
                 You can try it with a <a href="{% url 'uploader:download_sample_image' %}">sample image</a>
+                {% if sample_collection_hash %}
+                or you can check <a href="{%  url 'uploader:show_collection' sample_collection_hash %}">sample reports.</a>
+                {% endif %}
             </p>
         </div>
     </div>

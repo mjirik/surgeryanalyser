@@ -72,6 +72,7 @@ class UploadedFile(models.Model):
 class Collection(models.Model):
     name = models.CharField(max_length=255, blank=True, default="")
     owner = models.ForeignKey(Owner, on_delete=models.CASCADE, null=True, blank=True)
+    hash = models.CharField(max_length=255, blank=True, default=_hash)
     # one collection can have many uploaded files
     uploaded_files = models.ManyToManyField(UploadedFile)
 

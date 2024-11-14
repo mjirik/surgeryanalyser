@@ -29,7 +29,7 @@ from .tasks import get_graph_path_for_owner, call_async_run_processing, make_it_
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
-from .models import UploadedFile, _hash
+from .models import UploadedFile, _hash, Collection
 from . import tasks, models, report_tools, forms
 
 # Create your views here.
@@ -196,10 +196,14 @@ def _general_report_list(request, uploaded_file_set):
     return context
 
 
-def show_collection_reports_list(request, collection_id):
-    collection = get_object_or_404(models.Collection, id=collection_id)
+def show_collection_reports_list(request, collection_id:Optional[int]=None, collection_hash:Optional[str]=None):
+    if collection_id:
+        collection = get_object_or_404(models.Collection, id=collection_id)
+    else:
+        collection = get_object_or_404(models.Collection, hash=collection_hash)
     upload_files_set = collection.uploaded_files.all()
     context = _general_report_list(request, upload_files_set)
+    context["headline"] = collection.name
     return render(request, "uploader/report_list.html", context)
 
 
@@ -1085,9 +1089,10 @@ def upload_mediafile(request):
                     "annotator_hash": owner.hash
                 }),
                 "next_text_secondary": "Upload another video",
-                "next_secondary": reverse("uploader:model_form_upload")
+                "next_secondary": reverse("uploader:model_form_upload"),
                 # 'next': "uploader:model_form_upload"
                 # 'next': "uploader:model_form_upload"
+                'sample_collection_hash': Collection.objects.get(name="Sample Reports").hash
             }
 
             logger.debug("redirecting to thanks")

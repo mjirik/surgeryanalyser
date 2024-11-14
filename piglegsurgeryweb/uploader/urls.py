@@ -77,6 +77,7 @@ urlpatterns = [
     path("collections/", views.collections_view, name="collections"),
     path("run_collection/<int:collection_id>/", views.run_collection, name="run_collection"),
     path("show_collection/<int:collection_id>/", views.show_collection_reports_list, name="show_collection"),
+    path("show_collection/<str:collection_hash>/", views.show_collection_reports_list, name="show_collection"),
     path("collection_update_spreadsheet/<int:collection_id>/", views.collection_update_spreadsheet, name="collection_update_spreadsheet"),
     path("add_to_collection/<int:collection_id>/<int:filename_id>/", views.add_uploaded_file_to_collection, name="add_to_collection"),
     path("remove_from_collection/<int:collection_id>/<int:filename_id>/", views.remove_uploaded_file_from_collection, name="remove_from_collection"),

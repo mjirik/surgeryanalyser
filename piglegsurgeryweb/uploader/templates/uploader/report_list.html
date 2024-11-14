@@ -10,6 +10,7 @@
 >
     {% if owner %}
         <H2> Reports for {{ owner.email }} </H2>
+    {% elif headline %}
     {% else %}
         <H2> List of reports </H2>
     {% endif %}
