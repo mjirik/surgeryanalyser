@@ -204,6 +204,7 @@ def show_collection_reports_list(request, collection_id:Optional[int]=None, coll
     upload_files_set = collection.uploaded_files.all()
     context = _general_report_list(request, upload_files_set)
     context["headline"] = collection.name
+    context["private_mode"] = True
     return render(request, "uploader/report_list.html", context)
 
 
@@ -1092,7 +1093,7 @@ def upload_mediafile(request):
                 "next_secondary": reverse("uploader:model_form_upload"),
                 # 'next': "uploader:model_form_upload"
                 # 'next': "uploader:model_form_upload"
-                'sample_collection_hash': Collection.objects.get(name="Sample Reports").hash
+                'sample_collection': Collection.objects.filter(name="Sample Reports").first()
             }
 
             logger.debug("redirecting to thanks")
@@ -1103,7 +1104,12 @@ def upload_mediafile(request):
     return render(
         request,
         "uploader/model_form_upload.html",
-        {"form": form, "headline": "Upload", "button": "Upload"},
+        {
+            "form": form,
+            "headline": "Upload",
+            "button": "Upload",
+            'sample_collection': Collection.objects.filter(name="Sample Reports").first()
+    },
     )
 
 

@@ -1,5 +1,6 @@
 
 <ul class="pagination">
+
     {% for pg_number in elided_page_range %}
         {% if pg_number != "…" %}
             {% if pg_number == page_obj.number %}

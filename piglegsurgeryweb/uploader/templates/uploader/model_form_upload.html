@@ -69,10 +69,11 @@
 
 
             <p class="m-3">
-                You can try it with a <a href="{% url 'uploader:download_sample_image' %}">sample image</a>
-                {% if sample_collection_hash %}
-                or you can check <a href="{%  url 'uploader:show_collection' sample_collection_hash %}">sample reports.</a>
+                You can try it with a <a href="{% url 'uploader:download_sample_image' %}">sample image</a>,
+                {% if sample_collection %}
+                or you can check <a href="{%  url 'uploader:show_collection' sample_collection.hash %}">sample reports, </a>
                 {% endif %}
+                or check our GitHub repository <a href="https://github.com/mjirik/surgeryanalyser">Surgery Analyser GitHub repository, </a>
             </p>
         </div>
     </div>

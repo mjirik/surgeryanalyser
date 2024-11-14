@@ -11,6 +11,7 @@
     {% if owner %}
         <H2> Reports for {{ owner.email }} </H2>
     {% elif headline %}
+        <H2> {{ headline }} </H2>
     {% else %}
         <H2> List of reports </H2>
     {% endif %}
@@ -27,6 +28,8 @@
     {% csrf_token %}
     <div class="mt-2">
         {% include "uploader/pagination_a.html" %}
+{# if user is authentificated #}
+        {% if user.is_authenticated %}
                 <!-- Dropdown for selecting a collection -->
         <select name="collection_id" class="form-select">
             <option value="">New Collection</option>
@@ -35,6 +38,7 @@
             {% endfor %}
         </select>
         <button type="button" class="btn btn-primary" onclick="submitSelectedReports()">Add to Collection</button>
+        {% endif %}
     </div>
     <table class="table">
         <thead>
@@ -42,9 +46,11 @@
             <th scope="col"></th>
             </th>
 
+            {% if not private_mode %}
             <th scope="col"><a class="link-secondary" href="?order_by=email">
                 {% if order_by == "email" %} ▼ {% endif %} Email </a>
             </th>
+            {% endif %}
 
             <th scope="col"><a class="link-secondary" href="?order_by=filename">
                 {% if order_by == "filename" %} ▼ {% endif %} File name </a>
@@ -73,8 +79,8 @@
                 <th scope="col"><a href="?order_by=-finished_at">
                     {% if order_by == "-finished_at" %} ▼ {% endif %} Finished At </a>
                 </th>
+                <th scope="col"><input type="checkbox" id="select_all" /></th>
             {% endif %}
-            <th scope="col"><input type="checkbox" id="select_all" /></th>
         </tr>
         </thead>
         <tbody>
@@ -88,6 +94,7 @@
                     {% endif %}
                 </td>
 
+                {% if not private_mode %}
                 <td scope="row">
                     {% if uploadedfile.owner.hash %}
                         <a href="{% url 'uploader:owners_reports_list' uploadedfile.owner.hash %}"
@@ -98,6 +105,7 @@
                         {{ uploadedfile.email }}
                     {% endif %}
                 </td>
+                {% endif %}
                 <td>
                     <a href="/uploader/web_report/{{ uploadedfile.hash }}/{{ uploadedfile.review_edit_hash }}/?next={{ request.path|urlencode }}"
                        style="word-break: break-all;"
