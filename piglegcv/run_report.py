@@ -276,6 +276,47 @@ def create_heatmap_report_plt(
 def calculate_one_two_hands_visibility():
     pass
 
+def draw_ideal_trajetory(ax, point, color='red'):
+    # Get the current axis limits
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
+
+    # Calculate the slope of the line
+    slope = point[1] / point[0]
+
+    # Calculate the intercepts with the bounding box
+    # Using the line equation y = slope * x
+    x_line = []
+    y_line = []
+
+    # Check where the line intersects the x and y axis bounds
+    if y_min <= slope * x_min <= y_max:  # Intersects left edge
+        x_line.append(x_min)
+        y_line.append(slope * x_min)
+
+    if y_min <= slope * x_max <= y_max:  # Intersects right edge
+        x_line.append(x_max)
+        y_line.append(slope * x_max)
+
+    if x_min <= y_min / slope <= x_max:  # Intersects bottom edge
+        x_line.append(y_min / slope)
+        y_line.append(y_min)
+
+    if x_min <= y_max / slope <= x_max:  # Intersects top edge
+        x_line.append(y_max / slope)
+        y_line.append(y_max)
+
+    # Plot the line
+    ax.plot(x_line, y_line, color=color, linestyle="--", alpha=0.5,
+            # label='Line through point'
+            )
+
+    # Restore the original axis limits
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+
+    return ax
+
 
 # ds_threshold [m]
 def create_pdf_report_for_one_tool(
@@ -419,8 +460,13 @@ def create_pdf_report_for_one_tool(
         # fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
         ax = fig.add_subplot()
         fig.subplots_adjust(top=0.85)
-        ax.set_title(f"Actual in-plain position of {object_name}")
+        ax.set_title(f"Trajectory of {object_name}")
         ax.set_xlabel("Time [sec]")
+
+        if object_name == "Needle holder":
+            draw_ideal_trajetory(ax, (100, 100), color='green')
+            draw_ideal_trajetory(ax, (80, 100), color='orange')
+            draw_ideal_trajetory(ax, (120, 100), color='orange')
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
