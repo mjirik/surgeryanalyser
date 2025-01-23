@@ -307,7 +307,8 @@ def draw_ideal_trajetory(ax, point, color='red'):
         y_line.append(y_max)
 
     # Plot the line
-    ax.plot(x_line, y_line, color=color, linestyle="--", alpha=0.5,
+    ax.plot(x_line, y_line, color=color,
+            # linestyle="--", alpha=0.5,
             # label='Line through point'
             )
 
@@ -464,9 +465,9 @@ def create_pdf_report_for_one_tool(
         ax.set_xlabel("Time [sec]")
 
         if object_name == "Needle holder":
-            draw_ideal_trajetory(ax, (100, 100), color='green')
-            draw_ideal_trajetory(ax, (80, 100), color='orange')
-            draw_ideal_trajetory(ax, (120, 100), color='orange')
+            draw_ideal_trajetory(ax, (100, 250), color='green')
+            draw_ideal_trajetory(ax, (100, 300), color='orange')
+            draw_ideal_trajetory(ax, (100, 150), color='orange')
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
@@ -1732,6 +1733,8 @@ def create_video_report_figure(
         fig.subplots_adjust(top=0.85)
         ax.set_title("Object Track Analysis")
         ax.set_xlabel("Time [sec]")
+
+        ax = draw_ideal_trajetory(ax, point=(100, 250), color="g")
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
