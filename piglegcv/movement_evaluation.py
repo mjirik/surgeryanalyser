@@ -11,7 +11,15 @@ except ImportError:
     from . import pigleg_evaluation_tools as pet
 
 
-PREDICTION_MODEL_PATH = Path("resources/movement_evaluation_models/model_best_SVR.pkl")
+
+PREDICTION_MODEL_PATH = sorted(list(Path("resources/movement_evaluation_models/").glob("model_best_SVR.*.pkl")))
+if len(PREDICTION_MODEL_PATH) == 0:
+    PREDICTION_MODEL_PATH = Path("resources/movement_evaluation_models/model_best_SVR.pkl")
+    PREDICTION_MODEL_VERSION = "2024-09-28"
+else:
+    PREDICTION_MODEL_PATH = PREDICTION_MODEL_PATH[-1]
+    PREDICTION_MODEL_VERSION = PREDICTION_MODEL_PATH.stem.split(".")[-1]
+
 PREDICTION_MODEL = None
 
 

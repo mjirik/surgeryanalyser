@@ -56,7 +56,10 @@
                 {{ form.as_p }}
 
                 <p><div class="progress not-visible" id="progress"></div></p>
-                <button class="btn btn-primary has-spinner" id="btnUpload" type="submit">
+
+
+
+                <button class="btn btn-primary has-spinner " id="btnUpload" type="submit">
                     {#            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>#}
                     <i class="fas fa-upload"></i>
                     {{ button }}
@@ -64,6 +67,10 @@
                 {#            {% if request.user.is_authenticated %}#}
                 {#            <a href="{% url 'uploader:web_reports' %}" class="btn btn-secondary">Go to list of reports</a>#}
                 {#            {% endif %}#}
+                    <!-- Warning message for unchecked agreement -->
+    <p id="agreementMessage" class="text-danger" style="display: block;">
+        You must agree to the terms and conditions before submitting.
+    </p>
 
             </form>
 
@@ -74,6 +81,10 @@
                 or you can check <a href="{%  url 'uploader:show_collection' sample_collection.hash %}">sample reports, </a>
                 {% endif %}
                 or check our GitHub repository <a href="https://github.com/mjirik/surgeryanalyser">Surgery Analyser GitHub repository, </a>
+            </p>
+
+            <p class="m-3">
+                <a href="https://docs.google.com/document/d/1nu53k1kIxUakajurYax9jmtNSm0tphRNtge6Xt3wi7E/edit?usp=sharing">Terms and conditions</a>
             </p>
         </div>
     </div>
@@ -135,6 +146,31 @@
                 processData: false,
             });
         });
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Najdi checkbox podle ID (nebo jiného identifikátoru)
+            const consentCheckbox = document.getElementById('id_consent');
+            const btnUpload = document.getElementById('btnUpload');
+            const agreementMessage = document.getElementById('agreementMessage');
+
+            if (consentCheckbox) {
+                // Připoj event listener k checkboxu
+                consentCheckbox.addEventListener('change', () => {
+                    btnUpload.disabled = !consentCheckbox.checked;
+                    if (consentCheckbox.checked) {
+                        agreementMessage.style.display = 'none';
+                    }
+                    else {
+                        agreementMessage.style.display = 'block';
+                    }
+                });
+
+                // Inicializace tlačítka podle výchozího stavu checkboxu
+                btnUpload.disabled = !consentCheckbox.checked;
+             }
+         });
 
     </script>
 

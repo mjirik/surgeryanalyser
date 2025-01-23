@@ -88,6 +88,8 @@ RUN pip install --user rich
 
 # for password generation for jupyterlab
 RUN sudo apt-get install -y net-tools sharutils
+RUN sudo apt-get install -y tesseract-ocr
+RUN pip install --user pytesseract
 
 RUN pip list
 
