@@ -280,6 +280,7 @@ def draw_ideal_trajetory(ax, point, color='red'):
     # Get the current axis limits
     x_min, x_max = ax.get_xlim()
     y_min, y_max = ax.get_ylim()
+    logger.debug(f"{x_min=}, {x_max=}, {y_min=}, {y_max=}")
 
     # Calculate the slope of the line
     slope = point[1] / point[0]
@@ -313,8 +314,8 @@ def draw_ideal_trajetory(ax, point, color='red'):
             )
 
     # Restore the original axis limits
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(y_min, y_max)
+    # ax.set_xlim(x_min, x_max)
+    # ax.set_ylim(y_min, y_max)
 
     return ax
 
@@ -1734,7 +1735,7 @@ def create_video_report_figure(
         ax.set_title("Object Track Analysis")
         ax.set_xlabel("Time [sec]")
 
-        ax = draw_ideal_trajetory(ax, point=(100, 250), color="g")
+        # ax = draw_ideal_trajetory(ax, point=(100, 250), color="g")
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
