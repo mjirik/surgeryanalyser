@@ -243,7 +243,61 @@
 
     // Při potvrzení "Proceed Without Consent" odeslat formulář
     confirmNoConsent.addEventListener("click", function () {
-        document.getElementById("consent-form").submit();
+        {# close the modal #}
+        $('#confirmModal').modal('hide');
+        console.log("submitting form");
+        {#document.getElementById("upload_form").submit();#}
+
+        {#$form = $(this)#}
+        $form = $("#upload_form")
+        var formData = new FormData($form[0]);
+        const media_data = input_file.files[0];
+        if(media_data != null){
+            progress_bar.classList.remove("not-visible");
+        }
+
+        $.ajax({
+            type: 'POST',
+            {# get url of actual pakge #}
+            url: window.location.href,
+            {#url:'{% url 'caidapp:upload_archive' %}',#}
+            {#url:'{% url next %}',#}
+            data: formData,
+            dataType: 'json',
+            beforeSend: function(){
+
+            },
+            xhr:function(){
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', e=>{
+                    if(e.lengthComputable){
+                        const percentProgress = (e.loaded/e.total)*99;
+                        const percentProgressInt = Math.round(percentProgress);
+                        progress_bar.innerHTML = `<div class="progress-bar progress-bar-striped bg-success"
+                    role="progressbar" style="width: ${percentProgress}%" aria-valuenow="${percentProgress}" aria-valuemin="0"
+                    aria-valuemax="100">${percentProgressInt}%</div>`
+                    }
+                });
+                return xhr
+            },
+            success: function(response){
+                uploadForm.reset()
+                progress_bar.classList.add('not-visible')
+
+                console.log("close to the render");
+                console.log(response);
+
+                const container = document.getElementById('appbody');
+                // Inject the server-rendered HTML into the selected container
+                container.innerHTML = response.html;
+            },
+            error: function(err){
+                console.log(err);
+            },
+            cache: false,
+            contentType: false,
+            processData: false,
+        });
     });
 });
 
