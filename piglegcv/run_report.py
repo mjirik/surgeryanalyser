@@ -466,9 +466,10 @@ def create_pdf_report_for_one_tool(
         ax.set_xlabel("Time [sec]")
 
         if object_name == "Needle holder":
-            draw_ideal_trajetory(ax, (100, 250), color='green')
-            draw_ideal_trajetory(ax, (100, 300), color='orange')
-            draw_ideal_trajetory(ax, (100, 150), color='orange')
+            # x: second, y: cm
+            draw_ideal_trajetory(ax, (10, 70), color='green')
+            draw_ideal_trajetory(ax, (10, 80), color='orange')
+            draw_ideal_trajetory(ax, (10, 90), color='orange')
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
