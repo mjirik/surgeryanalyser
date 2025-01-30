@@ -55,11 +55,14 @@
                 {% csrf_token %}
                 {{ form.as_p }}
 
-                <p><div class="progress not-visible" id="progress"></div></p>
+                <p id="agreementMessage" class="text-danger m-2" style="display: block;">
+                    Help us to improve our service by allowing us to use your data for research and educational purposes.
+                </p>
+                <div class="progress not-visible" id="progress"></div>
 
 
 
-                <button class="btn btn-primary has-spinner " id="btnUpload" type="submit">
+                <button class="btn btn-primary has-spinner mt-2" id="btnUpload" type="submit">
                     {#            <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>#}
                     <i class="fas fa-upload"></i>
                     {{ button }}
@@ -68,14 +71,12 @@
                 {#            <a href="{% url 'uploader:web_reports' %}" class="btn btn-secondary">Go to list of reports</a>#}
                 {#            {% endif %}#}
                     <!-- Warning message for unchecked agreement -->
-    <p id="agreementMessage" class="text-danger" style="display: block;">
-        You must agree to the terms and conditions before submitting.
-    </p>
 
             </form>
 
 
-            <p class="m-3">
+
+            <p class="mt-3">
                 You can try it with a <a href="{% url 'uploader:download_sample_image' %}">sample image</a>,
                 {% if sample_collection %}
                 or you can check <a href="{%  url 'uploader:show_collection' sample_collection.hash %}">sample reports, </a>
@@ -83,10 +84,39 @@
                 or check our GitHub repository <a href="https://github.com/mjirik/surgeryanalyser">Surgery Analyser GitHub repository, </a>
             </p>
 
-            <p class="m-3">
+            <p class="mt-3">
                 <a href="https://docs.google.com/document/d/1nu53k1kIxUakajurYax9jmtNSm0tphRNtge6Xt3wi7E/edit?usp=sharing">Terms and conditions</a>
             </p>
+
+
+            <p class="mt-3">
+                <button type="button" class="btn btn-outline-secondary" id="no-consent-btn" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                    Continue Without Consent
+                </button>
+            </p>
         </div>
+    <!-- Modální okno pro potvrzení -->
+
+    <!-- Modální okno pro potvrzení -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Are you sure?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                You have chosen to proceed without agreeing to the consent. Some features may be limited. Are you sure you want to continue?
+                <p class="mt-2 text-danger"><strong>Please wait <span id="countdown">5</span> seconds before confirming.</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="confirm-no-consent" disabled>Proceed Without Consent</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     </div>
 
     <script>
@@ -171,6 +201,52 @@
                 btnUpload.disabled = !consentCheckbox.checked;
              }
          });
+
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+    const consentCheckbox = document.getElementById("consent-checkbox");
+    const submitBtn = document.getElementById("submit-btn");
+    const confirmNoConsent = document.getElementById("confirm-no-consent");
+    const noConsentBtn = document.getElementById("no-consent-btn");
+    const countdownElement = document.getElementById("countdown");
+    let countdownInterval;
+
+    // Aktivace tlačítka "Submit" při zaškrtnutí souhlasu
+    {#consentCheckbox.addEventListener("change", function () {#}
+    {#    submitBtn.disabled = !consentCheckbox.checked;#}
+    {# });#}
+
+    // Při otevření modálního okna spustíme odpočet
+    noConsentBtn.addEventListener("click", function () {
+        confirmNoConsent.disabled = true; // Deaktivace tlačítka
+        let secondsLeft = 5;
+        countdownElement.textContent = secondsLeft;
+
+        countdownInterval = setInterval(function () {
+            secondsLeft--;
+            countdownElement.textContent = secondsLeft;
+
+            if (secondsLeft <= 0) {
+                clearInterval(countdownInterval);
+                confirmNoConsent.disabled = false; // Aktivace tlačítka
+            }
+        }, 1000);
+    });
+
+    // Při zavření modálního okna resetujeme odpočet
+    document.getElementById("confirmModal").addEventListener("hidden.bs.modal", function () {
+        clearInterval(countdownInterval);
+        countdownElement.textContent = "5";
+        confirmNoConsent.disabled = true;
+    });
+
+    // Při potvrzení "Proceed Without Consent" odeslat formulář
+    confirmNoConsent.addEventListener("click", function () {
+        document.getElementById("consent-form").submit();
+    });
+});
+
 
     </script>
 
