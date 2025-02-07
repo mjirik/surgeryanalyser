@@ -258,9 +258,12 @@ def compare_heatmaps_plot(
         with open(outputdir / "tracks_points.json", "r") as f:
             tracks_points = json.load(f)
         points_px = np.asarray(tracks_points["data_pixels"][tool_id])
+    else:
+        points_px = np.asarray(points_px)
 
-
-    points_m = points_px * pix_size_m
+    logger.debug(f"{points_px=}")
+    logger.debug(f"{pix_size_m=}")
+    # points_m = points_px * pix_size_m
 
     pts_gt = np.load(HEATMAP_EXPERT_POINTS_PATH)
 
