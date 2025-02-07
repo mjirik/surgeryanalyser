@@ -1,26 +1,27 @@
 #!/bin/bash
 
+mkdir -p ../logs
 echo "DOCKERLOGNAME=${DOCKERLOGNAME}"
 # there is primary log in .txt file and 3 rotating backup logs
 sudo service redis-server start 2>&1 | \
 #   tee >(rotatelogs -n 3 logs/piglegcv_${DOCKERLOGNAME}_redis_log.txt.bck 1M) | \
-   rotatelogs -n 1 logs/piglegcv_redis_${DOCKERLOGNAME}_log.txt 1M
+   rotatelogs -n 1 ../logs/piglegcv_redis_${DOCKERLOGNAME}_log.txt 1M
 python worker.py 2>&1 | \
-   rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_0.txt 1M &
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_0.txt 1M &
 python worker.py 2>&1 | \
-   rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_1.txt 1M &
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_1.txt 1M &
 python worker.py 2>&1 | \
-   rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_2.txt 1M &
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_2.txt 1M &
 python worker.py 2>&1 | \
-   rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_3.txt 1M &
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_3.txt 1M &
 python worker.py 2>&1 | \
-   rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_4.txt 1M &
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_4.txt 1M &
 # python worker.py 2>&1 | \
-#    rotatelogs -n 1 logs/piglegcv_worker_${DOCKERLOGNAME}_log_5.txt 1M &
+#    rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_5.txt 1M &
 
 python app.py 2>&1 | \
 #   tee >(rotatelogs -n 3 logs/piglegcv_app_${DOCKERLOGNAME}_log.txt.bck 1M) | \
-   rotatelogs -n 1 logs/piglegcv_app_${DOCKERLOGNAME}_log.txt 1M &
+   rotatelogs -n 1 ../logs/piglegcv_app_${DOCKERLOGNAME}_log.txt 1M &
 echo "Services started"
 
 
@@ -74,8 +75,8 @@ echo "PORT=$JUPYTER_PORT"
 
 cd /webapps/piglegsurgery/ && \
     jupyter lab --no-browser --allow-root  2>&1 | \
-#   tee >(rotatelogs -n 3 logs/jupyterlab_${DOCKERLOGNAME}_log_2.txt.bck 1M) | \
-   rotatelogs -n 1 logs/piglegcv_jupyterlab_${DOCKERLOGNAME}_log.txt 1M &
+#   tee >(rotatelogs -n 3 ../logs/jupyterlab_${DOCKERLOGNAME}_log_2.txt.bck 1M) | \
+   rotatelogs -n 1 ../logs/piglegcv_jupyterlab_${DOCKERLOGNAME}_log.txt 1M &
 echo "jupyterlab started"
 
 printf "Job with JupiterLab was started.\n\
