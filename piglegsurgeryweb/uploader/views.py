@@ -371,11 +371,20 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
                 STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
                 graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
 
+
+                # find image
+                needle_holder_compare_heatmaps_image = None
+                for image in serverfile.bitmapimage_set.all():
+                    if f"needle_holder_compare_heatmaps_stitch {int(i)}" in image.name :
+                        needle_holder_compare_heatmaps_image = image
+                        break
+
                 per_stitch_report.append({
                     "stitch_id": i,
                     "advices": prepare_advices(loaded_results, i),
                     "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
                     'graphs_html': graphs_html,
+                    "needle_holder_compare_heatmaps": needle_holder_compare_heatmaps_image,
                 })
 
             except Exception as e:

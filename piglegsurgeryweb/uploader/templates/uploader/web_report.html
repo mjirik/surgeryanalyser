@@ -524,6 +524,20 @@
                             {% endautoescape %}
                         {% endfor %}
                     </ul>
+                    {%  if stitch_report.needle_holder_compare_heatmaps_image %}
+                        <a href="#" class="pop">
+
+                            <figure class="figure">
+                                <img src="{{ stitch_report.needle_holder_compare_heatmaps_image.bitmap_image.url }}" class="figure-img img-fluid rounded"
+                                     alt="A generic square placeholder image with rounded corners in a figure."
+                                     width=550>
+                                -
+                                <figcaption class="figure-caption">{{ stitch_report.needle_holder_compare_heatmaps_image.filename }}</figcaption>
+                            </figure>
+                        </a>
+                    {% endif %}
+
+
 
                 {% endfor %}
         </div>
