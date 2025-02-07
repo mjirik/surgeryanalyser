@@ -52,7 +52,7 @@ except ImportError as e:
     )
 
 
-HEATMAP_EXPERT_POINTS_PATH="resources/points_normalized.npy"
+HEATMAP_EXPERT_POINTS_PATH="./resources/heatmap/points_normalized.npy"
 
 
 
