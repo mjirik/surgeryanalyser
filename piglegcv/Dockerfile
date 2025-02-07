@@ -110,17 +110,12 @@ RUN pip install django==3.2.23 django-q==1.3.9 plotly==5.18.0
 
 RUN mkdir -p ./piglegcv
 # copy recursively all from piglegcv to piglegcv
-COPY ./ /home/appuser/piglegcv/
-
-# COPY ./resources piglegcv/
-# COPY *.py piglegcv/
-# COPY *.sh piglegcv/
+COPY ./piglegcv/ ./piglegcv/
 
 # cd piglegcv
 WORKDIR /home/appuser/piglegcv
 # it is possible to do it togehter but then everything is in one layer and slow to build
-# RUN mkdir -p ./resources
-# run mkdir -p ./logs
+RUN mkdir -p ./resources
 #COPY ./resources/ ./resources/
 #
 #RUN mkdir -p ./resources/incision_detection_models
@@ -165,11 +160,7 @@ WORKDIR /home/appuser/piglegcv
 #COPY ./run_tracker_bytetrack.py .
 #COPY ./*.py .
 
-# RUN chown -R appuser:appuser /home/appuser/piglegcv/resources \    
-#    && chmod -R 755 /home/appuser/piglegcv/resources
-RUN sudo chown -R appuser:sudo /home/appuser/piglegcv/resources \    
-   && chmod -R 755 /home/appuser/piglegcv/resources
-# RUN sudo chmod a+r -R /home/appuser/piglegcv/resources
+RUN sudo chmod a+rw -R ./resources
 # USER root
 RUN chmod 777 ./
 # USER appuser
