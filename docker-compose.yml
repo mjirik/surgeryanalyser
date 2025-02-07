@@ -28,7 +28,7 @@ services:
     image: "${PIGLEG_IMAGE_PREFIX}piglegcv:latest"
     build:
       context: ./piglegcv
-      dockerfile: ./piglegcv/Dockerfile
+      dockerfile: ./Dockerfile
     env_file:
       - ".env.prod"
       # there should be PIGLEG_DEVICE
