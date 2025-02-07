@@ -107,71 +107,66 @@ RUN mkdir logs
 # for easier debugg with this environment connected in pycharm
 RUN pip install django==3.2.23 django-q==1.3.9 plotly==5.18.0
 
+
+RUN mkdir -p ./piglegcv
+# copy recursively all from piglegcv to piglegcv
+COPY ./piglegcv/ ./piglegcv/
+
+# cd piglegcv
+WORKDIR /home/appuser/piglegcv
 # it is possible to do it togehter but then everything is in one layer and slow to build
 RUN mkdir -p ./resources
 #COPY ./resources/ ./resources/
-
-RUN mkdir -p ./resources/incision_detection_models
-RUN mkdir -p ./resources/single_image_detector
-RUN mkdir -p ./resources/stitch_detection_models/
-RUN mkdir -p ./resources/tracker_model_bytetrack
-RUN mkdir -p ./resources/tracker_model_bytetrack_hands_tools
-RUN mkdir -p ./resources/tracker_model_bytetrack_microsurgery
-RUN mkdir -p ./resources/yolov7_qrdet
-RUN mkdir -p ./resources/movement_evaluation_models
-RUN mkdir -p ./resources/heatmap
 #
-COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
-COPY ./resources/single_image_detector/mdl_sid_2.pth ./resources/single_image_detector
-COPY ./resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
-COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/yolox_l_8x8.py ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
-COPY ./resources/tracker_model_bytetrack_hands_tools/* ./resources/tracker_model_bytetrack_hands_tools/
-COPY ./resources/tracker_model_bytetrack_microsurgery/* ./resources/tracker_model_bytetrack_microsurgery/
-COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
-COPY ./resources/movement_evaluation_models/* ./resources/movement_evaluation_models
-COPY ./resources/heatmap/* ./resources/heatmap
-#
-#COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
-#COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
+#RUN mkdir -p ./resources/incision_detection_models
+#RUN mkdir -p ./resources/single_image_detector
+#RUN mkdir -p ./resources/stitch_detection_models/
+#RUN mkdir -p ./resources/tracker_model_bytetrack
+#RUN mkdir -p ./resources/tracker_model_bytetrack_hands_tools
+#RUN mkdir -p ./resources/tracker_model_bytetrack_microsurgery
+#RUN mkdir -p ./resources/yolov7_qrdet
+#RUN mkdir -p ./resources/movement_evaluation_models
+#RUN mkdir -p ./resources/heatmap
+##
 #COPY ./resources/incision_detection_models/220326_234659_mmdet.pth ./resources/incision_detection_models/
-#COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
-#COPY ./resources/single_image_detector/mdl.pth ./resources/single_image_detector
+#COPY ./resources/single_image_detector/mdl_sid_2.pth ./resources/single_image_detector
 #COPY ./resources/stitch_detection_models/model.pth ./resources/stitch_detection_models/
+#COPY ./resources/tracker_model_bytetrack/bytetrack_pigleg.py ./resources/tracker_model_bytetrack
+#COPY ./resources/tracker_model_bytetrack/yolox_l_8x8.py ./resources/tracker_model_bytetrack
+#COPY ./resources/tracker_model_bytetrack/epoch.pth ./resources/tracker_model_bytetrack
+#COPY ./resources/tracker_model_bytetrack_hands_tools/* ./resources/tracker_model_bytetrack_hands_tools/
+#COPY ./resources/tracker_model_bytetrack_microsurgery/* ./resources/tracker_model_bytetrack_microsurgery/
+#COPY ./resources/yolov7_qrdet/qrdet-yolov7.pt ./resources/yolov7_qrdet
+#COPY ./resources/movement_evaluation_models/* ./resources/movement_evaluation_models
+#COPY ./resources/heatmap/* ./resources/heatmap
+##
+#
+#
+## Copy scripts
+## check permissions of folowing files before this docker file build!!!
+#COPY ./worker.py .
+#COPY ./app.py .
+#COPY ./pigleg_cv.py .
+#COPY ./cascade_rcnn_x101_64x4d_fpn_1class.py .
+#COPY ./res50_onehand10k_256x256.py .
+#COPY ./run_qr.py .
+#COPY ./qrdet.py .
+#COPY ./qreader.py .
+#COPY ./run_report.py .
+#COPY ./run_perpendicular.py .
+#COPY ./tools.py .
+#COPY ./run_services.sh .
+#COPY ./incision_detection_mmdet.py .
+#COPY ./run_tracker_bytetrack.py .
+#COPY ./*.py .
+
 RUN sudo chmod a+rw -R ./resources
-
-
-# Copy scripts
-# check permissions of folowing files before this docker file build!!!
-COPY ./worker.py .
-COPY ./app.py .
-COPY ./pigleg_cv.py .
-COPY ./cascade_rcnn_x101_64x4d_fpn_1class.py .
-COPY ./res50_onehand10k_256x256.py .
-COPY ./run_qr.py .
-COPY ./qrdet.py .
-COPY ./qreader.py .
-COPY ./run_report.py .
-COPY ./run_perpendicular.py .
-COPY ./tools.py .
-COPY ./run_services.sh .
-COPY ./incision_detection_mmdet.py .
-COPY ./run_tracker_bytetrack.py .
-# COPY ./stitch_detection_mmdet.py .
-# COPY ./stitch_detection_mmdet_config.py .
-# COPY ./media_tools.py .
-# COPY ./static_stitch_analysis.py .
-# COPY ./dynamic_stitch_analysis.py .
-# COPY ./structure_tools.py .
-COPY ./*.py .
-
 # USER root
 RUN chmod 777 ./
 # USER appuser
 
 # CMD ["./data/images"]
-CMD cd /home/appuser/ && \
+CMD cd /home/appuser/piglegcv && \
     bash ./run_services.sh && \
     tail -f /dev/null
 
