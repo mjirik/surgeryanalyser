@@ -52,7 +52,8 @@ except ImportError as e:
     )
 
 
-HEATMAP_EXPERT_POINTS_PATH="./resources/heatmap/points_normalized.npy"
+HEATMAP_EXPERT_POINTS_PATH=Path(__file__).parent / "resources/heatmap/points_normalized.npy"
+assert HEATMAP_EXPERT_POINTS_PATH.exists(), f"File {HEATMAP_EXPERT_POINTS_PATH} does not exist"
 
 
 
