@@ -18,7 +18,13 @@ from pathlib import Path
 import scipy
 import scipy.signal
 import traceback
-from typing import List, Optional, Tuple, Union
+from pathlib import Path
+import json
+import skimage.io
+import seaborn as sns
+from matplotlib import pyplot as plt
+import numpy as np
+from scipy.stats import gaussian_kde
 try:
     import tools
     from tools import draw_bbox_into_image
@@ -27,7 +33,7 @@ try:
 except ImportError:
     from .tools import draw_bbox_into_image
     from . import tools, static_stitch_analysis, dynamic_stitch_analysis
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 
 try:
