@@ -596,6 +596,8 @@ def make_preview(
                 ".tif",
                 ".png",
             ):
+
+
                 import cv2
 
                 # print(input_file)

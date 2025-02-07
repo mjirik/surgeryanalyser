@@ -17,6 +17,8 @@ import seaborn as sns
 from pathlib import Path
 import scipy
 import scipy.signal
+import traceback
+from typing import List, Optional, Tuple, Union
 try:
     import tools
     from tools import draw_bbox_into_image
@@ -48,6 +50,10 @@ except ImportError as e:
         count_points_in_bbox,
         make_bbox_larger,
     )
+
+
+HEATMAP_EXPERT_POINTS_PATH="resources/points_normalized.npy"
+
 
 
 def plot_finger(img, joints, threshold, thickness):
@@ -204,12 +210,107 @@ class RelativePresenceInOperatingArea(object):
             return img
 
 
+def compare_distributions_by_l2_distance(pts, points, bw_adjust1=1.0, bw_adjust2=1.0):
+    # Compute both KDEs.
+    kde_ground = gaussian_kde(pts.T)
+    kde_other = gaussian_kde(points.T)
+
+    kde_ground.set_bandwidth(bw_method=kde_ground.factor * bw_adjust1)
+    kde_other.set_bandwidth(bw_method=kde_other.factor * bw_adjust2)
+
+    # Define a common grid that covers the support of both datasets.
+    x_min = min(pts[:, 0].min(), points[:, 0].min())
+    x_max = max(pts[:, 0].max(), points[:, 0].max())
+    y_min = min(pts[:, 1].min(), points[:, 1].min())
+    y_max = max(pts[:, 1].max(), points[:, 1].max())
+
+    grid_size = 20
+    x_grid = np.linspace(x_min, x_max, grid_size)
+    y_grid = np.linspace(y_min, y_max, grid_size)
+    X, Y = np.meshgrid(x_grid, y_grid)
+    grid_coords = np.vstack([X.ravel(), Y.ravel()])
+
+    # Evaluate both KDEs on the grid.
+    density_ground = kde_ground(grid_coords).reshape(X.shape)
+    density_other  = kde_other(grid_coords).reshape(X.shape)
+
+    # Calculate a similarity measure (for example, L2 distance).
+    l2_distance = np.sqrt(np.sum((density_ground - density_other)**2))
+    # print("L2 distance between KDEs:", l2_distance)
+    return l2_distance
+
+
+def compare_heatmaps_plot(
+        outputdir: Union[str,Path], points_px:Optional[np.array]=None, pix_size_m:Optional[float]=None, filename=None,
+        image:Optional[np.array]=None,
+        tool_id=0,
+        cmap="Greens",
+        levels=3
+):
+
+    outputdir = Path(outputdir)
+    if pix_size_m is None:
+        with open(outputdir / "meta.json", "r") as f:
+            meta = json.load(f)
+        pix_size_m = meta["qr_data"]["pix_size"]
+
+    if points_px is None:
+        with open(outputdir / "tracks_points.json", "r") as f:
+            tracks_points = json.load(f)
+        points_px = np.asarray(tracks_points["data_pixels"][tool_id])
+
+
+    points_m = points_px * pix_size_m
+
+    pts_gt = np.load(HEATMAP_EXPERT_POINTS_PATH)
+
+    plt.figure()
+
+    if image is None:
+        fn_small = list(outputdir.glob("__cropped.*.jpg"))[0]
+        image = skimage.io.imread(fn_small, as_gray=True)
+    else:
+        if image.ndim == 3:
+            image = skimage.color.rgb2gray(image)
+    plt.imshow(image, cmap='gray')
+    plt.plot(points_px[:, 0], points_px[:, 1], ".", alpha=0.2, color="red", markersize=1)
+    # alpha=0.5, markerfacecolor=(1,1,0,0.1)
+    # )
+    # save dimensions of the plot
+    pts_px = (pts_gt / pix_size_m) + np.median(points_px, axis=0)
+    sns.kdeplot(x=points_px[::10,0], y=points_px[::10,1],
+                # cmap=None,
+                cmap=cmap,
+                fill=True, bw_adjust=2., levels=levels,alpha=0.5)
+    sns.kdeplot(x=pts_px[::10,0], y=pts_px[::10,1], cmap=cmap, fill=False, bw_adjust=2.0, levels=levels)
+    points_normed = (points_px - np.median(points_px, axis=0)) * pix_size_m
+
+    l2_distance = compare_distributions_by_l2_distance(points_normed, pts_gt, bw_adjust1=2.0, bw_adjust2=2.0)
+    sigma = np.mean(np.var(pts_gt))
+    sigma = 2000.0
+    score = np.exp( - l2_distance / sigma)
+    score_100 = 100 * score
+    plt.text(0.02 * image.shape[1], 0.98 * image.shape[0], f"{score_100:.0f}%", fontsize=12, color="red")
+
+    plt.xlim(0, image.shape[1])
+    plt.ylim(image.shape[0], 0)
+    # turn off axis
+    plt.axis("off")
+    if filename:
+        plt.savefig(filename, dpi=300, bbox_inches="tight", pad_inches=0)
+        plt.close()
+    return l2_distance, score
+
+
+
+
 def create_heatmap_report_plt(
     points: np.ndarray,
     image: Optional[np.ndarray] = None,
     filename: Optional[Path] = None,
     bbox: Optional[np.ndarray] = None,
     bbox_linecolor=(128, 255, 0),
+    pix_size_m:Optional[float]=None
 ):
     """
 
@@ -233,8 +334,7 @@ def create_heatmap_report_plt(
         # one channel gray scale image to 3 channel gray scale image
         im_gray = np.stack([im_gray, im_gray, im_gray], axis=-1)
         if bbox is not None:
-            print("bbox")
-            print(bbox)
+            print("{bbox=}")
             im_gray = draw_bbox_into_image(im_gray, bbox, linecolor=bbox_linecolor)
         plt.imshow(im_gray, cmap="gray")
     plt.axis("off")
@@ -260,12 +360,15 @@ def create_heatmap_report_plt(
             cmap="rocket",
             alpha=0.5,
             linewidth=0,
+            levels=4,
         )
     except ValueError as e:
         logger.error(f"Error creating heatmap: {e}")
+        logger.debug(traceback.format_exc())
         logger.debug(f"{x=}")
         logger.debug(f"{y=}")
         return None
+
     if filename is not None:
         # plt.savefig(Path(filename))
         plt.savefig(Path(filename), bbox_inches="tight", pad_inches=0)
@@ -467,9 +570,9 @@ def create_pdf_report_for_one_tool(
 
         if object_name == "Needle holder":
             # x: second, y: cm
-            draw_ideal_trajetory(ax, (10, 70), color='green')
-            draw_ideal_trajetory(ax, (10, 80), color='orange')
-            draw_ideal_trajetory(ax, (10, 90), color='orange')
+            draw_ideal_trajetory(ax, (100, 700), color='green')
+            draw_ideal_trajetory(ax, (100, 800), color='orange')
+            draw_ideal_trajetory(ax, (100, 900), color='orange')
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
@@ -1589,7 +1692,7 @@ class MainReport:
 
         img_first = self.img_first
         simplename = object_name.lower().strip().replace(" ", "_")
-        object_full_name = f"{object_name} {stitch_name}"
+        object_full_name_with_stitch = f"{object_name} {stitch_name}"
 
         track_points_general = {
             "frame_ids": self.frame_ids,
@@ -1634,21 +1737,21 @@ class MainReport:
                                                   None, None,
                                                   img_first,
                                                   relative_presence)
-            data_results[f"{object_full_name} {relative_presence.name} [%]"] = float(100.0 * oz_presence)
+            data_results[f"{object_full_name_with_stitch} {relative_presence.name} [%]"] = float(100.0 * oz_presence)
 
         if len(res) > 0:
             [T, L, V, Vstd, Vcount, unit] = res
             logger.debug(f"{video_duration_s=}")
             logger.debug(f"{T=}, {L=}, {V=}, {unit=}")
             logger.debug(f"{type(T)=}, {type(L)=}, {type(V)=}, {type(unit)=}")
-            data_results[f"{object_full_name} length [{unit}]"] = L
-            data_results[f"{object_full_name} visibility [s]"] = T
-            data_results[f"{object_full_name} velocity"] = V
-            data_results[f"{object_full_name} velocity std"] = Vstd
-            data_results[f"{object_full_name} velocity above threshold"] = Vcount
-            data_results[f"{object_full_name} velocity threshold [m/s]"] = v_threshold_m_s
-            data_results[f"{object_full_name} unit"] = unit
-            data_results[f"{object_full_name} visibility [%]"] = float(
+            data_results[f"{object_full_name_with_stitch} length [{unit}]"] = L
+            data_results[f"{object_full_name_with_stitch} visibility [s]"] = T
+            data_results[f"{object_full_name_with_stitch} velocity"] = V
+            data_results[f"{object_full_name_with_stitch} velocity std"] = Vstd
+            data_results[f"{object_full_name_with_stitch} velocity above threshold"] = Vcount
+            data_results[f"{object_full_name_with_stitch} velocity threshold [m/s]"] = v_threshold_m_s
+            data_results[f"{object_full_name_with_stitch} unit"] = unit
+            data_results[f"{object_full_name_with_stitch} visibility [%]"] = float(
                 100.0 * (T / video_duration_s)
             ) if video_duration_s > 0 else 0.0
             # data_results[f"{object_full_name} median area presence [%]"] = float(
@@ -1670,7 +1773,19 @@ class MainReport:
                      / f"fig_{tool_id}b_{simplename}_heatmap_{stitch_name}.jpg",
             bbox=oa_bbox,
             bbox_linecolor=relative_presences[0].bbox_linecolor_rgb[::-1],
+            pix_size_m = self.pix_size_m,
         )
+
+        l2_distance, heatmap_score = compare_heatmaps_plot(
+            self.outputdir, points_px=data_pixel_cut[tool_id],
+            pix_size_m=self.pix_size_m,
+            filename=Path(self.outputdir) / f"fig_{tool_id}d_{simplename}_compare_heatmaps_{stitch_name}.jpg",
+            image=img_first
+
+        )
+        data_results[f"{object_full_name_with_stitch} heatmap score [%]"] = float(100.0 * heatmap_score)
+        data_results[f"{object_full_name_with_stitch} heatmap l2 distance [-]"] = float(100.0 * heatmap_score)
+
         return data_results
 
     def draw_area_presence(self, data_pixel, filename, frame_idx_start, frame_idx_stop, img_first,
