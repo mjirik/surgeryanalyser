@@ -109,12 +109,16 @@ RUN pip install django==3.2.23 django-q==1.3.9 plotly==5.18.0
 
 
 RUN mkdir -p ./piglegcv
-# copy recursively all from piglegcv to piglegcv
-COPY ./ /home/appuser/piglegcv/
 
-# COPY ./resources piglegcv/
-# COPY *.py piglegcv/
-# COPY *.sh piglegcv/
+# copy recursively all from piglegcv to piglegcv
+#COPY ./ /home/appuser/piglegcv/
+
+ COPY ./resources piglegcv/resources
+RUN sudo chown -R appuser:sudo /home/appuser/piglegcv/resources \
+   && chmod -R 755 /home/appuser/piglegcv/resources
+
+ COPY *.py piglegcv/
+ COPY *.sh piglegcv/
 
 # cd piglegcv
 WORKDIR /home/appuser/piglegcv
@@ -167,8 +171,6 @@ WORKDIR /home/appuser/piglegcv
 
 # RUN chown -R appuser:appuser /home/appuser/piglegcv/resources \
 #    && chmod -R 755 /home/appuser/piglegcv/resources
-RUN sudo chown -R appuser:sudo /home/appuser/piglegcv/resources \
-   && chmod -R 755 /home/appuser/piglegcv/resources
 # RUN sudo chmod a+r -R /home/appuser/piglegcv/resources
 # USER root
 RUN chmod 777 ./

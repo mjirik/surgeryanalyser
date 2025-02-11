@@ -268,7 +268,7 @@ def compare_heatmaps_plot(
     else:
         points_px = np.asarray(points_px)
 
-    logger.debug(f"{points_px=}")
+    logger.debug(f"{points_px.shape=}")
     logger.debug(f"{pix_size_m=}")
     # points_m = points_px * pix_size_m
 

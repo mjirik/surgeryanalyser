@@ -2,6 +2,11 @@
 
 Actual version: "0.0.0"
 
+##/ 2025-01
+
+* [added] Expert heatmap
+* [added] Tabs for different stitches
+
 ## 2024-11
 
 * [added] Add selected reports to collection

@@ -350,6 +350,14 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     edit_review = True
     logger.debug(f"{edit_review=}")
 
+    logger.debug(f"Image list in {len(image_list_in)}")
+    for image in image_list_in:
+        image: models.BitmapImage
+        logger.debug(image.bitmap_image.name)
+    logger.debug(f"Image list out {len(image_list_out)}")
+    for image in image_list_out:
+        logger.debug(image.bitmap_image.name)
+
     html_path = tasks.get_graph_path_for_report(serverfile)
 
     html = None
@@ -365,6 +373,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     per_stitch_report = []
 
     if loaded_results is not None:
+
         for i in range(int(serverfile.stitch_count)):
             logger.debug(f"Stitch {i}")
             try:
@@ -374,8 +383,12 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
                 # find image
                 needle_holder_compare_heatmaps_image = None
+                looking_for = f"needle_holder_compare_heatmaps_stitch {int(i)}"
+                logger.debug(f"{looking_for=}")
                 for image in serverfile.bitmapimage_set.all():
-                    if f"needle_holder_compare_heatmaps_stitch {int(i)}" in image.name :
+                    logger.debug(f"  {image.bitmap_image.name}")
+                    if looking_for in str(image.bitmap_image.name):
+                        logger.debug(f"     Found {image.bitmap_image.name}")
                         needle_holder_compare_heatmaps_image = image
                         break
 
@@ -384,7 +397,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
                     "advices": prepare_advices(loaded_results, i),
                     "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
                     'graphs_html': graphs_html,
-                    "needle_holder_compare_heatmaps": needle_holder_compare_heatmaps_image,
+                    "needle_holder_compare_heatmaps_image": needle_holder_compare_heatmaps_image,
                 })
 
             except Exception as e:
@@ -429,7 +442,7 @@ def is_hi_than(value, threshold):
     return value > threshold
 
 def prepare_advices(results: dict, stitch_id:int) -> list:
-    logger.warning(f"{results=}")
+    # logger.debug(f"{results=}")
     advices = []
 
     # set varibale fn to function which will return true if the value will be lower then some threshold
@@ -804,7 +817,6 @@ def _filter_images(serverfile: UploadedFile):
             "needle_holder_all_area_presence",
             "forceps_all_area_presence",
             "jpeg",
-            "gif",
         ]
     else:
         allowed_image_patterns = [
