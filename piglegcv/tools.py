@@ -145,7 +145,7 @@ def count_points_in_bbox(points, bbox):
 def array_stats_to_str(arr:np.array, axis:Optional[int] = None):
     arr = np.asarray(arr)
     if axis is None:
-        axis = np.argmin(arr.shape)
+        axis = np.argmax(arr.shape)
 
     # check if array is empty
     if arr.size == 0:
