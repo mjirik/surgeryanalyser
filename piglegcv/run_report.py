@@ -270,6 +270,8 @@ def compare_heatmaps_plot(
 
     logger.debug(f"{points_px.shape=}")
     logger.debug(f"{pix_size_m=}")
+    if len(points_px) == 0:
+        return None, None
     # points_m = points_px * pix_size_m
 
     pts_gt = np.load(HEATMAP_EXPERT_POINTS_PATH)
@@ -1793,8 +1795,10 @@ class MainReport:
             image=img_first
 
         )
-        data_results[f"{object_full_name_with_stitch} heatmap score [%]"] = float(100.0 * heatmap_score)
-        data_results[f"{object_full_name_with_stitch} heatmap l2 distance [-]"] = float(100.0 * heatmap_score)
+        if l2_distance is not None and heatmap_score is not None:
+            data_results[f"{object_full_name_with_stitch} heatmap l2 distance [-]"] = l2_distance
+            data_results[f"{object_full_name_with_stitch} heatmap score [%]"] = float(100.0 * heatmap_score)
+            data_results[f"{object_full_name_with_stitch} heatmap l2 distance [-]"] = float(100.0 * heatmap_score)
 
         return data_results
 
