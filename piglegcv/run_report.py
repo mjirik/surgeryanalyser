@@ -270,7 +270,7 @@ def compare_heatmaps_plot(
 
     logger.debug(f"{points_px.shape=}")
     logger.debug(f"{pix_size_m=}")
-    if len(points_px) == 0:
+    if points_px.size < 8:
         return None, None
     # points_m = points_px * pix_size_m
 
