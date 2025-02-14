@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 services:
   dev_piglegweb:
     container_name: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegweb"

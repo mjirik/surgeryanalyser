@@ -12,6 +12,7 @@ from . import pigleg_evaluation_tools as pet
 from typing import Optional, Union, List
 
 
+ADD_ADVANCED_STUDENTS_TO_EXPERT = False
 
 
 class StitchDataFrame():
@@ -80,14 +81,20 @@ class StitchDataFrame():
 
 def add_group_column(dfst, movement_evaluation_col, expert_threshold):
     dfst["Group"] = "expert"
-    dfst["Group"][dfst[movement_evaluation_col] < expert_threshold] = "student"
+    if ADD_ADVANCED_STUDENTS_TO_EXPERT:
+        dfst["Group"][dfst[movement_evaluation_col] < expert_threshold] = "student"
+    else:
+        dfst["Group"][dfst["done_by_expert"]==False] = "student"
     return dfst
 
 
 def findIntersection(fun1, fun2, x0):
     return fsolve(lambda x : fun1(x) - fun2(x), x0)
+
+
 def find_threshold(dfst, col_name):
     med = dfst[col_name].median()
+
     # find the threshold beteween experts and students based on KDE model of each group descriped by done_by_expert
     kde_expert = scipy.stats.gaussian_kde(dfst[dfst["Group"]=='expert'][col_name].dropna())
     kde_student = scipy.stats.gaussian_kde(dfst[dfst["Group"]=='student'][col_name].dropna())
@@ -98,8 +105,8 @@ def find_threshold(dfst, col_name):
 def get_distplot(dfst, col_name, my_value, annotation_text="You"):
     fig = ff.create_distplot([dfst[dfst["Group"]=="student"][col_name].dropna(), dfst[dfst["Group"]=='expert'][col_name].dropna()],
                              group_labels=['student', 'expert'],
-                             show_hist=False,
-                             show_rug=False,
+                             show_hist=True,
+                             show_rug=True,
                              curve_type='kde',
                              # histnorm='probability density'
                              histnorm='probability'
