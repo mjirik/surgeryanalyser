@@ -247,6 +247,31 @@ def compare_distributions_by_l2_distance(pts, points, bw_adjust1=1.0, bw_adjust2
     return l2_distance
 
 
+def logistic_normalize_inverted(d, midpoint=700, steepness=0.01):
+    """
+    Normalizes a distance d so that:
+      - d = 0 maps to 1.0 (best),
+      - d = midpoint maps to 0.5,
+      - d -> infinity maps to 0.0.
+
+    Parameters:
+      d (float or np.ndarray): The distance value(s).
+      midpoint (float): The distance at which the result is 0.5.
+      steepness (float): Controls the slope of the logistic curve.
+
+    Returns:
+      float or np.ndarray: A normalized value in the range [0, 1].
+    """
+    # Ensure d is a NumPy array for vectorized operations
+    d = np.array(d, dtype=float)
+    normalized = 1 / (1 + np.exp(steepness * (d - midpoint)))
+
+    # If you want to force exactly 1.0 when d == 0, adjust those entries:
+    # normalized[d == 0] = 1.0
+
+    return normalized
+
+
 def compare_heatmaps_plot(
         outputdir: Union[str,Path], points_px:Optional[np.array]=None, pix_size_m:Optional[float]=None, filename=None,
         image:Optional[np.array]=None,
@@ -303,8 +328,10 @@ def compare_heatmaps_plot(
 
     l2_distance = compare_distributions_by_l2_distance(points_normed, pts_gt, bw_adjust1=2.0, bw_adjust2=2.0)
     sigma = np.mean(np.var(pts_gt))
-    sigma = 2000.0
-    score = np.exp( - l2_distance / sigma)
+    sigma = 4000.0
+    # score = np.exp( - l2_distance / sigma)
+    # print(f"{l2_distance=}")
+    score = logistic_normalize_inverted(l2_distance, midpoint=1000, steepness=0.005)
     score_100 = 100 * score
     plt.text(0.02 * image.shape[1], 0.98 * image.shape[0], f"{score_100:.0f}%", fontsize=12, color="red")
 
@@ -316,8 +343,6 @@ def compare_heatmaps_plot(
         plt.savefig(filename, dpi=300, bbox_inches="tight", pad_inches=0)
         plt.close()
     return l2_distance, score
-
-
 
 
 def create_heatmap_report_plt(

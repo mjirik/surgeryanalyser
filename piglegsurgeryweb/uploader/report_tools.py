@@ -58,7 +58,9 @@ class StitchDataFrame():
             my_value = self.my_dfst[self.my_dfst["stitch_id"] == stitch_id][col_name].values[0]
             fig = get_distplot(self.dfst, col_name, my_value, annotation_text=f"You={my_value:.2f}")
             html = fig.to_html(full_html=False, include_plotlyjs='cdn')
-            htmls.append(html)
+            htmls.append(
+                {"title": col_name, "html": html}
+                )
 
         return htmls
 

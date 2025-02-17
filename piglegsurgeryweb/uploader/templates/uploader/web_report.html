@@ -509,7 +509,7 @@
         <ul class="nav nav-tabs border-start border-end" id="myTab" role="tablist">
             {% for stitch_report in per_stitch_report %}
               <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="stitch-{{ stitch_report.stitch_id }}-tab" data-bs-toggle="tab" data-bs-target="#stitch_report_{{ stitch_report.stitch_id }}" type="button" role="tab" aria-controls="home" aria-selected="true">Stitch {{ stitch_report.stitch_id }}</button>
+                <button class="nav-link {% if forloop.first %} active {% endif %}" id="stitch-{{ stitch_report.stitch_id }}-tab" data-bs-toggle="tab" data-bs-target="#stitch_report_{{ stitch_report.stitch_id }}" type="button" role="tab" aria-controls="home" aria-selected="true">Stitch {{ stitch_report.stitch_id }}</button>
               </li>
             {% endfor %}
 
@@ -530,12 +530,48 @@
                         <p>AI movement evaluation: {{ stitch_report.ai_movement_evaluation|floatformat:0 }}</p>
                     {% endif  %}
 {#                    items #}
+                    <h4>Personalized suggestions</h4>
                     <ul>
                         {% for advice in stitch_report.advices %}
                             <li>{{ advice }}</li>
                         {% endfor %}
                     </ul>
+
+                        <h4>Measurements</h4>
+
+                    <ul>
+
+                       <li> The red graph below represents the distribution of time needed by experts for one stitch.
+</li><li>The red histogram represents the number of stitches from experts  taking the given time indicated on the x-axis.
+</li><li>The blue graph represents the distribution of time needed by our participants.
+</li><li>The blue histogram represents the number of stitches from learners taking the given time indicated on the x-axis.
+</li><li>The dotted line shows your time for the stitch being analysed.
+</li><li>If your time is exceeding the expert time substantially, consider your what potentially went wrong.
+</li><li>Did you hit the point for piercing the skin atr the first trial? If not, try to target the point with your eye, before starting the movement.
+</li><li>Could you pass the needle easily? If not, check whether you needle was placed correctly in the needle holder.
+                    </li><li>Did the needle come out on the incision plane on the first trial? If not, again target the wanted point with your eye, before starting the movement.</li>
+                    </ul>
+                        {% for graph_html in stitch_report.graphs_html %}
+                            <h5>{{ graph_html.title }}</h5>
+                            {% autoescape off %}
+                                {{ graph_html.html }}
+                            {% endautoescape %}
+                        {% endfor %}
+{#                    {{ stitch_report }}#}
+
                         {%  if stitch_report.needle_holder_compare_heatmaps_image %}
+                            <h4>Needle holder movement heatmap</h4>
+                            <ul>
+
+                                <li> The heat map represents the projection of the needleholder movement during the process of stitching on the pig foot.
+                                </li><li> The green line encircles the space where the needle holder of the expert is found in 68% of the time.
+                            </li><li> The white line refers to the space the needle holder can be found in 95% of the time.
+                            </li><li> Correspondingly the dark green area shows where your needleholder is in 68% of the time.
+                            </li><li> The light green area corresponds to the space where your needleholder is found in 95% of the time.
+                            </li><li> When your shaded area is outside the corresponding circle, it means that your movements are rather wide and not focussed on the incision and the stitch.
+                                => In this case,  try to restrict your movements with the needleholder tip as close as possible to the incision.
+                            </li>
+                            </ul>
                             <a href="#" class="pop">
 
                                 <figure class="figure">
@@ -546,14 +582,6 @@
                                 </figure>
                             </a>
                         {% endif %}
-
-                        {% for graph_html in stitch_report.graphs_html %}
-                            {% autoescape off %}
-                                {{ graph_html }}
-                            {% endautoescape %}
-                        {% endfor %}
-{#                    {{ stitch_report }}#}
-
 
 
                     </div>
