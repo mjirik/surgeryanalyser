@@ -532,16 +532,19 @@
 {#                    items #}
                     <h4>Personalized suggestions</h4>
                     <ul>
+                        {% if stitch_report.advices|length == 0%}
+                            <li>No personalized suggestions. Your stitching seems to be perfect. </li>
+                        {% endif %}
                         {% for advice in stitch_report.advices %}
                             <li>{{ advice }}</li>
                         {% endfor %}
                     </ul>
 
-                        <h4>Measurements</h4>
 
                         {% for graph_html in stitch_report.graphs_html %}
 
 
+                            <h4>{{ graph_html.title }}</h4>
                             {% if graph_html.title == "Stitch duration [s]" %}
                             <ul>
                                 <li>The dotted line represents your time for the stitch being analyzed. If the line is green (below 60 seconds), your time is good. If it is yellow (between 60 and 90 seconds), your time is acceptable. If it is red (above 90 seconds), your time is too slow.
@@ -598,7 +601,6 @@
 
 
 
-                            <h5>{{ graph_html.title }}</h5>
                             {% autoescape off %}
                                 {{ graph_html.html }}
                             {% endautoescape %}
