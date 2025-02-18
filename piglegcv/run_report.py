@@ -318,21 +318,32 @@ def compare_heatmaps_plot(
     # alpha=0.5, markerfacecolor=(1,1,0,0.1)
     # )
     # save dimensions of the plot
-    pts_px = (pts_gt / pix_size_m) + np.median(points_px, axis=0)
-    sns.kdeplot(x=points_px[::10,0], y=points_px[::10,1],
-                # cmap=None,
-                cmap=cmap,
-                fill=True, bw_adjust=2., levels=levels,alpha=0.5)
-    sns.kdeplot(x=pts_px[::10,0], y=pts_px[::10,1], cmap=cmap, fill=False, bw_adjust=2.0, levels=levels)
-    points_normed = (points_px - np.median(points_px, axis=0)) * pix_size_m
 
+    points_normed = (points_px - np.median(points_px, axis=0)) * pix_size_m
     l2_distance = compare_distributions_by_l2_distance(points_normed, pts_gt, bw_adjust1=2.0, bw_adjust2=2.0)
     sigma = np.mean(np.var(pts_gt))
     sigma = 4000.0
     # score = np.exp( - l2_distance / sigma)
-    # print(f"{l2_distance=}")
+    print(f"{l2_distance=}")
     score = logistic_normalize_inverted(l2_distance, midpoint=1000, steepness=0.005)
     score_100 = 100 * score
+
+    if score_100 < 70:
+        students_cmap = "Reds"
+    elif score_100 < 85:
+        students_cmap = "Oranges"
+    else:
+        students_cmap = "Greens"
+
+
+    pts_px = (pts_gt / pix_size_m) + np.median(points_px, axis=0)
+    sns.kdeplot(x=points_px[::10,0], y=points_px[::10,1],
+                # cmap=None,
+                cmap=students_cmap,
+                fill=True, bw_adjust=2., levels=levels,alpha=0.5)
+
+    sns.kdeplot(x=pts_px[::10,0], y=pts_px[::10,1], cmap="Greens", fill=False, bw_adjust=2.0, levels=levels)
+
     plt.text(0.02 * image.shape[1], 0.98 * image.shape[0], f"{score_100:.0f}%", fontsize=12, color="red")
 
     plt.xlim(0, image.shape[1])

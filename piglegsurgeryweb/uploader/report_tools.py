@@ -54,9 +54,26 @@ class StitchDataFrame():
                 # "Needle holder to forceps stitch below threshold [s]"
             ]
         htmls = []
+        thresholds = None
         for col_name in col_names:
             my_value = self.my_dfst[self.my_dfst["stitch_id"] == stitch_id][col_name].values[0]
-            fig = get_distplot(self.dfst, col_name, my_value, annotation_text=f"You={my_value:.2f}")
+
+            bin_size = None
+            if col_name == "Needle holder stitch length [m]":
+                bin_size = 0.1
+                thresholds = [60, 90]
+            elif col_name == "Needle holder stitch velocity above threshold":
+                thresholds = [17, 25]
+
+            if thresholds:
+                if my_value > thresholds[1]:
+                    color = "green"
+                elif my_value > thresholds[0]:
+                    color = "orange"
+                else:
+                    color = "red"
+
+            fig = get_distplot(self.dfst, col_name, my_value, annotation_text=f"You={my_value:.2f}", bin_size=bin_size, my_value_color=color)
             html = fig.to_html(full_html=False, include_plotlyjs='cdn')
             htmls.append(
                 {"title": col_name, "html": html}
@@ -104,7 +121,7 @@ def find_threshold(dfst, col_name):
     intersection = findIntersection(kde_expert, kde_student, med)
     return intersection[0]
 
-def get_distplot(dfst, col_name, my_value, annotation_text="You"):
+def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optional[float]=None, my_value_color="green"):
     fig = ff.create_distplot([dfst[dfst["Group"]=="student"][col_name].dropna(), dfst[dfst["Group"]=='expert'][col_name].dropna()],
                              group_labels=['student', 'expert'],
                              show_hist=True,
@@ -112,13 +129,22 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You"):
                              curve_type='kde',
                              # histnorm='probability density'
                              histnorm='probability'
+
                              )
+
+    if bin_size is not None:
+        # Loop over the traces and update the histogram bin size
+        for trace in fig.data:
+            if trace.type == 'histogram':
+                # Update the xbins property
+                trace.xbins = dict(size=bin_size)
+
     # description of x-axis
     fig.update_xaxes(title_text=col_name)
     # legend
     fig.update_layout(legend_title_text='Group')
     # comparison_value
-    fig.add_vline(x=my_value, line_width=3, line_dash="dash", line_color="green", annotation_text=annotation_text, annotation_position="top right")
+    fig.add_vline(x=my_value, line_width=3, line_dash="dash", line_color=my_value_color, annotation_text=annotation_text, annotation_position="top right")
     # arrow to my_value with text
     # fig.add_annotation(x=my_value, y=0.5, text="mean", showarrow=True, arrowhead=1)
     return fig
