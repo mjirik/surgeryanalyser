@@ -59,19 +59,21 @@ class StitchDataFrame():
             my_value = self.my_dfst[self.my_dfst["stitch_id"] == stitch_id][col_name].values[0]
 
             bin_size = None
-            if col_name == "Needle holder stitch length [m]":
-                bin_size = 0.1
+            if col_name == "Stitch duration [s]":
                 thresholds = [60, 90]
+            elif col_name == "Needle holder stitch length [m]":
+                bin_size = 0.1
             elif col_name == "Needle holder stitch velocity above threshold":
                 thresholds = [17, 25]
 
+            color = "black"
             if thresholds:
                 if my_value > thresholds[1]:
-                    color = "green"
+                    color = "red"
                 elif my_value > thresholds[0]:
                     color = "orange"
                 else:
-                    color = "red"
+                    color = "green"
 
             fig = get_distplot(self.dfst, col_name, my_value, annotation_text=f"You={my_value:.2f}", bin_size=bin_size, my_value_color=color)
             html = fig.to_html(full_html=False, include_plotlyjs='cdn')

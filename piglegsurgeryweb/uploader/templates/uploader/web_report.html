@@ -539,19 +539,65 @@
 
                         <h4>Measurements</h4>
 
-                    <ul>
-
-                       <li> The red graph below represents the distribution of time needed by experts for one stitch.
-</li><li>The red histogram represents the number of stitches from experts  taking the given time indicated on the x-axis.
-</li><li>The blue graph represents the distribution of time needed by our participants.
-</li><li>The blue histogram represents the number of stitches from learners taking the given time indicated on the x-axis.
-</li><li>The dotted line shows your time for the stitch being analysed.
-</li><li>If your time is exceeding the expert time substantially, consider your what potentially went wrong.
-</li><li>Did you hit the point for piercing the skin atr the first trial? If not, try to target the point with your eye, before starting the movement.
-</li><li>Could you pass the needle easily? If not, check whether you needle was placed correctly in the needle holder.
-                    </li><li>Did the needle come out on the incision plane on the first trial? If not, again target the wanted point with your eye, before starting the movement.</li>
-                    </ul>
                         {% for graph_html in stitch_report.graphs_html %}
+
+
+                            {% if graph_html.title == "Stitch duration [s]" %}
+                            <ul>
+                                <li>The dotted line represents your time for the stitch being analyzed. If the line is green (below 60 seconds), your time is good. If it is yellow (between 60 and 90 seconds), your time is acceptable. If it is red (above 90 seconds), your time is too slow.
+                                </li><li>The red graph below represents the distribution of time needed by experts for one stitch.
+                            </li><li>The red histogram shows the number of stitches performed by experts that took the given time indicated on the x-axis.
+                            </li><li>The blue graph represents the distribution of time needed by learners.
+                            </li><li>The blue histogram shows the number of stitches performed by learners that took the given time indicated on the x-axis.
+                            </li><li>If your time is significantly higher than the expert times, consider what may have caused the delay:
+                                <ul>
+                                    <li>Did you successfully hit the skin penetration point on the first attempt? If not, try focusing on the target point with your eye before starting the movement.
+                                    </li><li>Was the needle easy to pass through? If not, check whether it was correctly positioned in the needle holder.
+                                </li><li>Did the needle exit on the intended incision plane on the first attempt? If not, ensure you visually align with the desired exit point before starting the motion. </li>
+                                </ul>
+                            </li>
+                            </ul>
+                            {% elif graph_html.title ==  "Needle holder stitch length [m]" %}
+                            <ul>
+                                <li>The dotted line represents your needle holder stitch length for the stitch being analyzed. If the line is green (within the expert range), your length is optimal. If it is yellow (slightly outside the expert range), your length is acceptable but could be improved. If it is red (far from the expert range), your length is not ideal and may need adjustment.
+
+                                </li><li>The orange graph below represents the distribution of needle holder stitch lengths used by experts.
+                                </li><li>The orange histogram shows the number of stitches performed by experts with the given stitch length indicated on the x-axis.
+
+                                </li><li>The blue graph represents the distribution of needle holder stitch lengths used by learners.
+                                </li><li>The blue histogram shows the number of stitches performed by learners with the given stitch length indicated on the x-axis.
+
+                                <ul>
+                            <li>If your stitch length differs significantly from expert values, consider the following: Keep the needle holder close to the incision to maintain control and consistency. Holding it too far away can lead to excessive stitch length.
+                            </li><li>Avoid erratic movements when guiding the needle through the tissue. Smooth and controlled motions help achieve a precise and consistent stitch length.
+                                </ul>
+                            </li>
+
+                            </ul>
+                            {% elif graph_html.title ==  "Needle holder stitch velocity above threshold"  %}
+                                <ul>
+
+                                    <li>The dotted line represents the time your needle holder velocity exceeded the threshold for the stitch being analyzed. If the line is green (within the expert range), your velocity control is optimal. If it is yellow (slightly above the threshold), your control is acceptable but could be improved. If it is red (significantly above the threshold), your movements may be too fast and uncontrolled.
+
+                                    </li><li>The orange graph below represents the distribution of needle holder velocity exceeding the threshold among experts.
+                                    </li><li>The orange histogram shows the number of stitches performed by experts where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.
+
+                                    </li><li>The blue graph represents the distribution of needle holder velocity exceeding the threshold among learners.
+                                    </li><li>The blue histogram shows the number of stitches performed by learners where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.
+
+                                    </li><li>If your velocity exceeds expert values significantly, consider working on your instrument handling:
+                                    <ul>
+                                <li>Practice maintaining a steady grip and controlled movements with the needle holder to avoid sudden acceleration.
+                                </li><li>Focus on smooth, deliberate motions rather than quick or forceful actions to improve precision and stability.
+                                    </ul>
+                                </li>
+                                </ul>
+                            {% endif %}
+
+
+
+
+
                             <h5>{{ graph_html.title }}</h5>
                             {% autoescape off %}
                                 {{ graph_html.html }}
@@ -562,16 +608,22 @@
                         {%  if stitch_report.needle_holder_compare_heatmaps_image %}
                             <h4>Needle holder movement heatmap</h4>
                             <ul>
+                            <li>The heat map represents the projection of the needle holder movement during the process of stitching on the pig foot
+                                <ul>
+                                    <li>Above 85% frequency is considered optimal (green).
+                                    </li><li>Between 70% and 85% is considered acceptable but could be improved (yellow).
+                                    </li><li>Below 70% is considered not ideal (red).
+                                </ul>
+                                </li><li>If your needle holder positioning differs significantly from expert patterns, consider working on these:
 
-                                <li> The heat map represents the projection of the needleholder movement during the process of stitching on the pig foot.
-                                </li><li> The green line encircles the space where the needle holder of the expert is found in 68% of the time.
-                            </li><li> The white line refers to the space the needle holder can be found in 95% of the time.
-                            </li><li> Correspondingly the dark green area shows where your needleholder is in 68% of the time.
-                            </li><li> The light green area corresponds to the space where your needleholder is found in 95% of the time.
-                            </li><li> When your shaded area is outside the corresponding circle, it means that your movements are rather wide and not focussed on the incision and the stitch.
-                                => In this case,  try to restrict your movements with the needleholder tip as close as possible to the incision.
+                                <ul>
+                            <li>Ensure that the needle holder remains close to the incision to maintain control and precision.
+                            </li><li>Avoid excessive movement or unnecessary repositioning to improve efficiency and consistency.
+                            </li><li>Practice smooth and controlled handling to keep the needle holder within the optimal range (green circle) throughout the stitching process.
+                                </ul>
                             </li>
                             </ul>
+
                             <a href="#" class="pop">
 
                                 <figure class="figure">
