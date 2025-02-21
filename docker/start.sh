@@ -35,6 +35,7 @@ echo "  QCluster started"
 #gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0:8000 --timeout 1800 --workers 5 |& \
 #    tee >(rotatelogs -n 3 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt.bck 1k) | tee  >(rotatelogs -n 1 /webapps/piglegsurgery/piglegsurgeryweb/log/gunicorn_log.txt 1M)
 
+echo " ENV=${ENV}"
 
 # Determine whether to run development or production server
 if [ "$ENV" = "production" ]; then
