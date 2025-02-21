@@ -19,6 +19,7 @@ services:
       - "${PIGLEG_ROOT_DIR}:/webapps/piglegsurgery"
       - "${PIGLEG_MEDIA_DIR}:/webapps/piglegsurgery/piglegsurgeryweb/media"
       - "${PIGLEG_LOG_DIR}:/root/pigleg/logs"
+      - "${PIGLEG_ADDITIONAL_DATA_DIR:-./additional}:/data"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
     networks:
       - piglegnet

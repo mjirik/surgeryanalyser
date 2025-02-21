@@ -150,6 +150,8 @@ RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/
 #CMD service redis-server start && tail -F /var/log/redis/error.log
 #CMD tail -f /dev/null
 
+ARG ENV=development
+ENV ENV=$ENV
 
 #ENV PIGLEGCV_HOSTNAME "PIGLEGCV_HOSTNAME"
 CMD cd /webapps/piglegsurgery/docker && \
