@@ -150,6 +150,9 @@ RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/
 #CMD service redis-server start && tail -F /var/log/redis/error.log
 #CMD tail -f /dev/null
 
+# install gunicorn
+RUN conda install -n piglegsurgery --yes -c conda-forge gunicorn=20.1.0
+
 ARG ENV=development
 ENV ENV=$ENV
 
