@@ -13,6 +13,7 @@ services:
       - PIGLEGCV_PORT=5000
       - PIGLEG_SPREADSHEET_URL="${PIGLEG_SPREADSHEET_URL}"
     env_file:
+      # there should be PIGLEG_SPREADSHEET_URL
       - ".env.prod"
 #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:

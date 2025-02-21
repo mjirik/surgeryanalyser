@@ -3,34 +3,37 @@ services:
   dev_piglegweb:
     container_name: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegweb"
     image: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegweb:latest"
-    build: docker
+    build:
+      context: ./docker
     ports:
       - '${PIGLEG_PORT:-8100}:8000'
       # outer:inner
     environment:
       - PIGLEGCV_HOSTNAME=dev_piglegcv
       - PIGLEGCV_PORT=5000
-#      - PIGLEG_SPREADSHEET_URL="${PIGLEG_SPREADSHEET_URL}"
+      - PIGLEG_SPREADSHEET_URL="${PIGLEG_SPREADSHEET_URL}"
     env_file:
       # there should be PIGLEG_SPREADSHEET_URL
       - ".env.dev"
-    #      - PIGLEGCV_HOSTNAME_DEVEL=piglegcv_devel
-    #      - PIGLEGCV_PORT_DEVEL=5000
-    #      - DOCKERLOGNAME="devel"
     #     dockery vidí své vnitřní porty, nikoliv ty vnější
     volumes:
       - "${PIGLEG_ROOT_DIR:-./}:/webapps/piglegsurgery"
       - "${PIGLEG_MEDIA_DIR:-./piglegsurgeryweb/media_symlink}:/webapps/piglegsurgery/piglegsurgeryweb/media"
       - "${PIGLEG_LOG_DIR:-./logs_dev}:/home/appuser/pigleg/logs"
+      - "${PIGLEG_ADDITIONAL_DATA_DIR:-./additional}:/data"
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
     networks:
       - dev_piglegnet
+
   dev_piglegcv:
     container_name: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegcv"
     image: "${PIGLEG_IMAGE_PREFIX:-dev_}piglegcv:latest"
-    build: piglegcv
+    build:
+      context: ./piglegcv
+      dockerfile: ./Dockerfile
     env_file:
       - ".env.dev"
+      # there should be PIGLEG_DEVICE
     ports:
       - '5000'
       - '${PIGLEG_JUPYTER_PORT:-8808}:8888'
@@ -59,3 +62,4 @@ volumes:
 
 networks:
   dev_piglegnet:
+    driver: bridge
