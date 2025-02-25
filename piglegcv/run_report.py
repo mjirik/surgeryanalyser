@@ -632,7 +632,8 @@ def create_pdf_report_for_one_tool(
         track_label = "Track [{}]".format(unit)
         vel_label = "Velocity [{}/sec]".format(unit)
 
-        ax.plot(t, np.cumsum(ds), "-" + object_color, label="Track", linewidth=3)
+        # ax.plot(t, np.cumsum(ds), "-" + object_color, label="Track", linewidth=3)
+        ax.plot(t, np.cumsum(ds), "." + object_color, label="Track", linewidth=3, markersize=3)
         ax.set_ylabel(track_label)
 
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
@@ -1801,7 +1802,8 @@ def create_video_report_figure(
                 ds_cumsum = np.cumsum(ds)
                 if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
                     ds_max = ds_cumsum[-1]
-                ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
+                # ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
+                ax.plot(t, ds_cumsum, "." + object_color, linewidth=1, markersize=1)
                 ax2.plot(
                     t,
                     gaussian_filter(ds / dt, sigma=2),
