@@ -119,138 +119,18 @@
 
     </div>
 
-    <script>
-        const uploadForm = document.getElementById('upload_form');
-        const input_file = document.getElementById('id_mediafile');
-        const progress_bar = document.getElementById('progress');
 
-        $("#upload_form").submit(function(e){
-            e.preventDefault();
-            $form = $(this)
-            var formData = new FormData(this);
-            const media_data = input_file.files[0];
-            if(media_data != null){
-                progress_bar.classList.remove("not-visible");
-            }
+{% endblock %}
+{% block script %}
+<script>
+    const uploadForm = document.getElementById('upload_form');
+    const input_file = document.getElementById('id_mediafile');
+    const progress_bar = document.getElementById('progress');
 
-            $.ajax({
-                type: 'POST',
-                {# get url of actual pakge #}
-                url: window.location.href,
-                {#url:'{% url 'caidapp:upload_archive' %}',#}
-                {#url:'{% url next %}',#}
-                data: formData,
-                dataType: 'json',
-                beforeSend: function(){
-
-                },
-                xhr:function(){
-                    const xhr = new window.XMLHttpRequest();
-                    xhr.upload.addEventListener('progress', e=>{
-                        if(e.lengthComputable){
-                            const percentProgress = (e.loaded/e.total)*99;
-                            const percentProgressInt = Math.round(percentProgress);
-                            progress_bar.innerHTML = `<div class="progress-bar progress-bar-striped bg-success"
-                    role="progressbar" style="width: ${percentProgress}%" aria-valuenow="${percentProgress}" aria-valuemin="0"
-                    aria-valuemax="100">${percentProgressInt}%</div>`
-                        }
-                    });
-                    return xhr
-                },
-                success: function(response){
-                    uploadForm.reset()
-                    progress_bar.classList.add('not-visible')
-
-                    console.log("close to the render");
-                    console.log(response);
-
-                    const container = document.getElementById('appbody');
-                    // Inject the server-rendered HTML into the selected container
-                    container.innerHTML = response.html;
-                },
-                error: function(err){
-                    console.log(err);
-                },
-                cache: false,
-                contentType: false,
-                processData: false,
-            });
-        });
-
-
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Najdi checkbox podle ID (nebo jiného identifikátoru)
-            const consentCheckbox = document.getElementById('id_consent');
-            const btnUpload = document.getElementById('btnUpload');
-            const agreementMessage = document.getElementById('agreementMessage');
-
-            if (consentCheckbox) {
-                // Připoj event listener k checkboxu
-                consentCheckbox.addEventListener('change', () => {
-                    btnUpload.disabled = !consentCheckbox.checked;
-                    if (consentCheckbox.checked) {
-                        agreementMessage.style.display = 'none';
-                    }
-                    else {
-                        agreementMessage.style.display = 'block';
-                    }
-                });
-
-                // Inicializace tlačítka podle výchozího stavu checkboxu
-                btnUpload.disabled = !consentCheckbox.checked;
-             }
-         });
-
-
-
-        document.addEventListener("DOMContentLoaded", function () {
-    const consentCheckbox = document.getElementById("consent-checkbox");
-    const submitBtn = document.getElementById("submit-btn");
-    const confirmNoConsent = document.getElementById("confirm-no-consent");
-    const noConsentBtn = document.getElementById("no-consent-btn");
-    const countdownElement = document.getElementById("countdown");
-    let countdownInterval;
-
-    // Aktivace tlačítka "Submit" při zaškrtnutí souhlasu
-    {#consentCheckbox.addEventListener("change", function () {#}
-    {#    submitBtn.disabled = !consentCheckbox.checked;#}
-    {# });#}
-
-    // Při otevření modálního okna spustíme odpočet
-    noConsentBtn.addEventListener("click", function () {
-        confirmNoConsent.disabled = true; // Deaktivace tlačítka
-        let secondsLeft = 5;
-        countdownElement.textContent = secondsLeft;
-
-        countdownInterval = setInterval(function () {
-            secondsLeft--;
-            countdownElement.textContent = secondsLeft;
-
-            if (secondsLeft <= 0) {
-                clearInterval(countdownInterval);
-                confirmNoConsent.disabled = false; // Aktivace tlačítka
-            }
-        }, 1000);
-    });
-
-    // Při zavření modálního okna resetujeme odpočet
-    document.getElementById("confirmModal").addEventListener("hidden.bs.modal", function () {
-        clearInterval(countdownInterval);
-        countdownElement.textContent = "5";
-        confirmNoConsent.disabled = true;
-    });
-
-    // Při potvrzení "Proceed Without Consent" odeslat formulář
-    confirmNoConsent.addEventListener("click", function () {
-        {# close the modal #}
-        $('#confirmModal').modal('hide');
-        console.log("submitting form");
-        {#document.getElementById("upload_form").submit();#}
-
-        {#$form = $(this)#}
-        $form = $("#upload_form")
-        var formData = new FormData($form[0]);
+    $("#upload_form").submit(function(e){
+        e.preventDefault();
+        $form = $(this)
+        var formData = new FormData(this);
         const media_data = input_file.files[0];
         if(media_data != null){
             progress_bar.classList.remove("not-visible");
@@ -299,10 +179,132 @@
             processData: false,
         });
     });
-});
 
 
-    </script>
 
+    document.addEventListener('DOMContentLoaded', () => {
+        // Najdi checkbox podle ID (nebo jiného identifikátoru)
+        const consentCheckbox = document.getElementById('id_consent');
+        const btnUpload = document.getElementById('btnUpload');
+        const agreementMessage = document.getElementById('agreementMessage');
+
+        if (consentCheckbox) {
+            // Připoj event listener k checkboxu
+            consentCheckbox.addEventListener('change', () => {
+                btnUpload.disabled = !consentCheckbox.checked;
+                if (consentCheckbox.checked) {
+                    agreementMessage.style.display = 'none';
+                }
+                else {
+                    agreementMessage.style.display = 'block';
+                }
+            });
+
+            // Inicializace tlačítka podle výchozího stavu checkboxu
+            btnUpload.disabled = !consentCheckbox.checked;
+        }
+    });
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const consentCheckbox = document.getElementById("consent-checkbox");
+        const submitBtn = document.getElementById("submit-btn");
+        const confirmNoConsent = document.getElementById("confirm-no-consent");
+        const noConsentBtn = document.getElementById("no-consent-btn");
+        const countdownElement = document.getElementById("countdown");
+        let countdownInterval;
+
+        // Aktivace tlačítka "Submit" při zaškrtnutí souhlasu
+        {#consentCheckbox.addEventListener("change", function () {#}
+        {#    submitBtn.disabled = !consentCheckbox.checked;#}
+        {# });#}
+
+        // Při otevření modálního okna spustíme odpočet
+        noConsentBtn.addEventListener("click", function () {
+            confirmNoConsent.disabled = true; // Deaktivace tlačítka
+            let secondsLeft = 5;
+            countdownElement.textContent = secondsLeft;
+
+            countdownInterval = setInterval(function () {
+                secondsLeft--;
+                countdownElement.textContent = secondsLeft;
+
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    confirmNoConsent.disabled = false; // Aktivace tlačítka
+                }
+            }, 1000);
+        });
+
+        // Při zavření modálního okna resetujeme odpočet
+        document.getElementById("confirmModal").addEventListener("hidden.bs.modal", function () {
+            clearInterval(countdownInterval);
+            countdownElement.textContent = "5";
+            confirmNoConsent.disabled = true;
+        });
+
+        // Při potvrzení "Proceed Without Consent" odeslat formulář
+        confirmNoConsent.addEventListener("click", function () {
+            {# close the modal #}
+            $('#confirmModal').modal('hide');
+            console.log("submitting form");
+            {#document.getElementById("upload_form").submit();#}
+
+            {#$form = $(this)#}
+            $form = $("#upload_form")
+            var formData = new FormData($form[0]);
+            const media_data = input_file.files[0];
+            if(media_data != null){
+                progress_bar.classList.remove("not-visible");
+            }
+
+            $.ajax({
+                type: 'POST',
+                {# get url of actual pakge #}
+                url: window.location.href,
+                {#url:'{% url 'caidapp:upload_archive' %}',#}
+                {#url:'{% url next %}',#}
+                data: formData,
+                dataType: 'json',
+                beforeSend: function(){
+
+                },
+                xhr:function(){
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener('progress', e=>{
+                        if(e.lengthComputable){
+                            const percentProgress = (e.loaded/e.total)*99;
+                            const percentProgressInt = Math.round(percentProgress);
+                            progress_bar.innerHTML = `<div class="progress-bar progress-bar-striped bg-success"
+                    role="progressbar" style="width: ${percentProgress}%" aria-valuenow="${percentProgress}" aria-valuemin="0"
+                    aria-valuemax="100">${percentProgressInt}%</div>`
+                        }
+                    });
+                    return xhr
+                },
+                success: function(response){
+                    uploadForm.reset()
+                    progress_bar.classList.add('not-visible')
+
+                    console.log("close to the render");
+                    console.log(response);
+
+                    const container = document.getElementById('appbody');
+                    // Inject the server-rendered HTML into the selected container
+                    container.innerHTML = response.html;
+                },
+                error: function(err){
+                    console.log(err);
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+            });
+        });
+    });
+
+
+</script>
 
 {% endblock %}
