@@ -9,6 +9,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from collections import Counter
 from gspread.exceptions import GSpreadException
 import numpy as np
+import traceback
 
 try:
     from structure_tools import save_json, load_json
@@ -83,12 +84,24 @@ def xlsx_spreadsheet_append(data: Union[pd.DataFrame, dict], file_path: Union[st
     else:
         df_novy = data
 
+    # if size of file is larger than 5MB, then rename the file and create new one
+    if file_path.exists() and file_path.stat().st_size > 5 * 1024 * 1024:
+        # add timestamp to the file name
+        timestamp = pd.Timestamp.now().strftime("%Y%m%d%H%M%S")
+        file_path.rename(file_path.parent / f"{file_path.stem}.{timestamp}{file_path.suffix}")
+
     if file_path.exists():
         # read the xlsx file
-        df = pd.read_excel(file_path)
-
-        # append the new data
-        df_out = pd.concat([df, df_novy], axis=0, ignore_index=True)
+        try:
+            df = pd.read_excel(file_path)
+            # append the new data
+            df_out = pd.concat([df, df_novy], axis=0, ignore_index=True)
+        except Exception as e:
+            logger.error(f"Error in reading xlsx file. {e}")
+            logger.debug(traceback.format_exc())
+            timestamp = pd.Timestamp.now().strftime("%Y%m%d%H%M%S")
+            file_path.rename(file_path.parent / f"{file_path.stem}.errored.{timestamp}{file_path.suffix}")
+            df_out = df_novy
     else:
         df_out = df_novy
 
