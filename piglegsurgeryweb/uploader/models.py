@@ -45,7 +45,7 @@ class UploadedFile(models.Model):
         # null=True,
         max_length=500,
     )
-    stitch_count = models.IntegerField("Stitch count", default=0)
+    stitch_count = models.IntegerField("Stitch count", null=True, blank=True, help_text="Number of stitches in the video. Set to 0 if not applicable.")
     preview = models.ImageField(blank=True, null=True)
     outputdir = models.CharField(max_length=255, blank=True, default=get_output_dir)
     zip_file = models.FileField(upload_to="cellimage/", blank=True, null=True)
