@@ -1803,14 +1803,16 @@ def create_video_report_figure(
                 if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
                     ds_max = ds_cumsum[-1]
                 # ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
-                ax.plot(t, ds_cumsum, "." + object_color, linewidth=1, markersize=1)
-                ax2.plot(
-                    t,
-                    gaussian_filter(ds / dt, sigma=2),
-                    ":" + object_color,
-                    label=object_name,
-                    linewidth=0.2,
-                    )
+                # do graphs for all but scissors
+                if object_name != "Scissors":
+                    ax.plot(t, ds_cumsum, "." + object_color, linewidth=1, markersize=1)
+                    ax2.plot(
+                        t,
+                        gaussian_filter(ds / dt, sigma=2),
+                        ":" + object_color,
+                        label=object_name,
+                        linewidth=0.2,
+                        )
 
                 ds_per_class.append(ds)
                 dt_per_class.append(dt)
