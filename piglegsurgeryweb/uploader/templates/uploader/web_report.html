@@ -523,14 +523,16 @@
                     <div class="tab-pane fade show {% if forloop.first %} active {% endif %}" id="stitch_report_{{ stitch_report.stitch_id }}" role="tabpanel" aria-labelledby="stitch-{{ stitch_report.stitch_id }}-tab">
 
                     <h3 class="mt-2">Stitch {{ stitch_report.stitch_id }}</h3>
+{% load star_rating %}
 
+{% if stitch_report.ai_movement_evaluation %}
+    <p>AI movement evaluation: {{ stitch_report.ai_movement_evaluation|star_rating }}</p>
+{% endif %}
 
                     {% if stitch_report.ai_movement_evaluation %}
-{#                        round movement evaluation #}
-                        <p>AI movement evaluation: {{ stitch_report.ai_movement_evaluation|floatformat:0 }}</p>
+                        <p>AI movement evaluation: {{ stitch_report.ai_movement_evaluation|floatformat:0 }}%</p>
                     {% endif  %}
-{#                    items #}
-                    <h4>Personalized suggestions</h4>
+                    <h4>Personalized suggestions based on Stitch duration, Needle holder trajectory length and Sudden moves count</h4>
                     <ul>
                         {% if stitch_report.advices|length == 0%}
                             <li>No personalized suggestions. Your stitching seems to be perfect. </li>
