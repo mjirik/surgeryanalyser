@@ -141,6 +141,11 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optio
                 # Update the xbins property
                 trace.xbins = dict(size=bin_size)
 
+    # hide students
+    for trace in fig.data:
+        if trace.name == 'student':
+            trace.visible = 'legendonly'
+
     # description of x-axis
     fig.update_xaxes(title_text=col_name)
     # legend
