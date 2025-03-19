@@ -926,10 +926,10 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
         return None
 
     if X_px.ndim < 2:
-        logger.error(f"X_px.dim={X_px.dim}")
+        logger.error(f"{X_px.shape=}")
         return None
     if time_fr.ndim < 2:
-        logger.error(f"time_fr.dim={time_fr.dim}")
+        logger.error(f"{time_fr.shape}")
         return None
 
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
