@@ -925,10 +925,10 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
         logger.error(f"Shape mismatch: X_px.shape={X_px.shape}, time_fr.shape={time_fr.shape}")
         return None
 
-    if X_px.dim < 2:
+    if X_px.ndim < 2:
         logger.error(f"X_px.dim={X_px.dim}")
         return None
-    if time_fr.dim < 2:
+    if time_fr.ndim < 2:
         logger.error(f"time_fr.dim={time_fr.dim}")
         return None
 
