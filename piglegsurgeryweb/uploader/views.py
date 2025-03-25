@@ -404,7 +404,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
                 logger.error(f"Error in processing stitch {i}. {e}")
                 logger.error(traceback.format_exc())
 
-    logger.debug(f"{per_stitch_report=}")
+    # logger.debug(f"{per_stitch_report=}")
 
     # get collections with serverfile
     collections_with = models.Collection.objects.filter(uploaded_files=serverfile)

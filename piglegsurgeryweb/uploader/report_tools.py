@@ -10,10 +10,14 @@ from loguru import logger
 from . import pigleg_evaluation_tools as pet
 
 from typing import Optional, Union, List
+import json
+
 
 
 ADD_ADVANCED_STUDENTS_TO_EXPERT = False
 
+with open(Path(__file__).parent / "suggestions.json") as f:
+    suggestions = json.load(f)
 
 class StitchDataFrame():
     def __init__(self,
@@ -37,6 +41,24 @@ class StitchDataFrame():
         dfst = add_group_column(dfst, movement_evaluation_col=relevant_column, expert_threshold=3.7894)
         self.dfst:pd.DataFrame = dfst.copy().reset_index(drop=True)
         self.my_dfst:Optional[pd.DataFrame] = None
+
+
+    def get_suggestions(self, col_name, my_value) -> List[str]:
+        col_suggestion = suggestions.get(col_name, [])
+        # print(col_suggestion)
+
+        if "thresholds" in col_suggestion:
+            thresholds = col_suggestion["thresholds"]
+            if my_value < thresholds[0]:
+                suggestions_list = col_suggestion["low"]
+            elif my_value < thresholds[1]:
+                suggestions_list = col_suggestion["moderate"]
+            else:
+                suggestions_list = col_suggestion["high"]
+        else:
+            suggestions_list = []
+
+        return suggestions_list
 
     def get_figs_to_html(self, stitch_id: int, col_names: Optional[List[str]] = None) -> List[str]:
         if col_names is None:
@@ -78,7 +100,10 @@ class StitchDataFrame():
             fig = get_distplot(self.dfst, col_name, my_value, annotation_text=f"You={my_value:.2f}", bin_size=bin_size, my_value_color=color)
             html = fig.to_html(full_html=False, include_plotlyjs='cdn')
             htmls.append(
-                {"title": col_name, "html": html}
+                {"title": col_name, "html": html,
+                    "suggestions": self.get_suggestions(col_name, my_value),
+                 "color": color,
+                 }
                 )
 
         return htmls

@@ -599,13 +599,11 @@
 {#                                </ul>#}
 {#                            {% endif %}#}
 
-
-
-                            <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp" aria-expanded="false" aria-controls="collapseHelp">
-        Show / Hide Help
+    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp{{ forloop.counter }}" aria-expanded="false" aria-controls="collapseHelp{{ forloop.counter }}">
+        Show / Hide Help {{  forloop.counter }}
     </button>
 
-    <div class="collapse mt-2" id="collapseHelp">
+    <div class="collapse mt-2" id="collapseHelp{{ forloop.counter }}">
         <div class="card card-body">
             {% if graph_html.title == "Stitch duration [s]" %}
             <ul>
@@ -656,30 +654,47 @@
 
 
 
+
                             {% autoescape off %}
                                 {{ graph_html.html }}
                             {% endautoescape %}
+                            {% if graph_html.suggestions %}
+                                <h5 style="color:{{ graph_html.color }};"> {{ graph_html.suggestions.name }}</h5>
+                                <ul>
+                                    <li> {{ graph_html.suggestions.Observation }} </li>
+                                    <li> {{ graph_html.suggestions.Recommendation }} </li>
+
+                                </ul>
+
+                            {% endif %}
                         {% endfor %}
 {#                    {{ stitch_report }}#}
 
                         {%  if stitch_report.needle_holder_compare_heatmaps_image %}
                             <h4>Needle holder movement heatmap</h4>
-                            <ul>
-                            <li>The heat map represents the projection of the needle holder movement during the process of stitching on the pig foot
+                            <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp_heatmap" aria-expanded="false" aria-controls="collapseHelp_heatmap">
+                                Show / Hide Help
+                            </button>
+                            <div class="collapse mt-2" id="collapseHelp_heatmap">
+                                <div class="card card-body">
                                 <ul>
-                                    <li>Above 85% frequency is considered optimal (green).
-                                    </li><li>Between 70% and 85% is considered acceptable but could be improved (yellow).
-                                    </li><li>Below 70% is considered not ideal (red).
-                                </ul>
-                                </li><li>If your needle holder positioning differs significantly from expert patterns, consider working on these:
+                                <li>The heat map represents the projection of the needle holder movement during the process of stitching on the pig foot
+                                    <ul>
+                                        <li>Above 85% frequency is considered optimal (green).
+                                        </li><li>Between 70% and 85% is considered acceptable but could be improved (yellow).
+                                        </li><li>Below 70% is considered not ideal (red).
+                                    </ul>
+                                    </li><li>If your needle holder positioning differs significantly from expert patterns, consider working on these:
 
-                                <ul>
-                            <li>Ensure that the needle holder remains close to the incision to maintain control and precision.
-                            </li><li>Avoid excessive movement or unnecessary repositioning to improve efficiency and consistency.
-                            </li><li>Practice smooth and controlled handling to keep the needle holder within the optimal range (green circle) throughout the stitching process.
+                                    <ul>
+                                <li>Ensure that the needle holder remains close to the incision to maintain control and precision.
+                                </li><li>Avoid excessive movement or unnecessary repositioning to improve efficiency and consistency.
+                                </li><li>Practice smooth and controlled handling to keep the needle holder within the optimal range (green circle) throughout the stitching process.
+                                    </ul>
+                                </li>
                                 </ul>
-                            </li>
-                            </ul>
+                                </div>
+                            </div>
 
                             <a href="#" class="pop">
 
