@@ -888,7 +888,9 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Union[list, None], tool_indexes
     # merge several tools
     X_px_fr_list = []
     for trim_tool_index in tool_indexes:
-        X_px_fr_list.append(_get_X_px_fr(data, oa_bbox, trim_tool_index))
+        X_px_fr_one_tool = _get_X_px_fr(data, oa_bbox, trim_tool_index)
+        if X_px_fr_one_tool is not None:
+            X_px_fr_list.append(X_px_fr_one_tool)
 
     logger.debug(f"{len(X_px_fr_list)=}")
     # merge the lists
@@ -903,7 +905,13 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Union[list, None], tool_indexes
 
 
 def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarray:
-    """Get X vector in pixels and frames filtered to the incision area."""
+    """Get X vector in pixels and frames filtered to the incision area.
+
+    :param data: data containing the track points in pixels together with the id of the frame
+        data_pixels is x,y coordinates of the tool in pixels
+        frame_ids is the id of the frame
+
+    """
     if "data_pixels" in data:
         X_px = np.asarray(data["data_pixels"][tool_index])
     else:
@@ -911,6 +919,19 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
         X_px = np.asarray(data[f"data_pixels_{tool_index}"])
 
     time_fr = np.asarray(data["frame_ids"][tool_index]).reshape(-1, 1)
+    logger.debug(f"{X_px.shape=}, {time_fr.shape=}")
+
+    if X_px.shape[0] != time_fr.shape[0]:
+        logger.error(f"Shape mismatch: X_px.shape={X_px.shape}, time_fr.shape={time_fr.shape}")
+        return None
+
+    if X_px.ndim < 2:
+        logger.error(f"{X_px.shape=}")
+        return None
+    if time_fr.ndim < 2:
+        logger.error(f"{time_fr.shape}")
+        return None
+
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
 
     if oa_bbox is not None:
