@@ -44,7 +44,7 @@
   },
   "Needle holder stitch length [m]": {
     "name": "Needle holder path length",
-    "thresholds": [2.0, 3.0],
+    "thresholds": [3.0, 4.0],
     "low": {
       "name": "Appropriate",
       "Observation": "The needle holder path length is close to the expert-level performance, within the green zone.",

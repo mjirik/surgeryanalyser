@@ -84,9 +84,10 @@ class StitchDataFrame():
             if col_name == "Stitch duration [s]":
                 thresholds = [60, 90]
             elif col_name == "Needle holder stitch length [m]":
+                thresholds = [3., 4.]
                 bin_size = 0.1
             elif col_name == "Needle holder stitch velocity above threshold":
-                thresholds = [17, 25]
+                thresholds = [20, 30]
 
             color = "black"
             if thresholds:
@@ -163,8 +164,15 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optio
                              # histnorm='probability'
 
                              )
+    # find max value
+    experts_max = dfst[dfst["Group"] == 'expert'][col_name].max()
+    experts_max = max(experts_max, my_value)
+    experts_max = max(experts_max, thresholds[1])
 
     if thresholds and len(thresholds) > 0:
+        pass
+    if thresholds and len(thresholds) > 1:
+        logger.debug(f"{thresholds=}")
         fig.add_vrect(
             x0=0, x1=thresholds[0],  # uprav si dle potřeby
             fillcolor="green",
@@ -172,16 +180,17 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optio
             layer="below",  # vrstvení pod křivkami
             line_width=0,
         )
-    if thresholds and len(thresholds) > 1:
         fig.add_vrect(
             x0=thresholds[0], x1=thresholds[1],  # uprav si dle potřeby
-            fillcolor="orange",
+            fillcolor="yellow",
             opacity=0.15,
             layer="below",  # vrstvení pod křivkami
             line_width=0,
         )
+        logger.debug(f"{thresholds[0]=}, {experts_max=}")
         fig.add_vrect(
-            x0=thresholds[1], x1=float("inf"),  # uprav si dle potřeby
+            x0=thresholds[1],
+            x1 = experts_max,
             fillcolor="red",
             opacity=0.15,
             layer="below",  # vrstvení pod křivkami
