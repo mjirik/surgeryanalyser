@@ -431,6 +431,38 @@ def create_heatmap_report_plt(
 def calculate_one_two_hands_visibility():
     pass
 
+
+def draw_simplified_ideal_cumulative_trajectory(
+        ax,
+        ds_cumsum,
+        t,
+        start_t = 1.1,
+        stop_t = 2.1,
+        ideal_slope_m_s = 11.1,
+
+):
+    """Draw line with defined slope between start_t and stop_t."""
+
+    # find largest t smaller than start_t
+    start_t_idx = 0
+    for i in range(len(t)):
+        if t[i] > start_t:
+            start_t_idx = i - 1
+            break
+
+    stop_t_idx = 0
+    for i in range(len(t)):
+        if t[i] > stop_t:
+            stop_t_idx = i - 1
+            break
+
+    y_start = ds_cumsum[start_t_idx]
+    y_stop = y_start + ideal_slope_m_s * (stop_t - start_t)
+
+    # Přidání přímky do grafu
+    ax.plot([start_t, stop_t], [y_start, y_stop], "-b", linewidth=10, alpha=0.2)
+
+
 def draw_ideal_trajetory(ax, point, color='red'):
     # Get the current axis limits
     x_min, x_max = ax.get_xlim()
@@ -512,28 +544,33 @@ def create_pdf_report_for_one_tool(
     """
 
     if len(frame_ids) > 1:
-
-        data_pixel = np.array(data_pixel)
-        data = pix_size * data_pixel
-        t = np.array(frame_ids) / float(source_fps)
-        dxy = data[1:] - data[:-1]
-        ds = np.sqrt(np.sum(dxy * dxy, axis=1))
         if not qr_init:
             ds_threshold = 200.0
 
-        ds[ds > ds_threshold] = 0.0
-        ds = unit_conversion(ds, "m", output_unit=visualization_unit)
-        # v_threshold = 20 # [cm/s]
-        v_threshold = unit_conversion(v_threshold_m_s, "m", output_unit=visualization_unit)
-        dt = t[1:] - t[:-1]
-        t = t[0:-1]
+        data_pixel = np.array(data_pixel)
+        ds, dt, t = track_derivation_and_normalization(
+            data_pixel, frame_ids, source_fps,
+            pix_size, ds_threshold, visualization_unit
+        )
+        # data_pixel = np.array(data_pixel)
+        # data = pix_size * data_pixel
+        # t = np.array(frame_ids) / float(source_fps)
+        # dxy = data[1:] - data[:-1]
+        # ds = np.sqrt(np.sum(dxy * dxy, axis=1))
+        #
+        # ds[ds > ds_threshold] = 0.0
+        # ds = unit_conversion(ds, "m", output_unit=visualization_unit)
+        # # v_threshold = 20 # [cm/s]
+        # dt = t[1:] - t[:-1]
+        # t = t[0:-1]
+        #
+        # # chech double data
+        # ind = dt != 0.0
+        # ds = ds[ind]
+        # dt = dt[ind]
+        # t = t[ind]
 
-        # chech double data
-        ind = dt != 0.0
-        ds = ds[ind]
-        dt = dt[ind]
-        t = t[ind]
-
+        ds_cumsum = np.cumsum(ds)
         # print(dt)
         L = np.sum(ds)
         # T = np.sum(dt)
@@ -547,6 +584,7 @@ def create_pdf_report_for_one_tool(
         # count how many times the ds_td_filtered goes above 0.1
         Vcount = 0
         v_prev = ds_dt_filtered[0]
+        v_threshold = unit_conversion(v_threshold_m_s, "m", output_unit=visualization_unit)
         for v in ds_dt_filtered:
             if (v > v_threshold) and (v_prev < v_threshold):
                 Vcount += 1
@@ -622,9 +660,12 @@ def create_pdf_report_for_one_tool(
 
         if object_name == "Needle holder":
             # x: second, y: cm
-            draw_ideal_trajetory(ax, (100, 700), color='green')
-            draw_ideal_trajetory(ax, (100, 800), color='orange')
-            draw_ideal_trajetory(ax, (100, 900), color='orange')
+            # draw_simplified_ideal_cumulative_trajectory(ax, )
+            # draw_ideal_trajetory(ax, (100, 700), color='green')
+            # draw_ideal_trajetory(ax, (100, 800), color='orange')
+            # draw_ideal_trajetory(ax, (100, 900), color='orange')
+            #ideal_trajectory
+            pass
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
         # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
@@ -633,7 +674,7 @@ def create_pdf_report_for_one_tool(
         vel_label = "Velocity [{}/sec]".format(unit)
 
         # ax.plot(t, np.cumsum(ds), "-" + object_color, label="Track", linewidth=3)
-        ax.plot(t, np.cumsum(ds), "." + object_color, label="Track", linewidth=3, markersize=3)
+        ax.plot(t, ds_cumsum, "." + object_color, label="Track", linewidth=3, markersize=3)
         ax.set_ylabel(track_label)
 
         ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
@@ -1597,7 +1638,8 @@ class MainReport:
         data_pixel_cut = track_points["data_pixels"]
 
         video_duration_s = float(video_part_duration_frames) / float(self.fps)
-        v_threshold_m_s = 0.030
+        # v_threshold_m_s = 0.030
+        v_threshold_m_s = 0.020
         res = create_pdf_report_for_one_tool(
             # frame_id[frame_idx_start:frame_idx_stop],
             # data_pixel[frame_idx_start:frame_idx_stop],
@@ -1616,7 +1658,7 @@ class MainReport:
             os.path.join(
                 self.outputdir, f"fig_{tool_id}a_{simplename}_graph_{stitch_name}.jpg"
             ),
-            v_threshold_m_s=0.020
+            v_threshold_m_s=v_threshold_m_s,
         )
 
         for relative_presence in relative_presences:
@@ -1752,6 +1794,7 @@ def create_video_report_figure(
         ax.set_title("Object Track Analysis")
         ax.set_xlabel("Time [sec]")
 
+        # TODO draw ideal trajectory
         # ax = draw_ideal_trajetory(ax, point=(100, 250), color="g")
         # ax.set_ylabel('Data')
         # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
@@ -1776,51 +1819,57 @@ def create_video_report_figure(
         ):
             logger.debug(f"{object_name=}, {len(frame_ids_per_class)=}, {len(data_pixel_per_class)=}")
             if frame_ids_per_class != []:
-                data_pixel_per_class = np.array(data_pixel_per_class)
-                data = pix_size * data_pixel_per_class
-                t = 1.0 / source_fps * np.array(frame_ids_per_class)
-                # t_i = 1.0/source_fps * i
-                dxy = data[1:] - data[:-1]
-                ds = np.sqrt(np.sum(dxy * dxy, axis=1))
                 if not qr_init:
                     ds_threshold = 200.0
+                ds_vis_unit, dt, t = track_derivation_and_normalization(
+                    data_pixel_per_class, frame_ids_per_class, source_fps,
+                    pix_size, ds_threshold, visualization_unit
+                )
 
-                ds[ds > ds_threshold] = 0.0
-                ds = unit_conversion(ds, "m", output_unit=visualization_unit)
-                dt = t[1:] - t[:-1]
-                t = t[0:-1]
+                ds_cumsum_vis_unit = np.cumsum(ds_vis_unit)
+                if len(ds_cumsum_vis_unit) > 0 and ds_cumsum_vis_unit[-1] > ds_max:
+                    ds_max = ds_cumsum_vis_unit[-1]
 
-                # chech double data
-                ind = dt != 0.0
-                ds = ds[ind]
-                dt = dt[ind]
-                t = t[ind]
-
-                # print(dt)
-                # L = np.sum(ds)
-                # T = np.sum(dt)
-                ds_cumsum = np.cumsum(ds)
-                if len(ds_cumsum) > 0 and ds_cumsum[-1] > ds_max:
-                    ds_max = ds_cumsum[-1]
                 # ax.plot(t, ds_cumsum, "-" + object_color, linewidth=1)
                 # do graphs for all but scissors
+
+                if object_name == "Needle holder":
+                    if len(cut_frames)>1:
+                        cut_frame_t = float(cut_frames[0]) / source_fps
+                        cut_frame_t_stop = float(cut_frames[1]) / source_fps
+                        if cut_frame_t_stop - cut_frame_t < 50:
+                            cut_frame_t_stop = cut_frame_t + 50
+                    else:
+                        cut_frame_t = 0
+                        cut_frame_t_stop = 50
+
+                    # around 2 meters per minute 2. /60.
+
+                    ideal_slope_m_s = 0.0333
+                    ideal_slope = unit_conversion(ideal_slope_m_s, "m", visualization_unit)
+                    draw_simplified_ideal_cumulative_trajectory(ax, ds_cumsum_vis_unit, t,
+                                                                start_t=cut_frame_t,
+                                                                stop_t=cut_frame_t_stop
+                                                                )
                 if object_name != "Scissors":
-                    ax.plot(t, ds_cumsum, "." + object_color, linewidth=1, markersize=1)
+                    ax.plot(t, ds_cumsum_vis_unit, "." + object_color, linewidth=1, markersize=1)
                     ax2.plot(
                         t,
-                        gaussian_filter(ds / dt, sigma=2),
+                        gaussian_filter(ds_vis_unit / dt, sigma=2),
                         ":" + object_color,
                         label=object_name,
                         linewidth=0.2,
                         )
 
-                ds_per_class.append(ds)
+                ds_per_class.append(ds_vis_unit)
                 dt_per_class.append(dt)
                 t_per_class.append(t)
 
                 logger.debug(f"{object_color=}, {object_name=}")
                 # logger.debug(f"{t=}, {ds_cumsum=}")
 
+        # Draw ideal trajectory
+        # ax = draw_ideal_trajetory(ax, point=(100, 250), color="g")
         # Draw vlines on scissors QR code visible
         # logger.debug(f"{cut_frames=}")
         t = (1.0 / source_fps) * np.array(cut_frames)
@@ -1849,6 +1898,34 @@ def create_video_report_figure(
         return fig, ax, ds_max, cumulative_measurements
 
 
+def track_derivation_and_normalization(
+        data_pixel_per_class,
+        frame_ids_per_class,
+        source_fps,
+        pix_size,
+        ds_threshold,
+        visualization_unit):
+    """
+    Method description
+    """
+    data_pixel_per_class = np.array(data_pixel_per_class)
+    data = pix_size * data_pixel_per_class
+    t = 1.0 / source_fps * np.array(frame_ids_per_class)
+    dxy = data[1:] - data[:-1]
+    ds = np.sqrt(np.sum(dxy * dxy, axis=1))
+    ds[ds > ds_threshold] = 0.0
+    ds = unit_conversion(ds, "m", output_unit=visualization_unit)
+    dt = t[1:] - t[:-1]
+    t = t[0:-1]
+    # chech double data
+    ind = dt != 0.0
+    ds = ds[ind]
+    dt = dt[ind]
+    t = t[ind]
+    # print(dt)
+    # L = np.sum(ds)
+    # T = np.sum(dt)
+    return ds, dt, t
 
 
 if __name__ == "__main__":
