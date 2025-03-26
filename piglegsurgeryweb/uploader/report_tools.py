@@ -174,14 +174,14 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optio
         )
     if thresholds and len(thresholds) > 1:
         fig.add_vrect(
-            x0=thresholds[1], x1=thresholds[2],  # uprav si dle potřeby
+            x0=thresholds[0], x1=thresholds[1],  # uprav si dle potřeby
             fillcolor="orange",
             opacity=0.15,
             layer="below",  # vrstvení pod křivkami
             line_width=0,
         )
         fig.add_vrect(
-            x0=thresholds[2], x1=float("inf"),  # uprav si dle potřeby
+            x0=thresholds[1], x1=float("inf"),  # uprav si dle potřeby
             fillcolor="red",
             opacity=0.15,
             layer="below",  # vrstvení pod křivkami
