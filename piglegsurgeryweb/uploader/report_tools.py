@@ -167,7 +167,7 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optio
     # find max value
     experts_max = dfst[dfst["Group"] == 'expert'][col_name].max()
     experts_max = max(experts_max, my_value)
-    experts_max = max(experts_max, thresholds[1])
+    experts_max = max(experts_max, thresholds[1] + 0.5*(thresholds[1] - thresholds[0]))
 
     if thresholds and len(thresholds) > 0:
         pass
