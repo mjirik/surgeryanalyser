@@ -438,10 +438,14 @@ def draw_simplified_ideal_cumulative_trajectory(
         t,
         start_t = 1.1,
         stop_t = 2.1,
-        ideal_slope_m_s = 11.1,
+        ideal_slope = 11.1,
 
 ):
-    """Draw line with defined slope between start_t and stop_t."""
+    """Draw line with defined slope between start_t and stop_t.
+
+    ds_cumsum: cumulative sum of distance in display_unit (m, cm, mm, ...)
+    ideal_slop: in display_unit/s
+    """
 
     # find largest t smaller than start_t
     start_t_idx = 0
@@ -457,7 +461,7 @@ def draw_simplified_ideal_cumulative_trajectory(
             break
 
     y_start = ds_cumsum[start_t_idx]
-    y_stop = y_start + ideal_slope_m_s * (stop_t - start_t)
+    y_stop = y_start + ideal_slope * (stop_t - start_t)
 
     # Přidání přímky do grafu
     ax.plot([start_t, stop_t], [y_start, y_stop], "-b", linewidth=10, alpha=0.2)
@@ -1849,7 +1853,8 @@ def create_video_report_figure(
                     ideal_slope = unit_conversion(ideal_slope_m_s, "m", visualization_unit)
                     draw_simplified_ideal_cumulative_trajectory(ax, ds_cumsum_vis_unit, t,
                                                                 start_t=cut_frame_t,
-                                                                stop_t=cut_frame_t_stop
+                                                                stop_t=cut_frame_t_stop,
+                                                                ideal_slope = ideal_slope,
                                                                 )
                 if object_name != "Scissors":
                     ax.plot(t, ds_cumsum_vis_unit, "." + object_color, linewidth=1, markersize=1)
