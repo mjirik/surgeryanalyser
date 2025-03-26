@@ -97,7 +97,10 @@ class StitchDataFrame():
                 else:
                     color = "green"
 
-            fig = get_distplot(self.dfst, col_name, my_value, annotation_text=f"You={my_value:.2f}", bin_size=bin_size, my_value_color=color)
+            fig = get_distplot(self.dfst, col_name, my_value, annotation_text=f"You={my_value:.2f}",
+                               bin_size=bin_size, my_value_color=color,
+                               thresholds=thresholds,
+                               )
             html = fig.to_html(full_html=False, include_plotlyjs='cdn')
             htmls.append(
                 {"title": col_name, "html": html,
@@ -148,16 +151,42 @@ def find_threshold(dfst, col_name):
     intersection = findIntersection(kde_expert, kde_student, med)
     return intersection[0]
 
-def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optional[float]=None, my_value_color="green"):
+def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optional[float]=None, my_value_color="green",
+                 thresholds:Optional[list]=None,
+                 ):
     fig = ff.create_distplot([dfst[dfst["Group"]=="student"][col_name].dropna(), dfst[dfst["Group"]=='expert'][col_name].dropna()],
                              group_labels=['student', 'expert'],
-                             show_hist=True,
+                             # show_hist=True,
                              show_rug=True,
                              curve_type='kde',
                              # histnorm='probability density'
-                             histnorm='probability'
+                             # histnorm='probability'
 
                              )
+
+    if thresholds and len(thresholds) > 0:
+        fig.add_vrect(
+            x0=0, x1=thresholds[0],  # uprav si dle potřeby
+            fillcolor="green",
+            opacity=0.15,
+            layer="below",  # vrstvení pod křivkami
+            line_width=0,
+        )
+    if thresholds and len(thresholds) > 1:
+        fig.add_vrect(
+            x0=thresholds[1], x1=thresholds[2],  # uprav si dle potřeby
+            fillcolor="orange",
+            opacity=0.15,
+            layer="below",  # vrstvení pod křivkami
+            line_width=0,
+        )
+        fig.add_vrect(
+            x0=thresholds[2], x1=float("inf"),  # uprav si dle potřeby
+            fillcolor="red",
+            opacity=0.15,
+            layer="below",  # vrstvení pod křivkami
+            line_width=0,
+        )
 
     if bin_size is not None:
         # Loop over the traces and update the histogram bin size

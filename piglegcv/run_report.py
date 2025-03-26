@@ -25,6 +25,8 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.stats import gaussian_kde
+import plotly.graph_objects as go
+
 try:
     import tools
     from tools import draw_bbox_into_image
@@ -431,6 +433,78 @@ def create_heatmap_report_plt(
 def calculate_one_two_hands_visibility():
     pass
 
+def plotly_trajectory_cumsum(
+        ds_cumsum1,
+        t1,
+        ds_cumsum2 = None,
+        t2 = None,
+        start_t = 1.1,
+        stop_t = 2.1,
+        ideal_slope = 11.1,
+        visualization_unit:str = "cm",
+        name1 = "Needle holder",
+        name2 = "Forceps",
+        show:bool = True,
+):
+
+    # find largest t smaller than start_t
+    start_t_idx = 0
+    for i in range(len(t1)):
+        if t1[i] > start_t:
+            start_t_idx = i - 1
+            break
+
+    stop_t_idx = 0
+    for i in range(len(t1)):
+        if t1[i] > stop_t:
+            stop_t_idx = i - 1
+            break
+
+    y_start = ds_cumsum1[start_t_idx]
+    y_stop = y_start + ideal_slope * (stop_t - start_t)
+
+    # Přidání přímky do grafu
+    # ax.plot([start_t, stop_t], [y_start, y_stop], "-b", linewidth=10, alpha=0.2)
+
+    # draw the line
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=[start_t, stop_t],
+        y=[y_start, y_stop],
+        mode='lines',
+        name='ideal trajectory',
+
+        line=dict(width=10, color='blue'),  # tlustá čára
+        opacity=0.2  # průhlednost
+    ))
+    # draw cumsum as points
+    fig.add_trace(go.Scatter(
+        x=t1, y=ds_cumsum1,
+        mode='markers',
+        name=name1,
+        marker=dict(size=2, color='blue')
+
+    ))
+
+    if ds_cumsum2 is not None:
+        fig.add_trace(go.Scatter(
+            x=t2, y=ds_cumsum2,
+            mode='markers',
+            name=name2,
+            marker=dict(size=2, color='red')
+
+
+        ))
+
+
+    fig.update_layout(
+        xaxis_title="Time [s]",
+        yaxis_title=f"Cumulative trajectory [{visualization_unit}]",
+        title="Movement analysis"
+    )
+    if show:
+        fig.show()
+    return fig
 
 def draw_simplified_ideal_cumulative_trajectory(
         ax,
