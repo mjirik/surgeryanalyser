@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load myfilter %}
 
 {% block body %}
 <div
@@ -170,7 +171,7 @@
                 </td>
             <td>
                 {% if uploadedfile.score %}
-                    {{ uploadedfile.score|floatformat:1 }}
+                    {{ uploadedfile.score|mul:1|floatformat:1 }}
                 {% endif %}
             </td>
                 {% if user.is_authenticated %}

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load myfilter %}
 
 {% block head %}
     <style>
@@ -509,7 +510,7 @@
         <ul class="nav nav-tabs border-start border-end" id="myTab" role="tablist">
             {% for stitch_report in per_stitch_report %}
               <li class="nav-item" role="presentation">
-                <button class="nav-link {% if forloop.first %} active {% endif %}" id="stitch-{{ stitch_report.stitch_id }}-tab" data-bs-toggle="tab" data-bs-target="#stitch_report_{{ stitch_report.stitch_id }}" type="button" role="tab" aria-controls="home" aria-selected="true">Stitch {{ stitch_report.stitch_id }}</button>
+                <button class="nav-link {% if forloop.first %} active {% endif %}" id="stitch-{{ stitch_report.stitch_id }}-tab" data-bs-toggle="tab" data-bs-target="#stitch_report_{{ stitch_report.stitch_id }}" type="button" role="tab" aria-controls="home" aria-selected="true">Stitch {{ stitch_report.stitch_id|add:1 }}</button>
               </li>
             {% endfor %}
 
@@ -716,13 +717,13 @@
         </div>
         {% endif %}
     <div>
-        <h3>Statistics</h3>
-        {% if myhtml %}
-
-        {% autoescape off %}
-        {{ myhtml }}
-        {% endautoescape %}
-        {% endif %}
+{#        <h3>Statistics</h3>#}
+{#        {% if myhtml %}#}
+{##}
+{#        {% autoescape off %}#}
+{#        {{ myhtml }}#}
+{#        {% endautoescape %}#}
+{#        {% endif %}#}
     </div>
     <div class="accordion" id="accordionPanelsStayOpenExample">
         <div class="accordion-item">
