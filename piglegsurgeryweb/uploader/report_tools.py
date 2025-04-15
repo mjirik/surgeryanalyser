@@ -154,10 +154,11 @@ def find_threshold(dfst, col_name):
 
 def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optional[float]=None, my_value_color="green",
                  thresholds:Optional[list]=None,
+                 show_hist:Optional[bool]=False,
                  ):
     fig = ff.create_distplot([dfst[dfst["Group"]=="student"][col_name].dropna(), dfst[dfst["Group"]=='expert'][col_name].dropna()],
                              group_labels=['student', 'expert'],
-                             # show_hist=True,
+                             show_hist=show_hist,
                              show_rug=True,
                              curve_type='kde',
                              # histnorm='probability density'
@@ -197,12 +198,13 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optio
             line_width=0,
         )
 
-    if bin_size is not None:
-        # Loop over the traces and update the histogram bin size
-        for trace in fig.data:
-            if trace.type == 'histogram':
-                # Update the xbins property
-                trace.xbins = dict(size=bin_size)
+    if show_hist:
+        if bin_size is not None:
+            # Loop over the traces and update the histogram bin size
+            for trace in fig.data:
+                if trace.type == 'histogram':
+                    # Update the xbins property
+                    trace.xbins = dict(size=bin_size)
 
     # hide students
     for trace in fig.data:
