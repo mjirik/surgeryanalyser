@@ -523,7 +523,7 @@
 
                     <div class="tab-pane fade show {% if forloop.first %} active {% endif %}" id="stitch_report_{{ stitch_report.stitch_id }}" role="tabpanel" aria-labelledby="stitch-{{ stitch_report.stitch_id }}-tab">
 
-                    <h3 class="mt-2">Stitch {{ stitch_report.stitch_id }}</h3>
+                    <h3 class="mt-2">Stitch {{ stitch_report.stitch_id|add:1|floatformat:0 }}</h3>
 {% load star_rating %}
 
 {% if stitch_report.ai_movement_evaluation %}
