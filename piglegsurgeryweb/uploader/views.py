@@ -31,16 +31,14 @@ from django.utils import timezone
 from django.db.models import Count, Q
 from .models import UploadedFile, _hash, Collection
 from . import tasks, models, report_tools, forms
+import numpy as np
+from .report_tools import load_results, load_per_stitch_data
 
 # Create your views here.
 
 
 # from piglegsurgeryweb.piglegsurgeryweb.settings import PIGLEGCV_TIMEOUT
 
-STITCH_DATA_FRAME = report_tools.StitchDataFrame(
-    relevant_column="mean_movement_annotation",
-    filename_patch="*all_stitches_with_human_annotations*.xlsx",
-)
 
 
 def logout_view(request):
@@ -264,62 +262,8 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     #     })
     logger.debug(serverfile.zip_file.url)
 
-    fn_results = Path(serverfile.outputdir) / "results.json"
-    results = {}
-
-    loaded_results = None
-    if fn_results.exists():
-        with open(fn_results) as f:
-            loaded_results = json.load(f)
-            if "Video duration [s]" in loaded_results:
-                video_duration = loaded_results["Video duration [s]"]
-            else:
-                video_duration = None
-            for key in loaded_results:
-                new_value = loaded_results[key]
-                # backward compatibility
-                new_key = (
-                    key.replace("Tweezes", "Forceps")
-                    .replace("Tweezers", "Forceps")
-                    .replace("duration", "visibility")
-                )
-                new_key = re.sub("visibility$", "visibility [s]", new_key)
-                new_key = re.sub("length$", "length [m]", new_key)
-                if new_key in (
-                    "Needle holder length [pix]",
-                    "Needle holder length [m]",
-                    "Needle holder length [cm]",
-                    "Needle holder visibility [s]",
-                    "Needle holder visibility [%]",
-                    "Forceps length [pix]",
-                    "Forceps length [m]",
-                    "Forceps length [cm]",
-                    "Forceps visibility [s]",
-                    "Forceps visibility [%]",
-                    "Scissors length [pix]",
-                    "Scissors length [m]",
-                    "Scissors length [cm]",
-                    "Scissors visibility [s]",
-                    "Scissors visibility [%]",
-                    "Needle holder area presence [%]",
-                    # "Tweezes length", "Tweezes duration" # typo in some older processings
-                    # "Tweezers length", "Tweezers duration", # backward compatibility
-                    # "Scissors length", "Scissors duration", # backward compatibility
-                    # "Needle holder length", "Needle holder duration", # backward compatibility
-                ):
-                    # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
-
-                    if new_key.find("[m]") > 0:
-                        new_key = re.sub("length \[m\]$", "length [cm]", new_key)
-                        new_value = f"{new_value * 100:0.0f}"
-                    if new_key.find("[pix]") > 0:
-                        # new_key = re.sub("length \[m\]$", "length [cm]", new_key)
-                        new_value = f"{new_value:0.0f}"
-                    if new_key.find("[s]") > 0:
-                        new_value = f"{new_value:0.0f}"
-                    if new_key.find("[%]") > 0:
-                        new_value = f"{new_value:0.0f}"
-                    results[new_key] = new_value
+    loaded_results = load_results(serverfile)
+    results = prepare_results_for_visualization(loaded_results)
 
     image_list = serverfile.bitmapimage_set.all()
 
@@ -370,39 +314,7 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
 
     reviews = [review.annotator for review in serverfile.mediafileannotation_set.all()]
 
-    per_stitch_report = []
-
-    if loaded_results is not None:
-
-        for i in range(int(serverfile.stitch_count)):
-            logger.debug(f"Stitch {i}")
-            try:
-                STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
-                graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
-
-
-                # find image
-                needle_holder_compare_heatmaps_image = None
-                looking_for = f"needle_holder_compare_heatmaps_stitch {int(i)}"
-                logger.debug(f"{looking_for=}")
-                for image in serverfile.bitmapimage_set.all():
-                    logger.debug(f"  {image.bitmap_image.name}")
-                    if looking_for in str(image.bitmap_image.name):
-                        logger.debug(f"     Found {image.bitmap_image.name}")
-                        needle_holder_compare_heatmaps_image = image
-                        break
-
-                per_stitch_report.append({
-                    "stitch_id": i,
-                    "advices": prepare_advices(loaded_results, i),
-                    "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
-                    'graphs_html': graphs_html,
-                    "needle_holder_compare_heatmaps_image": needle_holder_compare_heatmaps_image,
-                })
-
-            except Exception as e:
-                logger.error(f"Error in processing stitch {i}. {e}")
-                logger.error(traceback.format_exc())
+    per_stitch_report = load_per_stitch_data(loaded_results, serverfile)
 
     # logger.debug(f"{per_stitch_report=}")
 
@@ -434,52 +346,62 @@ def _prepare_context_for_web_report(request, serverfile: UploadedFile, review_ed
     return context
 
 
-
-def is_lo_than(value, threshold):
-    return value < threshold
-
-def is_hi_than(value, threshold):
-    return value > threshold
-
-def prepare_advices(results: dict, stitch_id:int) -> list:
-    # logger.debug(f"{results=}")
-    advices = []
-
-    # set varibale fn to function which will return true if the value will be lower then some threshold
-    fn = lambda x, threshold: x < threshold
-
-    adv0 = "Try to keep your instruments closer to the incision to avoid unnecessary large movements."
-    adv1 = "Try to move the instruments at a constant speed. Careless, rapid movements can result in unnecessary large movements. "
-
-    rules_and_advices = [
-        (f"Stitch {stitch_id} duration [s]", is_hi_than, 65.30, "The stitch duration is too long. ", "Try to make your movements more smooth and precise. "),
-    # ),(# "Needle holder stitch area presence [%]" ,
-    #     (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 91.43, "The needle holder visibility in area around stitch is too low. " + adv0),
-        (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 70., "The needle holder visibility in area around stitch is too low. ", adv0),  # arbitrary value
-        (f"Needle holder stitch {stitch_id} length [m]", is_hi_than, 2.67, "The needle holder trajectory length is too long. ", adv0),
-        (f"Needle holder stitch {stitch_id} visibility [%]", is_lo_than, 84.25, "The needle holder visibility is too low. ", adv0),
-        (f"Needle holder stitch {stitch_id} velocity above threshold" , is_hi_than, 20.18, "Too much sudden moves of the needle holder detected. ", adv1),
-        (f"Forceps stitch {stitch_id} median area presence [%]" , is_hi_than, 86.23 , "The forceps visibility in area around stitch is too low. ", adv0)
-        ]
-    # "Knot duration [s]",
-    # "Needle holder to forceps stitch below threshold [s]"
-
-    advice_reason = {}
-    for rule_and_advice in rules_and_advices:
-        key, fn, threshold, reason, advice = rule_and_advice
-        if key in results:
-            if fn(results[key], threshold):
-                if advice in advice_reason:
-                    advice_reason[advice].append(reason)
-                else:
-                    advice_reason[advice] = [reason]
+def prepare_results_for_visualization(loaded_results:Optional[dict]) -> dict:
+    results = {}
+    loaded_results = None
+    if loaded_results:
+        if "Video duration [s]" in loaded_results:
+            video_duration = loaded_results["Video duration [s]"]
         else:
-            logger.warning(f"Key '{key}' not found in results")
+            video_duration = None
+        for key in loaded_results:
+            new_value = loaded_results[key]
+            # backward compatibility
+            new_key = (
+                key.replace("Tweezes", "Forceps")
+                .replace("Tweezers", "Forceps")
+                .replace("duration", "visibility")
+            )
+            new_key = re.sub("visibility$", "visibility [s]", new_key)
+            new_key = re.sub("length$", "length [m]", new_key)
+            if new_key in (
+                    "Needle holder length [pix]",
+                    "Needle holder length [m]",
+                    "Needle holder length [cm]",
+                    "Needle holder visibility [s]",
+                    "Needle holder visibility [%]",
+                    "Forceps length [pix]",
+                    "Forceps length [m]",
+                    "Forceps length [cm]",
+                    "Forceps visibility [s]",
+                    "Forceps visibility [%]",
+                    "Scissors length [pix]",
+                    "Scissors length [m]",
+                    "Scissors length [cm]",
+                    "Scissors visibility [s]",
+                    "Scissors visibility [%]",
+                    "Needle holder area presence [%]",
+                    # "Tweezes length", "Tweezes duration" # typo in some older processings
+                    # "Tweezers length", "Tweezers duration", # backward compatibility
+                    # "Scissors length", "Scissors duration", # backward compatibility
+                    # "Needle holder length", "Needle holder duration", # backward compatibility
+            ):
+                # new_key = new_key.replace("visibility", "visibility [s]").replace("length", "length [cm]")
 
-    # Put the advice on one line fallowed by the reasons.
-    for advice in advice_reason:
-        advices.append(advice + " " + " ".join(advice_reason[advice]))
-    return advices
+                if new_key.find("[m]") > 0:
+                    new_key = re.sub("length \[m\]$", "length [cm]", new_key)
+                    new_value = f"{new_value * 100:0.0f}"
+                if new_key.find("[pix]") > 0:
+                    # new_key = re.sub("length \[m\]$", "length [cm]", new_key)
+                    new_value = f"{new_value:0.0f}"
+                if new_key.find("[s]") > 0:
+                    new_value = f"{new_value:0.0f}"
+                if new_key.find("[%]") > 0:
+                    new_value = f"{new_value:0.0f}"
+                results[new_key] = new_value
+    return results
+
+
 
 def download_sample_image(request):
     """Download uploaded file."""

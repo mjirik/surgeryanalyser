@@ -42,6 +42,7 @@ from .data_tools import (
 from .media_tools import convert_avi_to_mp4, make_images_from_video, rescale, crop_square
 from .models import BitmapImage, UploadedFile, Owner
 from . import visualization_tools, models
+from .report_tools import set_overall_score
 
 
 def _run_media_processing_rest_api(
@@ -76,7 +77,7 @@ def _run_media_processing_rest_api(
     tm = 0
     time_to_sleep = 4
     while not is_finished:
-        time_to_sleep = time_to_sleep * 2 if time_to_sleep < 64 else 64
+        time_to_sleep = time_to_sleep * 2 if time_to_sleep < 32 else 32
         time_step = 4
         tm += time_to_sleep
         for i in range(int(time_to_sleep / time_step)):
@@ -615,6 +616,13 @@ def make_preview(
 
             serverfile.preview.name = str(filename_rel)
             serverfile.save()
+
+def on_finished_run_processing(task):
+
+    email_report_from_task(task)
+    serverfile: UploadedFile = task.args[0]
+
+    set_overall_score(serverfile)
 
 
 def email_report_from_task(task):

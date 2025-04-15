@@ -220,3 +220,132 @@ def get_distplot(dfst, col_name, my_value, annotation_text="You", bin_size:Optio
     return fig
     # fig.show()
 
+
+STITCH_DATA_FRAME = StitchDataFrame(
+    relevant_column="mean_movement_annotation",
+    filename_patch="*all_stitches_with_human_annotations*.xlsx",
+)
+
+
+import numpy as np
+
+def set_overall_score(serverfile) -> float:
+    """
+    Set overall score from the serverfile.
+    :param serverfile: UploadedFile object
+    :return: overall score
+    """
+    loaded_results = load_results(serverfile)
+    per_stitch_report = load_per_stitch_data(loaded_results, serverfile)
+
+    scores = []
+
+    for record in per_stitch_report:
+        if "ai_movement_evaluation" in record and record["ai_movement_evaluation"] is not None:
+            scores.append(record["ai_movement_evaluation"])
+
+
+    scores = np.array(scores)
+    if len(scores) > 0:
+        score = np.mean(scores)
+    else:
+        score = None
+
+    serverfile.score = score
+    serverfile.save()
+
+
+
+
+
+def load_per_stitch_data(loaded_results, serverfile):
+    per_stitch_report = []
+    if loaded_results is not None:
+
+        for i in range(int(serverfile.stitch_count)):
+            logger.debug(f"Stitch {i}")
+            try:
+                STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
+                graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
+
+                # find image
+                needle_holder_compare_heatmaps_image = None
+                looking_for = f"needle_holder_compare_heatmaps_stitch {int(i)}"
+                logger.debug(f"{looking_for=}")
+                for image in serverfile.bitmapimage_set.all():
+                    logger.debug(f"  {image.bitmap_image.name}")
+                    if looking_for in str(image.bitmap_image.name):
+                        logger.debug(f"     Found {image.bitmap_image.name}")
+                        needle_holder_compare_heatmaps_image = image
+                        break
+
+                per_stitch_report.append({
+                    "stitch_id": i,
+                    "advices": prepare_advices(loaded_results, i),
+                    "ai_movement_evaluation": loaded_results.get(f"AI movement evaluation stitch {i} [%]", None),
+                    'graphs_html': graphs_html,
+                    "needle_holder_compare_heatmaps_image": needle_holder_compare_heatmaps_image,
+                })
+
+            except Exception as e:
+                logger.error(f"Error in processing stitch {i}. {e}")
+                logger.error(traceback.format_exc())
+    return per_stitch_report
+
+
+def load_results(serverfile) -> dict:
+    fn_results = Path(serverfile.outputdir) / "results.json"
+    results = {}
+    loaded_results = None
+    if fn_results.exists():
+        with open(fn_results) as f:
+            loaded_results = json.load(f)
+    return loaded_results
+
+
+
+def prepare_advices(results: dict, stitch_id:int) -> list:
+    # logger.debug(f"{results=}")
+    advices = []
+
+    # set varibale fn to function which will return true if the value will be lower then some threshold
+    fn = lambda x, threshold: x < threshold
+
+    adv0 = "Try to keep your instruments closer to the incision to avoid unnecessary large movements."
+    adv1 = "Try to move the instruments at a constant speed. Careless, rapid movements can result in unnecessary large movements. "
+
+    rules_and_advices = [
+        (f"Stitch {stitch_id} duration [s]", is_hi_than, 65.30, "The stitch duration is too long. ", "Try to make your movements more smooth and precise. "),
+        # ),(# "Needle holder stitch area presence [%]" ,
+        #     (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 91.43, "The needle holder visibility in area around stitch is too low. " + adv0),
+        (f"Needle holder stitch {stitch_id} median area presence [%]", is_lo_than, 70., "The needle holder visibility in area around stitch is too low. ", adv0),  # arbitrary value
+        (f"Needle holder stitch {stitch_id} length [m]", is_hi_than, 2.67, "The needle holder trajectory length is too long. ", adv0),
+        (f"Needle holder stitch {stitch_id} visibility [%]", is_lo_than, 84.25, "The needle holder visibility is too low. ", adv0),
+        (f"Needle holder stitch {stitch_id} velocity above threshold" , is_hi_than, 20.18, "Too much sudden moves of the needle holder detected. ", adv1),
+        (f"Forceps stitch {stitch_id} median area presence [%]" , is_hi_than, 86.23 , "The forceps visibility in area around stitch is too low. ", adv0)
+    ]
+    # "Knot duration [s]",
+    # "Needle holder to forceps stitch below threshold [s]"
+
+    advice_reason = {}
+    for rule_and_advice in rules_and_advices:
+        key, fn, threshold, reason, advice = rule_and_advice
+        if key in results:
+            if fn(results[key], threshold):
+                if advice in advice_reason:
+                    advice_reason[advice].append(reason)
+                else:
+                    advice_reason[advice] = [reason]
+        else:
+            logger.warning(f"Key '{key}' not found in results")
+
+    # Put the advice on one line fallowed by the reasons.
+    for advice in advice_reason:
+        advices.append(advice + " " + " ".join(advice_reason[advice]))
+    return advices
+
+def is_lo_than(value, threshold):
+    return value < threshold
+
+def is_hi_than(value, threshold):
+    return value > threshold

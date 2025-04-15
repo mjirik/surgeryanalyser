@@ -2,8 +2,11 @@ import os.path as op
 from datetime import datetime
 from pathlib import Path
 import numpy as np
+import traceback
 
 from django.db import models
+from loguru import logger
+import json
 
 from .models_tools import (
     generate_sha1,
@@ -11,6 +14,7 @@ from .models_tools import (
     randomString,
     upload_to_unqiue_folder,
 )
+
 
 # Create your models here.
 
@@ -63,6 +67,7 @@ class UploadedFile(models.Model):
     consent = models.BooleanField(default=False)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     rotation = models.IntegerField(default=0)
+    score = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)
@@ -145,3 +150,4 @@ class BitmapImage(models.Model):
 
     def __str__(self):
         return str(op.basename(self.bitmap_image.name))
+
