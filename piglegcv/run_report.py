@@ -26,6 +26,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy.stats import gaussian_kde
 import plotly.graph_objects as go
+import scipy.spatial
 
 try:
     import tools
@@ -274,6 +275,22 @@ def logistic_normalize_inverted(d, midpoint=700, steepness=0.01):
     return normalized
 
 
+def mean_mahalanobis_to_distribution(pts, points):
+    """
+    Computes the average Mahalanobis distance from each point in `pts`
+    to the mean of `points`, using the covariance of `points`.
+    """
+    mean = np.mean(points, axis=0)
+    cov = np.cov(points, rowvar=False)
+
+    try:
+        inv_cov = np.linalg.inv(cov)
+        distances = [scipy.spatial.distance.mahalanobis(p, mean, inv_cov) for p in pts]
+        return np.mean(distances)
+    except np.linalg.LinAlgError:
+        return np.inf
+
+
 def compare_heatmaps_plot(
         outputdir: Union[str,Path], points_px:Optional[np.array]=None, pix_size_m:Optional[float]=None, filename=None,
         image:Optional[np.array]=None,
@@ -322,12 +339,19 @@ def compare_heatmaps_plot(
     # save dimensions of the plot
 
     points_normed = (points_px - np.median(points_px, axis=0)) * pix_size_m
-    l2_distance = compare_distributions_by_l2_distance(points_normed, pts_gt, bw_adjust1=2.0, bw_adjust2=2.0)
+    # distance = compare_distributions_by_l2_distance(points_normed, pts_gt, bw_adjust1=2.0, bw_adjust2=2.0)
+    midpoint = 1000
+    steepness=0.005
+    dist = mean_mahalanobis_to_distribution(points_normed, pts_gt)
+    midpoint = 1.2
+    steepness=4.01
+
     sigma = np.mean(np.var(pts_gt))
     sigma = 4000.0
     # score = np.exp( - l2_distance / sigma)
-    print(f"{l2_distance=}")
-    score = logistic_normalize_inverted(l2_distance, midpoint=1000, steepness=0.005)
+    print(f"{dist=}")
+    score = logistic_normalize_inverted(dist, midpoint=midpoint, steepness=steepness)
+    # score  = distance
     score_100 = 100 * score
 
     if score_100 < 70:
@@ -355,7 +379,7 @@ def compare_heatmaps_plot(
     if filename:
         plt.savefig(filename, dpi=300, bbox_inches="tight", pad_inches=0)
         plt.close()
-    return l2_distance, score
+    return dist, score
 
 
 def create_heatmap_report_plt(
