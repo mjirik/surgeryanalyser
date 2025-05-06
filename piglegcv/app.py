@@ -24,6 +24,7 @@ from pigleg_cv import do_computer_vision
 from rq import Queue
 from rq.job import Job
 from worker import conn
+from rq import Worker
 
 PIGLEGCV_TIMEOUT = 10 * 3600
 app = flask.Flask(__name__)
@@ -43,6 +44,10 @@ def make_bool_from_string(s: str) -> bool:
 @app.route("/run", methods=["GET", "POST"])
 def index():
     logger.debug("index in progress")
+    # zjisti stav workerů
+    workers = Worker.all(connection=conn)
+    active_workers = [w for w in workers if w.state == 'busy']
+    logger.debug(f"Total workers: {len(workers)}, Active workers: {len(active_workers)}")
     results = {}
     if request.method == "POST":
         # this import solves a rq bug which currently exists
