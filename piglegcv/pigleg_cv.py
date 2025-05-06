@@ -183,7 +183,7 @@ class DoComputerVision:
         except Exception as e:
             logger.error(traceback.format_exc())
         logger.remove(self.logger_id)
-        self.logger_id = None
+        # self.logger_id = None
 
     def _make_sure_media_is_cropped(self):
         if self.filename_cropped is None:
