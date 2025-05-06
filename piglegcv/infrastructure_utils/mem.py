@@ -60,7 +60,7 @@ def get_ram():
     )
 
 
-def get_vram(device: Optional[torch.device] = None):
+def get_vram(device: Optional[torch.device] = None) -> str:
     """Get visualized VRAM usage in GB."""
     device = get_torch_cuda_device_if_available(device)
     device = device if device else torch.cuda.current_device()
@@ -106,3 +106,11 @@ def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str]
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
         time.sleep(5)
+
+def empty_cache_and_syncronize(device: Union[int, str] = 0):
+    """Empty GPU cache and synchronize."""
+    device = get_torch_cuda_device_if_available(device)
+    if device.type == "cpu":
+        return
+    torch.cuda.empty_cache()
+    torch.cuda.synchronize()

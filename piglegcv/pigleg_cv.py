@@ -160,6 +160,9 @@ class DoComputerVision:
         logger.debug(f"{self.is_microsurgery}, {type(self.is_microsurgery)}")
         logger.debug(type(self.is_microsurgery))
         logger.debug(self.is_microsurgery)
+        logger.debug(mem.get_vram(DEVICE))
+        mem.empty_cache_and_syncronize()
+        logger.debug(mem.get_vram(DEVICE))
 
         try:
             if Path(self.filename).suffix.lower() in (
@@ -175,6 +178,7 @@ class DoComputerVision:
                 self.run_video_processing()
             save_json(self.meta, Path(self.outputdir) / "meta.json", update=False)
 
+            logger.debug(mem.get_vram(DEVICE))
             logger.debug("Work finished")
         except Exception as e:
             logger.error(traceback.format_exc())
