@@ -46,12 +46,12 @@ try:
     import tools
     from tools import save_json
     import movement_evaluation
-    from infrastructure_utils import mem
+    import mem
 except ImportError:
     from .tools import save_json
     from . import tools
     from . import movement_evaluation
-    from .infrastructure_utils import mem
+    from . import mem
 
 
 
@@ -97,8 +97,8 @@ class DoComputerVision:
         device: Optional[str] = None,
         force_tracker:bool=False
     ):
-        self.create_logger(outputdir)
         self.logger_id = None
+        self.create_logger(outputdir)
 
         if device is None:
             import torch
@@ -113,6 +113,7 @@ class DoComputerVision:
         self.filename_original: Path = Path(filename)
         self.outputdir: Path = Path(outputdir)
         self.meta: dict = meta if meta is not None else {}
+        self.logger_id = None
         self.frame: Optional[np.ndarray] = None
         self.frame_at_beginning: Optional[np.ndarray] = None
         self.filename_cropped: Optional[Path] = None
