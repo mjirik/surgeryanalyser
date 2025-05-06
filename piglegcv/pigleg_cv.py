@@ -46,10 +46,13 @@ try:
     import tools
     from tools import save_json
     import movement_evaluation
+    from infrastructure_utils import mem
 except ImportError:
     from .tools import save_json
     from . import tools
     from . import movement_evaluation
+    from .infrastructure_utils import mem
+
 
 
 # from sklearn.mixture import GaussianMixture
@@ -94,15 +97,8 @@ class DoComputerVision:
         device: Optional[str] = None,
         force_tracker:bool=False
     ):
-        log_format = loguru._defaults.LOGURU_FORMAT
-        self.logger_id = logger.add(
-            str(Path(outputdir) / "piglegcv_log.txt"),
-            format=log_format,
-            level="DEBUG",
-            rotation="1 week",
-            backtrace=True,
-            diagnose=True,
-        )
+        self.logger_id = None
+        self.create_logger(outputdir)
 
         if device is None:
             import torch
@@ -117,7 +113,6 @@ class DoComputerVision:
         self.filename_original: Path = Path(filename)
         self.outputdir: Path = Path(outputdir)
         self.meta: dict = meta if meta is not None else {}
-        self.logger_id = None
         self.frame: Optional[np.ndarray] = None
         self.frame_at_beginning: Optional[np.ndarray] = None
         self.filename_cropped: Optional[Path] = None
@@ -144,6 +139,17 @@ class DoComputerVision:
         self.do_crop = False
 
         logger.debug(f"{self.is_microsurgery=}")
+
+    def create_logger(self, outputdir):
+        log_format = loguru._defaults.LOGURU_FORMAT
+        self.logger_id = logger.add(
+            str(Path(outputdir) / "piglegcv_log.txt"),
+            format=log_format,
+            level="DEBUG",
+            rotation="1 week",
+            backtrace=True,
+            diagnose=True,
+        )
 
     def run(self):
         self.meta = {}
@@ -173,6 +179,7 @@ class DoComputerVision:
         except Exception as e:
             logger.error(traceback.format_exc())
         logger.remove(self.logger_id)
+        self.logger_id = None
 
     def _make_sure_media_is_cropped(self):
         if self.filename_cropped is None:
@@ -327,6 +334,7 @@ class DoComputerVision:
         :return:
         """
         logger.debug("Running video processing...")
+        logger.debug(mem.get_vram(DEVICE))
         if self.meta is None:
             self.meta = {}
 
@@ -421,6 +429,7 @@ class DoComputerVision:
 
         set_progress(99)
 
+        logger.debug(mem.get_vram(DEVICE))
         logger.debug(f"Report finished in {time.time() - s}s.")
 
         logger.debug("Report based on video is finished.")
@@ -849,6 +858,7 @@ def do_computer_vision(
     force_tracker:bool = False
 ):
     logger.debug(f"{is_microsurgery=}")
+    logger.debug(mem.get_vram(DEVICE))
     return DoComputerVision(
         filename,
         outputdir,
