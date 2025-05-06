@@ -97,8 +97,8 @@ class DoComputerVision:
         device: Optional[str] = None,
         force_tracker:bool=False
     ):
-        self.logger_id = None
         self.create_logger(outputdir)
+        self.logger_id = None
 
         if device is None:
             import torch
