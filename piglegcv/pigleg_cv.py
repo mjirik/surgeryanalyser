@@ -113,7 +113,7 @@ class DoComputerVision:
         self.filename_original: Path = Path(filename)
         self.outputdir: Path = Path(outputdir)
         self.meta: dict = meta if meta is not None else {}
-        self.logger_id = None
+        # self.logger_id = None
         self.frame: Optional[np.ndarray] = None
         self.frame_at_beginning: Optional[np.ndarray] = None
         self.filename_cropped: Optional[Path] = None
@@ -164,6 +164,7 @@ class DoComputerVision:
         logger.debug(mem.get_vram(DEVICE))
         mem.empty_cache_and_syncronize()
         logger.debug(mem.get_vram(DEVICE))
+        mem.wait_for_gpu_memory(1.0, device=DEVICE, max_wait_time_s=600)
 
         try:
             if Path(self.filename).suffix.lower() in (

@@ -255,6 +255,7 @@ def set_overall_score(serverfile) -> float:
 
     serverfile.score = score
     serverfile.save()
+    return score
 
 
 

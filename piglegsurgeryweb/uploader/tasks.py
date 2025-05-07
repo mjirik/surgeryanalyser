@@ -187,6 +187,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
     _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
 
     _make_graphs(serverfile)
+    set_overall_score(serverfile)
 
     logger.debug("Processing finished")
     logger.remove(logger_id)
@@ -520,6 +521,8 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     novy = remove_empty_lists(flatten_dict(novy))
     pop_from_dict(novy, "qr_data_box")
 
+    serverfile.data_row = novy
+    serverfile.save()
     # novy = remove_iterables_from_dict(novy)
     # logger.debug(f"novy={novy}")
     df_novy = pd.DataFrame(novy, index=[0])
@@ -617,12 +620,12 @@ def make_preview(
             serverfile.preview.name = str(filename_rel)
             serverfile.save()
 
+# not used any more
 def on_finished_run_processing(task):
 
     email_report_from_task(task)
     serverfile: UploadedFile = task.args[0]
 
-    set_overall_score(serverfile)
 
 
 def email_report_from_task(task):

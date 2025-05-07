@@ -1583,7 +1583,8 @@ class MainReport:
 
             # TODO unlink but wait for finishing ffmpeg
             if output_video_fn.exists():
-                output_video_fn_tmp.unlink()
+                # in one case it happened that the temp file did not exist
+                output_video_fn_tmp.unlink(missing_ok=True)
 
             print(f"main_report: Video file {filename} is processed!")
             return data_results

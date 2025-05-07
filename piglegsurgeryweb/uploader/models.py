@@ -68,6 +68,7 @@ class UploadedFile(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     rotation = models.IntegerField(default=0)
     score = models.FloatField(null=True, blank=True)
+    data_row = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)

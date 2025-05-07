@@ -84,7 +84,7 @@ def get_vram(device: Optional[torch.device] = None) -> str:
         return "No GPU available"
 
 
-def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str] = 0):
+def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str] = 0, max_wait_time_s: int = 3600):
     """Wait until GPU memory is below threshold."""
     device = get_torch_cuda_device_if_available(device)
 
@@ -93,6 +93,7 @@ def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str]
         logger.debug("No need to wait for CPU")
         return
 
+    start_time = time.time()
     while True:
         reserved = torch.cuda.memory_reserved(device) / 1024 ** 3
         total = torch.cuda.get_device_properties(device).total_memory / 1024 ** 3
@@ -105,6 +106,10 @@ def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str]
         print(f"Waiting for {required_memory_gb} GB of GPU memory. " + get_vram(device))
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
+        if time.time() - start_time > max_wait_time_s:
+            logger.debug(f"Timeout ({max_wait_time_s} [s]) waiting for GPU memory. Free memory: {free_memory_gb:.1f} GB")
+            print(f"Timeout waiting for GPU memory. Free memory: {free_memory_gb:.1f} GB")
+            break
         time.sleep(5)
 
 def empty_cache_and_syncronize(device: Union[int, str] = 0):
