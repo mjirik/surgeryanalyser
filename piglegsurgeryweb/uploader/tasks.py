@@ -642,6 +642,10 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
     logger.debug("Sending email report...")
     logger.debug(f"absolute_uri={absolute_uri}, {type(absolute_uri)}")
     logger.debug(f"serverfile={serverfile}, {type(serverfile)}")
+    if absolute_uri[-1] == "/":
+        pass
+    else:
+        absolute_uri = absolute_uri + "/"
     html_message = (
         '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
         '<html xmlns="http://www.w3.org/1999/xhtml">\n'
@@ -653,16 +657,16 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         f"<body>"
         f"<p>Report processing finished.</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}uploader/web_report/{serverfile.hash}">Check report here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/assigned_to/{serverfile.owner.hash}">See all your assignments</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}uploader/assigned_to/{serverfile.owner.hash}">See all your assignments</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
         f"<p></p>"
         f"<p>Best regards</p>\n"
         f"<p>Miroslav Jirik</p>\n"
@@ -710,6 +714,10 @@ def email_media_recived(serverfile: UploadedFile, absolute_uri: str):
     review_url = reverse("uploader:go_to_video_for_annotation_email", kwargs={
         "annotator_hash": serverfile.owner.hash
     }),
+    if absolute_uri[-1] == "/":
+        pass
+    else:
+        absolute_uri = absolute_uri + "/"
     html_message = (
         '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">'
         '<html xmlns="http://www.w3.org/1999/xhtml">\n'
@@ -728,13 +736,13 @@ def email_media_recived(serverfile: UploadedFile, absolute_uri: str):
         f"</p><p>Email: {serverfile.email}</p><p>Filename: {str(Path(str(serverfile.mediafile.name)).name)}</p>"
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}uploader/owners_reports/{serverfile.owner.hash}">See all your reports here</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/assigned_to/{serverfile.owner.hash}">See all your assignments</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}uploader/assigned_to/{serverfile.owner.hash}">See all your assignments</a> .</p>\n'
         f"<p></p>"
         f"<p></p>"
-        f'<p> <a href="{absolute_uri}/uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
+        f'<p> <a href="{absolute_uri}uploader/go_to_video_for_annotation/{serverfile.owner.hash}">You can also do a review</a> .</p>\n'
         f"<p></p>"
         f"<p>Best regards</p>\n"
         f"<p>Miroslav Jirik</p>\n"
