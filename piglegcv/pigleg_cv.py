@@ -100,12 +100,13 @@ class DoComputerVision:
         self.logger_id = None
         self.create_logger(outputdir)
 
-        if device is None:
-            import torch
-
-            device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.debug("###############")
-        logger.debug(f"device={device}")
+        import torch
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        logger.debug(f"device={device}, {torch.cuda.is_available()=}")
+        logger.debug(mem.get_vram(device))
         logger.debug(f"{test_first_seconds=}")
         logger.debug(f"{is_microsurgery=}")
 
