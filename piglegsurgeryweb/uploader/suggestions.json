@@ -66,7 +66,7 @@
   },
   "Needle holder stitch velocity above threshold": {
     "thresholds": [20, 30],
-    "name": "Needle holder sudden movements",
+    "name": "Needle holder jerk index",
     "low": {
       "name": "Appropriate",
       "Observation": "The count of the needle holder’s sudden movements is close to the expert level, within the green zone.",

@@ -17,7 +17,7 @@ import json
 ADD_ADVANCED_STUDENTS_TO_EXPERT = False
 
 with open(Path(__file__).parent / "suggestions.json") as f:
-    suggestions = json.load(f)
+    SUGGESTIONS = json.load(f)
 
 class StitchDataFrame():
     def __init__(self,
@@ -51,7 +51,7 @@ class StitchDataFrame():
 
 
     def get_suggestions(self, col_name, my_value) -> List[str]:
-        col_suggestion = suggestions.get(col_name, [])
+        col_suggestion = SUGGESTIONS.get(col_name, [])
         # print(col_suggestion)
 
         if "thresholds" in col_suggestion:
@@ -65,7 +65,7 @@ class StitchDataFrame():
         else:
             suggestions_list = []
 
-        return suggestions_list
+        return suggestions_list, name
 
     def get_figs_to_html(self, stitch_id: int, col_names: Optional[List[str]] = None) -> List[str]:
         if col_names is None:
@@ -110,9 +110,10 @@ class StitchDataFrame():
                                thresholds=thresholds,
                                )
             html = fig.to_html(full_html=False, include_plotlyjs='cdn')
+            suggestions, title = self.get_suggestions(col_name, my_value)
             htmls.append(
                 {"title": col_name, "html": html,
-                    "suggestions": self.get_suggestions(col_name, my_value),
+                    "suggestions": suggestions,
                  "color": color,
                  }
                 )
