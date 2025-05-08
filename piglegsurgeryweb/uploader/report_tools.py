@@ -50,13 +50,17 @@ class StitchDataFrame():
         self.dfst:pd.DataFrame = dfst.copy().reset_index(drop=True)
         self.my_dfst:Optional[pd.DataFrame] = None
 
-
-    def get_suggestions(self, col_name, my_value) -> List[str]:
+    def get_name(self, col_name) -> str:
         col_suggestion = SUGGESTIONS.get(col_name, [])
+        logger.debug(col_suggestion)
         if "name" in col_suggestion:
             name = col_suggestion["name"]
         else:
             name = col_name
+        return name
+
+    def get_suggestions(self, col_name, my_value) -> List[str]:
+        col_suggestion = SUGGESTIONS.get(col_name, [])
         # print(col_suggestion)
 
         if "thresholds" in col_suggestion:
@@ -70,7 +74,7 @@ class StitchDataFrame():
         else:
             suggestions_list = []
 
-        return suggestions_list, name
+        return suggestions_list
 
     def get_figs_to_html(self, stitch_id: int, col_names: Optional[List[str]] = None) -> List[str]:
         if col_names is None:
@@ -115,9 +119,10 @@ class StitchDataFrame():
                                thresholds=thresholds,
                                )
             html = fig.to_html(full_html=False, include_plotlyjs='cdn')
-            suggestions, title = self.get_suggestions(col_name, my_value)
+            suggestions = self.get_suggestions(col_name, my_value)
+            title = self.get_name(col_name)
             htmls.append(
-                {"title": col_name, "html": html,
+                {"title": title, "html": html,
                     "suggestions": suggestions,
                  "color": color,
                  }
