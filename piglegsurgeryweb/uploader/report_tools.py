@@ -7,6 +7,7 @@ import scipy.stats
 import pandas as pd
 import plotly.figure_factory as ff
 from loguru import logger
+import traceback
 from . import pigleg_evaluation_tools as pet
 
 from typing import Optional, Union, List
