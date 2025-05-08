@@ -165,7 +165,7 @@ class DoComputerVision:
         logger.debug(mem.get_vram(DEVICE))
         mem.empty_cache_and_syncronize()
         logger.debug(mem.get_vram(DEVICE))
-        mem.wait_for_gpu_memory(1.0, device=DEVICE, max_wait_time_s=600)
+        mem.wait_for_gpu_memory(2.0, device=DEVICE, max_wait_time_s=600)
 
         try:
             if Path(self.filename).suffix.lower() in (

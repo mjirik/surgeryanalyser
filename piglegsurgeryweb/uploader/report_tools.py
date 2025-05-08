@@ -52,7 +52,7 @@ class StitchDataFrame():
 
     def get_name(self, col_name) -> str:
         col_suggestion = SUGGESTIONS.get(col_name, [])
-        logger.debug(col_suggestion)
+        # logger.debug(col_suggestion)
         if "name" in col_suggestion:
             name = col_suggestion["name"]
         else:
