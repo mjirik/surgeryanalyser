@@ -53,6 +53,10 @@ class StitchDataFrame():
 
     def get_suggestions(self, col_name, my_value) -> List[str]:
         col_suggestion = SUGGESTIONS.get(col_name, [])
+        if "name" in col_suggestion:
+            name = col_suggestion["name"]
+        else:
+            name = col_name
         # print(col_suggestion)
 
         if "thresholds" in col_suggestion:
