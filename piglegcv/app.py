@@ -61,6 +61,7 @@ def index():
         outputdir = request.args.get("outputdir")
         n_stitches = int(request.args.get("n_stitches"))
         is_microsurgery = make_bool_from_string(request.args.get("is_microsurgery"))
+        force_tracking = make_bool_from_string(request.args.get("force_tracking", default=True))
 
         logger.debug(f"{n_stitches=}")
         logger.debug(f"{is_microsurgery=}, {type(is_microsurgery)=}")
@@ -76,7 +77,7 @@ def index():
         meta = {}
         job = q.enqueue_call(
             func=do_computer_vision,
-            args=(filename, outputdir, meta, is_microsurgery, n_stitches),
+            args=(filename, outputdir, meta, is_microsurgery, n_stitches, force_tracking),
             result_ttl=5000,
             timeout=PIGLEGCV_TIMEOUT,
         )

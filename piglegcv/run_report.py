@@ -275,13 +275,13 @@ def logistic_normalize_inverted(d, midpoint=700, steepness=0.01):
     return normalized
 
 
-def mean_mahalanobis_to_distribution(pts, points):
+def mean_mahalanobis_to_distribution(pts, points_expert):
     """
     Computes the average Mahalanobis distance from each point in `pts`
     to the mean of `points`, using the covariance of `points`.
     """
-    mean = np.mean(points, axis=0)
-    cov = np.cov(points, rowvar=False)
+    mean = np.mean(points_expert, axis=0)
+    cov = np.cov(points_expert, rowvar=False)
 
     try:
         inv_cov = np.linalg.inv(cov)
@@ -296,7 +296,8 @@ def compare_heatmaps_plot(
         image:Optional[np.array]=None,
         tool_id=0,
         cmap="Greens",
-        levels=3
+        levels=3,
+        show_students_heatmap:bool = False
 ):
 
     outputdir = Path(outputdir)
@@ -322,7 +323,7 @@ def compare_heatmaps_plot(
         return None, None
     # points_m = points_px * pix_size_m
 
-    pts_gt = np.load(HEATMAP_EXPERT_POINTS_PATH)
+    pts_expert = np.load(HEATMAP_EXPERT_POINTS_PATH)
 
     plt.figure()
 
@@ -333,6 +334,8 @@ def compare_heatmaps_plot(
         if image.ndim == 3:
             image = skimage.color.rgb2gray(image)
     plt.imshow(image, cmap='gray')
+
+    # small points
     plt.plot(points_px[:, 0], points_px[:, 1], ".", alpha=0.2, color="red", markersize=1)
     # alpha=0.5, markerfacecolor=(1,1,0,0.1)
     # )
@@ -342,11 +345,11 @@ def compare_heatmaps_plot(
     # distance = compare_distributions_by_l2_distance(points_normed, pts_gt, bw_adjust1=2.0, bw_adjust2=2.0)
     midpoint = 1000
     steepness=0.005
-    dist = mean_mahalanobis_to_distribution(points_normed, pts_gt)
+    dist = mean_mahalanobis_to_distribution(points_normed, pts_expert)
     midpoint = 1.2
     steepness=4.01
 
-    sigma = np.mean(np.var(pts_gt))
+    sigma = np.mean(np.var(pts_expert))
     sigma = 4000.0
     # score = np.exp( - l2_distance / sigma)
     print(f"{dist=}")
@@ -362,11 +365,13 @@ def compare_heatmaps_plot(
         students_cmap = "Greens"
 
 
-    pts_px = (pts_gt / pix_size_m) + np.median(points_px, axis=0)
-    sns.kdeplot(x=points_px[::10,0], y=points_px[::10,1],
-                # cmap=None,
-                cmap=students_cmap,
-                fill=True, bw_adjust=2., levels=levels,alpha=0.5)
+    pts_px = (pts_expert / pix_size_m) + np.median(points_px, axis=0)
+    # here is the heatmap of the student colored by the score
+    if show_students_heatmap:
+        sns.kdeplot(x=points_px[::10,0], y=points_px[::10,1],
+                    # cmap=None,
+                    cmap=students_cmap,
+                    fill=True, bw_adjust=2., levels=levels,alpha=0.5)
 
     sns.kdeplot(x=pts_px[::10,0], y=pts_px[::10,1], cmap="Greens", fill=False, bw_adjust=2.0, levels=levels)
 
