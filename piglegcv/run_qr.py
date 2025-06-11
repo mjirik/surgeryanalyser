@@ -31,6 +31,8 @@ def get_sid_model(device):
                 / "resources/single_image_detector/mdl_sid_2.pth"
             # Path(__file__).parent / "resources/single_image_detector/mdl.pth"
         )
+        logger.debug(f"single_model_path={single_model_path}")
+        logger.debug(f"{device=}")
         _model = torch.load(single_model_path, map_location=torch.device(device))
         single_image_model = _model["model"]
         single_image_model.cfg = _model["my_params"]

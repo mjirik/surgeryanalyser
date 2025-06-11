@@ -94,8 +94,8 @@ class DoComputerVision:
         n_stitches=0,
         is_microsurgery=False,
         test_first_seconds: bool = False,
+        force_tracking:bool=False,
         device: Optional[str] = None,
-        force_tracker:bool=False
     ):
         self.logger_id = None
         self.create_logger(outputdir)
@@ -109,6 +109,7 @@ class DoComputerVision:
         logger.debug(mem.get_vram(device))
         logger.debug(f"{test_first_seconds=}")
         logger.debug(f"{is_microsurgery=}")
+        logger.debug(f"{force_tracking=}")
 
         self.filename: Path = Path(filename)
         self.filename_original: Path = Path(filename)
@@ -124,7 +125,7 @@ class DoComputerVision:
         self.device = device
         self.n_stitches: int = int(n_stitches)
         self.results = None
-        self.force_tracker = force_tracker
+        self.force_tracking = force_tracking
         self.operating_area_bbox = None
         self.is_video: bool = (
             False
@@ -306,7 +307,7 @@ class DoComputerVision:
             class_names=class_names,
             device=self.device,
             additional_hash="s" if self.test_first_seconds else "f",
-            force_tracker=self.force_tracker
+            force_tracking=self.force_tracking
         )
 
     def prepare_operation_area_bbox(self):
@@ -861,7 +862,7 @@ def do_computer_vision(
     meta=None,
     is_microsurgery: bool = False,
     n_stitches: Optional[int] = None,
-    force_tracker:bool = False,
+    force_tracking:bool = False,
     device=DEVICE,
 ):
     logger.debug(f"{is_microsurgery=}")
@@ -872,7 +873,7 @@ def do_computer_vision(
         meta,
         is_microsurgery=is_microsurgery,
         n_stitches=n_stitches,
-        force_tracker=force_tracker,
+        force_tracking=force_tracking,
         device=device,
     ).run()
 
