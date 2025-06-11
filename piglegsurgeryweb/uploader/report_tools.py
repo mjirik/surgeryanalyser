@@ -58,19 +58,39 @@ class StitchDataFrame():
         else:
             name = col_name
         return name
+    def _pick_suggestion(self, col_suggestion_for_level, seed) -> str:
+        """
+        Get a pseudo-random suggestion based on the value and the suggestions list.
+        :param col_suggestion_for_level: dict or list of dicts.
+        """
+        if type(col_suggestion_for_level) == dict:
+            # it is dict with keys "name", "Observation", "Analysis", "Recommendation"
+            pass
+        elif type(col_suggestion_for_level) == list:
+            # pick a random suggestion from the list with seed (i want the same suggestion for the same value)
+            import random
+            rng = random.Random(seed)  # vytvoříš vlastní generátor se seedem
+            col_suggestion_for_level= rng.choice(col_suggestion_for_level)
+        else:
+            # just log the error and use the col_suggestion_for_level as is
+            logger.error(f"Unknown type of col_suggestion_for_level: {type(col_suggestion_for_level)}. Expected list or dict.")
 
-    def get_suggestions(self, col_name, my_value) -> List[str]:
+        return col_suggestion_for_level
+
+    def get_suggestions(self, col_name, my_value, seed=None) -> List[str]:
+        if seed is not None:
+            seed = my_value
         col_suggestion = SUGGESTIONS.get(col_name, [])
         # print(col_suggestion)
 
         if "thresholds" in col_suggestion:
             thresholds = col_suggestion["thresholds"]
             if my_value < thresholds[0]:
-                suggestions_list = col_suggestion["low"]
+                suggestions_list = self._pick_suggestion(col_suggestion["low"], seed)
             elif my_value < thresholds[1]:
-                suggestions_list = col_suggestion["moderate"]
+                suggestions_list = self._pick_suggestion(col_suggestion["moderate"], seed)
             else:
-                suggestions_list = col_suggestion["high"]
+                suggestions_list = self._pick_suggestion(col_suggestion["high"], seed)
         else:
             suggestions_list = []
 

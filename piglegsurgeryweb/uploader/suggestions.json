@@ -22,82 +22,230 @@
   },
   "Stitch duration [s]": {
     "name": "Stitch duration [s]",
-    "thresholds": [60, 90],
-    "low": {
-      "name": "Appropriate",
-      "Observation": "Your stitch time is close to the expert-level performance (within the green zone), indicating an optimal duration.",
-      "Analysis": "The student demonstrates efficient technique and good time management, completing the stitch quickly without sacrificing quality.",
-      "Recommendation": "Continue practicing to maintain this level of performance. Consider timing yourself regularly to ensure consistency."
-    },
-    "moderate": {
-      "name": "Moderate",
-      "Observation": "Your stitch time is slightly longer than the expert performance, within the yellow zone.",
-      "Analysis": "The student takes more time than optimal, possibly due to hesitation or lack of confidence in the technique.",
-      "Recommendation": "Focus on streamlining your movement and decision-making process. Practice suturing on simulated materials to build muscle memory and increase speed."
-    },
-    "high": {
-      "name": "Slow",
-      "Observation": "Your stitch time is substantially longer than the expert performance, within the red zone.",
-      "Analysis": "The extended time suggests difficulty with the suturing technique, possibly due to unfamiliarity with the tools or uncertainty in the steps.",
-      "Recommendation": "Break down the suturing process into smaller steps and practice each one separately (e.g., grabbing the needle after the first penetration of the skin). Seek additional guidance from instructors and consider watching our Moodle tutorial videos to improve your technique and efficiency."
-    }
+    "thresholds": [
+      60,
+      90
+    ],
+    "low": [
+      {
+        "name": "Appropriate",
+        "Observation": "Your stitch time is close to the expert-level performance (within the green zone), indicating an optimal duration.",
+        "Analysis": "The student demonstrates efficient technique and good time management, completing the stitch quickly without sacrificing quality.",
+        "Recommendation": "Continue practicing to maintain this level of performance. Consider timing yourself regularly to ensure consistency."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "The time you take to complete each stitch is near expert-level (within the optimal range), reflecting effective pacing.",
+        "Recommendation": "Keep practicing to sustain this performance. Periodically time your stitches to help maintain consistency."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "Your stitch time is very close to expert-level performance and falls within the green zone, suggesting you're working at an optimal pace.",
+        "Recommendation": "Keep up the good work and aim to maintain this timing. Regularly timing yourself can help ensure continued consistency."
+      }
+    ],
+    "moderate": [
+      {
+        "name": "Moderate",
+        "Observation": "Your stitch time is slightly longer than the expert performance, within the yellow zone.",
+        "Analysis": "The student takes more time than optimal, possibly due to hesitation or lack of confidence in the technique.",
+        "Recommendation": "Focus on streamlining your movement and decision-making process. Practice suturing on simulated materials to build muscle memory and increase speed."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "Your stitch duration is somewhat longer than expert-level timing, placing you in the yellow performance range.",
+        "Recommendation": "Aim to refine your technique and decision-making to improve efficiency. Regular practice on simulation models can help develop muscle memory and enhance your speed."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "Your stitch time is a bit longer than the expert’s, but still falls within the yellow zone.",
+        "Recommendation": "Work on making your movements more efficient and decisive. Practicing on simulation materials can help you build muscle memory and improve your speed."
+      }
+    ],
+    "high": [
+      {
+        "name": "Slow",
+        "Observation": "Your stitch time is substantially longer than the expert performance, within the red zone.",
+        "Analysis": "The extended time suggests difficulty with the suturing technique, possibly due to unfamiliarity with the tools or uncertainty in the steps.",
+        "Recommendation": "Break down the suturing process into smaller steps and practice each one separately (e.g., grabbing the needle after the first penetration of the skin). Seek additional guidance from instructors and consider watching our Moodle tutorial videos to improve your technique and efficiency."
+      },
+      {
+        "name": "Slow",
+        "Observation": "Your stitch time is significantly longer than expert-level performance, placing it in the red zone.",
+        "Recommendation": "Try breaking the suturing process into smaller, manageable steps—for example, practicing how to re-grasp the needle after initial entry. Seek feedback from instructors and review the tutorial videos on Moodle to enhance your technique and improve overall efficiency."
+      },{
+        "name": "Slow",
+        "Observation": "Your stitch time is significantly longer than the expert’s, placing it in the red zone.",
+        "Recommendation": "Try breaking the suturing process into smaller steps and practicing each component individually—such as positioning the needle after the initial skin penetration. It may also help to seek feedback from instructors and review the tutorial videos on Moodle to refine your technique and improve efficiency."
+
+      }
+    ]
   },
   "Needle holder stitch length [m]": {
     "name": "Needle holder path length",
     "thresholds": [3.0, 4.0],
-    "low": {
-      "name": "Appropriate",
-      "Observation": "The needle holder path length is close to the expert-level performance, within the green zone.",
-      "Analysis": "The movement length demonstrates excellent control and efficiency, matching the precision and consistency of expert performance.",
-      "Recommendation": "Continue practicing to maintain this path length. Focus on replicating this movement length to ensure consistent performance."
-    },
-    "moderate": {
-      "name": "Moderate",
-      "Observation": "The needle holder movement path is slightly longer than the expert performance, within the yellow zone.",
-      "Analysis": "The movement length is acceptable but indicates minor inefficiencies or inconsistencies in technique, which could slightly impact overall performance.",
-      "Recommendation": "Practice refining your movements to align closer with the expert range. Pay attention to minimizing unnecessary motion and focus on smooth, controlled movements during suturing."
-    },
-    "high": {
-      "name": "Long",
-      "Observation": "The needle holder movement path is substantially longer than the expert performance, within the red zone.",
-      "Analysis": "The movement length suggests significant inefficiencies or excessive motion, which may result from improper technique or lack of familiarity with the tool.",
-      "Recommendation": "Review proper needle holder handling techniques and practice reducing unnecessary movements (e.g., pulling the needle too far away when taking it out). Seek feedback from instructors or use guided exercises to improve control and bring your movement length closer to the expert range."
-    }
+     "low": [
+      {
+        "name": "Appropriate",
+        "Observation": "The needle holder path length is close to the expert-level performance, within the green zone.",
+        "Recommendation": "Continue practicing to maintain this path length. Focus on replicating this movement length to ensure consistent performance."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "The distance your needle holder travels closely matches expert-level performance and falls within the green zone.",
+        "Recommendation": "Keep practicing to preserve this level of efficiency. Concentrate on consistently reproducing this movement range to maintain precision and control."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "The path length of your needle holder is very similar to expert-level performance and falls within the green zone.",
+        "Recommendation": "Keep practicing to maintain this level of control. Concentrate on repeating this movement length consistently to support reliable performance."
+      }
+    ],
+    "moderate": [
+      {
+        "name": "Moderate",
+        "Observation": "The needle holder movement path is slightly longer than the expert performance, within the yellow zone.",
+        "Recommendation": "Practice refining your movements to align closer with the expert range. Pay attention to minimizing unnecessary motion and focus on smooth, controlled movements during suturing."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "The path length of your needle holder movements is somewhat longer than expert-level performance, placing it in the yellow zone.",
+        "Recommendation": "Work on fine-tuning your technique to reduce excess motion. Aim for smooth, deliberate movements that stay within the optimal range to improve control and efficiency."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "Your needle holder path is a bit longer than the expert’s, placing it in the yellow zone.",
+        "Recommendation": "Work on fine-tuning your movements to more closely match the expert range. Try to reduce any excess motion and focus on making smooth, deliberate movements during suturing."
+      }
+    ],
+    "high": [
+      {
+        "name": "Long",
+        "Observation": "The needle holder movement path is substantially longer than the expert performance, within the red zone.",
+        "Recommendation": "Review proper needle holder handling techniques and practice reducing unnecessary movements (e.g., pulling the needle too far away when taking it out). Seek feedback from instructors or use guided exercises to improve control and bring your movement length closer to the expert range."
+      },
+      {
+        "name": "Long",
+        "Observation": "Your needle holder path length is significantly greater than expert-level performance, placing it in the red zone.",
+        "Recommendation": "Revisit correct needle handling techniques and focus on eliminating excessive motion—such as pulling the needle too far during extraction. Use guided practice and seek instructor feedback to enhance control and reduce movement distance toward the expert standard."
+      },
+      {
+        "name": "Long",
+        "Observation": "Your needle holder path is significantly longer than the expert’s, placing it in the red zone.",
+        "Recommendation": "Revisit correct needle holder handling techniques and focus on minimizing unnecessary movements—such as overextending when removing the needle. Consider using guided practice exercises and seeking instructor feedback to improve control and bring your movement length closer to the expert standard."
+      }
+    ]
   },
   "Needle holder stitch velocity above threshold": {
     "thresholds": [20, 30],
     "name": "Needle holder jerk index",
-    "low": {
-      "name": "Appropriate",
-      "Observation": "The count of the needle holder’s sudden movements is close to the expert level, within the green zone.",
-      "Analysis": "The student demonstrates excellent control over the needle holder, maintaining a consistent and efficient velocity throughout the stitch.",
-      "Recommendation": "Continue practicing to maintain this level of speed and control. Focus on replicating this velocity to ensure consistent performance."
-    },
-    "moderate": {
-      "name": "Moderate",
-      "Observation": "The count of the needle holder’s sudden movements is slightly higher than the expert performance, within the yellow zone.",
-      "Analysis": "The velocity is adequate but suggests minor inconsistencies in technique or control, which could impact the overall efficiency of the suturing process.",
-      "Recommendation": "Practice maintaining a more consistent velocity throughout the stitch. Pay attention to smooth, controlled movements and try to eliminate any hesitations or sudden accelerations during the suturing motion."
-    },
-    "high": {
-      "name": "To many",
-      "Observation": "The count of the needle holder’s sudden movement is much higher than the expert performance, within the red zone.",
-      "Analysis": "The velocity indicates either excessive speed, compromising accuracy and tissue handling, or insufficient speed, leading to inefficient suturing and increased tissue trauma.",
-      "Recommendation": "Focus on finding the right balance between speed and control. Practice with simulated materials to develop muscle memory for optimal velocity. Seek guidance from instructors on proper technique and how to adjust your movements to achieve a more consistent and appropriate stitch velocity."
-    }
+
+
+     "low": [
+      {
+        "name": "Appropriate",
+        "Observation": "The count of the needle holder’s sudden movements is close to the expert level, within the green zone.",
+        "Recommendation": "Continue practicing to maintain this level of speed and control. Focus on replicating this velocity to ensure consistent performance."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "The number of sudden or abrupt needle holder movements is similar to expert-level performance and falls within the green zone.",
+        "Recommendation": "Keep practicing to sustain this balance of speed and control. Aim to consistently reproduce this movement quality to maintain precision and efficiency."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "The number of sudden movements by your needle holder is close to expert level and falls within the green zone.",
+        "Recommendation": "Keep practicing to maintain this speed and control. Aim to consistently replicate this smooth velocity for reliable performance."
+      }
+    ],
+    "moderate": [
+      {
+        "name": "Moderate",
+        "Observation": "The count of the needle holder’s sudden movements is slightly higher than the expert performance, within the yellow zone.",
+        "Recommendation": "Practice maintaining a more consistent velocity throughout the stitch. Pay attention to smooth controlled movements and try to eliminate any hesitations or sudden accelerations during the suturing motion."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "The number of abrupt needle holder movements is slightly above expert-level performance, placing it in the yellow zone.",
+        "Recommendation": "Focus on sustaining a steady pace throughout each stitch. Work on smooth, controlled motions and aim to reduce any hesitations or sudden bursts of speed during suturing."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "The number of sudden needle holder movements is a bit higher than expert performance, falling within the yellow zone.",
+        "Recommendation": "Work on keeping a steady velocity throughout the stitch. Focus on smooth, controlled motions and try to avoid any hesitations or sudden speed changes during suturing."
+      }
+    ],
+    "high": [
+      {
+        "name": "Too Many",
+        "Observation": "The count of the needle holder’s sudden movements is much higher than the expert performance, within the red zone.",
+        "Recommendation": "Focus on finding the right balance between speed and control. Practice with simulated materials to develop muscle memory for optimal velocity. Seek guidance from instructors on proper technique and how to adjust your movements to achieve a more consistent and appropriate stitch velocity."
+      },
+      {
+        "name": "Too Many",
+        "Observation": "The frequency of sudden needle holder movements is significantly higher than expert-level performance, placing it in the red zone.",
+        "Recommendation": "Work on balancing speed with control. Use simulation practice to build muscle memory for smoother, more consistent movements. Consult instructors for feedback on technique and strategies to adjust your motion for a more controlled and appropriate stitching pace."
+      },
+      {
+        "name": "Too Many",
+        "Observation": "The number of sudden needle holder movements is much higher than expert performance, placing it in the red zone.",
+        "Recommendation": "Focus on balancing speed and control. Practice on simulated materials to build muscle memory for an optimal and steady velocity. Seek feedback from instructors on technique adjustments to help achieve a more consistent and appropriate stitch speed."
+      }
+    ]
   },
   "NeedleHolderHeatmap": {
-    "Appropriate": {
-      "Observation": "The movements of your needle holder are in the expected area in comparison to the expert group.",
-      "Recommendation": "Ensure that the needle holder remains close to the incision to maintain control and precision."
-    },
-    "Moderate": {
-      "Observation": "The movements of your needle holder are slightly off the expected area in comparison to the expert group.",
-      "Recommendation": "Avoid excessive movements outside of the suturing area."
-    },
-    "OutOfArea": {
-      "Observation": "The movements of your needle holder are too far outside the expected area in comparison to the expert group.",
-      "Recommendation": "Try to keep your movements close to the pig foot. Focus on keeping the needle holder close to the suturing area."
-    }
+    "name": "Needle holder heatmap",
+    "thresholds": [60, 80],
+    "low": [
+      {
+        "name": "Appropriate",
+        "Observation": "The movements of your needle holder are in the expected area in comparison to the expert group.",
+        "Recommendation": "Ensure that the needle holder remains close to the incision to maintain control and precision."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "Your needle holder movements are within the expected range when compared to the expert group.",
+        "Recommendation": "Continue to keep the needle holder close to the incision site to optimize control and accuracy during suturing."
+      },
+      {
+        "name": "Appropriate",
+        "Observation": "Your needle holder movements fall within the expected range compared to the expert group.",
+        "Recommendation": "Keep the needle holder close to the incision to maintain better control and precision."
+      }
+    ],
+    "moderate": [
+      {
+        "name": "Moderate",
+        "Observation": "The movements of your needle holder are slightly off the expected area in comparison to the expert group.",
+        "Recommendation": "Avoid excessive movements outside of the suturing area."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "Your needle holder movements deviate slightly from the expected range observed in the expert group.",
+        "Recommendation": "Focus on minimizing movements beyond the suturing field to maintain precision and reduce unnecessary motion."
+      },
+      {
+        "name": "Moderate",
+        "Observation": "Your needle holder movements are a bit outside the expected range compared to the expert group.",
+        "Recommendation": "Try to minimize unnecessary movements outside the suturing area."
+      }
+    ],
+    "high": [
+      {
+        "name": "Out of area",
+        "Observation": "The movements of your needle holder are too far outside the expected area in comparison to the expert group.",
+        "Recommendation": "Try to keep your movements close to the pig foot. Focus on keeping the needle holder close to the suturing area."
+      },
+      {
+        "name": "Out of area",
+        "Observation": "Your needle holder movements extend well beyond the typical range seen in the expert group.",
+        "Recommendation": "Aim to keep your instrument movements closer to the pig foot, concentrating on staying within the suturing area to enhance precision and control."
+      },
+      {
+        "name": "Out of area",
+        "Observation": "Your needle holder movements are significantly outside the expected area compared to the expert group.",
+        "Recommendation": "Work on keeping your movements closer to the pig foot. Focus on maintaining the needle holder near the suturing area for better precision."
+      }
+    ]
   }
 }

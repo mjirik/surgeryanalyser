@@ -2,7 +2,11 @@
 
 Actual version: "0.0.0"
 
-##/ 2025-01
+## 2025-06
+
+* [added] Several variants of suggestions for each level
+
+## 2025-01
 
 * [added] Expert heatmap
 * [added] Tabs for different stitches
