@@ -398,7 +398,9 @@ def compare_heatmaps_plot_one_contour(
         cmap="Greens",
         levels=3,
         percentil:float=0.8,
-        red_threshold:float=0.7
+        red_threshold:float=0.7,
+        bw_adjust1:float=2.0,
+
 ):
     """Create a heatmap comparing student points with expert points.
 
@@ -406,6 +408,7 @@ def compare_heatmaps_plot_one_contour(
 
     :param percentil: float: Percentil for the contour line. Default is 0.8 (80%). Also used for score color.
     :param red_threshold: float: Threshold for red color. Default is 0.7 (70%). Used for score color.
+    :param bw_adjust1: float: Bandwidth adjustment for the expert KDE. Default is 2.0.
     """
 
     outputdir = Path(outputdir)
@@ -1955,6 +1958,7 @@ class MainReport:
             logger.debug("adding operating area to the heatmap")
             oa_bbox = relative_presences[0].operating_area_bbox
 
+        logger.debug("Creating heatmaps...")
         create_heatmap_report_plt(
             data_pixel_cut[tool_id],
             # data_pixel[frame_idx_start:frame_idx_stop],
