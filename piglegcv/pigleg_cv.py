@@ -861,8 +861,8 @@ def do_computer_vision(
     meta=None,
     is_microsurgery: bool = False,
     n_stitches: Optional[int] = None,
+    force_tracker:bool = False,
     device=DEVICE,
-    force_tracker:bool = False
 ):
     logger.debug(f"{is_microsurgery=}")
     logger.debug(mem.get_vram(DEVICE))
@@ -872,8 +872,8 @@ def do_computer_vision(
         meta,
         is_microsurgery=is_microsurgery,
         n_stitches=n_stitches,
+        force_tracker=force_tracker,
         device=device,
-        force_tracker=force_tracker
     ).run()
 
 
