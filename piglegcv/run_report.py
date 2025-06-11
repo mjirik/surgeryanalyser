@@ -291,6 +291,7 @@ def mean_mahalanobis_to_distribution(pts, points_expert):
         return np.inf
 
 
+# remove
 def compare_heatmaps_plot(
         outputdir: Union[str,Path], points_px:Optional[np.array]=None, pix_size_m:Optional[float]=None, filename=None,
         image:Optional[np.array]=None,
@@ -390,6 +391,150 @@ def compare_heatmaps_plot(
         plt.close()
     return dist, score
 
+def compare_heatmaps_plot_one_contour(
+        outputdir: Union[str,Path], points_px:Optional[np.array]=None, pix_size_m:Optional[float]=None, filename=None,
+        image:Optional[np.array]=None,
+        tool_id=0,
+        cmap="Greens",
+        levels=3,
+        percentil:float=0.8,
+        red_threshold:float=0.7
+):
+    """Create a heatmap comparing student points with expert points.
+
+    Function is called during the report generation.
+
+    :param percentil: float: Percentil for the contour line. Default is 0.8 (80%). Also used for score color.
+    :param red_threshold: float: Threshold for red color. Default is 0.7 (70%). Used for score color.
+    """
+
+    outputdir = Path(outputdir)
+    if pix_size_m is None:
+        with open(outputdir / "meta.json", "r") as f:
+            meta = json.load(f)
+        pix_size_m = meta["qr_data"]["pix_size"]
+
+    if points_px is None:
+        with open(outputdir / "tracks_points.json", "r") as f:
+            tracks_points = json.load(f)
+        points_px = np.asarray(tracks_points["data_pixels"][tool_id])
+    else:
+        points_px = np.asarray(points_px)
+
+    logger.debug(f"{points_px.shape=}")
+    logger.debug(f"{pix_size_m=}")
+    if points_px.size < 8:
+        logger.warning("No points found for heatmap")
+        return None, None
+    if pix_size_m is None:
+        logger.warning("No pix_size_m found for heatmap")
+        return None, None
+    # points_m = points_px * pix_size_m
+
+    pts_gt = np.load(HEATMAP_EXPERT_POINTS_PATH)
+
+    plt.figure()
+
+    if image is None:
+        fn_small = list(outputdir.glob("__cropped.*.jpg"))[0]
+        image = skimage.io.imread(fn_small, as_gray=True)
+    else:
+        if image.ndim == 3:
+            image = skimage.color.rgb2gray(image)
+    plt.imshow(image, cmap='gray')
+    # alpha=0.5, markerfacecolor=(1,1,0,0.1)
+    # )
+    # save dimensions of the plot
+
+    points_normed = (points_px - np.median(points_px, axis=0)) * pix_size_m
+
+
+    # Výpočet KDE pro expertí data
+    pts_px = (pts_gt / pix_size_m) + np.median(points_px, axis=0)
+    points_expert = pts_px
+    points_actual = points_px
+    kde_expert = gaussian_kde(points_expert.T)
+
+
+    kde_expert.set_bandwidth(bw_method=kde_expert.factor * bw_adjust1)
+    # kde_other.set_bandwidth(bw_method=kde_other.factor * bw_adjust2)
+
+    # Mřížka pro KDE
+    x_min, y_min = points_expert.min(axis=0)
+    x_max, y_max = points_expert.max(axis=0)
+    X, Y = np.mgrid[x_min:x_max:100j, y_min:y_max:100j]
+    positions = np.vstack([X.ravel(), Y.ravel()])
+    Z = np.reshape(kde_expert(positions), X.shape)
+
+    # Najdi threshold pro 50% konturu
+    Z_flat = Z.flatten()
+    Z_sorted = np.sort(Z_flat)[::-1]
+    cum_probs = np.cumsum(Z_sorted)
+    cum_probs /= cum_probs[-1]
+    threshold_50 = Z_sorted[np.searchsorted(cum_probs, percentil)]
+
+    # Zjisti hustotu pro body points_actual
+    densities_actual = kde_expert(points_actual.T)
+
+    # Rozdělení podle toho, jestli jsou uvnitř nebo vně 50%
+    inside_mask = densities_actual >= threshold_50
+    outside_mask = ~inside_mask
+
+    score = np.sum(inside_mask) / len(inside_mask)
+
+
+    # plt.plot(points_px[:, 0], points_px[:, 1], ".", alpha=0.2, color="red", markersize=1)
+
+    # KDE kontura
+    cs = plt.contour(X, Y, Z, levels=[threshold_50], colors='orange', linewidths=2, label=f'Experts  {int(percentil * 100)}%')
+    from matplotlib.lines import Line2D
+    legend_proxy = [Line2D([0], [0], color='orange', lw=2, label=f'Experts {int(percentil * 100)}%')]
+    plt.legend(handles=legend_proxy)
+
+    # KDE heatmapa (volitelná, můžeš vypnout)
+    # plt.imshow(Z.T, origin='lower', extent=[x_min, x_max, y_min, y_max], aspect='auto', cmap='Greens', alpha=0.5)
+
+    # Body expertů (např. černé)
+    # plt.scatter(points_expert[:, 0], points_expert[:, 1], s=10, color='black', label='Expert')
+
+    # Body actual rozdělené dle hustoty
+    plt.scatter(points_actual[inside_mask, 0], points_actual[inside_mask, 1], s=1, color='green',
+                # label=f'Actual (inside {int(percentil * 100)}%)'
+                label="_no_legend_"
+                )
+    plt.scatter(points_actual[outside_mask, 0], points_actual[outside_mask, 1], s=1, color='red',
+                # label=f'Actual (outside {int(percentil * 100)}%)'
+                label="_no_legend_"
+                )
+    dist = score
+
+    score_100 = 100 * score
+    green_threshold_100 = percentil * 100
+    red_threshold_100 = red_threshold * 100
+    if score_100 < red_threshold_100:
+        students_cmap = "Reds"
+        text_color = "red"
+    elif score_100 < green_threshold_100:
+        text_color = "orange"
+        students_cmap = "Oranges"
+    else:
+        students_cmap = "Greens"
+        text_color = "green"
+
+    plt.text(0.02 * image.shape[1], 0.98 * image.shape[0], f"{score_100:.0f}%", fontsize=16, color=text_color,
+             bbox=dict(facecolor='white', alpha=0.9, edgecolor='none', boxstyle='round,pad=0.3')
+
+             )
+
+    plt.xlim(0, image.shape[1])
+    plt.ylim(image.shape[0], 0)
+    plt.legend(handles=legend_proxy)
+    # turn off axis
+    plt.axis("off")
+    if filename:
+        plt.savefig(filename, dpi=300, bbox_inches="tight", pad_inches=0)
+        plt.close()
+    return dist, score
 
 def create_heatmap_report_plt(
     points: np.ndarray,
@@ -1822,7 +1967,7 @@ class MainReport:
         )
 
         try:
-            l2_distance, heatmap_score = compare_heatmaps_plot(
+            l2_distance, heatmap_score = compare_heatmaps_plot_one_contour(
                 self.outputdir, points_px=data_pixel_cut[tool_id],
                 pix_size_m=self.pix_size_m,
                 filename=Path(self.outputdir) / f"fig_{tool_id}d_{simplename}_compare_heatmaps_{stitch_name}.jpg",
@@ -1836,10 +1981,10 @@ class MainReport:
             l2_distance = None
             heatmap_score = None
 
-        if l2_distance is not None and heatmap_score is not None:
-            data_results[f"{object_full_name_with_stitch} heatmap l2 distance [-]"] = l2_distance
+        if heatmap_score is not None:
             data_results[f"{object_full_name_with_stitch} heatmap score [%]"] = float(100.0 * heatmap_score)
-            data_results[f"{object_full_name_with_stitch} heatmap l2 distance [-]"] = float(100.0 * heatmap_score)
+        # if l2_distance is not None:
+        #     data_results[f"{object_full_name_with_stitch} heatmap l2 distance [-]"] = l2_distance
 
         return data_results
 

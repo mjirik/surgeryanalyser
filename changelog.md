@@ -6,6 +6,7 @@ Actual version: "0.0.0"
 
 * [added] Several variants of suggestions for each level
 * [added] Force tracking to measure the computation time in fair way
+* [added] Heatmap based on 80% percentile KDE
 
 ## 2025-01
 
