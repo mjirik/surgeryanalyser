@@ -52,6 +52,7 @@ def _run_media_processing_rest_api(
     n_stitches: int,
     hostname="127.0.0.1",
     port=5000,
+    force_tracking=False,
 ):
 
     # query = {"filename": "/webapps/piglegsurgery/tests/pigleg_test.mp4", "outputdir": "/webapps/piglegsurgery/tests/outputdir"}
@@ -62,6 +63,7 @@ def _run_media_processing_rest_api(
         "outputdir": str(outputdir),
         "is_microsurgery": is_microsurgery,
         "n_stitches": n_stitches,
+        "force_tracking": force_tracking,  # always force tracking
     }
     url = f"http://{hostname}:{port}/run"
     try:
@@ -98,8 +100,49 @@ def _run_media_processing_rest_api(
     else:
         logger.debug(f"REST API processing finished.")
 
+def make_it_run(
+        serverfile: UploadedFile,
+        absolute_uri: str, hostname: str, port: int,
+        send_email:bool=False,
+        force_tracking: bool=False,
+) -> UploadedFile:
+    kwargs = {}
+    if send_email:
+        # hook="uploader.tasks.email_report_from_task",
+        kwargs["hook"] = "uploader.tasks.email_report_from_task"
+    serverfile.started_at = django.utils.timezone.now()
+    serverfile.finished_at = None
+    serverfile.processing_ok = False
+    serverfile.processing_message = "Not finished yet."
+    serverfile.save()
+    logger.debug(f"hostname={hostname}, port={port}")
+    if serverfile.category and serverfile.category.name == "Other":
+        serverfile.finished_at = django.utils.timezone.now()
+        serverfile.processing_ok = True
+        serverfile.processing_message = "Other category: Processing skipped."
+        serverfile.save()
+        email_report(serverfile, absolute_uri)
 
-def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
+    else:
+        async_task(
+            "uploader.tasks.run_processing",
+            serverfile,
+            absolute_uri,
+            hostname,
+            int(port),
+            bool(force_tracking),
+            timeout=settings.PIGLEGCV_TIMEOUT,
+            **kwargs,
+            # hook="uploader.tasks.email_report_from_task",
+        )
+    return serverfile
+
+def run_processing(
+        serverfile: UploadedFile,
+        absolute_uri,
+        hostname,
+        port,
+        force_tracking:bool):
     outputdir = Path(serverfile.outputdir)
     logger.debug(f"outputdir={outputdir}")
 
@@ -161,6 +204,7 @@ def run_processing(serverfile: UploadedFile, absolute_uri, hostname, port):
         int(serverfile.stitch_count),
         hostname,
         port,
+        force_tracking=force_tracking,
     )
 
     # (outputdir / "empty.txt").touch(exist_ok=True)
@@ -939,37 +983,3 @@ def save_annotations_to_json(serverfile: UploadedFile):
             f.write(serialize("json", [annotation]))
 
 
-def make_it_run(
-        serverfile: UploadedFile,
-        absolute_uri: str, hostname: str, port: int,
-        send_email:bool=False
-) -> UploadedFile:
-    kwargs = {}
-    if send_email:
-        # hook="uploader.tasks.email_report_from_task",
-        kwargs["hook"] = "uploader.tasks.email_report_from_task"
-    serverfile.started_at = django.utils.timezone.now()
-    serverfile.finished_at = None
-    serverfile.processing_ok = False
-    serverfile.processing_message = "Not finished yet."
-    serverfile.save()
-    logger.debug(f"hostname={hostname}, port={port}")
-    if serverfile.category and serverfile.category.name == "Other":
-        serverfile.finished_at = django.utils.timezone.now()
-        serverfile.processing_ok = True
-        serverfile.processing_message = "Other category: Processing skipped."
-        serverfile.save()
-        email_report(serverfile, absolute_uri)
-
-    else:
-        async_task(
-            "uploader.tasks.run_processing",
-            serverfile,
-            absolute_uri,
-            hostname,
-            int(port),
-            timeout=settings.PIGLEGCV_TIMEOUT,
-            **kwargs,
-            # hook="uploader.tasks.email_report_from_task",
-        )
-    return serverfile

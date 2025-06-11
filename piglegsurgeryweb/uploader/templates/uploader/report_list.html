@@ -198,6 +198,10 @@
                                     >Run and send email</a>
                                 </li>
                                 <li><a class="dropdown-item"
+                                       href="{% url 'uploader:run_and_force_tracking' uploadedfile.hash %}?next={{ request.path|urlencode }}&next_anchor=row{{ uploadedfile.id }}"
+                                >Run and force tracking</a>
+                                </li>
+                                <li><a class="dropdown-item"
                                        href="{% url 'admin:uploader_uploadedfile_change' uploadedfile.id %}"
                                 >Edit in Admin</a>
                                 </li>

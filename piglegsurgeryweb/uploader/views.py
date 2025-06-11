@@ -821,15 +821,25 @@ def collection_update_spreadsheet(request, collection_id):
     )
     return redirect("uploader:collections")
 
+@staff_member_required(login_url="/admin/")
+def run_collection_force_tracking(request, collection_id):
+    """Run collection with force tracking."""
+    return run_collection(request, collection_id, force_tracking=True)
 
 @staff_member_required(login_url="/admin/")
-def run_collection(request, collection_id):
+def run_collection(request, collection_id, force_tracking:bool=False):
     collection = get_object_or_404(models.Collection, id=collection_id)
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
     collection_len = len(collection.uploaded_files.all())
     for uploaded_file in collection.uploaded_files.all():
-        _ = _run(request, uploaded_file.hash, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT))
+        _ = _run(
+            request,
+            uploaded_file.hash,
+            PIGLEGCV_HOSTNAME,
+            port=int(PIGLEGCV_PORT),
+            force_tracking=force_tracking,
+        )
     # next_url = None
 
     # if "next" in request.GET:
@@ -847,10 +857,14 @@ def run_collection(request, collection_id):
 def run_and_send_email(request, filename_hash:str):
     return run(request, filename_hash, send_email=True)
 
-def run(request, filename_hash:str, send_email:bool=False):
+def run_and_force_tracking(request, filename_hash:str):
+    return run(request, filename_hash, force_tracking=True)
+
+def run(request, filename_hash:str, send_email:bool=False, force_tracking:bool=False):
     PIGLEGCV_HOSTNAME = os.getenv("PIGLEGCV_HOSTNAME", default="127.0.0.1")
     PIGLEGCV_PORT = os.getenv("PIGLEGCV_PORT", default="5000")
-    serverfile = _run(request, filename_hash, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT), send_email=send_email)
+    serverfile = _run(request, filename_hash, PIGLEGCV_HOSTNAME, port=int(PIGLEGCV_PORT), send_email=send_email,
+                      force_tracking=bool(force_tracking))
     return _render_run(request, serverfile, )
 
 
@@ -860,11 +874,14 @@ def run(request, filename_hash:str, send_email:bool=False):
 #     return _run(request, filename_id, PIGLEGCV_HOSTNAME_DEVEL, port=int(PIGLEGCV_PORT_DEVEL))
 
 
-def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000, send_email=False):
+def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000,
+         send_email=False,
+         force_tracking=False
+         ):
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     absolute_uri = request.build_absolute_uri("/")
 
-    return make_it_run(serverfile, absolute_uri, hostname, port, send_email)
+    return make_it_run(serverfile, absolute_uri, hostname, port, send_email, force_tracking=force_tracking)
     # return redirect("/uploader/upload/")
 
 

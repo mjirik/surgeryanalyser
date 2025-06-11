@@ -299,6 +299,10 @@ def compare_heatmaps_plot(
         levels=3,
         show_students_heatmap:bool = False
 ):
+    """Create a heatmap comparing student points with expert points.
+
+    Function is called during the report generation.
+    """
 
     outputdir = Path(outputdir)
     if pix_size_m is None:

@@ -61,10 +61,11 @@ def index():
         outputdir = request.args.get("outputdir")
         n_stitches = int(request.args.get("n_stitches"))
         is_microsurgery = make_bool_from_string(request.args.get("is_microsurgery"))
-        force_tracking = make_bool_from_string(request.args.get("force_tracking", default=True))
+        force_tracking = make_bool_from_string(request.args.get("force_tracking", default=False))
 
         logger.debug(f"{n_stitches=}")
         logger.debug(f"{is_microsurgery=}, {type(is_microsurgery)=}")
+        logger.debug(f"{force_tracking=}")
 
         # if not url[:8].startswith(('https://', 'http://')):
         #     url = 'http://' + url

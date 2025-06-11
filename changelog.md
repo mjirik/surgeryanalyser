@@ -5,6 +5,7 @@ Actual version: "0.0.0"
 ## 2025-06
 
 * [added] Several variants of suggestions for each level
+* [added] Force tracking to measure the computation time in fair way
 
 ## 2025-01
 
