@@ -706,14 +706,17 @@ def draw_simplified_ideal_cumulative_trajectory(
     start_t_idx = 0
     for i in range(len(t)):
         if t[i] > start_t:
-            start_t_idx = i - 1
+            start_t_idx = i
             break
 
-    stop_t_idx = 0
-    for i in range(len(t)):
-        if t[i] > stop_t:
-            stop_t_idx = i - 1
-            break
+    # stop_t_idx = 0
+    # for i in range(len(t)):
+    #     if t[i] > stop_t:
+    #         stop_t_idx = i
+    #         break
+
+    logger.debug(f"{start_t=}, {start_t_idx=}, {ds_cumsum[start_t_idx]=}")
+    logger.debug(f"{stop_t=}, {len(t)=}")
 
     y_start = ds_cumsum[start_t_idx]
     y_stop = y_start + ideal_slope * (stop_t - start_t)
@@ -849,103 +852,12 @@ def create_pdf_report_for_one_tool(
                 Vcount += 1
             v_prev = v
 
-
-
-        fig = plt.figure()
-        fig.suptitle(
-            f"Space trajectory analysis of {object_name}",
-            fontsize=14,
-            fontweight="bold",
-        )
-        ax = fig.add_subplot()
-        fig.subplots_adjust(top=0.85)
-        ax.set_title("Plot on the scene image")
-
-        if isinstance(image, np.ndarray):
-            ax.imshow(image[:, :, ::-1])
-
-        # check unit
-        if qr_init:
-            unit = visualization_unit
-        else:
-            unit = "pix"
-
-        box_text = "Total in-plain track {:.2f} {} / {:.2f} sec".format(L, unit, T)
-        ax.text(
-            100,
-            150,
-            box_text,
-            style="italic",
-            bbox={"facecolor": "white", "alpha": 1.0, "pad": 10},
-        )
-
-        ax.plot(data_pixel[:, 0], data_pixel[:, 1], "+" + object_color, markersize=12)
-        x = data_pixel[0, 0]
-        y = data_pixel[0, 1]
-        ax.plot(x, y, "go")
-        ax.annotate(
-            "Start",
-            xy=(x, y),
-            xytext=(x + 100, y - 100),
-            arrowprops=dict(facecolor="white", shrink=0.001),
-            bbox={"facecolor": "white", "alpha": 1.0, "pad": 1},
-        )
-        x = data_pixel[-1, 0]
-        y = data_pixel[-1, 1]
-        ax.plot(x, y, "ro")
-        ax.annotate(
-            "Stop",
-            xy=(x, y),
-            xytext=(x + 100, y + 100),
-            arrowprops=dict(facecolor="white", shrink=0.001),
-            bbox={"facecolor": "white", "alpha": 1.0, "pad": 1},
-        )
-        ax.axis("off")
-        # ax.plot(x[-1], y[-1],'ro')
-        # plt.plot(t, dist,'-')
-
-        # plt.show()
-        plt.savefig(output_file_name, dpi=dpi)
-        logger.debug(f"main_report: figures {output_file_name} is saved")
+        unit = make_top_view_with_trajectory_start_and_end(L, T, data_pixel, dpi, image, object_color, object_name,
+                                                           output_file_name, qr_init, visualization_unit)
 
         ##################
         ## second graph
-        fig = plt.figure()
-        # fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
-        ax = fig.add_subplot()
-        fig.subplots_adjust(top=0.85)
-        ax.set_title(f"Trajectory of {object_name}")
-        ax.set_xlabel("Time [sec]")
-
-        if object_name == "Needle holder":
-            # x: second, y: cm
-            # draw_simplified_ideal_cumulative_trajectory(ax, )
-            # draw_ideal_trajetory(ax, (100, 700), color='green')
-            # draw_ideal_trajetory(ax, (100, 800), color='orange')
-            # draw_ideal_trajetory(ax, (100, 900), color='orange')
-            #ideal_trajectory
-            pass
-        # ax.set_ylabel('Data')
-        # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
-        # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
-
-        track_label = "Track [{}]".format(unit)
-        vel_label = "Velocity [{}/sec]".format(unit)
-
-        # ax.plot(t, np.cumsum(ds), "-" + object_color, label="Track", linewidth=3)
-        ax.plot(t, ds_cumsum, "." + object_color, label="Track", linewidth=3, markersize=3)
-        ax.set_ylabel(track_label)
-
-        ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
-        ax2.plot(t, ds_dt_filtered, ":" + object_color, label="Velocity", linewidth=0.5)
-        ax2.set_ylabel(vel_label)
-
-        fig.tight_layout()  # otherwise the right y-label is slightly clipped
-        ax2.legend(loc="upper left")
-
-        # plt.show()
-        plt.savefig(output_file_name2, dpi=dpi)
-        logger.debug(f"main_report: figures {output_file_name2} is saved")
+        make_trajectory_plot(dpi, ds_cumsum, ds_dt_filtered, object_color, object_name, output_file_name2, t, unit)
 
         if qr_init:
             L = unit_conversion(L, visualization_unit, "m")
@@ -957,6 +869,95 @@ def create_pdf_report_for_one_tool(
     else:
         logger.debug("main_report: No data to report")
         return []
+
+
+def make_trajectory_plot(dpi, ds_cumsum, ds_dt_filtered, object_color, object_name, output_file_name2, t, unit):
+    fig = plt.figure()
+    # fig.suptitle('Time analysis', fontsize=14, fontweight='bold')
+    ax = fig.add_subplot()
+    fig.subplots_adjust(top=0.85)
+    ax.set_title(f"Trajectory of {object_name}")
+    ax.set_xlabel("Time [sec]")
+    if object_name == "Needle holder":
+        # x: second, y: cm
+        # draw_simplified_ideal_cumulative_trajectory(ax, )
+        # draw_ideal_trajetory(ax, (100, 700), color='green')
+        # draw_ideal_trajetory(ax, (100, 800), color='orange')
+        # draw_ideal_trajetory(ax, (100, 900), color='orange')
+        # ideal_trajectory
+        pass
+    # ax.set_ylabel('Data')
+    # ax.plot(t, data[:, 1], "-+r", label="X coordinate [mm]"  )
+    # ax.plot(t, data[:, 0], "-+b", label="Y coordinate [m]"  )
+    track_label = "Track [{}]".format(unit)
+    vel_label = "Velocity [{}/sec]".format(unit)
+    # ax.plot(t, np.cumsum(ds), "-" + object_color, label="Track", linewidth=3)
+    ax.plot(t, ds_cumsum, "." + object_color, label="Track", linewidth=3, markersize=3)
+    ax.set_ylabel(track_label)
+    ax2 = ax.twinx()  # instantiate a second axes that shares the same x-axis
+    ax2.plot(t, ds_dt_filtered, ":" + object_color, label="Velocity", linewidth=0.5)
+    ax2.set_ylabel(vel_label)
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    ax2.legend(loc="upper left")
+    # plt.show()
+    plt.savefig(output_file_name2, dpi=dpi)
+    logger.debug(f"main_report: figures {output_file_name2} is saved")
+
+
+def make_top_view_with_trajectory_start_and_end(L, T, data_pixel, dpi, image, object_color, object_name,
+                                                output_file_name, qr_init, visualization_unit):
+    fig = plt.figure()
+    fig.suptitle(
+        f"Space trajectory analysis of {object_name}",
+        fontsize=14,
+        fontweight="bold",
+    )
+    ax = fig.add_subplot()
+    fig.subplots_adjust(top=0.85)
+    ax.set_title("Plot on the scene image")
+    if isinstance(image, np.ndarray):
+        ax.imshow(image[:, :, ::-1])
+    # check unit
+    if qr_init:
+        unit = visualization_unit
+    else:
+        unit = "pix"
+    box_text = "Total in-plain track {:.2f} {} / {:.2f} sec".format(L, unit, T)
+    ax.text(
+        100,
+        150,
+        box_text,
+        style="italic",
+        bbox={"facecolor": "white", "alpha": 1.0, "pad": 10},
+    )
+    ax.plot(data_pixel[:, 0], data_pixel[:, 1], "+" + object_color, markersize=12)
+    x = data_pixel[0, 0]
+    y = data_pixel[0, 1]
+    ax.plot(x, y, "go")
+    ax.annotate(
+        "Start",
+        xy=(x, y),
+        xytext=(x + 100, y - 100),
+        arrowprops=dict(facecolor="white", shrink=0.001),
+        bbox={"facecolor": "white", "alpha": 1.0, "pad": 1},
+    )
+    x = data_pixel[-1, 0]
+    y = data_pixel[-1, 1]
+    ax.plot(x, y, "ro")
+    ax.annotate(
+        "Stop",
+        xy=(x, y),
+        xytext=(x + 100, y + 100),
+        arrowprops=dict(facecolor="white", shrink=0.001),
+        bbox={"facecolor": "white", "alpha": 1.0, "pad": 1},
+    )
+    ax.axis("off")
+    # ax.plot(x[-1], y[-1],'ro')
+    # plt.plot(t, dist,'-')
+    # plt.show()
+    plt.savefig(output_file_name, dpi=dpi)
+    logger.debug(f"main_report: figures {output_file_name} is saved")
+    return unit
 
 
 #####################################
