@@ -725,48 +725,48 @@ def draw_simplified_ideal_cumulative_trajectory(
     ax.plot([start_t, stop_t], [y_start, y_stop], "-b", linewidth=10, alpha=0.2)
 
 
-def draw_ideal_trajetory(ax, point, color='red'):
-    # Get the current axis limits
-    x_min, x_max = ax.get_xlim()
-    y_min, y_max = ax.get_ylim()
-    logger.debug(f"{x_min=}, {x_max=}, {y_min=}, {y_max=}")
-
-    # Calculate the slope of the line
-    slope = point[1] / point[0]
-
-    # Calculate the intercepts with the bounding box
-    # Using the line equation y = slope * x
-    x_line = []
-    y_line = []
-
-    # Check where the line intersects the x and y axis bounds
-    if y_min <= slope * x_min <= y_max:  # Intersects left edge
-        x_line.append(x_min)
-        y_line.append(slope * x_min)
-
-    if y_min <= slope * x_max <= y_max:  # Intersects right edge
-        x_line.append(x_max)
-        y_line.append(slope * x_max)
-
-    if x_min <= y_min / slope <= x_max:  # Intersects bottom edge
-        x_line.append(y_min / slope)
-        y_line.append(y_min)
-
-    if x_min <= y_max / slope <= x_max:  # Intersects top edge
-        x_line.append(y_max / slope)
-        y_line.append(y_max)
-
-    # Plot the line
-    ax.plot(x_line, y_line, color=color,
-            # linestyle="--", alpha=0.5,
-            # label='Line through point'
-            )
-
-    # Restore the original axis limits
-    # ax.set_xlim(x_min, x_max)
-    # ax.set_ylim(y_min, y_max)
-
-    return ax
+# def draw_ideal_trajetory(ax, point, color='red'):
+#     # Get the current axis limits
+#     x_min, x_max = ax.get_xlim()
+#     y_min, y_max = ax.get_ylim()
+#     logger.debug(f"{x_min=}, {x_max=}, {y_min=}, {y_max=}")
+#
+#     # Calculate the slope of the line
+#     slope = point[1] / point[0]
+#
+#     # Calculate the intercepts with the bounding box
+#     # Using the line equation y = slope * x
+#     x_line = []
+#     y_line = []
+#
+#     # Check where the line intersects the x and y axis bounds
+#     if y_min <= slope * x_min <= y_max:  # Intersects left edge
+#         x_line.append(x_min)
+#         y_line.append(slope * x_min)
+#
+#     if y_min <= slope * x_max <= y_max:  # Intersects right edge
+#         x_line.append(x_max)
+#         y_line.append(slope * x_max)
+#
+#     if x_min <= y_min / slope <= x_max:  # Intersects bottom edge
+#         x_line.append(y_min / slope)
+#         y_line.append(y_min)
+#
+#     if x_min <= y_max / slope <= x_max:  # Intersects top edge
+#         x_line.append(y_max / slope)
+#         y_line.append(y_max)
+#
+#     # Plot the line
+#     ax.plot(x_line, y_line, color=color,
+#             # linestyle="--", alpha=0.5,
+#             # label='Line through point'
+#             )
+#
+#     # Restore the original axis limits
+#     # ax.set_xlim(x_min, x_max)
+#     # ax.set_ylim(y_min, y_max)
+#
+#     return ax
 
 
 # ds_threshold [m]
