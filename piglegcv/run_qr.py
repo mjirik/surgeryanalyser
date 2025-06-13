@@ -33,6 +33,10 @@ def get_sid_model(device):
         )
         logger.debug(f"single_model_path={single_model_path}")
         logger.debug(f"{device=}")
+        logger.debug(f"{torch.cuda.is_available()=}")
+        logger.debug(f"{torch.cuda.device_count()=}")
+        logger.debug(f"{torch.cuda.current_device()=}")
+        logger.debug(f"{torch.cuda.get_device_name(0)=}")
         _model = torch.load(single_model_path, map_location=torch.device(device))
         single_image_model = _model["model"]
         single_image_model.cfg = _model["my_params"]
