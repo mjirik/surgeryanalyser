@@ -14,6 +14,7 @@ from loguru import logger
 from mmdet.apis import inference_detector
 from qreader import QReader
 from tools import load_json, save_json
+import mem
 
 
 SID_MODEL = None
@@ -37,7 +38,8 @@ def get_sid_model(device):
         logger.debug(f"{torch.cuda.device_count()=}")
         logger.debug(f"{torch.cuda.current_device()=}")
         logger.debug(f"{torch.cuda.get_device_name(0)=}")
-        _model = torch.load(single_model_path, map_location=torch.device(device))
+        _model = mem.load_model_torch(single_model_path, device=torch.device(device))
+        # _model = torch.load(single_model_path, map_location=torch.device(device))
         single_image_model = _model["model"]
         single_image_model.cfg = _model["my_params"]
         SID_MODEL = single_image_model

@@ -2,6 +2,7 @@ import logging
 import time
 import traceback
 from typing import Optional, Union
+from pathlib import Path
 
 import psutil
 import torch
@@ -10,7 +11,42 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def get_torch_cuda_device_if_available(device: Union[None, int, str, torch.device] = 0) -> torch.device:
+LOADED_MODELS = {
+}
+
+
+def load_model_torch(model_path: Union[str, Path], required_memory_gb: float = 1.0, device: Union[int, str, torch.device] = 0) -> torch.nn.Module:
+    """Load a PyTorch model from a file."""
+    global LOADED_MODELS
+    device = get_torch_cuda_device_if_available(device)
+    key = str(model_path) + "_" + str(device)
+    if key in LOADED_MODELS:
+        logger.debug(f"Model {model_path} already loaded on device {device}.")
+        print(f"Model {model_path} already loaded on device {device}.")
+        return LOADED_MODELS[key]
+
+    wait_for_gpu_memory(required_memory_gb, device=device)
+
+    model = torch.load(model_path, map_location=device)
+
+    LOADED_MODELS[key] = model
+    return model
+
+def release_model_torch(model_path: Union[str, Path], device: Union[int, str, torch.device] = 0) -> dict:
+    """Delete a loaded PyTorch model."""
+    global LOADED_MODELS
+    key = str(model_path) + "_" + str(device)
+
+    if model_path in LOADED_MODELS:
+        del LOADED_MODELS[key]
+        empty_cache_and_syncronize(device= device)
+        logger.debug(f"Deleted model {model_path} from memory.")
+    else:
+        logger.warning(f"Model {model_path} not found in loaded models.")
+    return LOADED_MODELS
+
+
+def get_torch_cuda_device_if_available(device: Union[None, int, str, torch.device] = 0, allow_cpu=True) -> torch.device:
     """Set and return a valid torch device."""
     logger.debug(f"requested device: {device}")
     print(f"requested device: {device}")
@@ -36,13 +72,35 @@ def get_torch_cuda_device_if_available(device: Union[None, int, str, torch.devic
         device = 0
 
     # Handle torch device assignment
-    if torch.cuda.is_available():
-        new_device = torch.device(device)
-    else:
-        new_device = torch.device("cpu")
+    new_device = wait_for_gpu_device(device, max_wait_time_s=1800, allow_cpu=allow_cpu)
     logger.debug(f"new_device: {new_device}")
     print(f"new_device: {new_device}")
     return new_device
+
+
+def wait_for_gpu_device(device: torch.device, max_wait_time_s: int = 3600, allow_cpu: bool = True):
+    """Wait until a GPU device is available."""
+    start_time = time.time()
+    while True:
+        if torch.cuda.is_available() and torch.cuda.device_count() > 0:
+            return device
+        else:
+            logger.debug("Waiting for GPU device to become available.")
+            print("Waiting for GPU device to become available.")
+
+        if time.time() - start_time > max_wait_time_s:
+            logger.debug(f"Timeout ({max_wait_time_s} [s]) waiting for GPU device {device}.")
+            print(f"Timeout waiting for GPU device {device}.")
+            if allow_cpu:
+                logger.debug("Falling back to CPU.")
+                print("Falling back to CPU.")
+                return torch.device("cpu")
+            else:
+                logger.error(f"GPU device {device} not available after {max_wait_time_s} seconds.")
+                print(f"GPU device {device} not available after {max_wait_time_s} seconds.")
+                return None
+        time.sleep(5)
+
 
 
 def get_ram():
@@ -84,7 +142,7 @@ def get_vram(device: Optional[torch.device] = None) -> str:
         return "No GPU available"
 
 
-def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str] = 0, max_wait_time_s: int = 3600):
+def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str, torch.device] = 0, max_wait_time_s: int = 3600):
     """Wait until GPU memory is below threshold."""
     device = get_torch_cuda_device_if_available(device)
 
