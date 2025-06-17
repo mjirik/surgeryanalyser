@@ -7,8 +7,9 @@ from pathlib import Path
 import psutil
 import torch
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
+from loguru import logger
 
 
 LOADED_MODELS = {
@@ -144,7 +145,9 @@ def get_vram(device: Optional[torch.device] = None) -> str:
 
 def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str, torch.device] = 0, max_wait_time_s: int = 3600):
     """Wait until GPU memory is below threshold."""
+    logger.debug(f"Waiting for {required_memory_gb} GB of GPU memory on device {device}.")
     device = get_torch_cuda_device_if_available(device)
+    logger.debug(f"device: {device}")
 
     # check if device is cpu
     if device.type == "cpu":
