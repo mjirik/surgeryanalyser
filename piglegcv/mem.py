@@ -21,6 +21,7 @@ def load_model_torch(model_path: Union[str, Path], required_memory_gb: float = 1
     global LOADED_MODELS
     device = get_torch_cuda_device_if_available(device)
     key = str(model_path) + "_" + str(device)
+    logger.debug("Loading model from {}".format(key))
     if key in LOADED_MODELS:
         logger.debug(f"Model {model_path} already loaded on device {device}.")
         print(f"Model {model_path} already loaded on device {device}.")
@@ -146,6 +147,7 @@ def get_vram(device: Optional[torch.device] = None) -> str:
 def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str, torch.device] = 0, max_wait_time_s: int = 3600):
     """Wait until GPU memory is below threshold."""
     logger.debug(f"Waiting for {required_memory_gb} GB of GPU memory on device {device}.")
+    print(f"Waiting for {required_memory_gb} GB of GPU memory on device {device}.")
     device = get_torch_cuda_device_if_available(device)
     logger.debug(f"device: {device}")
 
