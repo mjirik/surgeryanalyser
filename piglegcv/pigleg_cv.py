@@ -165,8 +165,11 @@ class DoComputerVision:
         logger.debug(mem.get_vram(device))
         mem.empty_cache_and_syncronize()
         logger.debug(mem.get_vram(device))
-        logger.debug("Waiting for GPU memory to be available...")
+        logger.debug("Waiting for GPU device...")
+        mem.wait_for_gpu_device(device=device, max_wait_time_s=600)
+        logger.debug("Waiting for GPU memory...")
         mem.wait_for_gpu_memory(2.0, device=device, max_wait_time_s=600)
+
         logger.debug("GPU memory is available.")
 
         try:
