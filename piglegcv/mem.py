@@ -40,7 +40,7 @@ def release_model_torch(model_path: Union[str, Path], device: Union[int, str, to
 
     if model_path in LOADED_MODELS:
         del LOADED_MODELS[key]
-        empty_cache_and_syncronize(device= device)
+        empty_cache_and_syncronize()
         logger.debug(f"Deleted model {model_path} from memory.")
     else:
         logger.warning(f"Model {model_path} not found in loaded models.")
@@ -182,12 +182,15 @@ def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str,
             break
         time.sleep(5)
 
-def empty_cache_and_syncronize(device: Union[int, str] = 0):
+def empty_cache_and_syncronize(
+        # device: Optional[Union[int, str, torch.device]] = None
+):
     """Empty GPU cache and synchronize."""
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
-    device = get_torch_cuda_device_if_available(device)
-    logger.debug(f"device={device}")
-    # just print where from is the function called
-    if device.type == "cpu":
-        return
+    # if device is None:
+    # device = get_torch_cuda_device_if_available(device)
+    # logger.debug(f"device={device}")
+    # # just print where from is the function called
+    # if device.type == "cpu":
+    #     return

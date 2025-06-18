@@ -160,13 +160,13 @@ class DoComputerVision:
             f"CV processing started on {self.filename}, outputdir={self.outputdir}"
         )
         logger.debug(f"{self.is_microsurgery=}")
-        logger.debug(f"{self.is_microsurgery}, {type(self.is_microsurgery)}")
-        logger.debug(type(self.is_microsurgery))
-        logger.debug(self.is_microsurgery)
-        logger.debug(mem.get_vram(DEVICE))
+        logger.debug(f"{self.is_microsurgery=}, {type(self.is_microsurgery)=}")
+        device = mem.get_torch_cuda_device_if_available(self.device)
+        logger.debug(mem.get_vram(device))
         mem.empty_cache_and_syncronize()
-        logger.debug(mem.get_vram(DEVICE))
-        mem.wait_for_gpu_memory(2.0, device=DEVICE, max_wait_time_s=600)
+        logger.debug(mem.get_vram(device))
+        logger.debug("Waiting for GPU memory to be available...")
+        mem.wait_for_gpu_memory(2.0, device=device, max_wait_time_s=600)
         logger.debug("GPU memory is available.")
 
         try:
