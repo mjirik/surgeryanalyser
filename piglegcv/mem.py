@@ -12,8 +12,7 @@ import torch
 from loguru import logger
 
 
-LOADED_MODELS = {
-}
+LOADED_MODELS = {}
 
 
 def load_model_torch(model_path: Union[str, Path], required_memory_gb: float = 1.0, device: Union[int, str, torch.device] = 0) -> torch.nn.Module:
@@ -21,7 +20,7 @@ def load_model_torch(model_path: Union[str, Path], required_memory_gb: float = 1
     global LOADED_MODELS
     device = get_torch_cuda_device_if_available(device)
     key = str(model_path) + "_" + str(device)
-    logger.debug("Loading model from {}".format(key))
+    logger.debug("Loading model {}".format(key))
     if key in LOADED_MODELS:
         logger.debug(f"Model {model_path} already loaded on device {device}.")
         print(f"Model {model_path} already loaded on device {device}.")
@@ -84,6 +83,8 @@ def wait_for_gpu_device(device: torch.device, max_wait_time_s: int = 3600, allow
     """Wait until a GPU device is available."""
     start_time = time.time()
     while True:
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
         if torch.cuda.is_available() and torch.cuda.device_count() > 0:
             return device
         else:
@@ -177,8 +178,9 @@ def wait_for_gpu_memory(required_memory_gb: float = 1.0, device: Union[int, str,
 
 def empty_cache_and_syncronize(device: Union[int, str] = 0):
     """Empty GPU cache and synchronize."""
-    device = get_torch_cuda_device_if_available(device)
-    if device.type == "cpu":
-        return
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
+    device = get_torch_cuda_device_if_available(device)
+    logger.debug(f"device={device}")
+    if device.type == "cpu":
+        return
