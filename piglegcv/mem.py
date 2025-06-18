@@ -59,21 +59,27 @@ def get_torch_cuda_device_if_available(device: Union[None, int, str, torch.devic
                 device = 0  # Default to cuda:0 if no index is provided
             else:
                 device = int(device.split(":")[-1])  # Extract index
+            device = torch.device(device)
         elif device == "cpu":
             return torch.device("cpu")
         else:
             logger.warning(f"Unknown device string: {device}. Falling back to CUDA or CPU.")
-            device = 0  # Default fallback
+            # device = 0  # Default fallback
+            device = torch.device(0)
     elif isinstance(device, int):
         pass
     elif isinstance(device, torch.device):
-        return device
+        if device.type == "cpu":
+            return device
+        else:
+            pass
     else:
         logger.warning(f"Unknown device string: {device}. Falling back to CUDA or CPU.")
-        device = 0
+        device = torch.device(0)
 
     # Handle torch device assignment
-    new_device = wait_for_gpu_device(device, max_wait_time_s=1800, allow_cpu=allow_cpu)
+    # new_device = wait_for_gpu_device(device, max_wait_time_s=1800, allow_cpu=allow_cpu)
+    new_device = device
     logger.debug(f"new_device: {new_device}")
     print(f"new_device: {new_device}")
     return new_device
