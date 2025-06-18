@@ -188,5 +188,6 @@ def empty_cache_and_syncronize(device: Union[int, str] = 0):
     torch.cuda.synchronize()
     device = get_torch_cuda_device_if_available(device)
     logger.debug(f"device={device}")
+    # just print where from is the function called
     if device.type == "cpu":
         return

@@ -167,6 +167,7 @@ class DoComputerVision:
         mem.empty_cache_and_syncronize()
         logger.debug(mem.get_vram(DEVICE))
         mem.wait_for_gpu_memory(2.0, device=DEVICE, max_wait_time_s=600)
+        logger.debug("GPU memory is available.")
 
         try:
             if Path(self.filename).suffix.lower() in (
@@ -867,7 +868,7 @@ def do_computer_vision(
 ):
     logger.debug(f"{is_microsurgery=}")
     logger.debug(mem.get_vram(DEVICE))
-    return DoComputerVision(
+    docv = DoComputerVision(
         filename,
         outputdir,
         meta,
@@ -875,7 +876,10 @@ def do_computer_vision(
         n_stitches=n_stitches,
         force_tracking=force_tracking,
         device=device,
-    ).run()
+    )
+    logger.debug("Created DoComputerVision object")
+    return docv.run()
+
 
 
 def add_dim_with_cumulative_number_of_empty_frames(X_px_fr: np.ndarray, empty_frames_axis:int=3) -> np.ndarray:
