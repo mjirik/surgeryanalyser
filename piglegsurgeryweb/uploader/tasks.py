@@ -580,6 +580,8 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     pop_from_dict(new_data_row, "qr_data_box")
 
     try:
+        # remove NaN values from new_data_row, probably this will affect the spreadsheet serialization
+        new_data_row = clean_data_for_json(new_data_row)
         serverfile.data_row = new_data_row
         serverfile.save()
         # novy = remove_iterables_from_dict(novy)
@@ -599,6 +601,17 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
         raise e
 
 
+
+def clean_data_for_json(obj):
+    """Remove NaN values and clean data for JSON serialization."""
+    if isinstance(obj, float) and math.isnan(obj):
+        return None
+    elif isinstance(obj, dict):
+        return {k: clean_data_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [clean_data_for_json(v) for v in obj]
+    else:
+        return obj
 
 
 def pop_from_dict(d, key):
