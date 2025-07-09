@@ -221,10 +221,11 @@ def run_processing(
     #     if output_video_file.exists():
     #         output_video_file.unlink()
     #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
+    logger.debug("Adding generated images to the database...")
     add_generated_images(serverfile)
+    logger.debug("Making zip file...")
     make_zip(serverfile)
 
-    add_status_to_uploaded_file(serverfile)
 
     # _add_row_to_spreadsheet(serverfile, absolute_uri)
     _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
@@ -233,8 +234,8 @@ def run_processing(
     _make_graphs(serverfile)
     set_overall_score(serverfile)
 
-    serverfile.finished_at = django.utils.timezone.now()
-    serverfile.save()
+    logger.debug("Updating status...")
+    add_status_to_uploaded_file(serverfile)
 
     logger.debug("Processing finished in API")
     logger.remove(logger_id)
@@ -453,6 +454,8 @@ def add_status_to_uploaded_file(serverfile:UploadedFile):
                 status = f"Last log message: {last_line}"
     serverfile.processing_ok = is_ok
     serverfile.processing_message = status
+    serverfile.finished_at = django.utils.timezone.now()
+    serverfile.save()
     serverfile.save()
 
 def _add_rows_to_spreadsheet_for_each_annotation(serverfile: UploadedFile, absolute_uri):
