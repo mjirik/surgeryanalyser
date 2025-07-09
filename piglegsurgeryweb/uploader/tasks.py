@@ -100,7 +100,7 @@ def _run_media_processing_rest_api(
     else:
         logger.debug(f"REST API processing finished.")
 
-def make_it_run(
+def make_it_run_with_async_task(
         serverfile: UploadedFile,
         absolute_uri: str, hostname: str, port: int,
         send_email:bool=False,
@@ -206,6 +206,7 @@ def run_processing(
         port,
         force_tracking=force_tracking,
     )
+    logger.debug("Adding records to the database...")
 
     # (outputdir / "empty.txt").touch(exist_ok=True)
 
@@ -225,15 +226,17 @@ def run_processing(
 
     add_status_to_uploaded_file(serverfile)
 
-    serverfile.finished_at = django.utils.timezone.now()
-    serverfile.save()
     # _add_row_to_spreadsheet(serverfile, absolute_uri)
     _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
 
+    logger.debug("Making graphs...")
     _make_graphs(serverfile)
     set_overall_score(serverfile)
 
-    logger.debug("Processing finished")
+    serverfile.finished_at = django.utils.timezone.now()
+    serverfile.save()
+
+    logger.debug("Processing finished in API")
     logger.remove(logger_id)
 
 def get_graph_path_for_report(serverfile: UploadedFile, stitch_id: Optional[int] = None):
@@ -963,7 +966,7 @@ def call_async_run_processing(serverfile, absolute_uri):
     make_preview(serverfile)
     update_owner(serverfile)
 
-    make_it_run(
+    make_it_run_with_async_task(
         serverfile, absolute_uri, PIGLEGCV_HOSTNAME, int(PIGLEGCV_PORT),
         send_email=True)
 

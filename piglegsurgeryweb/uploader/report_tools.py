@@ -275,6 +275,7 @@ def set_overall_score(serverfile) -> float:
     :param serverfile: UploadedFile object
     :return: overall score
     """
+    logger.debug(f"Setting overall score.")
     loaded_results = load_results(serverfile)
     per_stitch_report = load_per_stitch_data(loaded_results, serverfile)
 
@@ -282,7 +283,9 @@ def set_overall_score(serverfile) -> float:
 
     for record in per_stitch_report:
         if "ai_movement_evaluation" in record and record["ai_movement_evaluation"] is not None:
-            scores.append(record["ai_movement_evaluation"])
+            score = record["ai_movement_evaluation"]
+            scores.append(score)
+            logger.debug(f"   adding score: {score}")
 
 
     scores = np.array(scores)

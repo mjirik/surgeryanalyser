@@ -25,7 +25,7 @@ from loguru import logger
 
 from .forms import AnnotationForm, UploadedFileForm
 from .models import Owner
-from .tasks import get_graph_path_for_owner, call_async_run_processing, make_it_run
+from .tasks import get_graph_path_for_owner, call_async_run_processing, make_it_run_with_async_task
 from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Count, Q
@@ -881,7 +881,7 @@ def _run(request, filename_hash:str, hostname="127.0.0.1", port=5000,
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
     absolute_uri = request.build_absolute_uri("/")
 
-    return make_it_run(serverfile, absolute_uri, hostname, port, send_email, force_tracking=force_tracking)
+    return make_it_run_with_async_task(serverfile, absolute_uri, hostname, port, send_email, force_tracking=force_tracking)
     # return redirect("/uploader/upload/")
 
 
