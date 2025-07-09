@@ -487,22 +487,22 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     ]
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
 
-    novy = {}
+    new_data_row = {}
 
     filename = Path(serverfile.outputdir) / "meta.json"
     if os.path.isfile(filename):
         with open(filename, "r") as fr:
             data = json.load(fr)
-            novy.update(data)
+            new_data_row.update(data)
 
     # filename = Path(serverfile.outputdir) / "evaluation.json"
     filename = Path(serverfile.outputdir) / "results.json"
     if os.path.isfile(filename):
         with open(filename, "r") as fr:
             data = json.load(fr)
-            novy.update(data)
+            new_data_row.update(data)
 
-    novy.update(
+    new_data_row.update(
         {
             "email": serverfile.email,
             "filename_full": str(Path(serverfile.mediafile.name)),
@@ -557,7 +557,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
 
         ann["i"] = ith_annotation
 
-        novy.update(
+        new_data_row.update(
             {
                 "annotation":{
                     'annotation': ann,
@@ -574,23 +574,29 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
             }
         )
 
-    pop_from_dict(novy, "incision_bboxes")
-    pop_from_dict(novy, "filename_full")
-    novy = remove_empty_lists(flatten_dict(novy))
-    pop_from_dict(novy, "qr_data_box")
+    pop_from_dict(new_data_row, "incision_bboxes")
+    pop_from_dict(new_data_row, "filename_full")
+    new_data_row = remove_empty_lists(flatten_dict(new_data_row))
+    pop_from_dict(new_data_row, "qr_data_box")
 
-    serverfile.data_row = novy
-    serverfile.save()
-    # novy = remove_iterables_from_dict(novy)
-    # logger.debug(f"novy={novy}")
-    df_novy = pd.DataFrame(novy, index=[0])
-    # save to xlsx to media dir
-    xlsx_spreadsheet_path = django.conf.settings.XLSX_SPREADSHEET_PATH
-    xlsx_spreadsheet_append(df_novy, xlsx_spreadsheet_path)
-    # xlsx_spjson_path = Path(serverfile.outputdir) / "report.xlsx"
-    # save to local xlsx file
-    xlsx_spreadsheet_append(df_novy, Path(serverfile.outputdir) / "report.xlsx")
-    google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
+    try:
+        serverfile.data_row = new_data_row
+        serverfile.save()
+        # novy = remove_iterables_from_dict(novy)
+        # logger.debug(f"novy={novy}")
+        df_novy = pd.DataFrame(new_data_row, index=[0])
+        # save to xlsx to media dir
+        xlsx_spreadsheet_path = django.conf.settings.XLSX_SPREADSHEET_PATH
+        xlsx_spreadsheet_append(df_novy, xlsx_spreadsheet_path)
+        # xlsx_spjson_path = Path(serverfile.outputdir) / "report.xlsx"
+        # save to local xlsx file
+        xlsx_spreadsheet_append(df_novy, Path(serverfile.outputdir) / "report.xlsx")
+        google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
+    except Exception as e:
+        logger.error(f"Error saving data_row to serverfile: {e}")
+        logger.error(traceback.format_exc())
+        logger.debug(f"new_data_row={new_data_row}")
+        raise e
 
 
 
