@@ -110,6 +110,7 @@ def make_it_run_with_async_task(
     if send_email:
         # hook="uploader.tasks.email_report_from_task",
         kwargs["hook"] = "uploader.tasks.email_report_from_task"
+        logger.debug(f"Sending email to {absolute_uri} added to planned task.")
     serverfile.started_at = django.utils.timezone.now()
     serverfile.finished_at = None
     serverfile.processing_ok = False
@@ -189,53 +190,59 @@ def run_processing(
         diagnose=True,
     )
     logger.debug(f"Image processing of '{serverfile.mediafile}' initiated")
-    make_preview(serverfile)
-    if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
-        serverfile.zip_file.delete()
-    input_file = Path(serverfile.mediafile.path)
-    logger.debug(f"input_file={input_file}")
-    outputdir = Path(serverfile.outputdir)
-    logger.debug(f"outputdir={outputdir}")
+    try:
+        make_preview(serverfile)
+        if serverfile.zip_file and Path(serverfile.zip_file.path).exists():
+            serverfile.zip_file.delete()
+        input_file = Path(serverfile.mediafile.path)
+        logger.debug(f"input_file={input_file}")
+        outputdir = Path(serverfile.outputdir)
+        logger.debug(f"outputdir={outputdir}")
 
-    _run_media_processing_rest_api(
-        input_file,
-        outputdir,
-        serverfile.is_microsurgery,
-        int(serverfile.stitch_count),
-        hostname,
-        port,
-        force_tracking=force_tracking,
-    )
-    logger.debug("Adding records to the database...")
+        _run_media_processing_rest_api(
+            input_file,
+            outputdir,
+            serverfile.is_microsurgery,
+            int(serverfile.stitch_count),
+            hostname,
+            port,
+            force_tracking=force_tracking,
+        )
+        logger.debug("Adding records to the database...")
 
-    # (outputdir / "empty.txt").touch(exist_ok=True)
+        # (outputdir / "empty.txt").touch(exist_ok=True)
 
-    if input_file.suffix in (".mp4", ".avi", ".mov", ".webm"):
-        make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
+        if input_file.suffix in (".mp4", ".avi", ".mov", ".webm"):
+            make_images_from_video(input_file, outputdir=outputdir, n_frames=1)
 
-    # for video_pth in outputdir.glob("*.avi"):
-    #     input_video_file = video_pth
-    #     output_video_file = video_pth.with_suffix(".mp4")
-    #     logger.debug(f"input_video_file={input_video_file}")
-    #     logger.debug(f"outout_video_file={output_video_file}")
-    #     if output_video_file.exists():
-    #         output_video_file.unlink()
-    #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
-    logger.debug("Adding generated images to the database...")
-    add_generated_images(serverfile)
-    logger.debug("Making zip file...")
-    make_zip(serverfile)
+        # for video_pth in outputdir.glob("*.avi"):
+        #     input_video_file = video_pth
+        #     output_video_file = video_pth.with_suffix(".mp4")
+        #     logger.debug(f"input_video_file={input_video_file}")
+        #     logger.debug(f"outout_video_file={output_video_file}")
+        #     if output_video_file.exists():
+        #         output_video_file.unlink()
+        #     _convert_avi_to_mp4(str(input_video_file), str(output_video_file))
+        logger.debug("Adding generated images to the database...")
+        add_generated_images(serverfile)
 
 
-    # _add_row_to_spreadsheet(serverfile, absolute_uri)
-    _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
+        # _add_row_to_spreadsheet(serverfile, absolute_uri)
+        _add_rows_to_spreadsheet_for_each_annotation(serverfile, absolute_uri)
 
-    logger.debug("Making graphs...")
-    _make_graphs(serverfile)
-    set_overall_score(serverfile)
+        logger.debug("Making graphs...")
+        _make_graphs(serverfile)
+        set_overall_score(serverfile)
 
-    logger.debug("Updating status...")
-    add_status_to_uploaded_file(serverfile)
+        logger.debug("Updating status...")
+        add_status_to_uploaded_file(serverfile)
+
+        logger.debug("Making zip file...")
+        make_zip(serverfile)
+    except Exception as err:
+        logger.error(err)
+        logger.error(traceback.format_exc())
+        add_status_to_uploaded_file(serverfile, ok=False, status="Webapp error: " + str(err))
 
     logger.debug("Processing finished in API")
     logger.remove(logger_id)
@@ -423,7 +430,7 @@ def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri
     # make_zip(serverfile)
     logger.debug("Zip updated")
 
-def add_status_to_uploaded_file(serverfile:UploadedFile):
+def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None, status:Optional[str]=None):
     """
     Find status in piglegcv log file. Status is the last line of the file.
     If line contain "Work finished", everything is OK. If line contain error,
@@ -431,7 +438,9 @@ def add_status_to_uploaded_file(serverfile:UploadedFile):
     """
     piglegcv_log_path = Path(serverfile.outputdir) / "piglegcv_log.txt"
     is_ok = False
-    if not piglegcv_log_path.exists():
+    if ok is not None:
+        is_ok = ok
+    elif not piglegcv_log_path.exists():
         is_ok = False
         status = "Log file does not exist."
     else:
@@ -455,7 +464,6 @@ def add_status_to_uploaded_file(serverfile:UploadedFile):
     serverfile.processing_ok = is_ok
     serverfile.processing_message = status
     serverfile.finished_at = django.utils.timezone.now()
-    serverfile.save()
     serverfile.save()
 
 def _add_rows_to_spreadsheet_for_each_annotation(serverfile: UploadedFile, absolute_uri):
