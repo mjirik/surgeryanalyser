@@ -2,6 +2,9 @@
 
 Actual version: "0.0.0"
 
+## 2025-07
+* [added] Watch errors with Sentry
+
 ## 2025-06
 
 * [added] Several variants of suggestions for each level

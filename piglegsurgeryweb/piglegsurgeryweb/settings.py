@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 
 from rich.traceback import install
+import sentry_sdk
 
 install(show_locals=True)
 
@@ -207,3 +208,23 @@ CREDS_JSON_FILE = Path(PRIVATE_DIR) / "piglegsurgery-creds.json"
 
 DROP_DIR = Path(MEDIA_ROOT) / "drop_dir"
 LOG_DIR = Path("/home/appuser/pigleg/logs")
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", default=None)
+
+if SENTRY_DSN:
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        _experiments={
+            # Set continuous_profiling_auto_start to True
+            # to automatically start the profiler on when
+            # possible.
+            "continuous_profiling_auto_start": True,
+        },
+    )

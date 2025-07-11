@@ -46,7 +46,7 @@ from . import visualization_tools, models
 from .report_tools import set_overall_score
 
 
-def _run_media_processing_rest_api(
+def _run_media_processing_and_wait_for_rest_api(
     input_file: Path,
     outputdir: Path,
     is_microsurgery: bool,
@@ -200,7 +200,7 @@ def run_processing(
         outputdir = Path(serverfile.outputdir)
         logger.debug(f"outputdir={outputdir}")
 
-        _run_media_processing_rest_api(
+        _run_media_processing_and_wait_for_rest_api(
             input_file,
             outputdir,
             serverfile.is_microsurgery,
@@ -236,17 +236,24 @@ def run_processing(
         set_overall_score(serverfile)
 
         logger.debug("Updating status...")
-        add_status_to_uploaded_file(serverfile)
+        is_ok, status = add_status_to_uploaded_file(serverfile)
 
         logger.debug("Making zip file...")
         make_zip(serverfile)
+        logger.debug("Processing finished in API")
+        logger.remove(logger_id)
+        if not is_ok:
+            # error in piglegcv
+            # raise exception to be caught by the sentry
+            raise Exception("Processing in piglegcv failed: " + status)
     except Exception as err:
         logger.error(err)
         logger.error(traceback.format_exc())
         add_status_to_uploaded_file(serverfile, ok=False, status="Webapp error: " + str(err))
+        logger.debug("Processing finished in API with error")
+        logger.remove(logger_id)
+        raise err
 
-    logger.debug("Processing finished in API")
-    logger.remove(logger_id)
 
 def get_graph_path_for_report(serverfile: UploadedFile, stitch_id: Optional[int] = None):
     if stitch_id is not None:
@@ -466,6 +473,9 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
     serverfile.processing_message = status
     serverfile.finished_at = django.utils.timezone.now()
     serverfile.save()
+
+
+    return is_ok, status
 
 def _add_rows_to_spreadsheet_for_each_annotation(serverfile: UploadedFile, absolute_uri):
     if len(serverfile.mediafileannotation_set.all()) == 0:

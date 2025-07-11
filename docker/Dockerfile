@@ -72,12 +72,12 @@ COPY environment.yml .
 COPY requirements_pip.txt .
 
 RUN conda env create -v -v -f environment.yml
-RUN conda install -n piglegsurgery --yes -c conda-forge redis loguru=0.5 gunicorn=20 opencv=4.8 ffmpeg pillow pytest
-RUN conda install -n piglegsurgery --yes -c conda-forge google-api-python-client=2.88 gspread=5.7
-RUN conda install -n piglegsurgery --yes -c conda-forge google-auth-httplib2=0.1 google-auth=2.19 oauth2client=4.1 google-auth-oauthlib=1.0
-RUN conda install -n piglegsurgery --yes -c conda-forge rich
-RUN conda install -n piglegsurgery --yes -c conda-forge rich django==3.2.23
-RUN conda install -n piglegsurgery --yes -c conda-forge django-widget-tweaks
+#RUN conda install -n piglegsurgery --yes -c conda-forge redis loguru=0.5 gunicorn=20 opencv=4.8 ffmpeg pillow pytest
+#RUN conda install -n piglegsurgery --yes -c conda-forge google-api-python-client=2.88 gspread=5.7
+#RUN conda install -n piglegsurgery --yes -c conda-forge google-auth-httplib2=0.1 google-auth=2.19 oauth2client=4.1 google-auth-oauthlib=1.0
+#RUN conda install -n piglegsurgery --yes -c conda-forge rich
+#RUN conda install -n piglegsurgery --yes -c conda-forge rich django==3.2.23
+#RUN conda install -n piglegsurgery --yes -c conda-forge django-widget-tweaks
 RUN conda list
 #RUN cd /webapps/scaffanweb_django
 # Make RUN commands use the new environment:

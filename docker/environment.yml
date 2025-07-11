@@ -27,4 +27,22 @@ dependencies:
 #    - ffmpeg
 #    - pillow
 #    - pytest
+    - redis
+    - loguru=0.5
+    - gunicorn=20
+    - opencv=4.8
+    - ffmpeg
+    - pillow
+    - pytest
+    - google-api-python-client=2.88
+    - gspread=5.7
+    - google-auth-httplib2=0.1
+    - google-auth=2.19
+    - oauth2client=4.1
+    - google-auth-oauthlib=1.0
+    - rich
+    - django=3.2.23
+    - django-widget-tweaks
+    - sentry-sdk
+
 
