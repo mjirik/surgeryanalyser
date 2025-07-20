@@ -62,7 +62,7 @@ else:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"].extend(env("ALLOWED_HOSTS").split(","))
+ALLOWED_HOSTS = ["127.0.0.1", ".localhost"].extend(env("ALLOWED_HOSTS").split(","))
 
 
 # Application definition
