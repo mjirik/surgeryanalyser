@@ -9,7 +9,9 @@ channels:
 dependencies:
     - python=3.9
     - pip=23.1
-    - django=3.2
+#    - django=3.2  # is reinstalled by pip later in Dockerfile so we use the same version here
+    - django=4.2
+    - django-picklefield=3.3  # dependency for django_q
     - django-allauth=0.53
     - django-environ=0.4
 #    - redis=3
