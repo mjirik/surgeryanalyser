@@ -10,7 +10,11 @@ RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machi
 
 RUN apt-get update
 RUN apt-get install -y \
-	python3-opencv ca-certificates python3-dev git wget sudo ninja-build
+	python3-opencv ca-certificates python3-dev git wget sudo ninja-build \
+    gpg vim redis ffmpeg libsm6 libxext6 curl supervisor multitail \
+    # get rotatelogs
+    apache2-utils
+
 RUN ln -sv /usr/bin/python3 /usr/bin/python
 
 ## create a non-root user
@@ -34,8 +38,9 @@ USER root
 SHELL ["/bin/bash", "--login", "-c"]
 RUN #apt-get update --yes
 # PyQt5 => ffmpeg libsm6 libxext6
-RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl supervisor multitail \
-    apache2-utils # to get rotatelogs
+#RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl supervisor multitail \
+#    # get rotatelogs
+#    apache2-utils \
 
 # Install our public GPG key to trusted store
 RUN curl https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc | gpg --dearmor > conda.gpg
