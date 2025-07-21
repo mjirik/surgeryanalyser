@@ -50,6 +50,7 @@ dependencies:
     - statsmodels
     - pandas=1.5.3
     - openpyxl
+    - gunicorn=20.1.0
     - pip:
         - django-q==1.3.9
 
