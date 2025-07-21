@@ -34,7 +34,9 @@ USER root
 SHELL ["/bin/bash", "--login", "-c"]
 RUN #apt-get update --yes
 # PyQt5 => ffmpeg libsm6 libxext6
-RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl supervisor multitail
+RUN apt-get install --yes gpg vim redis ffmpeg libsm6 libxext6 curl supervisor multitail \
+    apache2-utils # to get rotatelogs
+
 # Install our public GPG key to trusted store
 RUN curl https://repo.anaconda.com/pkgs/misc/gpgkeys/anaconda.asc | gpg --dearmor > conda.gpg
 RUN install -o root -g root -m 644 conda.gpg /usr/share/keyrings/conda-archive-keyring.gpg
@@ -83,7 +85,9 @@ RUN conda list
 # Make RUN commands use the new environment:
 # SHELL ["conda", "run", "-n", "scaffanweb", "/bin/bash", "--login", "-c"]
 RUN /opt/conda/condabin/conda init bash
-RUN conda run -n piglegsurgery --no-capture-output pip install -r requirements_pip.txt
+
+# installed from environment.yml
+# RUN conda run -n piglegsurgery --no-capture-output pip install -r requirements_pip.txt
 
 # gunicorn is in conda env
 #RUN conda run -n piglegsurgery --no-capture-output pip install gunicorn
@@ -134,10 +138,10 @@ RUN sudo rm /etc/apt/sources.list.d/cuda.list
 RUN sudo rm /etc/apt/sources.list.d/nvidia-ml.list
 
 # to get rotatelogs
-RUN sudo apt-get update --yes
-RUN sudo apt-get install --yes apache2-utils
+#RUN sudo apt-get update --yes
+#RUN sudo apt-get install --yes apache2-utils
 
-RUN conda install -n piglegsurgery --yes -c conda-forge plotly=5.18.0 statsmodels pandas=1.5.3 openpyxl
+# RUN conda install -n piglegsurgery --yes -c conda-forge plotly=5.18.0 statsmodels pandas=1.5.3 openpyxl
 
 RUN sudo mkdir -p /webapps/piglegsurgery/piglegsurgeryweb/static/
 RUN sudo chmod a+w -R /webapps/piglegsurgery/piglegsurgeryweb/static/

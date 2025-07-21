@@ -10,12 +10,12 @@ dependencies:
     - python=3.9
     - pip=23.1
 #    - django=3.2  # is reinstalled by pip later in Dockerfile so we use the same version here
-    - django=4.2
+    - django=4.2.
     - django-picklefield=3.3  # dependency for django_q
     - django-allauth=0.53
     - django-environ=0.4
 #    - redis=3
-    - pandas=1.3
+#    - pandas=1.3
 #    - google-api-python-client=2.88
 #    - google-auth-httplib2=0.1
 #    - google-auth=2.19
@@ -43,8 +43,14 @@ dependencies:
     - oauth2client=4.1
     - google-auth-oauthlib=1.0
     - rich
-    - django=3.2.23
     - django-widget-tweaks
     - sentry-sdk
+    # moved from Dockerfile to here 2025-07-21
+    - plotly=5.18.0
+    - statsmodels
+    - pandas=1.5.3
+    - openpyxl
+    - pip:
+        - django-q==1.3.9
 
 
