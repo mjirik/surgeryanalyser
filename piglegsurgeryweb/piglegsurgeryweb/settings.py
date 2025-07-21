@@ -71,6 +71,12 @@ suran_allowed_hosts = env.list("SURAN_ALLOWED_HOSTS", default=[]) # comma separa
 ALLOWED_HOSTS.extend(suran_allowed_hosts)
 # print("ALLOWED_HOSTS=", ALLOWED_HOSTS)
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://suran.kky.zcu.cz',
+    'http://127.0.0.1',
+    'http://localhost',
+    'https://localhost',
+]
 
 # Application definition
 
