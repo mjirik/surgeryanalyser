@@ -65,11 +65,11 @@ else:
 DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", ".localhost"]
-suran_allowed_hosts = env("SURAN_ALLOWED_HOSTS", default=[])
-print(f"SURAN_ALLOWED_HOSTS={suran_allowed_hosts}")
+suran_allowed_hosts = env.list("SURAN_ALLOWED_HOSTS", default=[]) # comma separated list of hosts
+# print(f"SURAN_ALLOWED_HOSTS={suran_allowed_hosts}")
 
-ALLOWED_HOSTS.extend(suran_allowed_hosts.split(","))
-print("ALLOWED_HOSTS=", ALLOWED_HOSTS)
+ALLOWED_HOSTS.extend(suran_allowed_hosts)
+# print("ALLOWED_HOSTS=", ALLOWED_HOSTS)
 
 
 # Application definition
