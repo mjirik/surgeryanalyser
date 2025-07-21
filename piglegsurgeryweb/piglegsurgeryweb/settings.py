@@ -14,6 +14,7 @@ from pathlib import Path
 
 from rich.traceback import install
 import sentry_sdk
+from loguru import logger
 
 install(show_locals=True)
 
@@ -29,7 +30,8 @@ PRIVATE_DIR.mkdir(exist_ok=True, parents=True)
 import environ
 
 env = environ.Env()
-environ.Env.read_env()
+env.read_env()
+# environ.Env.read_env()
 
 # Previous settings ...
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -63,7 +65,10 @@ else:
 DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", ".localhost"]
-ALLOWED_HOSTS.extend(env("ALLOWED_HOSTS").split(","))
+caid_allowed_hosts = env("CAID_ALLOWED_HOSTS", default=[])
+print(f"CAID_ALLOWED_HOSTS={caid_allowed_hosts}")
+
+ALLOWED_HOSTS.extend(caid_allowed_hosts.split(","))
 print("ALLOWED_HOSTS=", ALLOWED_HOSTS)
 
 
