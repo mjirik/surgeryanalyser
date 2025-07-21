@@ -8,12 +8,12 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/7fa2af80.pub
 
-RUN apt-get update
-RUN apt-get install -y \
+RUN apt-get update --yes
+RUN apt-get install --yes \
     python3-opencv ca-certificates python3-dev git wget sudo ninja-build \
     gpg vim redis ffmpeg libsm6 libxext6 curl supervisor multitail \
-    # get rotatelogs
     apache2-utils
+# apache2-utils  # get rotatelogs
 
 RUN ln -sv /usr/bin/python3 /usr/bin/python
 
