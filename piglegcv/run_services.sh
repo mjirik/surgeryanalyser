@@ -12,6 +12,12 @@ PIGLEG_WORKER_ID=1 python worker.py 2>&1 | \
    rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_1.txt 1M &
 PIGLEG_WORKER_ID=2 python worker.py 2>&1 | \
    rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_2.txt 1M &
+PIGLEG_WORKER_ID=3 python worker.py 2>&1 | \
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_3.txt 1M &
+PIGLEG_WORKER_ID=4 python worker.py 2>&1 | \
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_4.txt 1M &
+PIGLEG_WORKER_ID=5 python worker.py 2>&1 | \
+   rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_5.txt 1M &
 # python worker.py 2>&1 | \
 #    rotatelogs -n 1 ../logs/piglegcv_worker_${DOCKERLOGNAME}_log_3.txt 1M &
 # python worker.py 2>&1 | \
