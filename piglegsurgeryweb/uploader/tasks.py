@@ -80,7 +80,7 @@ def _run_media_processing_and_wait_for_rest_api(
     tm = 0
     time_to_sleep = 4
     while not is_finished:
-        time_to_sleep = time_to_sleep * 2 if time_to_sleep < 32 else 32
+        time_to_sleep = time_to_sleep * 2 if time_to_sleep < 16 else 16
         time_step = 4
         tm += time_to_sleep
         for i in range(int(time_to_sleep / time_step)):
