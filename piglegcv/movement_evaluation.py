@@ -90,7 +90,7 @@ def movement_evaluation_prediction(dfst: pd.DataFrame) -> pd.DataFrame:
     logger.debug(f"{predicted_columns=}")
 
 
-    logger.debug(dfst.shape)
+    logger.debug(f"{dfst.shape=}")
     # check all data_cols. If they are not in dfst add them and set them to NaN
     for col in data_cols:
         if col not in dfst:
@@ -106,8 +106,10 @@ def movement_evaluation_prediction(dfst: pd.DataFrame) -> pd.DataFrame:
         predictions = clf.predict(dfst_nna[data_cols])
     except Exception as e:
         logger.debug(traceback.format_exc())
+        logger.debug("dfst.describe():\n%s", dfst.describe().to_string())
+        logger.debug("dfst.sample():\n%s", dfst.sample().to_string())
         logger.warning(f"Problem during movement evaluation prediction: {e}")
-        predictions = np.nan
+        predictions = [np.nan] * len(dfst_nna)
 
     dfst_nna["prediction"] = predictions
     return dfst_nna

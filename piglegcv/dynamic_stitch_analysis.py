@@ -134,8 +134,11 @@ class InstrumentDistance:
 
         return count
 
-    def seconds_below_threshold(self, threshold, seconds_sensitivity=1):
+    def seconds_below_threshold(self, threshold, seconds_sensitivity=1, return_nan_if_no_data=False):
         if self.instrument1 is None or self.instrument2 is None:
-            return np.nan
+            if return_nan_if_no_data:
+                return np.nan
+            else:
+                return 0.
         frame_count = self.frames_below_threshold(threshold, seconds_sensitivity)
         return frame_count / self.fps

@@ -293,6 +293,9 @@ def set_overall_score(serverfile) -> float:
         score = np.mean(scores)
     else:
         score = None
+        logger.debug(f"{loaded_results=}")
+        logger.debug(f"{per_stitch_report=}")
+        logger.debug(f"No scores found for {serverfile.filename}. Setting score to None.")
 
     serverfile.score = score
     serverfile.save()

@@ -240,7 +240,10 @@ def run_processing(
 
         logger.debug("Making zip file...")
         make_zip(serverfile)
-        logger.debug("Processing finished in API")
+        if is_ok:
+            logger.debug("Processing finished in API")
+        else:
+            logger.error("Processing in piglegcv failed: " + status)
         logger.remove(logger_id)
         if not is_ok:
             # error in piglegcv
@@ -250,7 +253,7 @@ def run_processing(
         logger.error(err)
         logger.error(traceback.format_exc())
         add_status_to_uploaded_file(serverfile, ok=False, status="Webapp error: " + str(err))
-        logger.debug("Processing finished in API with error")
+        logger.error("Processing finished in API with error")
         logger.remove(logger_id)
         raise err
 
