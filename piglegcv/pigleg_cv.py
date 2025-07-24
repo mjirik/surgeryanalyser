@@ -61,7 +61,17 @@ except ImportError:
 PROGRESS = 0
 PROGRESS_MAX = 100
 
-DEVICE = os.getenv("PIGLEG_DEVICE", default=None)
+PIGLEG_DEVICES = os.getenv("PIGLEG_DEVICES", default="").split(",")
+logger.debug(f"PIGLEG_DEVICES={PIGLEG_DEVICES}")
+
+PIGLEG_WORKER_ID = int(os.getenv("PIGLEG_WORKER_ID", default="0"))
+
+if len(PIGLEG_DEVICES) == 0:
+    DEVICE=None
+else:
+    k = PIGLEG_WORKER_ID % len(PIGLEG_DEVICES)
+    DEVICE=PIGLEG_DEVICES[k]
+
 logger.debug(f"DEVICE={DEVICE}")
 
 

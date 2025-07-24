@@ -44,13 +44,16 @@ services:
       - "./.jupyter:/root/.jupyter"
     networks:
       - piglegnet
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: [ '1' ]
-              capabilities: [ gpu ]
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0,1
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              device_ids: [ '1' ]
+#              capabilities: [ gpu ]
 
   nginx:
     image: nginx:latest
