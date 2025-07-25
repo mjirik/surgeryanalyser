@@ -295,7 +295,7 @@ def set_overall_score(serverfile) -> float:
         score = None
         logger.debug(f"{loaded_results=}")
         logger.debug(f"{per_stitch_report=}")
-        logger.debug(f"No scores found for {serverfile.filename}. Setting score to None.")
+        logger.debug(f"No scores found for {serverfile.mediafile}. Setting score to None.")
 
     serverfile.score = score
     serverfile.save()
@@ -310,7 +310,7 @@ def load_per_stitch_data(loaded_results, serverfile):
     if loaded_results is not None:
 
         for i in range(int(serverfile.stitch_count)):
-            logger.debug(f"Stitch {i}")
+            logger.debug(f"Load data per Stitch {i}")
             try:
                 STITCH_DATA_FRAME.my_values_by_dict(loaded_results)
                 graphs_html = STITCH_DATA_FRAME.get_figs_to_html(i)
