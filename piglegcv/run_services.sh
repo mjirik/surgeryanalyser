@@ -34,8 +34,8 @@ echo "Services started"
 # Run jupyter lab
 
 # run jupyter if PIGLEG_RUN_JUPYTER is set
-if [ -z "$PIGLEG_RUN_JUPYTER" ]; then
-    echo "PIGLEG_RUN_JUPYTER is not set, not running jupyterlab."
+if [ -z "$PIGLEG_RUN_JUPYTER" ] && [ "$PIGLEG_RUN_JUPYTER" != "True" ]; then
+    echo "PIGLEG_RUN_JUPYTER is not set True, not running jupyterlab."
     exit 0
 fi
 
