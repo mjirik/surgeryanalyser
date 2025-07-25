@@ -21,7 +21,7 @@
 {#                            <p class="card-text">Some quick example text to build on the card title and make up the bulk#}
 {#                                of the card's content.</p>#}
                             <a href="{% url 'uploader:run_collection' collection.id %}" class="btn btn-primary">Run</a>
-                            <a href="{% url 'uploader:run_collection_and_force_tracking' collection.id %}" class="btn btn-primary">Run and force tracking</a>
+                            <a href="{% url 'uploader:run_collection_and_force_tracking' collection.id %}" class="btn btn-primary mt-2">Run and force tracking</a>
                             <a href="{% url 'uploader:show_collection' collection.id %}" class="btn btn-primary mt-2"><i class="fa fa-list"></i> Media files</a>
                             <a href="{% url 'uploader:collection_update_spreadsheet' collection.id %}" class="btn btn-primary mt-2"><i class="fa fa-table"></i> Update spreadsheet</a>
                         </div>
