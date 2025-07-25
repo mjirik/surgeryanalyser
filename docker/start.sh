@@ -41,7 +41,7 @@ echo " DOCKERLOGNAME=${DOCKERLOGNAME}"
 # Determine whether to run development or production server
 if [ "$ENV" = "production" ]; then
     echo "Starting Gunicorn for production..."
-    conda run -n piglegsurgery --no-capture-output gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0.0.0.0:8000 --timeout 1800 --workers 5
+    conda run -n piglegsurgery --no-capture-output gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0.0.0.0:8000 --timeout 1800 --workers 8
 #     gunicorn --log-level debug piglegsurgeryweb.wsgi:application --bind 0.0.0.0:8000 --timeout 1800 --workers 5 |& \
 #     tee >(rotatelogs -n 1 ~/pigleg/logs/piglegweb_gunicorn_log.txt 1M)
     echo "  Gunicorn started"
