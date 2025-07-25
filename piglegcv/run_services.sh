@@ -33,6 +33,12 @@ echo "Services started"
 
 # Run jupyter lab
 
+# run jupyter if PIGLEG_RUN_JUPYTER is set
+if [ -z "$PIGLEG_RUN_JUPYTER" ]; then
+    echo "PIGLEG_RUN_JUPYTER is not set, not running jupyterlab."
+    exit 0
+fi
+
 # HOMEDIR=/storage/plzen1/home/$USER # substitute username and path to to your real username and path
 # PRIVATEDIR=/webapps/piglegsurgery/piglegsurgeryweb/private
 HOSTNAME=`hostname -f`

@@ -5,6 +5,7 @@ Actual version: "0.0.0"
 ## 2025-07
 * [added] Watch errors with Sentry
 * [fix] Fix missing prediction on missing distance between forceps and needle holder
+* [added] Jupyterlab is optional
 
 ## 2025-06
 
