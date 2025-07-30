@@ -153,6 +153,14 @@ def report_list(request):
 
 
 def _general_report_list(request, uploaded_file_set):
+    query = request.GET.get("q")
+    if query:
+        uploaded_file_set = uploaded_file_set.filter(
+            Q(email__icontains=query)
+            | Q(original_filename__icontains=query)
+            | Q(result__icontains=query)  # Pokud máš pole s výsledky
+        )
+
     if "order_by" in request.GET:
         logger.debug(f"order_by={request.GET['order_by']}")
         request.session["order_by"] = request.GET.get("order_by")
