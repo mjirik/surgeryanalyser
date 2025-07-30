@@ -157,8 +157,9 @@ def _general_report_list(request, uploaded_file_set):
     if query:
         uploaded_file_set = uploaded_file_set.filter(
             Q(email__icontains=query)
-            | Q(original_filename__icontains=query)
-            | Q(result__icontains=query)  # Pokud máš pole s výsledky
+            | Q(mediafile__icontains=query)
+            | Q(collection__name__icontains=query)  # Pokud máš pole s výsledky
+            | Q(category__name__icontains=query)
         )
 
     if "order_by" in request.GET:
