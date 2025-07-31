@@ -154,12 +154,21 @@ def report_list(request):
 
 def _general_report_list(request, uploaded_file_set):
     query = request.GET.get("q")
+    words = query.split()
+    q_objects = Q()
+
+    for word in words:
+        word_filter = (
+              Q(email__icontains=word)
+              | Q(mediafile__icontains=word)
+              | Q(collection__name__icontains=word)  # Pokud máš pole s výsledky
+              | Q(category__name__icontains=word)
+        )
+        q_objects &= word_filter  # Každé slovo musí být nalezeno někde
+
+    uploaded_file_set = UploadedFile.objects.filter(q_objects).distinct()
     if query:
         uploaded_file_set = uploaded_file_set.filter(
-            Q(email__icontains=query)
-            | Q(mediafile__icontains=query)
-            | Q(collection__name__icontains=query)  # Pokud máš pole s výsledky
-            | Q(category__name__icontains=query)
         )
 
     if "order_by" in request.GET:

@@ -2,11 +2,16 @@
 
 Actual version: "0.0.0"
 
+
+##
+
+
 ## 2025-07
 * [added] Watch errors with Sentry
 * [fix] Fix missing prediction on missing distance between forceps and needle holder
 * [added] Jupyterlab is optional
 * [changed] Control the number of workers using environment variable `PIGLEG_WORKERS_...`
+* [fixed] Search in the reports
 
 ## 2025-06
 
