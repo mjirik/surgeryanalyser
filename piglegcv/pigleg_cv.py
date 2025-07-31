@@ -106,6 +106,7 @@ class DoComputerVision:
         test_first_seconds: bool = False,
         force_tracking:bool=False,
         device: Optional[str] = None,
+        with_profiler: bool = False,
     ):
         self.logger_id = None
         self.create_logger(outputdir)
@@ -150,6 +151,7 @@ class DoComputerVision:
             else True
         )
         self.do_crop = False
+        self.with_profiler = with_profiler
 
         logger.debug(f"{self.is_microsurgery=}")
 
@@ -165,10 +167,20 @@ class DoComputerVision:
         )
 
     def run(self):
-        self.meta = {}
+
         logger.info(
             f"CV processing started on {self.filename}, outputdir={self.outputdir}"
         )
+        self.meta = {}
+        profiler=None
+        if self.with_profiler:
+            logger.debug(f"Starting profiler")
+            import cProfile
+            import pstats
+            profiler = cProfile.Profile()
+            profiler.enable()
+
+
         logger.debug(f"{self.is_microsurgery=}")
         logger.debug(f"{self.is_microsurgery=}, {type(self.is_microsurgery)=}")
         device = mem.get_torch_cuda_device_if_available(self.device)
@@ -200,7 +212,19 @@ class DoComputerVision:
             logger.debug("Work finished")
         except Exception as e:
             logger.error(traceback.format_exc())
-        logger.remove(self.logger_id)
+        finally:
+            if profiler is not None:
+                logger.debug("Stopping profiler")
+                profiler.disable()
+                profiler.dump_stats(str(self.outputdir / "piglegcv_profiler_stats.prof"))
+                stats = pstats.Stats(profiler)
+                stats.strip_dirs().sort_stats("cumtime")
+
+                with open(self.outputdir / "piglegcv_profiler_stats.txt", "w") as f:
+                    stats.stream = f
+                    stats.print_stats(30)
+                logger.debug("Profiler stats saved.")
+            logger.remove(self.logger_id)
         # self.logger_id = None
 
     def _make_sure_media_is_cropped(self):
@@ -889,6 +913,7 @@ def do_computer_vision(
         n_stitches=n_stitches,
         force_tracking=force_tracking,
         device=device,
+        with_profiler=bool(os.getenv("PIGLEG_WITH_PROFILER", default="").lower()=="true")
     )
     logger.debug("Created DoComputerVision object")
     return docv.run()
