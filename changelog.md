@@ -13,6 +13,8 @@ Actual version: "0.0.0"
 * [changed] Control the number of workers using environment variable `PIGLEG_WORKERS_...`
 * [fixed] Search in the reports
 * [added] Profiler
+* [added] Savign the the time of the email sending
+* [added] saving the starting of processing
 
 ## 2025-06
 

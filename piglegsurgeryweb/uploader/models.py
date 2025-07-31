@@ -55,6 +55,7 @@ class UploadedFile(models.Model):
     outputdir = models.CharField(max_length=255, blank=True, default=get_output_dir)
     zip_file = models.FileField(upload_to="cellimage/", blank=True, null=True)
     hash = models.CharField(max_length=255, blank=True, default=_hash)
+    enqueued_at = models.DateTimeField("Enqueued at", blank=True, null=True)
     started_at = models.DateTimeField("Started at", blank=True, null=True)
     finished_at = models.DateTimeField("Finished at", blank=True, null=True)
     processing_ok = models.BooleanField(default=False)
@@ -69,6 +70,7 @@ class UploadedFile(models.Model):
     rotation = models.IntegerField(default=0)
     score = models.FloatField(null=True, blank=True)
     data_row = models.JSONField(null=True, blank=True)
+    email_sent_at = models.DateTimeField("Email sent at", null=True, blank=True, default=None   )
 
     def __str__(self):
         return str(Path(self.mediafile.name).name)
