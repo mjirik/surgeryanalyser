@@ -475,6 +475,7 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
                         # vezme prvních 23 znaků: "2025-07-31 13:41:32.787"
                         timestamp_str = line[:23]
                         started_at = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+                        started_at = django.utils.timezone.make_aware(started_at)
                     except ValueError:
                         logger.warning(f"Could not parse time in first log line: {line}")
             # last_line = lines[-1]
@@ -488,7 +489,7 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
     serverfile.processing_ok = is_ok
     serverfile.processing_message = status
     serverfile.finished_at = django.utils.timezone.now()
-    serverfile.started_at = django.utils.timezone.now()
+    serverfile.started_at = started_at
     serverfile.save(update_fields=["processing_ok", "processing_message", "finished_at", "started_at"])
 
 
@@ -804,7 +805,9 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         fail_silently=False,
         html_message=html_message,
     )
-    serverfile.email_sent_at = datetime.now()
+    sent_at = django.utils.timezone.now()
+    logger.debug(f"{sent_at=}")
+    serverfile.email_sent_at = sent_at
     serverfile.save(update_fields=["email_sent_at"])
     logger.debug("Email sent.")
     # send_mail(
