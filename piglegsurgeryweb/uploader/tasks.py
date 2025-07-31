@@ -112,17 +112,17 @@ def make_it_run_with_async_task(
         # hook="uploader.tasks.email_report_from_task",
         kwargs["hook"] = "uploader.tasks.email_report_from_task"
         logger.debug(f"Sending email to {absolute_uri} added to planned task.")
-    serverfile.started_at = django.utils.timezone.now()
+    serverfile.enqueued_at = django.utils.timezone.now()
     serverfile.finished_at = None
     serverfile.processing_ok = False
     serverfile.processing_message = "Not finished yet."
-    serverfile.save()
+    serverfile.save(update_fields=["enqueued_at", "finished_at", "processing_ok", "processing_message"])
     logger.debug(f"hostname={hostname}, port={port}")
     if serverfile.category and serverfile.category.name == "Other":
         serverfile.finished_at = django.utils.timezone.now()
         serverfile.processing_ok = True
         serverfile.processing_message = "Other category: Processing skipped."
-        serverfile.save()
+        serverfile.save(update_fields=["finished_at","processing_ok", "processing_message"])
         email_report(serverfile, absolute_uri)
 
     else:
@@ -448,9 +448,12 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
     the processing failed.
     """
     piglegcv_log_path = Path(serverfile.outputdir) / "piglegcv_log.txt"
+    started_at=None
     is_ok = False
     if ok is not None:
         is_ok = ok
+        if status is None:
+            logger.warning(f"No status provided for {piglegcv_log_path}")
     elif not piglegcv_log_path.exists():
         is_ok = False
         status = "Log file does not exist."
@@ -465,6 +468,15 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
             for last_line in reversed(lines):
                 if last_line.strip():
                     break
+            for line in lines:
+                line = line.strip()
+                if line:
+                    try:
+                        # vezme prvních 23 znaků: "2025-07-31 13:41:32.787"
+                        timestamp_str = line[:23]
+                        started_at = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+                    except ValueError:
+                        logger.warning(f"Could not parse time in first log line: {line}")
             # last_line = lines[-1]
             if "Work finished" in last_line:
                 is_ok = True
@@ -472,10 +484,12 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
             else:
                 is_ok = False
                 status = f"Last log message: {last_line}"
+    # read first line of log
     serverfile.processing_ok = is_ok
     serverfile.processing_message = status
     serverfile.finished_at = django.utils.timezone.now()
-    serverfile.save()
+    serverfile.started_at = django.utils.timezone.now()
+    serverfile.save(update_fields=["processing_ok", "processing_message", "finished_at", "started_at"])
 
 
     return is_ok, status
@@ -790,6 +804,8 @@ def email_report(serverfile: UploadedFile, absolute_uri: str):
         fail_silently=False,
         html_message=html_message,
     )
+    serverfile.email_sent_at = datetime.now()
+    serverfile.save(update_fields=["email_sent_at"])
     logger.debug("Email sent.")
     # send_mail(
     #     "[Pig Leg Surgery]",

@@ -76,6 +76,7 @@ USER appuser
 
 # COPY scaffanweb .
 COPY environment.yml .
+# TODO remove the next line
 COPY requirements_pip.txt .
 
 RUN conda env create -v -v -f environment.yml

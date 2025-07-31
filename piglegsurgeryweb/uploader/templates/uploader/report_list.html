@@ -83,6 +83,9 @@
             {% if user.is_authenticated %}
                 <th scope="col" colspan="2"></th>
                 <!--            <th scope="col" colspan="2">Queue size = {{ queue_size }}</th>-->
+                <th scope="col"><a href="?order_by=-enqueued_at">
+                    {% if order_by == "-enqueued_at" %} ▼ {% endif %} Enqueued At </a>
+                </th>
                 <th scope="col"><a href="?order_by=-started_at">
                     {% if order_by == "-started_at" %} ▼ {% endif %} Started At </a>
                 </th>
@@ -159,6 +162,12 @@
                     {% else %}
                         <!-- There are no MediaFileAnnotations related to this UploadedFile -->
                     {% endif %}
+                    {% if uploadedfile.email_sent_at %}
+                        <i class="bi bi-envelope-fill text-success"
+                           data-toggle="tooltip" data-placement="top"
+                           title="Email sent at {{ uploadedfile.email_sent_at|date:'Y-m-d H:i' }}"
+                    {% endif %}
+
                     {#                      <span class="fa-stack fa-2x">#}
                     {#    <i class="fa-solid fa-camera fa-stack-1x"></i>#}
                     {#    <i class="fa-solid fa-ban fa-stack-2x" style="color:Tomato"></i>#}
@@ -256,6 +265,7 @@
                     </div>
                     </td>
 
+                    <td>{{ uploadedfile.enqueued_at |date:'Y-m-d H:i' }}</td>
                     <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>
                     <td>{{ uploadedfile.finished_at |date:'Y-m-d H:i' }}</td>
                     <td><input type="checkbox" name="selected_reports" value="{{ uploadedfile.id }}" class="report-checkbox" /></td>
