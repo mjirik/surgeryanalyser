@@ -209,10 +209,6 @@ class DoComputerVision:
             save_json(self.meta, Path(self.outputdir) / "meta.json", update=False)
 
             logger.debug(mem.get_vram(DEVICE))
-            logger.debug("Work finished")
-        except Exception as e:
-            logger.error(traceback.format_exc())
-        finally:
             if profiler is not None:
                 logger.debug("Stopping profiler")
                 profiler.disable()
@@ -224,6 +220,10 @@ class DoComputerVision:
                     stats.stream = f
                     stats.print_stats(30)
                 logger.debug("Profiler stats saved.")
+            logger.debug("Work finished")
+        except Exception as e:
+            logger.error(traceback.format_exc())
+        finally:
             logger.remove(self.logger_id)
         # self.logger_id = None
 
