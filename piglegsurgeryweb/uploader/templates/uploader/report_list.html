@@ -40,13 +40,15 @@
 {# if user is authentificated #}
         {% if user.is_authenticated %}
                 <!-- Dropdown for selecting a collection -->
+            <div class="d-flex align-items-center gap-2">
         <select name="collection_id" class="form-select">
             <option value="">New Collection</option>
             {% for collection in collections %}
                 <option value="{{ collection.id }}">{{ collection.name }}</option>
             {% endfor %}
         </select>
-        <button type="button" class="btn btn-primary mt-2" onclick="submitSelectedReports()">Add to Collection</button>
+        <button type="button" class="btn btn-primary" onclick="submitSelectedReports()">Add to Collection</button>
+            </div>
         {% endif %}
     </div>
     <table class="table">
@@ -163,7 +165,7 @@
                         <!-- There are no MediaFileAnnotations related to this UploadedFile -->
                     {% endif %}
                     {% if uploadedfile.email_sent_at %}
-                        <i class="bi bi-envelope-fill text-success"
+                        <i class="bi bi-envelope-fill"
                            data-toggle="tooltip" data-placement="top"
                            title="Email sent at {{ uploadedfile.email_sent_at|date:'Y-m-d H:i' }}"
                     {% endif %}
