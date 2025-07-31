@@ -25,9 +25,9 @@
     {% endautoescape %}
     {% endif %}
 {#    <input id="search_here" class="form-control mb-3" placeholder="type here to search.."/>#}
-<form method="get" class="mb-3">
+<form method="get" class="mb-2 d-flex">
     <input type="text" name="q" placeholder="Search reports..." value="{{ request.GET.q }}" class="form-control" />
-    <button type="submit" class="btn btn-primary mt-2">Search</button>
+    <button type="submit" class="btn btn-primary">Search</button>
 </form>
 
 {% if query %}
