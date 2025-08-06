@@ -17,7 +17,6 @@ import run_qr
 from incision_detection_mmdet import run_incision_detection
 from loguru import logger
 from media_tools import make_images_from_video
-from piglegcv.debug_ruler import pix_size_m
 from run_perpendicular import get_frame_to_process, main_perpendicular
 import datetime
 import sklearn
