@@ -1098,7 +1098,8 @@ def show_mediafile_logs(request, filename_hash: str):
     key_value = _get_logs_as_html(serverfile)
     return render(
         request,
-        "uploader/message.html",
+        # "uploader/message.html",
+        "uploader/show_logs.html",
         {
             "headline": "Logs",
             "key_value": key_value,
