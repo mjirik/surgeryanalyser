@@ -1115,7 +1115,7 @@ def _get_logs_as_html(serverfile: UploadedFile) -> dict:
     for file in outputdir.glob("*_log.txt"):
         with open(file) as f:
             lines = f.readlines()
-        # lines = [_set_loglevel_color(line) for line in lines]
+            lines = [_set_loglevel_color(line) for line in lines]
         key_value.update(
             {str(file.stem): '<p class="text-monospace">' + "<br>".join(lines) + "</p>"}
         )
@@ -1125,16 +1125,21 @@ def _get_logs_as_html(serverfile: UploadedFile) -> dict:
 
 def _set_loglevel_color(line:str) -> str:
     """Set color of the log level in the log line"""
+    from django.utils import html
+    safe_line = html.escape(line)
     if "DEBUG" in line:
-        return f"<span class='text-muted'>{line}</span>"
+        return f"<span class='text-secondary'>{safe_line}</span>"  # decentní šedá
     elif "INFO" in line:
-        return f"<span class='text-info'>{line}</span>"
+        return f"<span class='text-primary'>{safe_line}</span>"
     elif "WARNING" in line:
-        return f"<span class='text-warning'>{line}</span>"
+        return f"<span class='text-warning'>{safe_line}</span>"
     elif "ERROR" in line:
-        return f"<span class='text-danger'>{line}</span>"
+        return f"<span class='text-danger'>{safe_line}</span>"
+    elif "CRITICAL" in line:
+        return f"<span class='bg-danger text-white fw-bold'>{safe_line}</span>"
     else:
-        return f"<span class='text-muted'>{line}</span>"
+        return f"<span class='text-body'>{safe_line}</span>"
+
 
 @login_required(login_url="/admin/")
 def show_logs(request, n_lines: int = 100):
