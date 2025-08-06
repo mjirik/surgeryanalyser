@@ -476,6 +476,7 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
                         timestamp_str = line[:23]
                         started_at = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
                         started_at = django.utils.timezone.make_aware(started_at)
+                        break
                     except ValueError:
                         logger.warning(f"Could not parse time in first log line: {line}")
             # last_line = lines[-1]
