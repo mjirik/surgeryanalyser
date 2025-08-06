@@ -1094,7 +1094,11 @@ def test(request):
 
 
 def show_mediafile_logs(request, filename_hash: str):
+    """Show logs for the media file and check started_at."""
     serverfile = get_object_or_404(UploadedFile, hash=filename_hash)
+    if serverfile.started_at is None:
+        from .tasks import update_started_at_from_log
+        update_started_at_from_log(serverfile)
     key_value = _get_logs_as_html(serverfile)
     return render(
         request,

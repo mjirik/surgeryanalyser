@@ -13,8 +13,6 @@ from pathlib import Path
 from django.conf import settings
 from loguru import logger
 
-from . import models_tools
-
 try:
     from hashlib import sha1 as sha_constructor
 except ImportError:
@@ -81,7 +79,7 @@ def get_output_dir():
     datetimestr = datetime.now().strftime("%Y%m%d-%H%M%S")
     filename = op.join(
         op.expanduser(OUTPUT_DIRECTORY_PATH),
-        "SA_" + datetimestr + "_" + models_tools.randomString(12),
+        "SA_" + datetimestr + "_" + randomString(12),
         "SA_" + datetimestr,
     )
     return filename
@@ -96,7 +94,7 @@ def upload_to_unqiue_folder(instance, filename):
     logger.debug(instance)
     logger.debug(filename)
     logger.debug(instance.uploaded_at)
-    hash = models_tools.generate_sha1(instance.uploaded_at, "_")
+    hash = generate_sha1(instance.uploaded_at, "_")
 
     # instance_filename = Path(instance.imagefile.path).stem # sometimes the instance.imagefile does not exist
     instance_filename = Path(filename).stem

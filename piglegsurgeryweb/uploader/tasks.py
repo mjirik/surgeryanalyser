@@ -441,6 +441,35 @@ def add_row_to_spreadsheet_and_update_zip(serverfile: UploadedFile, absolute_uri
     # make_zip(serverfile)
     logger.debug("Zip updated")
 
+def update_started_at_from_log(serverfile: UploadedFile) -> Tuple[Optional[datetime], bool]:
+    piglegcv_log_path = Path(serverfile.outputdir) / "piglegcv_log.txt"
+    if not serverfile.started_at:
+        if piglegcv_log_path.exists():
+            with open(piglegcv_log_path, "r") as fr:
+                lines = fr.readlines()
+                started_at = _get_started_at_from_log_lines(lines)
+                if started_at:
+                    serverfile.started_at = started_at
+                    serverfile.save(update_fields=["started_at"])
+                    logger.debug(f"Started at set to {started_at} for {serverfile}")
+
+
+def _get_started_at_from_log_lines(lines: list[str]) -> Optional[datetime]:
+    started_at = None
+    for line in lines:
+        line = line.strip()
+        if line:
+            try:
+                # vezme prvních 23 znaků: "2025-07-31 13:41:32.787"
+                timestamp_str = line[:23]
+                started_at = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
+                started_at = django.utils.timezone.make_aware(started_at)
+                break
+            except ValueError:
+                logger.warning(f"Could not parse time in first log line: {line}")
+    return started_at
+
+
 def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None, status:Optional[str]=None):
     """
     Find status in piglegcv log file. Status is the last line of the file.
@@ -468,17 +497,7 @@ def add_status_to_uploaded_file(serverfile:UploadedFile, ok:Optional[bool]=None,
             for last_line in reversed(lines):
                 if last_line.strip():
                     break
-            for line in lines:
-                line = line.strip()
-                if line:
-                    try:
-                        # vezme prvních 23 znaků: "2025-07-31 13:41:32.787"
-                        timestamp_str = line[:23]
-                        started_at = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S.%f")
-                        started_at = django.utils.timezone.make_aware(started_at)
-                        break
-                    except ValueError:
-                        logger.warning(f"Could not parse time in first log line: {line}")
+            started_at = _get_started_at_from_log_lines(lines)
             # last_line = lines[-1]
             if "Work finished" in last_line:
                 is_ok = True
