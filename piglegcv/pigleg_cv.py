@@ -289,7 +289,6 @@ class DoComputerVision:
         pixelsize_m = qr_data["pix_size"] if "pix_size" in qr_data else None
         main_perpendicular(
             self.frame, self.outputdir, self.meta, device=self.device, img_alternative=self.frame_at_beginning,
-            pixelsize_m=pixelsize_m
                            )
         logger.debug("Perpendicular finished.")
 
