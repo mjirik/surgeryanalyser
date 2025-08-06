@@ -285,7 +285,7 @@ class DoComputerVision:
         )
         qr_data["qr_scissors_frames"] = []
         self.meta["qr_data"] = qr_data
-        logger.debug(f"{self.meta=}")
+        logger.debug(f"self.meta={self.meta}")
         pixelsize_m = qr_data["pix_size"] if "pix_size" in qr_data else None
         main_perpendicular(
             self.frame, self.outputdir, self.meta, device=self.device, img_alternative=self.frame_at_beginning,
