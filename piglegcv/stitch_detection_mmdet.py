@@ -125,9 +125,12 @@ def run_stitch_analyser(
     labels,
     expected_stitch_line,
     output_filename,
-    basewidth=640,
+    pixelsize_m,
+    # basewidth=640,
+    basewidth=800,
     class_names=["<5", "5-10", "10-15", ">15"],
     bbox_color=[(0, 255, 0), (0, 255, 255), (0, 165, 255), (0, 0, 255)],
+    show_rscore_and_sscore=False,
 ):
 
     # uniform size ... basewidth
@@ -202,20 +205,23 @@ def run_stitch_analyser(
         )  # np.arctan [-pi/2, pi/2]
                 
         xx = np.array([0, cols])
-        ax.plot(
-            xx,
-            res1.intercept + res1.slope * xx,
-            "b:",
-            label=f"r-score: {r_score:.2f}, s-score: {s_score:.3f}",
-        )
-        ax.plot(xx, res2.intercept + res2.slope * xx, "b:")
+
+        if show_rscore_and_sscore:
+            ax.plot(
+                xx,
+                res1.intercept + res1.slope * xx,
+                "b:",
+                label=f"r-score: {r_score:.2f}, s-score: {s_score:.3f}",
+            )
+            ax.plot(xx, res2.intercept + res2.slope * xx, "b:")
 
         # reference lines
         y0, y1, shift_px = expected_stitch_line
-        ax.plot(xx, [wpercent * (y0 + shift_px), wpercent * (y1 + shift_px)], "k")
-        ax.plot(xx, [wpercent * (y0 - shift_px), wpercent * (y1 - shift_px)], "k")
+        ax.plot(xx, [wpercent * (y0 + shift_px), wpercent * (y1 + shift_px)], "blue", alpha=0.5, linewidth=2)
+        ax.plot(xx, [wpercent * (y0 - shift_px), wpercent * (y1 - shift_px)], "blue", alpha=0.5, linewidth=2)
 
-        plt.legend()
+        if show_rscore_and_sscore:
+            plt.legend()
                 
         
     # plt.show()
@@ -225,6 +231,17 @@ def run_stitch_analyser(
 
     return {"r_score": r_score, "s_score": s_score, "N": N, "p_score" : p_score}
 
+def point_and_line_distance(point, line_start, line_end):
+    xp, yp = point
+    x1, y1_ = line_start
+    x2, y2_ = line_end
+
+    # Výpočet vzdálenosti
+    numerator = abs((x2 - x1) * (y1_ - yp) - (x1 - xp) * (y2_ - y1_))
+    denominator = np.sqrt((x2 - x1) ** 2 + (y2_ - y1_) ** 2)
+    distance = numerator / denominator
+
+    return distance
 
 if __name__ == "__main__":
 
@@ -240,5 +257,6 @@ if __name__ == "__main__":
         image, f"{outputdir}/stitch_detection_{i}.json"
     )
     run_stitch_analyser(
-        image, bboxes_stitches, labels_stitches, f"{outputdir}/stitch_detection_{i}.jpg"
+        image, bboxes_stitches, labels_stitches, f"{outputdir}/stitch_detection_{i}.jpg",
+        pixelsize_m=0.0001,  # example pixel size in meters (100 microns)
     )

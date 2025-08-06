@@ -17,6 +17,7 @@ import run_qr
 from incision_detection_mmdet import run_incision_detection
 from loguru import logger
 from media_tools import make_images_from_video
+from piglegcv.debug_ruler import pix_size_m
 from run_perpendicular import get_frame_to_process, main_perpendicular
 import datetime
 import sklearn
@@ -284,9 +285,12 @@ class DoComputerVision:
         )
         qr_data["qr_scissors_frames"] = []
         self.meta["qr_data"] = qr_data
-        logger.debug(self.meta)
-
-        main_perpendicular(self.frame, self.outputdir, self.meta, device=self.device, img_alternative=self.frame_at_beginning)
+        logger.debug(f"{self.meta=}")
+        pixelsize_m = qr_data["pix_size"] if "pix_size" in qr_data else None
+        main_perpendicular(
+            self.frame, self.outputdir, self.meta, device=self.device, img_alternative=self.frame_at_beginning,
+            pixelsize_m=pixelsize_m
+                           )
         logger.debug("Perpendicular finished.")
 
     def _run_tracking(self):

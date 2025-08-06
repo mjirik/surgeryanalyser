@@ -327,7 +327,7 @@ def main_perpendicular(
     needle_holder_id=0,
     canny_sigma=2,
     device="cpu",
-    img_alternative:Optional[np.ndarray]=None
+    img_alternative:Optional[np.ndarray]=None,
 ):  # (x,y)
     logger.debug("main_perpendicular...")
     # img = get_frame_to_process(filename)
@@ -344,7 +344,10 @@ def main_perpendicular(
         save_incision_cropped_images(img_alternative, outputdir, bboxes, suffix="_start")
 
     logger.debug(f"len(imgs)={len(imgs)}")
-    pixelsize_m = meta["pixelsize_m_by_incision_size"]
+    if "qr_data" in meta and "pix_size" in meta["qr_data"]:
+        pixelsize_m = meta["qr_data"]["pix_size"]
+    else:
+        pixelsize_m = meta["pixelsize_m_by_incision_size"]
 
     meta["stitch_scores"] = []
     for i, image in enumerate(imgs):
@@ -379,6 +382,7 @@ def main_perpendicular(
                 labels_stitches,
                 expected_stitch_line,
                 f"{outputdir}/stitch_detection_{i}.jpg",
+                pixelsize_m=pixelsize_m,
             )
             meta["stitch_scores"].append(stitch_score)
         except Exception as e:
