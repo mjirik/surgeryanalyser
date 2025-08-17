@@ -52,39 +52,41 @@
         }
     </style>
     <style>
-      .video-container {
-        position: relative;
-        width: 100%;
-        max-height: 70vh;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-height: 70vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .my-video {
             width: 100%;
             max-height: 70vh;
             object-fit: contain;
         }
+
         .rotate90 {
-    transform: rotate(90deg) translateY(-100%);
-    transform-origin: top left;
-}
+            transform: rotate(90deg) translateY(-100%);
+            transform-origin: top left;
+        }
 
-.rotate180 {
-    transform: rotate(180deg) translate(-100%, -100%);
-    transform-origin: top left;
-}
+        .rotate180 {
+            transform: rotate(180deg) translate(-100%, -100%);
+            transform-origin: top left;
+        }
 
-.rotate270 {
-    transform: rotate(270deg) translateX(-100%);
-    transform-origin: top left;
-}
+        .rotate270 {
+            transform: rotate(270deg) translateX(-100%);
+            transform-origin: top left;
+        }
 
-.rotate360 {
-    transform: rotate(360deg);
-    transform-origin: top left;
-}
+        .rotate360 {
+            transform: rotate(360deg);
+            transform-origin: top left;
+        }
     </style>
     <script>
         $(function () {
@@ -110,882 +112,1019 @@
 
 
 {% block body %}
-<div class="container pb-4">
+    <div class="container-fluid pb-4 mt-3">
 
 
+        <div style="display: flex; justify-content: space-between">
 
-    <div style="display: flex; justify-content: space-between">
+            <h2> Report: {{ mediafile }} </h2>
+            <div class="btn-group">
 
-        <h2> Report: {{ mediafile }} </h2>
-        <div class="btn-group">
+                <div>
+                    <a class="btn btn-secondary mt-3" href="{% url 'uploader:rotate_mediafile_right' serverfile.hash %}"
+                       data-toggle="tooltip" data-placement="top" title="actual rotation: {{ serverfile.rotation }}°"
+                    ><i class="bi bi-arrow-clockwise"></i></a>
+                </div>
+                <div class="dropdown mt-3 m-1">
+                    {#                                <div class="dropdown d-inline-block">#}
+                    <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        Collections
+                    </a>
 
-            <div>
-                <a class="btn btn-secondary mt-3" href="{% url 'uploader:rotate_mediafile_right'  serverfile.hash %}"
-                   data-toggle="tooltip" data-placement="top" title="actual rotation: {{ serverfile.rotation }}°"
-                ><i class="bi bi-arrow-clockwise"></i></a>
-            </div>
-            <div class="dropdown mt-3 m-1">
-                {#                                <div class="dropdown d-inline-block">#}
-                <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                    Collections
-                </a>
+                    <ul class="dropdown-menu">
 
-                <ul class="dropdown-menu">
-
-                    {% for collection in collections_with %}
-                        <li>
-                            <a class="dropdown-item"
-                               onclick="return confirm('Remove from collection {{ collection }}?')"
-                               href="{% url 'uploader:remove_from_collection' collection.id serverfile.id %}">
-                                <i class="bi bi-dash"></i>
-                                {{ collection.name }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    {% for collection in collections_without %}
-                        <li>
-                            <a class="dropdown-item"
-                               href="{% url 'uploader:add_to_collection' collection.id serverfile.id %}">
-                                <i class="bi bi-plus"></i>
-                                {{ collection.name }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                    {#            separator#}
-                </ul>
-
-            </div>
-
-            <div class="dropdown mt-3">
-                {#                                <div class="dropdown d-inline-block">#}
-                <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
-                   data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-three-dots"></i>
-                </a>
-
-                <ul class="dropdown-menu">
-                    {% if request.user.is_staff %}
-
-                        <li>
-                            <a class="dropdown-item"
-                               href="{% url 'admin:uploader_uploadedfile_change' serverfile.id %}">
-                                <i class="bi bi-lock"></i>
-                                Edit in admin
-                            </a>
-                        </li>
-                        <li>
-{#                        run #}
-                            <a class="dropdown-item"
-                               href="{% url 'uploader:run' serverfile.hash %}">
-                                <i class="bi bi-play"></i> Run </a>
-                        </li>
-                        <li>
-                            {#                        run #}
-                            <a class="dropdown-item"
-                                href="{% url 'uploader:run_and_force_tracking' serverfile.hash %}?next={{ request.path|urlencode }}"
-                                >
-                                <i class="bi bi-play"></i> Run (force tracking) </a>
-                        </li>
+                        {% for collection in collections_with %}
+                            <li>
+                                <a class="dropdown-item"
+                                   onclick="return confirm('Remove from collection {{ collection }}?')"
+                                   href="{% url 'uploader:remove_from_collection' collection.id serverfile.id %}">
+                                    <i class="bi bi-dash"></i>
+                                    {{ collection.name }}
+                                </a>
+                            </li>
+                        {% endfor %}
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        {% if actual_annotation %}
+                        {% for collection in collections_without %}
                             <li>
-                                {#    pop up warning on click on delete button #}
+                                <a class="dropdown-item"
+                                   href="{% url 'uploader:add_to_collection' collection.id serverfile.id %}">
+                                    <i class="bi bi-plus"></i>
+                                    {{ collection.name }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                        {#            separator#}
+                    </ul>
+
+                </div>
+
+                <div class="dropdown mt-3">
+                    {#                                <div class="dropdown d-inline-block">#}
+                    <a class="btn btn-secondary dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots"></i>
+                    </a>
+
+                    <ul class="dropdown-menu">
+                        {% if request.user.is_staff %}
+
+                            <li>
+                                <a class="dropdown-item"
+                                   href="{% url 'admin:uploader_uploadedfile_change' serverfile.id %}">
+                                    <i class="bi bi-lock"></i>
+                                    Edit in admin
+                                </a>
+                            </li>
+                            <li>
+                                {#                        run #}
+                                <a class="dropdown-item"
+                                   href="{% url 'uploader:run' serverfile.hash %}">
+                                    <i class="bi bi-play"></i> Run </a>
+                            </li>
+                            <li>
+                                {#                        run #}
+                                <a class="dropdown-item"
+                                   href="{% url 'uploader:run_and_force_tracking' serverfile.hash %}?next={{ request.path|urlencode }}"
+                                >
+                                    <i class="bi bi-play"></i> Run (force tracking) </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            {% if actual_annotation %}
+                                <li>
+                                    {#    pop up warning on click on delete button #}
                                     <a class="dropdown-item d-flex align-items-center"
-                                       href="{% url 'uploader:delete_annotation' actual_annotation.id %}" onclick="return confirm('Delete annotation {{ actual_annotation }}?')">
+                                       href="{% url 'uploader:delete_annotation' actual_annotation.id %}"
+                                       onclick="return confirm('Delete annotation {{ actual_annotation }}?')">
                                         <i class="bi bi-trash"></i> Delete annotation
                                     </a>
-                            </li>
+                                </li>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
-                    <li>
+                        <li>
 
-                        {#                                            download mediafile#}
-                        <div class="dropdown">
+                            {#                                            download mediafile#}
+                            <div class="dropdown">
 
-                            {#                    <a class="dropdown-item"#}
-                            {#                       href="{{ mediafile.mediafile.url }}" download>#}
-                            {#                        <i class="bi bi-download"></i> Add to collection#}
-                            {#                    </a>#}
-                    </li>
-                    <li>
-                        <a class="dropdown-item text-danger"
-                                {#                       href="{% url 'caidapp:delete_mediafile' mediafile.id %}"#}
-                           onclick="return confirm('Delete file {{ mediafile }}?')">
-                            <i class="bi bi-trash"></i> Delete
-                        </a>
+                                {#                    <a class="dropdown-item"#}
+                                {#                       href="{{ mediafile.mediafile.url }}" download>#}
+                                {#                        <i class="bi bi-download"></i> Add to collection#}
+                                {#                    </a>#}
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-danger"
+                                    {#                       href="{% url 'caidapp:delete_mediafile' mediafile.id %}"#}
+                               onclick="return confirm('Delete file {{ mediafile }}?')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
 
-                    </li>
-                </ul>
-            </div>
+                        </li>
+                    </ul>
+                </div>
 
-            <div>
-                <a class="btn btn-secondary mt-3 m-1" href="{% url 'uploader:issue' uploadedfile_hash=serverfile.hash %}"
-                   data-toggle="tooltip" data-placement="top" title="Report an issue"
-                >
-{#                    <i class="bi bi-"></i> #}
-                    Let us know </a>
+                <div>
+                    <a class="btn btn-secondary mt-3 m-1"
+                       href="{% url 'uploader:issue' uploadedfile_hash=serverfile.hash %}"
+                       data-toggle="tooltip" data-placement="top" title="Report an issue"
+                    >
+                        {#                    <i class="bi bi-"></i> #}
+                        Let us know </a>
+                </div>
             </div>
         </div>
-    </div>
 
-    <p>
-    <div class="accordion pt-3" id="accordionExample">
-        <div class="accordion-item">
-{#            <div class="accordion-item">#}
-                <h2 class="accordion-header">
-                    <button class="accordion-button {% if show_alternative  %}{% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRawVideo"
-                            aria-expanded="{%  if show_alternative %}true{% else %}false{% endif %}" aria-controls="collapseRawVideo">
-                        Raw video - no overlay
-                    </button>
-                </h2>
-                <div id="collapseRawVideo" class="accordion-collapse collapse {% if show_alternative  %} show {% else %} {% endif %}" data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                        {% for videofile_url in alternative_videofiles_url %}
-                            <div class="video-container pt-3">
-{#                                {{ serverfile.hash }}#}
-                                <video
-                                        id="my-raw-video"
-                                        {#                                    class="video-js embed-responsive"#}
-                                        controls
-                                        autoplay
-                                        muted
-                                        preload="auto"
-                                        data-setup='{"fluid": true}'
-                                        poster="{{ videofile_url }}.jpg"
-                                        class="my-video rotate{{ serverfile.rotation }}"
-                                >
-                                    <source src="{% url 'uploader:stream_video' serverfile.hash %}" type="video/mp4">
-{#                                    <source src="{{ videofile_url }}" type="video/mp4"/>#}
-                                    {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
-                                    <p class="vjs-no-js">
-                                        To view this video please enable JavaScript, and consider upgrading to a
-                                        web browser that
-                                        <a href="https://videojs.com/html5-video-support/" target="_blank"
-                                        >supports HTML5 video</a
+        <p>
+        <div class="row">
+            <div class="col col-12 col-md-9">
+                <div class="accordion pt-3" id="accordionExample">
+                    <div class="accordion-item">
+                        {#            <div class="accordion-item">#}
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {% if show_alternative %}{% else %}collapsed{% endif %}"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseRawVideo"
+                                    aria-expanded="{% if show_alternative %}true{% else %}false{% endif %}"
+                                    aria-controls="collapseRawVideo">
+                                Raw video - no overlay
+                            </button>
+                        </h2>
+                        <div id="collapseRawVideo"
+                             class="accordion-collapse collapse {% if show_alternative %} show {% else %} {% endif %}"
+                             data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                {% for videofile_url in alternative_videofiles_url %}
+                                    <div class="video-container pt-3">
+                                        {#                                {{ serverfile.hash }}#}
+                                        <video
+                                                id="my-raw-video"
+                                                {#                                    class="video-js embed-responsive"#}
+                                                controls
+                                                autoplay
+                                                muted
+                                                preload="auto"
+                                                data-setup='{"fluid": true}'
+                                                poster="{{ videofile_url }}.jpg"
+                                                class="my-video rotate{{ serverfile.rotation }}"
                                         >
-                                    </p>
-                                </video>
+                                            <source src="{% url 'uploader:stream_video' serverfile.hash %}"
+                                                    type="video/mp4">
+                                            {#                                    <source src="{{ videofile_url }}" type="video/mp4"/>#}
+                                            {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
+                                            <p class="vjs-no-js">
+                                                To view this video please enable JavaScript, and consider upgrading to a
+                                                web browser that
+                                                <a href="https://videojs.com/html5-video-support/" target="_blank"
+                                                >supports HTML5 video</a
+                                                >
+                                            </p>
+                                        </video>
+
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {% if show_alternative %} collapsed {% else %} {% endif %}"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
+                                    aria-expanded="{% if show_alternative %}false{% else %}true{% endif %}"
+                                    aria-controls="collapseOne">
+                                Dynamic analysis video
+                            </button>
+                        </h2>
+                        <div id="collapseOne"
+                             class="accordion-collapse collapse {% if show_alternative %} {% else %} show {% endif %}"
+                             data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                {% for videofile_url in videofiles_url %}
+                                    <div class="pt-3">
+                                        <video
+                                                id="my-video"
+                                                {#                                    class="video-js embed-responsive"#}
+                                                controls
+                                                autoplay
+                                                muted
+                                                preload="auto"
+                                                data-setup='{"fluid": true}'
+                                                poster="{{ videofile_url }}.jpg"
+                                                class="my-video"
+                                        >
+                                            <source src="{% url 'uploader:stream_ith_video' serverfile.hash 0 %}"
+                                                    type="video/mp4">
+                                            {#                                    Your browser does not support the video tag.#}
+                                            {#                                <source src="{{ videofile_url }}" type="video/mp4"/>#}
+                                            {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
+                                            <p class="vjs-no-js">
+                                                To view this video please enable JavaScript, and consider upgrading to a
+                                                web browser that
+                                                <a href="https://videojs.com/html5-video-support/" target="_blank"
+                                                >supports HTML5 video</a
+                                                >
+                                            </p>
+                                        </video>
+
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Button to add current time-position -->
+
+                    <!-- Text area to display time-positions -->
+                    {#<textarea id="time-positions" rows="4" cols="50"></textarea>#}
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Static analysis image
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                {#        <div class="pt-3">#}
+                                {#            <img src="{{ static_analysis_image.bitmap_image.url }}" class="img-fluid" alt="Responsive image">#}
+                                {#        </div>#}
+                                {#        <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.#}
+
+
+                                <a href="#" class="pop">
+                                    <figure class="figure">
+                                        <img src="{{ static_analysis_image.bitmap_image.url }}"
+                                             class="figure-img img-fluid rounded"
+                                             alt="A generic square placeholder image with rounded corners in a figure."
+                                             width=550>
+                                        -
+                                        {#                  <figcaption class="figure-caption">Static analysis image</figcaption>#}
+                                    </figure>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="col col-12 col-md-3">
+                <div>
+                    {% if form.annotation.value or edit_review %}
+{#                        flex with the buttons#}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h3>Review</h3>
+                        </div>
+                        <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                            <div class="btn-group mr-2 mb-1" role="group" aria-label="First group">
+                                {% for review in reviews %}
+                                    <a href="?review_idx={{ forloop.counter0 }}"
+                                       class="btn btn-secondary">{{ forloop.counter }}
+                                        {{ review.annotated_at|date:'Y-m-d H:i' }} </a>
+                                {% endfor %}
+                                <a href="?review_idx=new" class="btn btn-light">New Review</a>
 
                             </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button {% if show_alternative  %} collapsed {% else %} {% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne"
-                        aria-expanded="{%  if show_alternative %}false{% else %}true{% endif %}" aria-controls="collapseOne">
-                    Dynamic analysis video
-                </button>
-            </h2>
-            <div id="collapseOne" class="accordion-collapse collapse {% if show_alternative  %} {% else %} show {% endif %}" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    {% for videofile_url in videofiles_url %}
-                        <div class="pt-3">
-                            <video
-                                    id="my-video"
-                                    {#                                    class="video-js embed-responsive"#}
-                                    controls
-                                    autoplay
-                                    muted
-                                    preload="auto"
-                                    data-setup='{"fluid": true}'
-                                    poster="{{ videofile_url }}.jpg"
-                                    class="my-video"
-                            >
-                                <source src="{% url 'uploader:stream_ith_video' serverfile.hash 0 %}" type="video/mp4">
-{#                                    Your browser does not support the video tag.#}
-{#                                <source src="{{ videofile_url }}" type="video/mp4"/>#}
-                                {#                                <source src="{{ serverfile.mediafile.url }}" type="video/mp4"/>#}
-                                <p class="vjs-no-js">
-                                    To view this video please enable JavaScript, and consider upgrading to a
-                                    web browser that
-                                    <a href="https://videojs.com/html5-video-support/" target="_blank"
-                                    >supports HTML5 video</a
-                                    >
-                                </p>
-                            </video>
-
                         </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
+                        </div>
+                        <p>
+                            Do a review of the video and static image here.
+                        </p>
 
 
-        <!-- Button to add current time-position -->
-
-        <!-- Text area to display time-positions -->
-        {#<textarea id="time-positions" rows="4" cols="50"></textarea>#}
-
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                    Static analysis image
-                </button>
-            </h2>
-            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    {#        <div class="pt-3">#}
-                    {#            <img src="{{ static_analysis_image.bitmap_image.url }}" class="img-fluid" alt="Responsive image">#}
-                    {#        </div>#}
-                    {#        <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.#}
-
-
-                    <a href="#" class="pop">
-                        <figure class="figure">
-                            <img src="{{ static_analysis_image.bitmap_image.url }}" class="figure-img img-fluid rounded"
-                                 alt="A generic square placeholder image with rounded corners in a figure." width=550>
-                            -
-                            {#                  <figcaption class="figure-caption">Static analysis image</figcaption>#}
-                        </figure>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    <div>
-        {% if form.annotation.value or edit_review %}
-            <h3>Review</h3>
-            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-  <div class="btn-group mr-2 mb-1" role="group" aria-label="First group">
-      {% for review in reviews %}
-          <a href="?review_idx={{ forloop.counter0 }}" class="btn btn-secondary">{{ forloop.counter }}
-              {{ review.annotated_at|date:'Y-m-d H:i' }} </a>
-        {% endfor %}
-      <a href="?review_idx=new" class="btn btn-secondary">New Review</a>
-
-  </div>
-</div>
-
-
-            <form method="post">
-                {% csrf_token %}
-{#            form errors #}
-    {% for field in form %}
-        {% if field.errors %}
-        <span class="text-danger">
+                        <form method="post">
+                            {% csrf_token %}
+                            {#            form errors #}
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <span class="text-danger">
             {{ field.label_tag }} {{ field.errors }}
         </span>
-        {% endif %}
-                {% endfor %}
-
-
-
-                <div class="row">
-                    {#                    <!-- Text Field Column -->#}
-                    <!-- Buttons and Star Rating Column -->
-                    <div class="col-md-4">
-                        <div class="d-flex flex-column align-items-end">
-                            <h5>Video (1st stitch)</h5>
-                            {% for field in form.group2 %}
-                                <div class="fieldWrapper"
-                                    data-toggle="tooltip" data-placement="top" title="{{ field.help_text }}">
-                                    {{ field.errors }}
-                                    {{ field.label_tag }} {{ field }}
-                                </div>
-                                {#                                <br>#}
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex flex-column align-items-end">
-                            <h5>Results</h5>
-
-
-                            {% for field in form.group3 %}
-                                <div class="fieldWrapper"
-                                     data-toggle="tooltip" data-placement="top" title="{{ field.help_text }}">
-                                    {{ field.errors }}
-                                    {{ field.label_tag }} {{ field }}
-                                </div>
+                                {% endif %}
                             {% endfor %}
 
-                        <h5>Global Rating Scale</h5>
-                            {% for field in form.group4 %}
-{#                                <div class="row">#}
-{##}
-{#                                <div class="col"#}
-{#                                                data-toggle="tooltip" data-placement="top" title=" asd{{ field.help_text }}">#}
-{#                                        {{ field.label }}#}
-{#                                </div>#}
-{#                                <div class="col">#}
-                                <div class="fieldWrapper">
-                                    {{ field.errors }}
 
-                                    {#                                        {{ field }}#}
-                                    <div class="star-rating2 mb-2">
-                                        {% for choice in field %}
-                                            {{ choice.tag }}
-                                            <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
+
+{#                            <div class="row">#}
+                                {#                    <!-- Text Field Column -->#}
+                                <!-- Buttons and Star Rating Column -->
+{#                                <div class="col-md-12">#}
+                                    <div class="d-flex flex-column align-items-end">
+                                        <h5>Video (1st stitch)</h5>
+                                        {% for field in form.group2 %}
+                                            <div class="fieldWrapper"
+                                                 data-toggle="tooltip" data-placement="top"
+                                                 title="{{ field.help_text }}">
+                                                {{ field.errors }}
+                                                {{ field.label_tag }} {{ field }}
+                                            </div>
+                                            {#                                <br>#}
                                         {% endfor %}
-                                        :
-                                        <span
-                                                data-toggle="tooltip" data-placement="top" title=" {{ field.help_text }}">
+                                        <h5>Results</h5>
+
+
+                                        {% for field in form.group3 %}
+                                            <div class="fieldWrapper"
+                                                 data-toggle="tooltip" data-placement="top"
+                                                 title="{{ field.help_text }}">
+                                                {{ field.errors }}
+                                                {{ field.label_tag }} {{ field }}
+                                            </div>
+                                        {% endfor %}
+
+{#                                    </div>#}
+                                    </div>
+{#                                <div class="col-md-12">#}
+                                    <div class="d-flex flex-column align-items-end">
+                                        <h5>Global Rating Scale</h5>
+                                        {% for field in form.group4 %}
+                                            {#                                <div class="row">#}
+                                            {##}
+                                            {#                                <div class="col"#}
+                                            {#                                                data-toggle="tooltip" data-placement="top" title=" asd{{ field.help_text }}">#}
+                                            {#                                        {{ field.label }}#}
+                                            {#                                </div>#}
+                                            {#                                <div class="col">#}
+                                            <div class="fieldWrapper">
+                                                {{ field.errors }}
+
+                                                {#                                        {{ field }}#}
+                                                <div class="star-rating2 mb-2">
+                                                    {% for choice in field %}
+                                                        {{ choice.tag }}
+                                                        <label for="{{ choice.id_for_label }}"><i
+                                                                class="fa fa-star"></i></label>
+                                                    {% endfor %}
+                                                    :
+                                                    <span
+                                                            data-toggle="tooltip" data-placement="top"
+                                                            title=" {{ field.help_text }}">
                                         {{ field.label }}
                                             </span>
-                                    </div>
-{#                                </div>#}
-{#                                </div>#}
-                                </div>
-                            {% endfor %}
+                                                </div>
+                                                {#                                </div>#}
+                                                {#                                </div>#}
+                                            </div>
+                                        {% endfor %}
 
 
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="d-flex flex-column align-items-end">
-                        <h5>Global Assessment</h5>
-                        <div class="form-group">
+                                        <h5>Global Assessment</h5>
+                                        <div class="form-group">
                         <textarea class="form-control" name="annotation" id="id_annotation" rows="5"
                                   {% if not edit_review %}disabled {% endif %}
                         >{% if form.annotation.value %}{{ form.annotation.value }}{% endif %}</textarea>
-                            {% if edit_review %}
-                                <button id="add-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
-                                        data-toggle="tooltip" data-placement="top" title="Shortcut: Alt + t">
-                                    Add Timed Annotation
-                                </button>
-                                <button id="add-stitch-start-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
-                                        data-toggle="tooltip" data-placement="top" title="Add stitch start (Alt + s)">
-                                    <i class="bi bi-arrow-bar-right"></i>
-                                </button>
-                                <button id="add-knot-start-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
-                                        data-toggle="tooltip" data-placement="top" title="Knot start (Alt + d)">
-                                    <i class="bi bi-chevron-bar-down"></i>
-                                </button>
-                                <button id="add-stitch-end-time-btn" type="button" class="btn btn-secondary mb-2 mt-2"
-                                        data-toggle="tooltip" data-placement="top" title="Add stitch end (Alt + e)">
-                                    <i class="bi bi-arrow-bar-left"></i>
-                                </button>
-                                {{ from.annotation.errors }}
-                                {{ from.annotation.group.value }}
-                            {% endif %}
-                            <div class="star-rating mb-2"
-                                 data-toggle="tooltip" data-placement="top" title="{{ field.help_text }}">
-                                {% for choice in form.stars %}
-                                    {{ choice.tag }}
-                                    <label for="{{ choice.id_for_label }}"><i class="fa fa-star"></i></label>
-                                {% endfor %}
-                                : {{ form.stars.label }}
-                            </div>
-                            {% if edit_review %}
-                                <button type="submit" class="btn btn-primary">Save</button>
-                                {% if user.is_authenticated %}
-                                    <i class="fa fa-user-pen text-secondary"
-                                       data-toggle="tooltip" data-placement="top"
-                                       title="
+                                            {% if edit_review %}
+                                                <button id="add-time-btn" type="button"
+                                                        class="btn btn-secondary mb-2 mt-2"
+                                                        data-toggle="tooltip" data-placement="top"
+                                                        title="Shortcut: Alt + t">
+                                                    Add Timed Annotation
+                                                </button>
+                                                <button id="add-stitch-start-time-btn" type="button"
+                                                        class="btn btn-secondary mb-2 mt-2"
+                                                        data-toggle="tooltip" data-placement="top"
+                                                        title="Add stitch start (Alt + s)">
+                                                    <i class="bi bi-arrow-bar-right"></i>
+                                                </button>
+                                                <button id="add-knot-start-time-btn" type="button"
+                                                        class="btn btn-secondary mb-2 mt-2"
+                                                        data-toggle="tooltip" data-placement="top"
+                                                        title="Knot start (Alt + d)">
+                                                    <i class="bi bi-chevron-bar-down"></i>
+                                                </button>
+                                                <button id="add-stitch-end-time-btn" type="button"
+                                                        class="btn btn-secondary mb-2 mt-2"
+                                                        data-toggle="tooltip" data-placement="top"
+                                                        title="Add stitch end (Alt + e)">
+                                                    <i class="bi bi-arrow-bar-left"></i>
+                                                </button>
+                                                {{ from.annotation.errors }}
+                                                {{ from.annotation.group.value }}
+                                            {% endif %}
+                                            <div class="star-rating mb-2"
+                                                 data-toggle="tooltip" data-placement="top"
+                                                 title="{{ field.help_text }}">
+                                                {% for choice in form.stars %}
+                                                    {{ choice.tag }}
+                                                    <label for="{{ choice.id_for_label }}"><i
+                                                            class="fa fa-star"></i></label>
+                                                {% endfor %}
+                                                : {{ form.stars.label }}
+                                            </div>
+                                            {% if edit_review %}
+                                                <button type="submit" class="btn btn-primary">Save</button>
+                                                {% if user.is_authenticated %}
+                                                    <i class="fa fa-user-pen text-secondary"
+                                                       data-toggle="tooltip" data-placement="top"
+                                                       title="
 {#                                       annotator={{ form.annotator.value }},#}
                                        annotator={{ actual_annotation.annotator }},
                                        created_at={{ actual_annotation.created_at |date:'Y-m-d H:i' }},
                                        updated_at={{ actual_annotation.updated_at |date:'Y-m-d H:i' }}"
-                                    ></i>
-                                            {% if user.is_authenticated %}
-                                                <i class="fa fa-user text-secondary"
-                                                   data-toggle="tooltip" data-placement="top"
-                                                   title="
+                                                    ></i>
+                                                    {% if user.is_authenticated %}
+                                                        <i class="fa fa-user text-secondary"
+                                                           data-toggle="tooltip" data-placement="top"
+                                                           title="
                                                                            uploaded_by={{ serverfile.owner }},
-                                                                           uploaded_at={{ serverfile.uploaded_at |date:'Y-m-d H:i' }}"
-                                                ></i>
+                                                                           uploaded_at=
+                                                                   {{ serverfile.uploaded_at |date:'Y-m-d H:i' }}"
+                                                        ></i>
+                                                    {% endif %}
+
+                                                {% endif %}
                                             {% endif %}
+                                        </div>
+                                    </div>
+{#                                </div>#}
+{#                            </div>#}
+                        </form>
+                    {% endif %}
+                </div>
 
+            </div>
+        </div>
+    </div>
+    <div class="container pb-4">
+
+        {% if serverfile.finished_at %}
+
+
+            {% if per_stitch_report %}
+
+                <div>
+
+                    <ul class="nav nav-tabs border-start border-end" id="myTab" role="tablist">
+                        {% for stitch_report in per_stitch_report %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if forloop.first %} active {% endif %}"
+                                        id="stitch-{{ stitch_report.stitch_id }}-tab" data-bs-toggle="tab"
+                                        data-bs-target="#stitch_report_{{ stitch_report.stitch_id }}" type="button"
+                                        role="tab" aria-controls="home" aria-selected="true">Stitch
+                                    {{ stitch_report.stitch_id|add:1|floatformat:0 }}</button>
+                            </li>
+                        {% endfor %}
+
+                    </ul>
+
+                    <div class="tab-content mt-1" id="myTabContent">
+
+                        {% for stitch_report in per_stitch_report %}
+
+
+                            <div class="tab-pane fade show {% if forloop.first %} active {% endif %}"
+                                 id="stitch_report_{{ stitch_report.stitch_id }}" role="tabpanel"
+                                 aria-labelledby="stitch-{{ stitch_report.stitch_id }}-tab">
+
+                                <h3 class="mt-2">Stitch {{ stitch_report.stitch_id|add:1|floatformat:0 }}</h3>
+                                {% load star_rating %}
+
+                                {% if stitch_report.ai_movement_evaluation %}
+                                    <p>AI movement
+                                        evaluation: {{ stitch_report.ai_movement_evaluation|star_rating }}</p>
                                 {% endif %}
-                            {% endif %}
-                        </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        {% endif %}
-    </div>
 
-
-    {% if serverfile.finished_at %}
-
-
-        {% if per_stitch_report %}
-
-        <div>
-
-        <ul class="nav nav-tabs border-start border-end" id="myTab" role="tablist">
-            {% for stitch_report in per_stitch_report %}
-              <li class="nav-item" role="presentation">
-                <button class="nav-link {% if forloop.first %} active {% endif %}" id="stitch-{{ stitch_report.stitch_id }}-tab" data-bs-toggle="tab" data-bs-target="#stitch_report_{{ stitch_report.stitch_id }}" type="button" role="tab" aria-controls="home" aria-selected="true">Stitch {{ stitch_report.stitch_id|add:1|floatformat:0 }}</button>
-              </li>
-            {% endfor %}
-
-        </ul>
-
-    <div class="tab-content mt-1" id="myTabContent">
-
-                {% for stitch_report in per_stitch_report %}
-
-
-                    <div class="tab-pane fade show {% if forloop.first %} active {% endif %}" id="stitch_report_{{ stitch_report.stitch_id }}" role="tabpanel" aria-labelledby="stitch-{{ stitch_report.stitch_id }}-tab">
-
-                    <h3 class="mt-2">Stitch {{ stitch_report.stitch_id|add:1|floatformat:0 }}</h3>
-{% load star_rating %}
-
-{% if stitch_report.ai_movement_evaluation %}
-    <p>AI movement evaluation: {{ stitch_report.ai_movement_evaluation|star_rating }}</p>
-{% endif %}
-
-                    {% if stitch_report.ai_movement_evaluation %}
-                        <p>AI movement evaluation: {{ stitch_report.ai_movement_evaluation|floatformat:0 }}%</p>
-                    {% endif  %}
-                    <h4>Personalized suggestions based on Stitch duration, Needle holder trajectory length and Sudden moves count</h4>
-                    <ul>
-                        {% if stitch_report.advices|length == 0%}
-                            <li>No personalized suggestions. Your stitching seems to be perfect. </li>
-                        {% endif %}
-                        {% for advice in stitch_report.advices %}
-                            <li>{{ advice }}</li>
-                        {% endfor %}
-                    </ul>
-
-
-                        {% for graph_html in stitch_report.graphs_html %}
-
-
-                            <h4>{{ graph_html.title }}</h4>
-{#                            {% if graph_html.title == "Stitch duration [s]" %}#}
-{#                            <ul>#}
-{#                                <li>The dotted line represents your time for the stitch being analyzed. If the line is green (below 60 seconds), your time is good. If it is yellow (between 60 and 90 seconds), your time is acceptable. If it is red (above 90 seconds), your time is too slow.#}
-{#                                </li><li>The red graph below represents the distribution of time needed by experts for one stitch.#}
-{#                            </li><li>The red histogram shows the number of stitches performed by experts that took the given time indicated on the x-axis.#}
-{#                            </li><li>The blue graph represents the distribution of time needed by learners.#}
-{#                            </li><li>The blue histogram shows the number of stitches performed by learners that took the given time indicated on the x-axis.#}
-{#                            </li><li>If your time is significantly higher than the expert times, consider what may have caused the delay:#}
-{#                                <ul>#}
-{#                                    <li>Did you successfully hit the skin penetration point on the first attempt? If not, try focusing on the target point with your eye before starting the movement.#}
-{#                                    </li><li>Was the needle easy to pass through? If not, check whether it was correctly positioned in the needle holder.#}
-{#                                </li><li>Did the needle exit on the intended incision plane on the first attempt? If not, ensure you visually align with the desired exit point before starting the motion. </li>#}
-{#                                </ul>#}
-{#                            </li>#}
-{#                            </ul>#}
-{#                            {% elif graph_html.title ==  "Needle holder stitch length [m]" %}#}
-{#                            <ul>#}
-{#                                <li>The dotted line represents your needle holder stitch length for the stitch being analyzed. If the line is green (within the expert range), your length is optimal. If it is yellow (slightly outside the expert range), your length is acceptable but could be improved. If it is red (far from the expert range), your length is not ideal and may need adjustment.#}
-{##}
-{#                                </li><li>The orange graph below represents the distribution of needle holder stitch lengths used by experts.#}
-{#                                </li><li>The orange histogram shows the number of stitches performed by experts with the given stitch length indicated on the x-axis.#}
-{##}
-{#                                </li><li>The blue graph represents the distribution of needle holder stitch lengths used by learners.#}
-{#                                </li><li>The blue histogram shows the number of stitches performed by learners with the given stitch length indicated on the x-axis.#}
-{##}
-{#                                <ul>#}
-{#                            <li>If your stitch length differs significantly from expert values, consider the following: Keep the needle holder close to the incision to maintain control and consistency. Holding it too far away can lead to excessive stitch length.#}
-{#                            </li><li>Avoid erratic movements when guiding the needle through the tissue. Smooth and controlled motions help achieve a precise and consistent stitch length.#}
-{#                                </ul>#}
-{#                            </li>#}
-{##}
-{#                            </ul>#}
-{#                            {% elif graph_html.title ==  "Needle holder stitch velocity above threshold"  %}#}
-{#                                <ul>#}
-{##}
-{#                                    <li>The dotted line represents the time your needle holder velocity exceeded the threshold for the stitch being analyzed. If the line is green (within the expert range), your velocity control is optimal. If it is yellow (slightly above the threshold), your control is acceptable but could be improved. If it is red (significantly above the threshold), your movements may be too fast and uncontrolled.#}
-{##}
-{#                                    </li><li>The orange graph below represents the distribution of needle holder velocity exceeding the threshold among experts.#}
-{#                                    </li><li>The orange histogram shows the number of stitches performed by experts where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.#}
-{##}
-{#                                    </li><li>The blue graph represents the distribution of needle holder velocity exceeding the threshold among learners.#}
-{#                                    </li><li>The blue histogram shows the number of stitches performed by learners where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.#}
-{##}
-{#                                    </li><li>If your velocity exceeds expert values significantly, consider working on your instrument handling:#}
-{#                                    <ul>#}
-{#                                <li>Practice maintaining a steady grip and controlled movements with the needle holder to avoid sudden acceleration.#}
-{#                                </li><li>Focus on smooth, deliberate motions rather than quick or forceful actions to improve precision and stability.#}
-{#                                    </ul>#}
-{#                                </li>#}
-{#                                </ul>#}
-{#                            {% endif %}#}
-
-    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp{{ forloop.counter }}" aria-expanded="false" aria-controls="collapseHelp{{ forloop.counter }}">
-        Show / Hide Help {{  forloop.counter }}
-    </button>
-
-    <div class="collapse mt-2" id="collapseHelp{{ forloop.counter }}">
-        <div class="card card-body">
-            {% if graph_html.title == "Stitch duration [s]" %}
-            <ul>
-                <li>The dotted line represents your time for the stitch being analyzed. If the line is green (below 60 seconds), your time is good. If it is yellow (between 60 and 90 seconds), your time is acceptable. If it is red (above 90 seconds), your time is too slow.</li>
-                <li>The red graph below represents the distribution of time needed by experts for one stitch.</li>
-                <li>The red histogram shows the number of stitches performed by experts that took the given time indicated on the x-axis.</li>
-                <li>The blue graph represents the distribution of time needed by learners.</li>
-                <li>The blue histogram shows the number of stitches performed by learners that took the given time indicated on the x-axis.</li>
-                <li>If your time is significantly higher than the expert times, consider what may have caused the delay:
-                    <ul>
-                        <li>Did you successfully hit the skin penetration point on the first attempt? If not, try focusing on the target point with your eye before starting the movement.</li>
-                        <li>Was the needle easy to pass through? If not, check whether it was correctly positioned in the needle holder.</li>
-                        <li>Did the needle exit on the intended incision plane on the first attempt? If not, ensure you visually align with the desired exit point before starting the motion.</li>
-                    </ul>
-                </li>
-            </ul>
-            {% elif graph_html.title ==  "Needle holder stitch length [m]" %}
-            <ul>
-                <li>The dotted line represents your needle holder stitch length for the stitch being analyzed. If the line is green (within the expert range), your length is optimal. If it is yellow (slightly outside the expert range), your length is acceptable but could be improved. If it is red (far from the expert range), your length is not ideal and may need adjustment.</li>
-                <li>The orange graph below represents the distribution of needle holder stitch lengths used by experts.</li>
-                <li>The orange histogram shows the number of stitches performed by experts with the given stitch length indicated on the x-axis.</li>
-                <li>The blue graph represents the distribution of needle holder stitch lengths used by learners.</li>
-                <li>The blue histogram shows the number of stitches performed by learners with the given stitch length indicated on the x-axis.
-                    <ul>
-                        <li>If your stitch length differs significantly from expert values, consider the following: Keep the needle holder close to the incision to maintain control and consistency. Holding it too far away can lead to excessive stitch length.</li>
-                        <li>Avoid erratic movements when guiding the needle through the tissue. Smooth and controlled motions help achieve a precise and consistent stitch length.</li>
-                    </ul>
-                </li>
-            </ul>
-            {% elif graph_html.title ==  "Needle holder stitch velocity above threshold"  %}
-            <ul>
-                <li>The dotted line represents the time your needle holder velocity exceeded the threshold for the stitch being analyzed. If the line is green (within the expert range), your velocity control is optimal. If it is yellow (slightly above the threshold), your control is acceptable but could be improved. If it is red (significantly above the threshold), your movements may be too fast and uncontrolled.</li>
-                <li>The orange graph below represents the distribution of needle holder velocity exceeding the threshold among experts.</li>
-                <li>The orange histogram shows the number of stitches performed by experts where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.</li>
-                <li>The blue graph represents the distribution of needle holder velocity exceeding the threshold among learners.</li>
-                <li>The blue histogram shows the number of stitches performed by learners where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.</li>
-                <li>If your velocity exceeds expert values significantly, consider working on your instrument handling:
-                    <ul>
-                        <li>Practice maintaining a steady grip and controlled movements with the needle holder to avoid sudden acceleration.</li>
-                        <li>Focus on smooth, deliberate motions rather than quick or forceful actions to improve precision and stability.</li>
-                    </ul>
-                </li>
-            </ul>
-            {% endif %}
-        </div>
-    </div>
-
-
-
-
-
-                            {% autoescape off %}
-                                {{ graph_html.html }}
-                            {% endautoescape %}
-                            {% if graph_html.suggestions %}
-                                <h5 style="color:{{ graph_html.color }};"> {{ graph_html.suggestions.name }}</h5>
+                                {% if stitch_report.ai_movement_evaluation %}
+                                    <p>AI movement evaluation:
+                                        {{ stitch_report.ai_movement_evaluation|floatformat:0 }}%</p>
+                                {% endif %}
+                                <h4>Personalized suggestions based on Stitch duration, Needle holder trajectory length
+                                    and Sudden moves count</h4>
                                 <ul>
-                                    <li> Observation: {{ graph_html.suggestions.Observation }} </li>
-                                    <li> Recommendation: {{ graph_html.suggestions.Recommendation }} </li>
-
+                                    {% if stitch_report.advices|length == 0 %}
+                                        <li>No personalized suggestions. Your stitching seems to be perfect.</li>
+                                    {% endif %}
+                                    {% for advice in stitch_report.advices %}
+                                        <li>{{ advice }}</li>
+                                    {% endfor %}
                                 </ul>
 
-                            {% endif %}
-                        {% endfor %}
-{#                    {{ stitch_report }}#}
 
-                        {%  if stitch_report.needle_holder_compare_heatmaps_image %}
-                            <h4>Needle holder movement heatmap</h4>
-                            <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp_heatmap" aria-expanded="false" aria-controls="collapseHelp_heatmap">
-                                Show / Hide Help
-                            </button>
-                            <div class="collapse mt-2" id="collapseHelp_heatmap">
-                                <div class="card card-body">
-                                <ul>
-                                <li>The heat map represents the projection of the needle holder movement during the process of stitching on the pig foot
-                                    <ul>
-                                        <li>Above 85% frequency is considered optimal (green).
-                                        </li><li>Between 70% and 85% is considered acceptable but could be improved (yellow).
-                                        </li><li>Below 70% is considered not ideal (red).
-                                    </ul>
-                                    </li><li>If your needle holder positioning differs significantly from expert patterns, consider working on these:
+                                {% for graph_html in stitch_report.graphs_html %}
 
-                                    <ul>
-                                <li>Ensure that the needle holder remains close to the incision to maintain control and precision.
-                                </li><li>Avoid excessive movement or unnecessary repositioning to improve efficiency and consistency.
-                                </li><li>Practice smooth and controlled handling to keep the needle holder within the optimal range (green circle) throughout the stitching process.
-                                    </ul>
-                                </li>
-                                </ul>
-                                </div>
+
+                                    <h4>{{ graph_html.title }}</h4>
+                                    {#                            {% if graph_html.title == "Stitch duration [s]" %}#}
+                                    {#                            <ul>#}
+                                    {#                                <li>The dotted line represents your time for the stitch being analyzed. If the line is green (below 60 seconds), your time is good. If it is yellow (between 60 and 90 seconds), your time is acceptable. If it is red (above 90 seconds), your time is too slow.#}
+                                    {#                                </li><li>The red graph below represents the distribution of time needed by experts for one stitch.#}
+                                    {#                            </li><li>The red histogram shows the number of stitches performed by experts that took the given time indicated on the x-axis.#}
+                                    {#                            </li><li>The blue graph represents the distribution of time needed by learners.#}
+                                    {#                            </li><li>The blue histogram shows the number of stitches performed by learners that took the given time indicated on the x-axis.#}
+                                    {#                            </li><li>If your time is significantly higher than the expert times, consider what may have caused the delay:#}
+                                    {#                                <ul>#}
+                                    {#                                    <li>Did you successfully hit the skin penetration point on the first attempt? If not, try focusing on the target point with your eye before starting the movement.#}
+                                    {#                                    </li><li>Was the needle easy to pass through? If not, check whether it was correctly positioned in the needle holder.#}
+                                    {#                                </li><li>Did the needle exit on the intended incision plane on the first attempt? If not, ensure you visually align with the desired exit point before starting the motion. </li>#}
+                                    {#                                </ul>#}
+                                    {#                            </li>#}
+                                    {#                            </ul>#}
+                                    {#                            {% elif graph_html.title ==  "Needle holder stitch length [m]" %}#}
+                                    {#                            <ul>#}
+                                    {#                                <li>The dotted line represents your needle holder stitch length for the stitch being analyzed. If the line is green (within the expert range), your length is optimal. If it is yellow (slightly outside the expert range), your length is acceptable but could be improved. If it is red (far from the expert range), your length is not ideal and may need adjustment.#}
+                                    {##}
+                                    {#                                </li><li>The orange graph below represents the distribution of needle holder stitch lengths used by experts.#}
+                                    {#                                </li><li>The orange histogram shows the number of stitches performed by experts with the given stitch length indicated on the x-axis.#}
+                                    {##}
+                                    {#                                </li><li>The blue graph represents the distribution of needle holder stitch lengths used by learners.#}
+                                    {#                                </li><li>The blue histogram shows the number of stitches performed by learners with the given stitch length indicated on the x-axis.#}
+                                    {##}
+                                    {#                                <ul>#}
+                                    {#                            <li>If your stitch length differs significantly from expert values, consider the following: Keep the needle holder close to the incision to maintain control and consistency. Holding it too far away can lead to excessive stitch length.#}
+                                    {#                            </li><li>Avoid erratic movements when guiding the needle through the tissue. Smooth and controlled motions help achieve a precise and consistent stitch length.#}
+                                    {#                                </ul>#}
+                                    {#                            </li>#}
+                                    {##}
+                                    {#                            </ul>#}
+                                    {#                            {% elif graph_html.title ==  "Needle holder stitch velocity above threshold"  %}#}
+                                    {#                                <ul>#}
+                                    {##}
+                                    {#                                    <li>The dotted line represents the time your needle holder velocity exceeded the threshold for the stitch being analyzed. If the line is green (within the expert range), your velocity control is optimal. If it is yellow (slightly above the threshold), your control is acceptable but could be improved. If it is red (significantly above the threshold), your movements may be too fast and uncontrolled.#}
+                                    {##}
+                                    {#                                    </li><li>The orange graph below represents the distribution of needle holder velocity exceeding the threshold among experts.#}
+                                    {#                                    </li><li>The orange histogram shows the number of stitches performed by experts where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.#}
+                                    {##}
+                                    {#                                    </li><li>The blue graph represents the distribution of needle holder velocity exceeding the threshold among learners.#}
+                                    {#                                    </li><li>The blue histogram shows the number of stitches performed by learners where the needle holder velocity surpassed the threshold for the given time indicated on the x-axis.#}
+                                    {##}
+                                    {#                                    </li><li>If your velocity exceeds expert values significantly, consider working on your instrument handling:#}
+                                    {#                                    <ul>#}
+                                    {#                                <li>Practice maintaining a steady grip and controlled movements with the needle holder to avoid sudden acceleration.#}
+                                    {#                                </li><li>Focus on smooth, deliberate motions rather than quick or forceful actions to improve precision and stability.#}
+                                    {#                                    </ul>#}
+                                    {#                                </li>#}
+                                    {#                                </ul>#}
+                                    {#                            {% endif %}#}
+
+                                    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapseHelp{{ forloop.counter }}" aria-expanded="false"
+                                            aria-controls="collapseHelp{{ forloop.counter }}">
+                                        Show / Hide Help {{ forloop.counter }}
+                                    </button>
+
+                                    <div class="collapse mt-2" id="collapseHelp{{ forloop.counter }}">
+                                        <div class="card card-body">
+                                            {% if graph_html.title == "Stitch duration [s]" %}
+                                                <ul>
+                                                    <li>The dotted line represents your time for the stitch being
+                                                        analyzed. If the line is green (below 60 seconds), your time is
+                                                        good. If it is yellow (between 60 and 90 seconds), your time is
+                                                        acceptable. If it is red (above 90 seconds), your time is too
+                                                        slow.
+                                                    </li>
+                                                    <li>The red graph below represents the distribution of time needed
+                                                        by experts for one stitch.
+                                                    </li>
+                                                    <li>The red histogram shows the number of stitches performed by
+                                                        experts that took the given time indicated on the x-axis.
+                                                    </li>
+                                                    <li>The blue graph represents the distribution of time needed by
+                                                        learners.
+                                                    </li>
+                                                    <li>The blue histogram shows the number of stitches performed by
+                                                        learners that took the given time indicated on the x-axis.
+                                                    </li>
+                                                    <li>If your time is significantly higher than the expert times,
+                                                        consider what may have caused the delay:
+                                                        <ul>
+                                                            <li>Did you successfully hit the skin penetration point on
+                                                                the first attempt? If not, try focusing on the target
+                                                                point with your eye before starting the movement.
+                                                            </li>
+                                                            <li>Was the needle easy to pass through? If not, check
+                                                                whether it was correctly positioned in the needle
+                                                                holder.
+                                                            </li>
+                                                            <li>Did the needle exit on the intended incision plane on
+                                                                the first attempt? If not, ensure you visually align
+                                                                with the desired exit point before starting the motion.
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            {% elif graph_html.title ==  "Needle holder stitch length [m]" %}
+                                                <ul>
+                                                    <li>The dotted line represents your needle holder stitch length for
+                                                        the stitch being analyzed. If the line is green (within the
+                                                        expert range), your length is optimal. If it is yellow (slightly
+                                                        outside the expert range), your length is acceptable but could
+                                                        be improved. If it is red (far from the expert range), your
+                                                        length is not ideal and may need adjustment.
+                                                    </li>
+                                                    <li>The orange graph below represents the distribution of needle
+                                                        holder stitch lengths used by experts.
+                                                    </li>
+                                                    <li>The orange histogram shows the number of stitches performed by
+                                                        experts with the given stitch length indicated on the x-axis.
+                                                    </li>
+                                                    <li>The blue graph represents the distribution of needle holder
+                                                        stitch lengths used by learners.
+                                                    </li>
+                                                    <li>The blue histogram shows the number of stitches performed by
+                                                        learners with the given stitch length indicated on the x-axis.
+                                                        <ul>
+                                                            <li>If your stitch length differs significantly from expert
+                                                                values, consider the following: Keep the needle holder
+                                                                close to the incision to maintain control and
+                                                                consistency. Holding it too far away can lead to
+                                                                excessive stitch length.
+                                                            </li>
+                                                            <li>Avoid erratic movements when guiding the needle through
+                                                                the tissue. Smooth and controlled motions help achieve a
+                                                                precise and consistent stitch length.
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            {% elif graph_html.title ==  "Needle holder stitch velocity above threshold" %}
+                                                <ul>
+                                                    <li>The dotted line represents the time your needle holder velocity
+                                                        exceeded the threshold for the stitch being analyzed. If the
+                                                        line is green (within the expert range), your velocity control
+                                                        is optimal. If it is yellow (slightly above the threshold), your
+                                                        control is acceptable but could be improved. If it is red
+                                                        (significantly above the threshold), your movements may be too
+                                                        fast and uncontrolled.
+                                                    </li>
+                                                    <li>The orange graph below represents the distribution of needle
+                                                        holder velocity exceeding the threshold among experts.
+                                                    </li>
+                                                    <li>The orange histogram shows the number of stitches performed by
+                                                        experts where the needle holder velocity surpassed the threshold
+                                                        for the given time indicated on the x-axis.
+                                                    </li>
+                                                    <li>The blue graph represents the distribution of needle holder
+                                                        velocity exceeding the threshold among learners.
+                                                    </li>
+                                                    <li>The blue histogram shows the number of stitches performed by
+                                                        learners where the needle holder velocity surpassed the
+                                                        threshold for the given time indicated on the x-axis.
+                                                    </li>
+                                                    <li>If your velocity exceeds expert values significantly, consider
+                                                        working on your instrument handling:
+                                                        <ul>
+                                                            <li>Practice maintaining a steady grip and controlled
+                                                                movements with the needle holder to avoid sudden
+                                                                acceleration.
+                                                            </li>
+                                                            <li>Focus on smooth, deliberate motions rather than quick or
+                                                                forceful actions to improve precision and stability.
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                </ul>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+
+
+
+
+                                    {% autoescape off %}
+                                        {{ graph_html.html }}
+                                    {% endautoescape %}
+                                    {% if graph_html.suggestions %}
+                                        <h5 style="color:{{ graph_html.color }};"> {{ graph_html.suggestions.name }}</h5>
+                                        <ul>
+                                            <li> Observation: {{ graph_html.suggestions.Observation }} </li>
+                                            <li> Recommendation: {{ graph_html.suggestions.Recommendation }} </li>
+
+                                        </ul>
+
+                                    {% endif %}
+                                {% endfor %}
+                                {#                    {{ stitch_report }}#}
+
+                                {% if stitch_report.needle_holder_compare_heatmaps_image %}
+                                    <h4>Needle holder movement heatmap</h4>
+                                    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapseHelp_heatmap" aria-expanded="false"
+                                            aria-controls="collapseHelp_heatmap">
+                                        Show / Hide Help
+                                    </button>
+                                    <div class="collapse mt-2" id="collapseHelp_heatmap">
+                                        <div class="card card-body">
+                                            <ul>
+                                                <li>The heat map represents the projection of the needle holder movement
+                                                    during the process of stitching on the pig foot
+                                                    <ul>
+                                                        <li>Above 85% frequency is considered optimal (green).
+                                                        </li>
+                                                        <li>Between 70% and 85% is considered acceptable but could be
+                                                            improved (yellow).
+                                                        </li>
+                                                        <li>Below 70% is considered not ideal (red).
+                                                    </ul>
+                                                </li>
+                                                <li>If your needle holder positioning differs significantly from expert
+                                                    patterns, consider working on these:
+
+                                                    <ul>
+                                                        <li>Ensure that the needle holder remains close to the incision
+                                                            to maintain control and precision.
+                                                        </li>
+                                                        <li>Avoid excessive movement or unnecessary repositioning to
+                                                            improve efficiency and consistency.
+                                                        </li>
+                                                        <li>Practice smooth and controlled handling to keep the needle
+                                                            holder within the optimal range (green circle) throughout
+                                                            the stitching process.
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <a href="#" class="pop">
+
+                                        <figure class="figure">
+                                            <img src="{{ stitch_report.needle_holder_compare_heatmaps_image.bitmap_image.url }}"
+                                                 class="figure-img img-fluid rounded"
+                                                 alt="A generic square placeholder image with rounded corners in a figure."
+                                                 style="width:auto;">
+                                            <figcaption
+                                                    class="figure-caption">{{ stitch_report.needle_holder_compare_heatmaps_image.filename }}</figcaption>
+                                        </figure>
+                                    </a>
+                                {% endif %}
+
+
                             </div>
-
-                            <a href="#" class="pop">
-
-                                <figure class="figure">
-                                    <img src="{{ stitch_report.needle_holder_compare_heatmaps_image.bitmap_image.url }}" class="figure-img img-fluid rounded"
-                                         alt="A generic square placeholder image with rounded corners in a figure."
-                                         style="width:auto;">
-                                    <figcaption class="figure-caption">{{ stitch_report.needle_holder_compare_heatmaps_image.filename }}</figcaption>
-                                </figure>
-                            </a>
-                        {% endif %}
-
-
-                    </div>
-                {% endfor %}
-
-    </div>
-
-        </div>
-        {% endif %}
-    <div>
-{#        <h3>Statistics</h3>#}
-{#        {% if myhtml %}#}
-{##}
-{#        {% autoescape off %}#}
-{#        {{ myhtml }}#}
-{#        {% endautoescape %}#}
-{#        {% endif %}#}
-    </div>
-    <div class="accordion" id="accordionPanelsStayOpenExample">
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
-                        aria-controls="panelsStayOpen-collapseOne">
-                    Measured Values
-                </button>
-            </h2>
-            <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse">
-                <div class="accordion-body">
-                    <ul>
-                        {% for key, value in results.items %}
-                            <li><b>{{ key }}</b>: {{ value }}</li>
                         {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
-                        aria-controls="panelsStayOpen-collapseTwo">
-                    Images
-                </button>
-            </h2>
-            <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show">
-                <div class="accordion-body">
-                    <div class="pt-3">
-                        <h3>Images</h3>
-                        {% for im in image_list %}
-                            <a href="#" class="pop">
 
-                                <figure class="figure">
-                                    <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
-                                         alt="A generic square placeholder image with rounded corners in a figure."
-                                         width=550>
-                                    -
-                                    <figcaption class="figure-caption">{{ im.filename }}</figcaption>
-                                </figure>
-                            </a>
-                        {% endfor %}
+                    </div>
+
+                </div>
+            {% endif %}
+            <div>
+                {#        <h3>Statistics</h3>#}
+                {#        {% if myhtml %}#}
+                {##}
+                {#        {% autoescape off %}#}
+                {#        {{ myhtml }}#}
+                {#        {% endautoescape %}#}
+                {#        {% endif %}#}
+            </div>
+            <div class="accordion" id="accordionPanelsStayOpenExample">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true"
+                                aria-controls="panelsStayOpen-collapseOne">
+                            Measured Values
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <ul>
+                                {% for key, value in results.items %}
+                                    <li><b>{{ key }}</b>: {{ value }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+                                aria-controls="panelsStayOpen-collapseTwo">
+                            Images
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <div class="pt-3">
+                                <h3>Images</h3>
+                                {% for im in image_list %}
+                                    <a href="#" class="pop">
+
+                                        <figure class="figure">
+                                            <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
+                                                 alt="A generic square placeholder image with rounded corners in a figure."
+                                                 width=550>
+                                            -
+                                            <figcaption class="figure-caption">{{ im.filename }}</figcaption>
+                                        </figure>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
+                                    aria-controls="panelsStayOpen-collapseThree">
+                                More Images
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                {% for im in image_list_out %}
+                                    <a href="#" class="pop">
+
+                                        <figure class="figure">
+                                            <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
+                                                 alt="A generic square placeholder image with rounded corners in a figure."
+                                                 width=550>
+                                            <figcaption class="figure-caption">{{ im.filename }}</figcaption>
+                                        </figure>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <button type="button" class="close" data-dismiss="modal"><span
+                                        aria-hidden="true">&times;</span><span
+                                        class="sr-only">Close</span></button>
+                                <img src="" class="imagepreview" style="width: 100%;" alt="big report image">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="accordion-item">
-                <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
-                            aria-controls="panelsStayOpen-collapseThree">
-                        More Images
-                    </button>
-                </h2>
-                <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
-                    <div class="accordion-body">
-                        {% for im in image_list_out %}
-                            <a href="#" class="pop">
-
-                                <figure class="figure">
-                                    <img src="{{ im.bitmap_image.url }}" class="figure-img img-fluid rounded"
-                                         alt="A generic square placeholder image with rounded corners in a figure."
-                                         width=550>
-                                    <figcaption class="figure-caption">{{ im.filename }}</figcaption>
-                                </figure>
-                            </a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="imagemodal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <button type="button" class="close" data-dismiss="modal"><span
-                                aria-hidden="true">&times;</span><span
-                                class="sr-only">Close</span></button>
-                        <img src="" class="imagepreview" style="width: 100%;" alt="big report image">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
-    {% else %}
-    <h3>Statistics</h3>
-    <p><b> Automatic evaluation is not finished yet.</b></p>
-    {% endif %}
-
-    <div class="mt-3">
-        {% if next == None %}
-            <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
         {% else %}
-            <a class="btn btn-secondary" href="{{ next }}">Back</a>
-        {% endif %}
-{#        <a class="btn btn-secondary" href='{{ serverfile.mediafile.url }}' download> Download original file </a>#}
-        <a class="btn btn-secondary" href="{% url 'uploader:download_original_video' serverfile.hash %}">Download original file (dynamic server) </a>
-        {% if serverfile.zip_file %}
-            <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report </a>
-        {% endif %}
-        {% if user.is_authenticated %}
-            {#        <td><a class="btn btn-light"#}
-            {#               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send#}
-            {#            Email</a></td>#}
-            {#        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>#}
-            <a class="btn btn-secondary" href='{% url 'uploader:show_mediafile_logs' serverfile.hash %}'> Show log </a>
+            <h3>Statistics</h3>
+            <p><b> Automatic evaluation is not finished yet.</b></p>
         {% endif %}
 
+        <div class="mt-3">
+            {% if next == None %}
+                <a class="btn btn-secondary" href="{% url 'uploader:model_form_upload' %}">Upload next</a>
+            {% else %}
+                <a class="btn btn-secondary" href="{{ next }}">Back</a>
+            {% endif %}
+            {#        <a class="btn btn-secondary" href='{{ serverfile.mediafile.url }}' download> Download original file </a>#}
+            <a class="btn btn-secondary" href="{% url 'uploader:download_original_video' serverfile.hash %}">Download
+                original file (dynamic server) </a>
+            {% if serverfile.zip_file %}
+                <a class="btn btn-primary" href='{{ serverfile.zip_file.url }}'> Download whole report </a>
+            {% endif %}
+            {% if user.is_authenticated %}
+                {#        <td><a class="btn btn-light"#}
+                {#               href="{% url 'uploader:resend_report_email' uploadedfile.id %}?next={{ request.path|urlencode }}">Send#}
+                {#            Email</a></td>#}
+                {#        <td>{{ uploadedfile.started_at |date:'Y-m-d H:i' }}</td>#}
+                <a class="btn btn-secondary" href='{% url 'uploader:show_mediafile_logs' serverfile.hash %}'> Show
+                    log </a>
+            {% endif %}
+
+        </div>
     </div>
-</div>
-<script>
-    {# show tooltip #}
-    $(document).ready(function () {
-        $('[data-toggle="tooltip"]').tooltip();
-    });
-</script>
-
-{#<script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>#}
-<script>
-
-
-    document.getElementById('add-time-btn').addEventListener('click', function () {
-        var video = document.getElementById('my-video');
-        var currentTime = video.currentTime; // Get current time in seconds
-
-        // Format the time correctly
-        var hours = Math.floor(currentTime / 3600);
-        var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
-        var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
-
-        var formattedTime =
-            (hours < 10 ? "0" + hours : hours) + ":" +
-            (minutes < 10 ? "0" + minutes : minutes) + ":" +
-            (seconds < 10 ? "0" + seconds : seconds);
-
-        var textArea = document.getElementById('id_annotation');
-        textArea.value += (textArea.value ? "\n" : "") + formattedTime + " "; // Append formatted time to text area
-        textArea.focus(); // Set focus on the text area
-        textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
-    });
-
-
-    {# add keyboard shortuct #}
-    document.addEventListener('DOMContentLoaded', function () {
-        document.addEventListener('keydown', function (event) {
-            // Check if Alt is pressed along with the 'T' key
-            if (event.altKey && event.key === 't') {
-                event.preventDefault(); // Prevent any default action triggered by this combination
-                document.getElementById('add-time-btn').click(); // Trigger the button click
-            }
+    <script>
+        {# show tooltip #}
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
         });
-    });
+    </script>
 
-    document.getElementById('add-stitch-start-time-btn').addEventListener('click', function () {
-        var video = document.getElementById('my-video');
-        var currentTime = video.currentTime; // Get current time in seconds
-
-        // Format the time correctly
-        var hours = Math.floor(currentTime / 3600);
-        var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
-        var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
-
-        var formattedTime =
-            (hours < 10 ? "0" + hours : hours) + ":" +
-            (minutes < 10 ? "0" + minutes : minutes) + ":" +
-            (seconds < 10 ? "0" + seconds : seconds);
-
-        var textArea = document.getElementById('id_annotation');
-        textArea.value += (textArea.value ? "\n" : "") + formattedTime + " stitch_start"; // Append formatted time to text area
-        textArea.focus(); // Set focus on the text area
-        textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
-    });
-
-    document.getElementById('add-knot-start-time-btn').addEventListener('click', function () {
-        var video = document.getElementById('my-video');
-        var currentTime = video.currentTime; // Get current time in seconds
-
-        // Format the time correctly
-        var hours = Math.floor(currentTime / 3600);
-        var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
-        var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
-
-        var formattedTime =
-            (hours < 10 ? "0" + hours : hours) + ":" +
-            (minutes < 10 ? "0" + minutes : minutes) + ":" +
-            (seconds < 10 ? "0" + seconds : seconds);
-
-        var textArea = document.getElementById('id_annotation');
-        textArea.value += (textArea.value ? "\n" : "") + formattedTime + " knot_start"; // Append formatted time to text area
-        textArea.focus(); // Set focus on the text area
-        textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
-    });
+    {#<script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>#}
+    <script>
 
 
-    document.getElementById('add-stitch-end-time-btn').addEventListener('click', function () {
-        var video = document.getElementById('my-video');
-        var currentTime = video.currentTime; // Get current time in seconds
+        document.getElementById('add-time-btn').addEventListener('click', function () {
+            var video = document.getElementById('my-video');
+            var currentTime = video.currentTime; // Get current time in seconds
 
-        // Format the time correctly
-        var hours = Math.floor(currentTime / 3600);
-        var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
-        var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+            // Format the time correctly
+            var hours = Math.floor(currentTime / 3600);
+            var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+            var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
 
-        var formattedTime =
-            (hours < 10 ? "0" + hours : hours) + ":" +
-            (minutes < 10 ? "0" + minutes : minutes) + ":" +
-            (seconds < 10 ? "0" + seconds : seconds);
+            var formattedTime =
+                (hours < 10 ? "0" + hours : hours) + ":" +
+                (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                (seconds < 10 ? "0" + seconds : seconds);
 
-        var textArea = document.getElementById('id_annotation');
-        textArea.value += (textArea.value ? "\n" : "") + formattedTime + " stitch_end"; // Append formatted time to text area
-        textArea.focus(); // Set focus on the text area
-        textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
-    });
-
-    {# add keyboard shortuct #}
-    document.addEventListener('DOMContentLoaded', function () {
-        document.addEventListener('keydown', function (event) {
-            // Check if Alt is pressed along with the 'T' key
-            if (event.altKey && event.key === 's') {
-                event.preventDefault(); // Prevent any default action triggered by this combination
-                document.getElementById('add-stitch-start-time-btn').click(); // Trigger the button click
-            }
+            var textArea = document.getElementById('id_annotation');
+            textArea.value += (textArea.value ? "\n" : "") + formattedTime + " "; // Append formatted time to text area
+            textArea.focus(); // Set focus on the text area
+            textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
         });
-    });
 
-    {# add keyboard shortuct #}
-    document.addEventListener('DOMContentLoaded', function () {
-        document.addEventListener('keydown', function (event) {
-            // Check if Alt is pressed along with the 'T' key
-            if (event.altKey && event.key === 'e') {
-                event.preventDefault(); // Prevent any default action triggered by this combination
-                document.getElementById('add-stitch-end-time-btn').click(); // Trigger the button click
-            }
+
+        {# add keyboard shortuct #}
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (event) {
+                // Check if Alt is pressed along with the 'T' key
+                if (event.altKey && event.key === 't') {
+                    event.preventDefault(); // Prevent any default action triggered by this combination
+                    document.getElementById('add-time-btn').click(); // Trigger the button click
+                }
+            });
         });
-    });
 
-    {# add keyboard shortuct #}
-    document.addEventListener('DOMContentLoaded', function () {
-        document.addEventListener('keydown', function (event) {
-            // Check if Alt is pressed along with the 'T' key
-            if (event.altKey && event.key === 'd') {
-                event.preventDefault(); // Prevent any default action triggered by this combination
-                document.getElementById('add-knot-start-time-btn').click(); // Trigger the button click
-            }
+        document.getElementById('add-stitch-start-time-btn').addEventListener('click', function () {
+            var video = document.getElementById('my-video');
+            var currentTime = video.currentTime; // Get current time in seconds
+
+            // Format the time correctly
+            var hours = Math.floor(currentTime / 3600);
+            var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+            var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+
+            var formattedTime =
+                (hours < 10 ? "0" + hours : hours) + ":" +
+                (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                (seconds < 10 ? "0" + seconds : seconds);
+
+            var textArea = document.getElementById('id_annotation');
+            textArea.value += (textArea.value ? "\n" : "") + formattedTime + " stitch_start"; // Append formatted time to text area
+            textArea.focus(); // Set focus on the text area
+            textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
         });
-    });
 
-    {# show tooltip #}
-    {#$(document).ready(function () {#}
-    {#    $('[data-toggle="tooltip"]').tooltip();#}
-    {# }); #}
-</script>
+        document.getElementById('add-knot-start-time-btn').addEventListener('click', function () {
+            var video = document.getElementById('my-video');
+            var currentTime = video.currentTime; // Get current time in seconds
+
+            // Format the time correctly
+            var hours = Math.floor(currentTime / 3600);
+            var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+            var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+
+            var formattedTime =
+                (hours < 10 ? "0" + hours : hours) + ":" +
+                (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                (seconds < 10 ? "0" + seconds : seconds);
+
+            var textArea = document.getElementById('id_annotation');
+            textArea.value += (textArea.value ? "\n" : "") + formattedTime + " knot_start"; // Append formatted time to text area
+            textArea.focus(); // Set focus on the text area
+            textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
+        });
+
+
+        document.getElementById('add-stitch-end-time-btn').addEventListener('click', function () {
+            var video = document.getElementById('my-video');
+            var currentTime = video.currentTime; // Get current time in seconds
+
+            // Format the time correctly
+            var hours = Math.floor(currentTime / 3600);
+            var minutes = Math.floor((currentTime - (hours * 3600)) / 60);
+            var seconds = Math.floor(currentTime - (hours * 3600) - (minutes * 60));
+
+            var formattedTime =
+                (hours < 10 ? "0" + hours : hours) + ":" +
+                (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                (seconds < 10 ? "0" + seconds : seconds);
+
+            var textArea = document.getElementById('id_annotation');
+            textArea.value += (textArea.value ? "\n" : "") + formattedTime + " stitch_end"; // Append formatted time to text area
+            textArea.focus(); // Set focus on the text area
+            textArea.scrollTop = textArea.scrollHeight; // Scroll to the bottom of the text area
+        });
+
+        {# add keyboard shortuct #}
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (event) {
+                // Check if Alt is pressed along with the 'T' key
+                if (event.altKey && event.key === 's') {
+                    event.preventDefault(); // Prevent any default action triggered by this combination
+                    document.getElementById('add-stitch-start-time-btn').click(); // Trigger the button click
+                }
+            });
+        });
+
+        {# add keyboard shortuct #}
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (event) {
+                // Check if Alt is pressed along with the 'T' key
+                if (event.altKey && event.key === 'e') {
+                    event.preventDefault(); // Prevent any default action triggered by this combination
+                    document.getElementById('add-stitch-end-time-btn').click(); // Trigger the button click
+                }
+            });
+        });
+
+        {# add keyboard shortuct #}
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (event) {
+                // Check if Alt is pressed along with the 'T' key
+                if (event.altKey && event.key === 'd') {
+                    event.preventDefault(); // Prevent any default action triggered by this combination
+                    document.getElementById('add-knot-start-time-btn').click(); // Trigger the button click
+                }
+            });
+        });
+
+        {# show tooltip #}
+        {#$(document).ready(function () {#}
+        {#    $('[data-toggle="tooltip"]').tooltip();#}
+        {# }); #}
+    </script>
 {% endblock %}
