@@ -589,8 +589,22 @@
                                 {% endif %}
 
                                 {% if stitch_report.ai_movement_evaluation %}
-                                    <p class="fs-3 fw-bold" >AI movement evaluation:
-                                        {{ stitch_report.ai_movement_evaluation|floatformat:0 }}%</p>
+                                      {% with val=stitch_report.ai_movement_evaluation|floatformat:0 %}
+                                    <p class="fs-3 fw-bold">
+                                        AI movement evaluation:
+                                        <span class="
+                                            {% if val|add:'0' < 50 %}
+                                                text-danger
+                                            {% elif val|add:'0' < 80 %}
+                                                text-warning
+                                            {% else %}
+                                                text-success
+                                            {% endif %}
+                                        ">
+                                            {{ val }}%
+                                        </span>
+                                    </p>
+                                {% endwith %}
                                 {% endif %}
                                 <h4>Personalized suggestions based on Stitch duration, Needle holder trajectory length
                                     and Sudden moves count</h4>

@@ -3,7 +3,10 @@
 Actual version: "0.0.0"
 
 
-##
+## 2025-08
+
+* [changed] Style of AI movement evaluation is colored now
+* [changed] The report and the form are now in two columns layout
 
 
 ## 2025-07
