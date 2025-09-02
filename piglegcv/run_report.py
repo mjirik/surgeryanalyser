@@ -1391,6 +1391,7 @@ class MainReport:
             test_first_seconds: bool = False,
             oa_bbox: Optional[list] = None,
             median_oa_bbox_linecolor_rgb=[100, 100, 100],
+            draw_progress_line: bool = False,
             ) -> dict:
         """
 
@@ -1586,6 +1587,7 @@ class MainReport:
                 self.frame_ids[:4],
                 self.data_pixels[:4],
                 source_fps = self.fps,
+                frame_count=self.frame_cnt,
                 pix_size = self.pix_size_m,
                 qr_init=self.is_qr_detected,
                 object_colors=object_colors[:4],
@@ -1593,12 +1595,13 @@ class MainReport:
                 video_size=size_output_fig,
                 dpi=300,
                 cut_frames=cut_frames,
-                knot_frames=self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else []
+                knot_frames=self.meta["knot_split_frames"] if "knot_split_frames" in self.meta else [],
             )
             save_json(cumulative_measurements, f"{outputdir}/cumulative_measurements.json")
 
             img_first = None
             video_frame_first = None
+            im_graph = None  # picture with the graph
             i = 0
             while cap.isOpened():
                 flag, img = cap.read()
@@ -1669,22 +1672,24 @@ class MainReport:
                 if (i < M) and (hand_poses[i] != []):
                         plot_skeleton(img, np.asarray(hand_poses[i]), 0.5, 8)
 
-                t_i = 1.0 / self.fps * i
-                lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label="Track", linewidth=2)
-                im_graph = plot3(fig)
-                # fix the video size if it is not correct
-                # if not im_graph.shape[:2] == tuple(size_output_frame[::-1]):
-                # im_graph = skimage.transform.resize(
-                #     im_graph, size_output_fig[::-1], preserve_range=True
-                # ).astype(img.dtype)
-                im_graph = cv2.resize(
-                    im_graph, size_output_fig, interpolation=cv2.INTER_AREA
-                )
-                im_graph = cv2.cvtColor(
-                    im_graph, cv2.COLOR_RGB2BGR
-                )  # matplotlib generate RGB channels but cv2 BGR
-                ax.lines.pop(-1)
-                im_graph = im_graph[:, :, :3]
+                if im_graph is None or draw_progress_line:
+                    if draw_progress_line:
+                        t_i = 1.0 / self.fps * i
+                        lines = ax.plot([t_i, t_i], [0, ds_max], "-k", label="Track", linewidth=2)
+                    im_graph = plot3(fig)
+                    # fix the video size if it is not correct
+                    # if not im_graph.shape[:2] == tuple(size_output_frame[::-1]):
+                    # im_graph = skimage.transform.resize(
+                    #     im_graph, size_output_fig[::-1], preserve_range=True
+                    # ).astype(img.dtype)
+                    im_graph = cv2.resize(
+                        im_graph, size_output_fig, interpolation=cv2.INTER_AREA
+                    )
+                    im_graph = cv2.cvtColor(
+                        im_graph, cv2.COLOR_RGB2BGR
+                    )  # matplotlib generate RGB channels but cv2 BGR
+                    ax.lines.pop(-1)
+                    im_graph = im_graph[:, :, :3]
                 if self.is_qr_detected:
 
                     # if ruler_size_mm is None:
@@ -2028,7 +2033,8 @@ def create_video_report_figure(
             cut_frames=None,
             knot_frames=None,
             visualization_unit="cm",
-    ):
+            frame_count:Optional[float]=None,
+):
         # frame_ids[:4],
         # data_pixels[:4],
         # fps,
@@ -2157,6 +2163,10 @@ def create_video_report_figure(
             "t_per_class": t_per_class,
         }
 
+        if frame_count is not None:
+            video_duration = float(frame_count) / source_fps
+            ax.set_xlim(0, video_duration)
+            ax2.set_xlim(0, video_duration)
         logger.debug("main_video_report: OK")
         return fig, ax, ds_max, cumulative_measurements
 
