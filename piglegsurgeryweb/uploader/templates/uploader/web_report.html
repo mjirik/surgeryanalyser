@@ -302,6 +302,7 @@
                             <div class="accordion-body">
                                 {% for videofile_url in videofiles_url %}
                                     <div class="pt-3">
+                                        <div class="video-container" style="position: relative; display: inline-block;">
                                         <video
                                                 id="my-video"
                                                 {#                                    class="video-js embed-responsive"#}
@@ -326,6 +327,12 @@
                                                 >
                                             </p>
                                         </video>
+
+  <!-- Overlay pro čáru -->
+  <div id="progress-line"
+       style="position:absolute; top:0; bottom:0; width:2px; background:red;">
+  </div>
+                                        </div>
 
                                     </div>
                                 {% endfor %}
@@ -1142,4 +1149,24 @@
         {#    $('[data-toggle="tooltip"]').tooltip();#}
         {# }); #}
     </script>
+
+    <script>
+  const video = document.getElementById("my-video");
+  const line = document.getElementById("progress-line");
+
+  video.addEventListener("timeupdate", () => {
+    const duration = video.duration || 1; // fallback aby nebylo dělení nulou
+    const progress = video.currentTime / duration;
+
+    // zjistit aktuální šířku videa
+    const videoWidth = video.clientWidth;
+
+    // na začátku v polovině obrazu, na konci u pravého okraje
+    const startX = videoWidth * 0.635;
+    const endX = videoWidth * 0.95;
+    const x = startX + (endX - startX) * progress;
+
+    line.style.left = `${x}px`;
+  });
+</script>
 {% endblock %}
