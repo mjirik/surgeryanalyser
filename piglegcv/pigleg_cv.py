@@ -956,7 +956,7 @@ def add_dim_with_cumulative_number_of_empty_frames(X_px_fr: np.ndarray, empty_fr
 
 
 
-def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:List[int], oa_median_bbox: Optional[list], time_axis:int=2) -> np.ndarray:
+def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:List[int], oa_median_bbox: Optional[list]=None, time_axis:int=2) -> np.ndarray:
     # merge several tools
     X_px_fr_list = []
     cumulative_length = 0
