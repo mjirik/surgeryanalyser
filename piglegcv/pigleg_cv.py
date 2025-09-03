@@ -731,6 +731,15 @@ class DoComputerVision:
         self.meta["stitch_split_s"] = []
 
         oa_bbox=self.operating_area_bbox
+        oa_median_bbox = None
+        try:
+            oa_median_bbox = run_report.get_median_bbox(
+                self.outputdir,
+                self.meta['qr_data']['pix_size'],
+            )
+        except Exception as e:
+            logger.debug(traceback.format_exc())
+            logger.warning(f"Error in get_median_bbox: {e}")
 
         if self.is_microsurgery:
             tool_index = [0,1,2]
@@ -754,7 +763,8 @@ class DoComputerVision:
                     plot_clusters=plot_clusters,
                     clusters_image_path=clusters_image_path,
                     trim_tool_indexes=trim_tool_index,
-                    oa_bbox=oa_bbox
+                    oa_bbox=oa_bbox,
+                    oa_median_bbox=oa_median_bbox
                 )
             except Exception as e:
                 logger.warning(traceback.format_exc())
@@ -946,7 +956,7 @@ def add_dim_with_cumulative_number_of_empty_frames(X_px_fr: np.ndarray, empty_fr
 
 
 
-def _get_X_px_fr_more_tools(data: dict, oa_bbox: Union[list, None], tool_indexes:List[int], time_axis=2) -> np.ndarray:
+def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:List[int], oa_median_box: Optional[list], time_axis:int=2) -> np.ndarray:
     # merge several tools
     X_px_fr_list = []
     cumulative_length = 0
@@ -958,13 +968,26 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Union[list, None], tool_indexes
 
     logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
     logger.debug(f"total number of points of all tools in the operating area bbox: {cumulative_length=}")
+    if cumulative_length < 10 and oa_median_box:
+        logger.warning("No more tban 10 points found in the tracks for the selected tools.")
+
+        X_px_fr_list = []
+        cumulative_length = 0
+        for trim_tool_index in tool_indexes:
+            X_px_fr_one_tool = _get_X_px_fr(data, oa_median_box, trim_tool_index)
+            if X_px_fr_one_tool is not None:
+                X_px_fr_list.append(X_px_fr_one_tool)
+                cumulative_length += len(X_px_fr_one_tool)
+
+        logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
+        logger.debug(f"total number of points found in median bbox: {cumulative_length=}")
     if cumulative_length < 10:
         logger.warning("No more tban 10 points found in the tracks for the selected tools.")
 
         X_px_fr_list = []
         cumulative_length = 0
         for trim_tool_index in tool_indexes:
-            X_px_fr_one_tool = _get_X_px_fr(data, None, trim_tool_index)
+            X_px_fr_one_tool = _get_X_px_fr(data, oa_median_box, trim_tool_index)
             if X_px_fr_one_tool is not None:
                 X_px_fr_list.append(X_px_fr_one_tool)
                 cumulative_length += len(X_px_fr_one_tool)
@@ -1023,6 +1046,7 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
             logger.warning(
                 f"No points found in the operating area bbox for tool {tool_index}."
             )
+            return None
         X_px_fr = X_px_fr_tmp
 
     return X_px_fr
@@ -1089,7 +1113,8 @@ def find_stitch_ends_in_tracks(
     metadata=None,
     plot_clusters=False,
     clusters_image_path: Optional[Path] = None,
-    oa_bbox=None
+    oa_bbox=None,
+    oa_median_bbox=None,
 ):
     """
     Find stitch ends in tracks.
@@ -1113,7 +1138,7 @@ def find_stitch_ends_in_tracks(
 
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
     data, metadata, _ = _get_metadata(outputdir, metadata)
-    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, tool_indexes, time_axis=time_axis)
+    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, tool_indexes, time_axis=time_axis, oa_median_bbox = oa_median_bbox)
     # pix_size is in [m] to normaliza data a bit we use [mm]
     axis_normalization = np.asarray(
         [
