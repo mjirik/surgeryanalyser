@@ -1217,7 +1217,12 @@ def stream_video(request, uploadedfile_hash:str, ith_video:Optional[int]=None):
 
 
     if ith_video is None:
-        video_path = uploaded_file.mediafile.path
+        video_list = list(Path(uploaded_file.outputdir).glob("__cropped.mp4"))
+        if len(video_list) == 0:
+            video_path = uploaded_file.mediafile.path
+        else:
+            video_path = str(video_list[0])
+
     else:
         # remove starting "_" from the video name
         video_list = [ element for element in Path(uploaded_file.outputdir).glob("*.mp4") if not element.name.startswith("_")]
