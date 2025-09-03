@@ -629,7 +629,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     new_data_row = remove_empty_lists(flatten_dict(new_data_row))
     pop_from_dict(new_data_row, "qr_data_box")
 
-    df_novy=None
+    df_novy = None
     try:
         # remove NaN values from new_data_row, probably this will affect the spreadsheet serialization
         new_data_row = clean_data_for_json(new_data_row)
@@ -643,7 +643,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
         logger.error(f"Error saving data_row preparation: {str(e)}")
         logger.error(traceback.format_exc())
         logger.debug(f"new_data_row={new_data_row}")
-    if df_novy:
+    if df_novy is not None:
         try:
             # save to xlsx to media dir
             xlsx_spreadsheet_path = django.conf.settings.XLSX_SPREADSHEET_PATH
