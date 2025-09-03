@@ -956,7 +956,7 @@ def add_dim_with_cumulative_number_of_empty_frames(X_px_fr: np.ndarray, empty_fr
 
 
 
-def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:List[int], oa_median_box: Optional[list], time_axis:int=2) -> np.ndarray:
+def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:List[int], oa_median_bbox: Optional[list], time_axis:int=2) -> np.ndarray:
     # merge several tools
     X_px_fr_list = []
     cumulative_length = 0
@@ -968,13 +968,13 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:Li
 
     logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
     logger.debug(f"total number of points of all tools in the operating area bbox: {cumulative_length=}")
-    if cumulative_length < 10 and oa_median_box:
+    if cumulative_length < 10 and oa_median_bbox:
         logger.warning("No more tban 10 points found in the tracks for the selected tools.")
 
         X_px_fr_list = []
         cumulative_length = 0
         for trim_tool_index in tool_indexes:
-            X_px_fr_one_tool = _get_X_px_fr(data, oa_median_box, trim_tool_index)
+            X_px_fr_one_tool = _get_X_px_fr(data, oa_median_bbox, trim_tool_index)
             if X_px_fr_one_tool is not None:
                 X_px_fr_list.append(X_px_fr_one_tool)
                 cumulative_length += len(X_px_fr_one_tool)
@@ -987,7 +987,7 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:Li
         X_px_fr_list = []
         cumulative_length = 0
         for trim_tool_index in tool_indexes:
-            X_px_fr_one_tool = _get_X_px_fr(data, oa_median_box, trim_tool_index)
+            X_px_fr_one_tool = _get_X_px_fr(data, None, trim_tool_index)
             if X_px_fr_one_tool is not None:
                 X_px_fr_list.append(X_px_fr_one_tool)
                 cumulative_length += len(X_px_fr_one_tool)
