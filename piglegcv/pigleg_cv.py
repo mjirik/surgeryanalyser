@@ -1182,7 +1182,7 @@ def find_stitch_ends_in_tracks(
     # print(f"{splits_s=}")
     # print(f"{splits_frames=}")
 
-    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, trim_tool_indexes, time_axis=time_axis)
+    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, trim_tool_indexes, time_axis=time_axis, oa_median_bbox=oa_median_bbox)
     X_px_fr = add_dim_with_cumulative_number_of_empty_frames(X_px_fr, empty_frames_axis=empty_frame_axis)
     X2 = X_px_fr * axis_normalization
 
