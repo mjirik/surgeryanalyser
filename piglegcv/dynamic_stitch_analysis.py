@@ -100,14 +100,14 @@ class InstrumentDistance:
             logger.debug(f"coordinates1.shape={coordinates1.shape}, coordinates2.shape={coordinates2.shape}")
             logger.warning("Coordinates must have shape (n, 2), n > 2")
 
-    def average_distance(self, ignore_no_data_for_s=1):
+    def average_distance(self, ignore_no_data_for_s=1, distance_if_no_data=10):
         if self.instrument1 is None:
             logger.warning(f"Instrument {self.instrument1_name} has no data. Setting distance to {self.instrument2_name} to  infinity.")
-            return np.inf
+            return distance_if_no_data
         if  self.instrument2 is None:
             logger.warning(f"Instrument {self.instrument2_name} has no data. Setting distance to {self.instrument1_name} to  infinity.")
             # return infty if no data
-            return np.inf
+            return distance_if_no_data
             # return np.nan
 
         total_distance = 0
