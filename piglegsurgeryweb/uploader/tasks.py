@@ -629,6 +629,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
     new_data_row = remove_empty_lists(flatten_dict(new_data_row))
     pop_from_dict(new_data_row, "qr_data_box")
 
+    df_novy=None
     try:
         # remove NaN values from new_data_row, probably this will affect the spreadsheet serialization
         new_data_row = clean_data_for_json(new_data_row)
@@ -637,18 +638,30 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
         # novy = remove_iterables_from_dict(novy)
         # logger.debug(f"novy={novy}")
         df_novy = pd.DataFrame(new_data_row, index=[0])
-        # save to xlsx to media dir
-        xlsx_spreadsheet_path = django.conf.settings.XLSX_SPREADSHEET_PATH
-        xlsx_spreadsheet_append(df_novy, xlsx_spreadsheet_path)
-        # xlsx_spjson_path = Path(serverfile.outputdir) / "report.xlsx"
-        # save to local xlsx file
-        xlsx_spreadsheet_append(df_novy, Path(serverfile.outputdir) / "report.xlsx")
-        google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
+
     except Exception as e:
-        logger.error(f"Error saving data_row to serverfile: {e}")
+        logger.error(f"Error saving data_row preparation: {str(e)}")
         logger.error(traceback.format_exc())
         logger.debug(f"new_data_row={new_data_row}")
-        raise e
+    if df_novy:
+        try:
+            # save to xlsx to media dir
+            xlsx_spreadsheet_path = django.conf.settings.XLSX_SPREADSHEET_PATH
+            xlsx_spreadsheet_append(df_novy, xlsx_spreadsheet_path)
+            # xlsx_spjson_path = Path(serverfile.outputdir) / "report.xlsx"
+            # save to local xlsx file
+            xlsx_spreadsheet_append(df_novy, Path(serverfile.outputdir) / "report.xlsx")
+        except Exception as e:
+            logger.error(f"Error saving data_row to XLSX: {str(e)}")
+            logger.error(traceback.format_exc())
+            logger.debug(f"new_data_row={new_data_row}")
+
+        try:
+            google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
+        except Exception as e:
+            logger.error(f"Error saving data_row to XLSX: {str(e)}")
+            logger.error(traceback.format_exc())
+            logger.debug(f"new_data_row={new_data_row}")
 
 
 
