@@ -1791,6 +1791,8 @@ class MainReport:
                 tpvp["frame_ids"][tool_id2], tpvp["data_pixels"][tool_id2],
                 self.fps,
                 pix_size=self.pix_size_m,
+                instrument1_name=str(tool_id1),
+                instrument2_name=str(tool_id2),
             )
             data_results[
                 f"Needle holder to forceps {long_name.lower()} average distance [m]"] = dynamic_analysis.average_distance()
