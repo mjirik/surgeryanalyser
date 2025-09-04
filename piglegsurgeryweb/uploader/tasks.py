@@ -659,7 +659,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
         try:
             google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
         except Exception as e:
-            logger.error(f"Error saving data_row to XLSX: {str(e)}")
+            logger.error(f"Error saving data_row to google spreadsheet: {str(e)}")
             logger.error(traceback.format_exc())
             logger.debug(f"new_data_row={new_data_row}")
 

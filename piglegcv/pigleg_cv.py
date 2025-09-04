@@ -220,6 +220,8 @@ class DoComputerVision:
                     stats.stream = f
                     stats.print_stats(30)
                 logger.debug("Profiler stats saved.")
+                # log profiler stats to logger
+                logger.debug(stats.print_stats(30))
             logger.debug("Work finished")
         except Exception as e:
             logger.error(traceback.format_exc())

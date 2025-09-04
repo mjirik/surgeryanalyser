@@ -110,7 +110,73 @@ def xlsx_spreadsheet_append(data: Union[pd.DataFrame, dict], file_path: Union[st
 
     return df_out
 
+def deduplicate_columns(columns: list[str]) -> list[str]:
+    """
+    Ensure column names are unique by appending suffixes.
+    Example: ["A", "B", "A"] -> ["A", "B", "A_2"]
+    """
+    seen = {}
+    result = []
+    for col in columns:
+        if col in seen:
+            seen[col] += 1
+            new_col = f"{col}_{seen[col]}"
+            result.append(new_col)
+        else:
+            seen[col] = 1
+            result.append(col)
+    return result
+
+
 def google_spreadsheet_append(
+    title: str, creds, data: Union[pd.DataFrame, dict], scope=None, sheet_index=0
+) -> pd.DataFrame:
+    if isinstance(data, dict):
+        first_key = list(data.keys())[0]
+        if isinstance(data[first_key], list):
+            df_novy = pd.DataFrame(data)
+        else:
+            df_novy = pd.DataFrame(data, index=[0])
+    else:
+        df_novy = data
+
+    if scope is None:
+        scope = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ]
+    logger.debug("Appending row to Google Sheets with new method.")
+
+    if isinstance(creds, (str, Path)):
+        creds = ServiceAccountCredentials.from_json_keyfile_name(Path(creds), scope)
+
+    client = gspread.authorize(creds)
+    sheet = client.open(title)
+    sheet_instance = sheet.get_worksheet(sheet_index)
+
+    # --- load header hlavičku ---
+    header = sheet_instance.row_values(1)
+
+    # sjednotit sloupce
+    all_cols = list(dict.fromkeys(header + list(df_novy.columns)))
+    all_cols = deduplicate_columns(all_cols)   # <--- tady
+
+    df_out = df_novy.reindex(columns=all_cols)
+
+    # nahradit NaN → prázdno
+    df_out2 = df_out.where(pd.notnull(df_out), "").fillna("")
+
+    # --- update hlavičky pokud se změnila ---
+    if header != all_cols:
+        sheet_instance.update([all_cols], range_name="A1")
+
+    # --- přidat nové řádky ---
+    sheet_instance.append_rows(df_out2.values.tolist(), value_input_option="RAW")
+
+    return df_out2
+
+
+def google_spreadsheet_append_deprecated(
     title: str, creds, data: Union[pd.DataFrame, dict], scope=None, sheet_index=0
 ) -> pd.DataFrame:
     # define the scope

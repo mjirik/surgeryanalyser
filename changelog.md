@@ -2,6 +2,11 @@
 
 Actual version: "0.0.0"
 
+## 2025-09
+
+* [added] Progress bar in processed video is drawn by overlay in web report
+* [added] Profiler added
+* [changed] Google API spreadsheet report now works with firs row and last row only
 
 ## 2025-08
 
