@@ -212,16 +212,8 @@ class DoComputerVision:
             if profiler is not None:
                 logger.debug("Stopping profiler")
                 profiler.disable()
-                profiler.dump_stats(str(self.outputdir / "piglegcv_profiler_stats.prof"))
-                stats = pstats.Stats(profiler)
-                stats.strip_dirs().sort_stats("cumtime")
-
-                with open(self.outputdir / "piglegcv_profiler_stats.txt", "w") as f:
-                    stats.stream = f
-                    stats.print_stats(30)
-                logger.debug("Profiler stats saved.")
+                self.save_profiler_data(profiler)
                 # log profiler stats to logger
-                # TODO print logs
                 # logger.debug("\n" + "\n".join(stats.text.splitlines()[:30]))
 
             logger.debug("Work finished")
@@ -230,6 +222,28 @@ class DoComputerVision:
         finally:
             logger.remove(self.logger_id)
         # self.logger_id = None
+
+    def save_profiler_data(self, profiler):
+        import pstats
+        profiler.dump_stats(str(self.outputdir / "piglegcv_profiler_stats.prof"))
+
+        stats = pstats.Stats(profiler)
+        stats.strip_dirs().sort_stats("cumtime")
+        with open(self.outputdir / "piglegcv_profiler_stats.txt", "w") as f:
+            stats.stream = f
+            stats.print_stats(50)
+        logger.debug("Profiler stats saved.")
+        import io
+        import sys
+        output = io.StringIO()
+        stats.stream = output
+        stats.print_stats(20)
+        stats_string = output.getvalue()
+        stats_lines = stats_string.splitlines()
+        # Now stats_lines is a list of strings, each representing a line of the stats output
+        # You can iterate through stats_lines and log each line.
+        for i, line in enumerate(stats_lines):
+            logger.debug(f"{i:03d} {line}")  # Replace with your logger.debug(line)
 
     def _make_sure_media_is_cropped(self):
         if self.filename_cropped is None:
