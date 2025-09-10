@@ -513,14 +513,29 @@ class DoComputerVision:
         filename,
         return_qrdata=False,
         n_tries=None,
-        debug_image_file: Optional[Path] = None,
+        debug_image_file: Optional[Path, str] = None,
+        debug_image_file_pattern: Optional[str] = None,
         frame_from_end_step: int = 5,
         n_detection_tries: int = 180,
         frame_from_end: int = 0,
     ):
+        """ Get a frame from the video that ideally contains an incision.
+
+        :param filename: Path to the video file.
+        :param return_qrdata: If True, return the QR data along with the frame.
+        :param n_tries: Number of tries to get a frame. If None, try until a frame is found.
+        :param debug_image_file: If provided, save the debug image with detected bbox to this file.
+        :param debug_image_file_pattern: If provided, save the debug image with detected bbox to this file pattern. This will produce more images for each try.
+                                        The pattern should contain {frame_from_end}, {i}, {n_detection_tries}, {frame_from_end_step} placeholders.
+        :param frame_from_end_step: Step size to move back in frames when searching for incision.
+        :param n_detection_tries: Number of tries to detect incision.
+        :param frame_from_end: Start
+
+        """
         # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
         # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         # remember at least some frame for the case that no incision is found and we will run out of frames
+        debug_image_file_pattern = str(debug_image_file_pattern)
         bad_last_frame = None
         bad_qr_data = None
         if self.is_video:
@@ -540,8 +555,9 @@ class DoComputerVision:
                     break
                 else:
                     try:
+                        debug_image_file_i = Path(debug_image_file_pattern.format(frame_from_end=frame_from_end, i=i, n_detection_tries=n_detection_tries, frame_from_end_step=frame_from_end_step))
                         qr_data = run_qr.bbox_info_extraction_from_frame(
-                            frame, device=self.device, debug_image_file=debug_image_file
+                            frame, device=self.device, debug_image_file=debug_image_file_i
                         )
                     except IndexError as e:
                         logger.error(f"Error in bbox_info_extraction_from_frame: {e}")
@@ -556,6 +572,10 @@ class DoComputerVision:
                     if len(qr_data["incision_bboxes"]) > 0:
                         logger.debug(
                             f"Found incision bbox in frame {frame_from_end} from the end."
+                        )
+                        # just to save the image with bbox
+                        _ = run_qr.bbox_info_extraction_from_frame(
+                            frame, device=self.device, debug_image_file=debug_image_file
                         )
                         break
                     else:
@@ -579,12 +599,14 @@ class DoComputerVision:
 
     def get_parameters_for_crop_rotate_rescale(self):
         logger.debug(f"device={self.device}")
+        logger.debug("Getting parameters for crop, rotate and rescale...")
         if self.is_video:
             self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
                 self.filename_original,
                 return_qrdata=True,
                 debug_image_file=self.outputdir
                 / "_single_image_detector_results_full_size.jpg",
+                debug_image_file_pattern=str(self.outputdir/"_single_image_detector_results_full_size_try_{frame_from_end}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"),
             )
         else:
             self.frame, local_meta = get_frame_to_process(self.filename_original)
