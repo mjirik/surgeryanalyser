@@ -513,7 +513,7 @@ class DoComputerVision:
         filename,
         return_qrdata=False,
         n_tries=None,
-        debug_image_file: Optional[Path, str] = None,
+        debug_image_file: Optional[Path] = None,
         debug_image_file_pattern: Optional[str] = None,
         frame_from_end_step: int = 5,
         n_detection_tries: int = 180,
@@ -606,7 +606,10 @@ class DoComputerVision:
                 return_qrdata=True,
                 debug_image_file=self.outputdir
                 / "_single_image_detector_results_full_size.jpg",
-                debug_image_file_pattern=str(self.outputdir/"_single_image_detector_results_full_size_try_{frame_from_end}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"),
+                debug_image_file_pattern= str(
+                    self.outputdir/
+                    "_single_image_detector_results_full_size_try_{frame_from_end}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"
+                ),
             )
         else:
             self.frame, local_meta = get_frame_to_process(self.filename_original)
