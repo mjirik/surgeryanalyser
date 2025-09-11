@@ -555,8 +555,11 @@ class DoComputerVision:
                     break
                 else:
                     try:
-                        debug_image_file_i = Path(debug_image_file_pattern.format(frame_from_end=frame_from_end, i=i, n_detection_tries=n_detection_tries, frame_from_end_step=frame_from_end_step))
-                        logger.debug(f"Trying frame {frame_from_end} from the end, i={i}, debug_image_file_i={debug_image_file_i}")
+                        if debug_image_file_pattern:
+                            debug_image_file_i = Path(debug_image_file_pattern.format(frame_from_end=frame_from_end, i=i, n_detection_tries=n_detection_tries, frame_from_end_step=frame_from_end_step))
+                            logger.debug(f"Trying frame {frame_from_end} from the end, i={i}, debug_image_file_i={debug_image_file_i}")
+                        else:
+                            debug_image_file_i = None
                         qr_data = run_qr.bbox_info_extraction_from_frame(
                             frame, device=self.device, debug_image_file=debug_image_file_i
                         )
