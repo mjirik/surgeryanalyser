@@ -255,7 +255,12 @@ def run_processing(
         logger.error(traceback.format_exc())
         add_status_to_uploaded_file(serverfile, ok=False, status="Webapp error: " + str(err))
         logger.error("Processing finished in API with error")
-        logger.remove(logger_id)
+        try:
+            logger.remove(logger_id)
+        except ValueError as e:
+            logger.error(traceback.format_exc())
+            logger.error(f"Error removing logger during exception: {e}")
+
         raise err
 
 
