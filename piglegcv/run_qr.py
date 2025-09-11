@@ -57,6 +57,8 @@ def get_bboxes(
     img_results = None
     # if image_file is not None:
     logger.debug("saving single_image_detector result")
+    logger.debug(f"{image_file=}")
+
     img_results = single_image_model.show_result(
         img,
         bboxes,
