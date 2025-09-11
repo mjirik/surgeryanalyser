@@ -535,7 +535,6 @@ class DoComputerVision:
         # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
         # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         # remember at least some frame for the case that no incision is found and we will run out of frames
-        debug_image_file_pattern = str(debug_image_file_pattern)
         bad_last_frame = None
         bad_qr_data = None
         if self.is_video:
@@ -556,6 +555,7 @@ class DoComputerVision:
                 else:
                     try:
                         if debug_image_file_pattern:
+                            debug_image_file_pattern = str(debug_image_file_pattern)
                             debug_image_file_i = Path(debug_image_file_pattern.format(frame_from_end=frame_from_end, i=i, n_detection_tries=n_detection_tries, frame_from_end_step=frame_from_end_step))
                             logger.debug(f"Trying frame {frame_from_end} from the end, i={i}, debug_image_file_i={debug_image_file_i}")
                         else:
