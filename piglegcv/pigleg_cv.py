@@ -530,7 +530,7 @@ class DoComputerVision:
         :param debug_image_file_pattern: If provided, save the debug image with detected bbox to this file pattern. This will produce more images for each try.
                                         The pattern should contain {frame_from_end}, {i}, {n_detection_tries}, {frame_from_end_step} placeholders.
         :param frame_from_end_step: Step size to move back in frames when searching for incision.
-        :param n_detection_tries: Number of tries to detect incision.
+        :param n_detection_tries: Number of tries to detect incision. For each detection several the frame is looked n_tries times.
         :param frame_from_end: Start
 
         """
@@ -603,19 +603,27 @@ class DoComputerVision:
         else:
             return frame
 
-    def get_parameters_for_crop_rotate_rescale(self):
+    def get_parameters_for_crop_rotate_rescale(self, inision_detection_debug_images: bool = False):
         logger.debug(f"device={self.device}")
         logger.debug("Getting parameters for crop, rotate and rescale...")
+
+        debug_image_file_pattern = None
+        if inision_detection_debug_images:
+            debug_image_file_pattern = str(
+                    self.outputdir/
+                    "_single_image_detector_results_full_size_try_{frame_from_end:07d}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"
+                )
+
+
+
         if self.is_video:
             self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
                 self.filename_original,
                 return_qrdata=True,
                 debug_image_file=self.outputdir
                 / "_single_image_detector_results_full_size.jpg",
-                debug_image_file_pattern= str(
-                    self.outputdir/
-                    "_single_image_detector_results_full_size_try_{frame_from_end:07d}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"
-                ),
+                debug_image_file_pattern=debug_image_file_pattern,
+                n_detection_tries=60, # try to look back for 20 seconds (15 FPS, each 5th frame)
             )
         else:
             self.frame, local_meta = get_frame_to_process(self.filename_original)
