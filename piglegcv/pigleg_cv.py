@@ -138,6 +138,7 @@ class DoComputerVision:
         self.results = None
         self.force_tracking = force_tracking
         self.operating_area_bbox = None
+        self.median_operating_area_bbox = None
         self.is_video: bool = (
             False
             if Path(self.filename).suffix.lower()
@@ -785,9 +786,13 @@ class DoComputerVision:
                 self.outputdir,
                 self.meta['qr_data']['pix_size'],
             )
+            self.median_operating_area_bbox = oa_median_bbox
         except Exception as e:
             logger.debug(traceback.format_exc())
             logger.warning(f"Error in get_median_bbox: {e}")
+
+        logger.debug(f"{oa_bbox=}")
+        logger.debug(f"{oa_median_bbox=}")
 
         if self.is_microsurgery:
             tool_index = [0,1,2]
@@ -1016,7 +1021,7 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:Li
 
     logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
     logger.debug(f"total number of points of all tools in the operating area bbox: {cumulative_length=}")
-    if cumulative_length < 10 and oa_median_bbox:
+    if (cumulative_length < 10) and (oa_median_bbox is not None):
         logger.warning("No more tban 10 points found in the tracks for the selected tools.")
 
         X_px_fr_list = []
