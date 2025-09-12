@@ -106,7 +106,7 @@ def interpret_bboxes(
     bboxes: list,
     masks,
     calibration_micro_thr: float = 0.5,
-    ia_threshold: float = 0.8,
+    incision_bbox_threshold: float = 0.8,
     scene_area_threshold: float = 0.35,
 ):
     # -1: incision area
@@ -123,7 +123,7 @@ def interpret_bboxes(
     bboxes_incision_area = tools.sort_bboxes(bboxes_incision_area)
 
     bboxes_incision_area = tools.filter_bboxes_by_confidence(
-        bboxes_incision_area, ia_threshold
+        bboxes_incision_area, incision_bbox_threshold
     )
 
     scene_area_bboxes = tools.filter_bboxes_by_confidence(

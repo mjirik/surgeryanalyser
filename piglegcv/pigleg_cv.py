@@ -613,7 +613,7 @@ class DoComputerVision:
                 / "_single_image_detector_results_full_size.jpg",
                 debug_image_file_pattern= str(
                     self.outputdir/
-                    "_single_image_detector_results_full_size_try_{frame_from_end}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"
+                    "_single_image_detector_results_full_size_try_{frame_from_end:07d}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"
                 ),
             )
         else:
