@@ -127,12 +127,15 @@ def get_ram():
     )
 
 
-def get_vram(device: Optional[torch.device] = None) -> str:
+def get_vram(device: Optional[torch.device] = None, allow_raise_exception=True) -> str:
     """Get visualized VRAM usage in GB."""
     device = get_torch_cuda_device_if_available(device)
     device = device if device else torch.cuda.current_device()
     if torch.device(device).type == "cpu":
         return "No GPU available"
+    if not torch.cuda.is_available():
+        if allow_raise_exception:
+            raise Exception("CUDA GPU asked but not available.")
     try:
         free = torch.cuda.mem_get_info(device)[0] / 1024**3
         total = torch.cuda.mem_get_info(device)[1] / 1024**3
