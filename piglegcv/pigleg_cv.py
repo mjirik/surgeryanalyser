@@ -663,8 +663,8 @@ class DoComputerVision:
                 debug_image_file=self.outputdir
                 / "_single_image_detector_results_full_size.jpg",
                 debug_image_file_pattern=debug_image_file_pattern,
-                n_detection_tries=30, # try to look back for 20 seconds (15 FPS, each 5th frame)
-                n_tries=20,
+                n_detection_tries=25, # try to look back for 20 seconds (15 FPS, each 5th frame)
+                n_tries=25,
                 frame_from_end_step=10,
                 purpose_log_text="get parameters for crop, rotate and rescale"
             )
