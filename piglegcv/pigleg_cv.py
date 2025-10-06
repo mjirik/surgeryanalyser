@@ -309,7 +309,9 @@ class DoComputerVision:
         self._make_sure_media_is_cropped()
         logger.debug("Running image processing...")
         self.frame = self._get_frame_to_process_ideally_with_incision(
-            self.filename_cropped, n_tries=180,
+            self.filename_cropped,
+            n_tries=10,
+            n_detection_tries=60,
             purpose_log_text="run image processing"
         )
         # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
@@ -436,7 +438,8 @@ class DoComputerVision:
         logger.debug("Searching for frame at beginning")
         self.frame_at_beginning = self._get_frame_to_process_ideally_with_incision(
             self.filename_cropped,
-            n_tries=100,
+            n_tries=10,
+            n_detection_tries=60,
             frame_from_end=-1,
             frame_from_end_step=-5,
             purpose_log_text="find frame at beginning of video"
@@ -535,7 +538,7 @@ class DoComputerVision:
         debug_image_file: Optional[Path] = None,
         debug_image_file_pattern: Optional[str] = None,
         frame_from_end_step: int = 5,
-        n_detection_tries: int = 180,
+        n_detection_tries: int = 90,
         frame_from_end: int = 0,
         purpose_log_text: Optional[str] = None,
         incision_detection_threshold_initial: float = 0.8,
@@ -556,6 +559,7 @@ class DoComputerVision:
         :param frame_from_end: Start
 
         """
+        # wholen umber of iterations is n_detection_tries * n_tries
         # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
         # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         # remember at least some frame for the case that no incision is found and we will run out of frames
