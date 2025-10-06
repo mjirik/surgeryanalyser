@@ -294,7 +294,8 @@ class DoComputerVision:
         self._make_sure_media_is_cropped()
         logger.debug("Running image processing...")
         self.frame = self._get_frame_to_process_ideally_with_incision(
-            self.filename_cropped, n_tries=None
+            self.filename_cropped, n_tries=180,
+            purpose_log_text="run image processing"
         )
         # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(
@@ -422,7 +423,8 @@ class DoComputerVision:
             self.filename_cropped,
             n_tries=100,
             frame_from_end=-1,
-            frame_from_end_step=-5
+            frame_from_end_step=-5,
+            purpose_log_text="find frame at beginning of video"
         )
         logger.debug(f"{type(self.frame_at_beginning)=}")
 
@@ -520,6 +522,7 @@ class DoComputerVision:
         frame_from_end_step: int = 5,
         n_detection_tries: int = 180,
         frame_from_end: int = 0,
+        purpose_log_text: Optional[str] = None
     ):
         """ Get a frame from the video that ideally contains an incision.
 
@@ -547,7 +550,8 @@ class DoComputerVision:
                     n_tries=n_tries,
                     return_metadata=True,
                     reference_frame_position_from_end=frame_from_end,
-                    step=frame_from_end_step
+                    step=frame_from_end_step,
+                    purpose_log_text = purpose_log_text
                 )
                 if frame is None:
                     logger.debug("Frame is None.")
@@ -623,7 +627,10 @@ class DoComputerVision:
                 debug_image_file=self.outputdir
                 / "_single_image_detector_results_full_size.jpg",
                 debug_image_file_pattern=debug_image_file_pattern,
-                n_detection_tries=60, # try to look back for 20 seconds (15 FPS, each 5th frame)
+                n_detection_tries=30, # try to look back for 20 seconds (15 FPS, each 5th frame)
+                n_tries=10,
+                frame_from_end_step=10,
+                purpose_log_text="get parameters for crop, rotate and rescale"
             )
         else:
             self.frame, local_meta = get_frame_to_process(self.filename_original)
