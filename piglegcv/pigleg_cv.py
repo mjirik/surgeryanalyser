@@ -583,7 +583,7 @@ class DoComputerVision:
                     # return at least some frame if possible
                     frame = bad_last_frame
                     qr_data = bad_qr_data
-                    break
+                    continue
                 else:
                     at_least_some_frame = frame
                     try:
@@ -664,7 +664,7 @@ class DoComputerVision:
                 / "_single_image_detector_results_full_size.jpg",
                 debug_image_file_pattern=debug_image_file_pattern,
                 n_detection_tries=30, # try to look back for 20 seconds (15 FPS, each 5th frame)
-                n_tries=10,
+                n_tries=20,
                 frame_from_end_step=10,
                 purpose_log_text="get parameters for crop, rotate and rescale"
             )
