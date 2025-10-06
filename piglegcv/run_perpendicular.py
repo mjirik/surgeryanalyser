@@ -229,10 +229,11 @@ def get_frame_to_process(
             "frame_count": totalframecount,
             "reference_frame_position_from_end": int(reference_frame_position_from_end),
         }
+    img_array_or_null = None if imag is None else np.asarray(imag)
     if return_metadata:
-        return np.asarray(imag), metadata
+        return img_array_or_null, metadata
     else:
-        return np.asarray(imag)
+        return img_array_or_null
 
 
 def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma):

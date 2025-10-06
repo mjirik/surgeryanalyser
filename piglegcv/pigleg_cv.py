@@ -580,10 +580,12 @@ class DoComputerVision:
                 )
                 if frame is None:
                     logger.debug("Frame is None.")
+                    # return at least some frame if possible
                     frame = bad_last_frame
                     qr_data = bad_qr_data
                     break
                 else:
+                    at_least_some_frame = frame
                     try:
                         if debug_image_file_pattern:
                             debug_image_file_pattern = str(debug_image_file_pattern)
@@ -629,7 +631,7 @@ class DoComputerVision:
             logger.debug(
                 f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
             )
-        else:
+        else: # is image
             frame, _ = get_frame_to_process(
                 str(filename),
                 n_tries=n_tries,
