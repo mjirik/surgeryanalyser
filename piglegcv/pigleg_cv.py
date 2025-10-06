@@ -94,6 +94,21 @@ def make_bool_from_string(s: str) -> bool:
         else:
             return False
 
+import math
+
+def exponential_threshold(iteration, initial_threshold, decay_rate=0.1, lower_limit=0.):
+    """Calculates an exponentially decaying threshold.
+
+    Args:
+    initial_threshold: The starting threshold value.
+    decay_rate: The rate at which the threshold decays (a value between 0 and 1).
+    iteration: The current iteration number (starting from 0).
+
+    Returns:
+    The calculated threshold for the given iteration.
+    """
+    return (initial_threshold - lower_limit) * math.exp(-decay_rate * iteration) + lower_limit
+
 
 class DoComputerVision:
     def __init__(
@@ -522,7 +537,11 @@ class DoComputerVision:
         frame_from_end_step: int = 5,
         n_detection_tries: int = 180,
         frame_from_end: int = 0,
-        purpose_log_text: Optional[str] = None
+        purpose_log_text: Optional[str] = None,
+        incision_detection_threshold_initial: float = 0.8,
+        incision_detection_threshold_exponential_decay: float = 0.01,
+        incision_detection_threshold_lower_limit: float = 0.5,
+
     ):
         """ Get a frame from the video that ideally contains an incision.
 
@@ -542,9 +561,11 @@ class DoComputerVision:
         # remember at least some frame for the case that no incision is found and we will run out of frames
         bad_last_frame = None
         bad_qr_data = None
+        iteration_counter = 0
         if self.is_video:
             # frame_from_end = 0
             for i in range(n_detection_tries):
+                iteration_counter += 1
                 frame, local_meta = get_frame_to_process(
                     str(filename),
                     n_tries=n_tries,
@@ -566,8 +587,17 @@ class DoComputerVision:
                             logger.debug(f"Trying frame {frame_from_end} from the end, i={i}, debug_image_file_i={debug_image_file_i}")
                         else:
                             debug_image_file_i = None
+
+                        incision_detection_threshold = exponential_threshold(
+                            iteration_counter,
+                            incision_detection_threshold_initial,
+                            incision_detection_threshold_exponential_decay,
+                            incision_detection_threshold_lower_limit
+                        )
                         qr_data = run_qr.bbox_info_extraction_from_frame(
-                            frame, device=self.device, debug_image_file=debug_image_file_i
+                            frame, device=self.device, debug_image_file=debug_image_file_i,
+                            incision_bbox_threshold=incision_detection_threshold
+
                         )
                     except IndexError as e:
                         logger.error(f"Error in bbox_info_extraction_from_frame: {e}")
@@ -581,7 +611,7 @@ class DoComputerVision:
                     bad_qr_data = qr_data
                     if len(qr_data["incision_bboxes"]) > 0:
                         logger.debug(
-                            f"Found incision bbox in frame {frame_from_end} from the end."
+                            f"Found incision bbox in frame {frame_from_end} from the end. {incision_detection_threshold=}."
                         )
                         # just to save the image with bbox
                         _ = run_qr.bbox_info_extraction_from_frame(
