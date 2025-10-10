@@ -647,7 +647,7 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     """
 
     now = timezone.now()
-    thirty_minutes_ago = now - timedelta(minutes=30)
+    thirty_minutes_ago = now - timedelta(minutes=20)
     today = timezone.now().date()
 
 

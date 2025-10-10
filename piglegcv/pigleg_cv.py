@@ -563,18 +563,20 @@ class DoComputerVision:
         # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
         # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         # remember at least some frame for the case that no incision is found and we will run out of frames
+        detection_frame_step = frame_from_end_step * n_tries
         bad_last_frame = None
         bad_qr_data = None
         iteration_counter = 0
         if self.is_video:
             # frame_from_end = 0
             for i in range(n_detection_tries):
+                actual_frame_from_end = frame_from_end + (i * detection_frame_step)
                 iteration_counter += 1
                 frame, local_meta = get_frame_to_process(
                     str(filename),
                     n_tries=n_tries,
                     return_metadata=True,
-                    reference_frame_position_from_end=frame_from_end,
+                    reference_frame_position_from_end=actual_frame_from_end,
                     step=frame_from_end_step,
                     purpose_log_text = purpose_log_text
                 )
@@ -589,8 +591,8 @@ class DoComputerVision:
                     try:
                         if debug_image_file_pattern:
                             debug_image_file_pattern = str(debug_image_file_pattern)
-                            debug_image_file_i = Path(debug_image_file_pattern.format(frame_from_end=frame_from_end, i=i, n_detection_tries=n_detection_tries, frame_from_end_step=frame_from_end_step))
-                            logger.debug(f"Trying frame {frame_from_end} from the end, i={i}, debug_image_file_i={debug_image_file_i}")
+                            debug_image_file_i = Path(debug_image_file_pattern.format(frame_from_end=actual_frame_from_end, i=i, n_detection_tries=n_detection_tries, frame_from_end_step=frame_from_end_step))
+                            logger.debug(f"Trying frame {actual_frame_from_end} from the end, i={i}, debug_image_file_i={debug_image_file_i}")
                         else:
                             debug_image_file_i = None
 
@@ -617,7 +619,7 @@ class DoComputerVision:
                     bad_qr_data = qr_data
                     if len(qr_data["incision_bboxes"]) > 0:
                         logger.debug(
-                            f"Found incision bbox in frame {frame_from_end} from the end. {incision_detection_threshold=}."
+                            f"Found incision bbox in frame {actual_frame_from_end} from the end. {incision_detection_threshold=}."
                         )
                         # just to save the image with bbox
                         _ = run_qr.bbox_info_extraction_from_frame(
