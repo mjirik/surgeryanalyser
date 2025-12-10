@@ -94,6 +94,21 @@ def make_bool_from_string(s: str) -> bool:
         else:
             return False
 
+import math
+
+def exponential_threshold(iteration, initial_threshold, decay_rate=0.1, lower_limit=0.):
+    """Calculates an exponentially decaying threshold.
+
+    Args:
+    initial_threshold: The starting threshold value.
+    decay_rate: The rate at which the threshold decays (a value between 0 and 1).
+    iteration: The current iteration number (starting from 0).
+
+    Returns:
+    The calculated threshold for the given iteration.
+    """
+    return (initial_threshold - lower_limit) * math.exp(-decay_rate * iteration) + lower_limit
+
 
 class DoComputerVision:
     def __init__(
@@ -138,6 +153,7 @@ class DoComputerVision:
         self.results = None
         self.force_tracking = force_tracking
         self.operating_area_bbox = None
+        self.median_operating_area_bbox = None
         self.is_video: bool = (
             False
             if Path(self.filename).suffix.lower()
@@ -212,20 +228,39 @@ class DoComputerVision:
             if profiler is not None:
                 logger.debug("Stopping profiler")
                 profiler.disable()
-                profiler.dump_stats(str(self.outputdir / "piglegcv_profiler_stats.prof"))
-                stats = pstats.Stats(profiler)
-                stats.strip_dirs().sort_stats("cumtime")
+                self.save_profiler_data(profiler)
+                # log profiler stats to logger
+                # logger.debug("\n" + "\n".join(stats.text.splitlines()[:30]))
 
-                with open(self.outputdir / "piglegcv_profiler_stats.txt", "w") as f:
-                    stats.stream = f
-                    stats.print_stats(30)
-                logger.debug("Profiler stats saved.")
             logger.debug("Work finished")
         except Exception as e:
             logger.error(traceback.format_exc())
         finally:
             logger.remove(self.logger_id)
         # self.logger_id = None
+
+    def save_profiler_data(self, profiler):
+        import pstats
+        profiler.dump_stats(str(self.outputdir / "piglegcv_profiler_stats.prof"))
+
+        stats = pstats.Stats(profiler)
+        stats.strip_dirs().sort_stats("cumtime")
+        with open(self.outputdir / "piglegcv_profiler_stats.txt", "w") as f:
+            stats.stream = f
+            stats.print_stats(50)
+        logger.debug("Profiler stats saved.")
+        import io
+        import sys
+        output = io.StringIO()
+        stats.stream = output
+        stats.print_stats(20)
+        stats_string = output.getvalue()
+        logger.debug(stats_string)
+        # stats_lines = stats_string.splitlines()
+        # # Now stats_lines is a list of strings, each representing a line of the stats output
+        # # You can iterate through stats_lines and log each line.
+        # for i, line in enumerate(stats_lines):
+        #     logger.debug(f"{i:03d} {line}")  # Replace with your logger.debug(line)
 
     def _make_sure_media_is_cropped(self):
         if self.filename_cropped is None:
@@ -274,7 +309,10 @@ class DoComputerVision:
         self._make_sure_media_is_cropped()
         logger.debug("Running image processing...")
         self.frame = self._get_frame_to_process_ideally_with_incision(
-            self.filename_cropped, n_tries=None
+            self.filename_cropped,
+            n_tries=10,
+            n_detection_tries=60,
+            purpose_log_text="run image processing"
         )
         # self.frame = get_frame_to_process(str(self.filename_cropped), n_tries=None)
         qr_data = run_qr.bbox_info_extraction_from_frame(
@@ -400,9 +438,11 @@ class DoComputerVision:
         logger.debug("Searching for frame at beginning")
         self.frame_at_beginning = self._get_frame_to_process_ideally_with_incision(
             self.filename_cropped,
-            n_tries=100,
+            n_tries=10,
+            n_detection_tries=60,
             frame_from_end=-1,
-            frame_from_end_step=-5
+            frame_from_end_step=-5,
+            purpose_log_text="find frame at beginning of video"
         )
         logger.debug(f"{type(self.frame_at_beginning)=}")
 
@@ -496,34 +536,76 @@ class DoComputerVision:
         return_qrdata=False,
         n_tries=None,
         debug_image_file: Optional[Path] = None,
+        debug_image_file_pattern: Optional[str] = None,
         frame_from_end_step: int = 5,
-        n_detection_tries: int = 180,
+        n_detection_tries: int = 90,
         frame_from_end: int = 0,
+        purpose_log_text: Optional[str] = None,
+        incision_detection_threshold_initial: float = 0.8,
+        incision_detection_threshold_exponential_decay: float = 0.01,
+        incision_detection_threshold_lower_limit: float = 0.5,
+
     ):
+        """ Get a frame from the video that ideally contains an incision.
+
+        :param filename: Path to the video file.
+        :param return_qrdata: If True, return the QR data along with the frame.
+        :param n_tries: Number of tries to get a frame. If None, try until a frame is found.
+        :param debug_image_file: If provided, save the debug image with detected bbox to this file.
+        :param debug_image_file_pattern: If provided, save the debug image with detected bbox to this file pattern. This will produce more images for each try.
+                                        The pattern should contain {frame_from_end}, {i}, {n_detection_tries}, {frame_from_end_step} placeholders.
+        :param frame_from_end_step: Step size to move back in frames when searching for incision.
+        :param n_detection_tries: Number of tries to detect incision. For each detection several the frame is looked n_tries times.
+        :param frame_from_end: Start
+
+        """
+        # wholen umber of iterations is n_detection_tries * n_tries
         # FPS=15, n_detection_tries * frame_from_end_step = 450 => cca 60 sec.
         # FPS=30, n_detection_tries * frame_from_end_step = 450 => cca 30 sec.
         # remember at least some frame for the case that no incision is found and we will run out of frames
+        detection_frame_step = frame_from_end_step * n_tries
         bad_last_frame = None
         bad_qr_data = None
+        iteration_counter = 0
         if self.is_video:
             # frame_from_end = 0
             for i in range(n_detection_tries):
+                actual_frame_from_end = frame_from_end + (i * detection_frame_step)
+                iteration_counter += 1
                 frame, local_meta = get_frame_to_process(
                     str(filename),
                     n_tries=n_tries,
                     return_metadata=True,
-                    reference_frame_position_from_end=frame_from_end,
-                    step=frame_from_end_step
+                    reference_frame_position_from_end=actual_frame_from_end,
+                    step=frame_from_end_step,
+                    purpose_log_text = purpose_log_text
                 )
                 if frame is None:
                     logger.debug("Frame is None.")
+                    # return at least some frame if possible
                     frame = bad_last_frame
                     qr_data = bad_qr_data
-                    break
+                    continue
                 else:
+                    at_least_some_frame = frame
                     try:
+                        if debug_image_file_pattern:
+                            debug_image_file_pattern = str(debug_image_file_pattern)
+                            debug_image_file_i = Path(debug_image_file_pattern.format(frame_from_end=actual_frame_from_end, i=i, n_detection_tries=n_detection_tries, frame_from_end_step=frame_from_end_step))
+                            logger.debug(f"Trying frame {actual_frame_from_end} from the end, i={i}, debug_image_file_i={debug_image_file_i}")
+                        else:
+                            debug_image_file_i = None
+
+                        incision_detection_threshold = exponential_threshold(
+                            iteration_counter,
+                            incision_detection_threshold_initial,
+                            incision_detection_threshold_exponential_decay,
+                            incision_detection_threshold_lower_limit
+                        )
                         qr_data = run_qr.bbox_info_extraction_from_frame(
-                            frame, device=self.device, debug_image_file=debug_image_file
+                            frame, device=self.device, debug_image_file=debug_image_file_i,
+                            incision_bbox_threshold=incision_detection_threshold
+
                         )
                     except IndexError as e:
                         logger.error(f"Error in bbox_info_extraction_from_frame: {e}")
@@ -537,7 +619,11 @@ class DoComputerVision:
                     bad_qr_data = qr_data
                     if len(qr_data["incision_bboxes"]) > 0:
                         logger.debug(
-                            f"Found incision bbox in frame {frame_from_end} from the end."
+                            f"Found incision bbox in frame {actual_frame_from_end} from the end. {incision_detection_threshold=}."
+                        )
+                        # just to save the image with bbox
+                        _ = run_qr.bbox_info_extraction_from_frame(
+                            frame, device=self.device, debug_image_file=debug_image_file
                         )
                         break
                     else:
@@ -547,7 +633,7 @@ class DoComputerVision:
             logger.debug(
                 f"Incision bbox not found. Using in frame {frame_from_end} frame from the end."
             )
-        else:
+        else: # is image
             frame, _ = get_frame_to_process(
                 str(filename),
                 n_tries=n_tries,
@@ -559,14 +645,30 @@ class DoComputerVision:
         else:
             return frame
 
-    def get_parameters_for_crop_rotate_rescale(self):
+    def get_parameters_for_crop_rotate_rescale(self, inision_detection_debug_images: bool = False):
         logger.debug(f"device={self.device}")
+        logger.debug("Getting parameters for crop, rotate and rescale...")
+
+        debug_image_file_pattern = None
+        if inision_detection_debug_images:
+            debug_image_file_pattern = str(
+                    self.outputdir/
+                    "_single_image_detector_results_full_size_try_{frame_from_end:07d}_from_end_{i}_of_{n_detection_tries}_step_{frame_from_end_step}.jpg"
+                )
+
+
+
         if self.is_video:
             self.frame, qr_data = self._get_frame_to_process_ideally_with_incision(
                 self.filename_original,
                 return_qrdata=True,
                 debug_image_file=self.outputdir
                 / "_single_image_detector_results_full_size.jpg",
+                debug_image_file_pattern=debug_image_file_pattern,
+                n_detection_tries=25, # try to look back for 20 seconds (15 FPS, each 5th frame)
+                n_tries=25,
+                frame_from_end_step=10,
+                purpose_log_text="get parameters for crop, rotate and rescale"
             )
         else:
             self.frame, local_meta = get_frame_to_process(self.filename_original)
@@ -731,6 +833,19 @@ class DoComputerVision:
         self.meta["stitch_split_s"] = []
 
         oa_bbox=self.operating_area_bbox
+        oa_median_bbox = None
+        try:
+            oa_median_bbox = run_report.get_median_bbox(
+                self.outputdir,
+                self.meta['qr_data']['pix_size'],
+            )
+            self.median_operating_area_bbox = oa_median_bbox
+        except Exception as e:
+            logger.debug(traceback.format_exc())
+            logger.warning(f"Error in get_median_bbox: {e}")
+
+        logger.debug(f"{oa_bbox=}")
+        logger.debug(f"{oa_median_bbox=}")
 
         if self.is_microsurgery:
             tool_index = [0,1,2]
@@ -754,7 +869,8 @@ class DoComputerVision:
                     plot_clusters=plot_clusters,
                     clusters_image_path=clusters_image_path,
                     trim_tool_indexes=trim_tool_index,
-                    oa_bbox=oa_bbox
+                    oa_bbox=oa_bbox,
+                    oa_median_bbox=oa_median_bbox
                 )
             except Exception as e:
                 logger.warning(traceback.format_exc())
@@ -946,15 +1062,44 @@ def add_dim_with_cumulative_number_of_empty_frames(X_px_fr: np.ndarray, empty_fr
 
 
 
-def _get_X_px_fr_more_tools(data: dict, oa_bbox: Union[list, None], tool_indexes:List[int], time_axis=2) -> np.ndarray:
+def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:List[int], oa_median_bbox: Optional[list]=None, time_axis:int=2) -> np.ndarray:
     # merge several tools
     X_px_fr_list = []
+    cumulative_length = 0
     for trim_tool_index in tool_indexes:
         X_px_fr_one_tool = _get_X_px_fr(data, oa_bbox, trim_tool_index)
         if X_px_fr_one_tool is not None:
             X_px_fr_list.append(X_px_fr_one_tool)
+            cumulative_length += len(X_px_fr_one_tool)
 
-    logger.debug(f"{len(X_px_fr_list)=}")
+    logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
+    logger.debug(f"total number of points of all tools in the operating area bbox: {cumulative_length=}")
+    if (cumulative_length < 10) and (oa_median_bbox is not None):
+        logger.warning("No more tban 10 points found in the tracks for the selected tools.")
+
+        X_px_fr_list = []
+        cumulative_length = 0
+        for trim_tool_index in tool_indexes:
+            X_px_fr_one_tool = _get_X_px_fr(data, oa_median_bbox, trim_tool_index)
+            if X_px_fr_one_tool is not None:
+                X_px_fr_list.append(X_px_fr_one_tool)
+                cumulative_length += len(X_px_fr_one_tool)
+
+        logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
+        logger.debug(f"total number of points found in median bbox: {cumulative_length=}")
+    if cumulative_length < 10:
+        logger.warning("No more tban 10 points found in the tracks for the selected tools.")
+
+        X_px_fr_list = []
+        cumulative_length = 0
+        for trim_tool_index in tool_indexes:
+            X_px_fr_one_tool = _get_X_px_fr(data, None, trim_tool_index)
+            if X_px_fr_one_tool is not None:
+                X_px_fr_list.append(X_px_fr_one_tool)
+                cumulative_length += len(X_px_fr_one_tool)
+
+        logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
+        logger.debug(f"total number of points of all tools everywhere: {cumulative_length=}")
     # merge the lists
     X_px_fr = np.concatenate(X_px_fr_list, axis=0)
     logger.debug(f"{X_px_fr.shape=}")
@@ -1003,6 +1148,11 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
             X_px_fr, oa_bbox
         )
         logger.debug(f"{X_px_fr.shape=}, {X_px_fr_tmp.shape=}")
+        if X_px_fr_tmp.shape[0] == 0:
+            logger.warning(
+                f"No points found in the operating area bbox for tool {tool_index}."
+            )
+            return None
         X_px_fr = X_px_fr_tmp
 
     return X_px_fr
@@ -1069,7 +1219,8 @@ def find_stitch_ends_in_tracks(
     metadata=None,
     plot_clusters=False,
     clusters_image_path: Optional[Path] = None,
-    oa_bbox=None
+    oa_bbox=None,
+    oa_median_bbox=None,
 ):
     """
     Find stitch ends in tracks.
@@ -1093,7 +1244,7 @@ def find_stitch_ends_in_tracks(
 
     logger.debug(f"find_stitch_end, {n_clusters=}, {outputdir=}")
     data, metadata, _ = _get_metadata(outputdir, metadata)
-    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, tool_indexes, time_axis=time_axis)
+    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, tool_indexes, time_axis=time_axis, oa_median_bbox = oa_median_bbox)
     # pix_size is in [m] to normaliza data a bit we use [mm]
     axis_normalization = np.asarray(
         [
@@ -1137,7 +1288,7 @@ def find_stitch_ends_in_tracks(
     # print(f"{splits_s=}")
     # print(f"{splits_frames=}")
 
-    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, trim_tool_indexes, time_axis=time_axis)
+    X_px_fr = _get_X_px_fr_more_tools(data, oa_bbox, trim_tool_indexes, time_axis=time_axis, oa_median_bbox=oa_median_bbox)
     X_px_fr = add_dim_with_cumulative_number_of_empty_frames(X_px_fr, empty_frames_axis=empty_frame_axis)
     X2 = X_px_fr * axis_normalization
 

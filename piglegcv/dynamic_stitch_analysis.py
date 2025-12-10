@@ -68,7 +68,7 @@ class Interpolation:
 
 
 class InstrumentDistance:
-    def __init__(self, frame_ids1, coordinates1, frame_ids2, coordinates2, fps:float, pix_size:float):
+    def __init__(self, frame_ids1, coordinates1, frame_ids2, coordinates2, fps:float, pix_size:float, instrument1_name:str="", instrument2_name:str=""):
         coordinates1 = np.asarray(coordinates1)
         coordinates2 = np.asarray(coordinates2)
         self.fps = fps
@@ -76,6 +76,9 @@ class InstrumentDistance:
         self.instrument2 = None
         self.min_frame = None
         self.max_frame = None
+        self.instrument1_name = instrument1_name
+        self.instrument2_name = instrument2_name
+
 
         # check the shape
         if len(frame_ids1) != len(coordinates1) or len(frame_ids2) != len(coordinates2):
@@ -97,9 +100,15 @@ class InstrumentDistance:
             logger.debug(f"coordinates1.shape={coordinates1.shape}, coordinates2.shape={coordinates2.shape}")
             logger.warning("Coordinates must have shape (n, 2), n > 2")
 
-    def average_distance(self, ignore_no_data_for_s=1):
-        if self.instrument1 is None or self.instrument2 is None:
-            return np.nan
+    def average_distance(self, ignore_no_data_for_s=1, distance_if_no_data=10):
+        if self.instrument1 is None:
+            logger.warning(f"Instrument {self.instrument1_name} has no data. Setting distance to {self.instrument2_name} to  infinity.")
+            return distance_if_no_data
+        if  self.instrument2 is None:
+            logger.warning(f"Instrument {self.instrument2_name} has no data. Setting distance to {self.instrument1_name} to  infinity.")
+            # return infty if no data
+            return distance_if_no_data
+            # return np.nan
 
         total_distance = 0
         valid_frame_count = 0

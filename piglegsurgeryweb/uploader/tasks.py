@@ -255,7 +255,12 @@ def run_processing(
         logger.error(traceback.format_exc())
         add_status_to_uploaded_file(serverfile, ok=False, status="Webapp error: " + str(err))
         logger.error("Processing finished in API with error")
-        logger.remove(logger_id)
+        try:
+            logger.remove(logger_id)
+        except ValueError as e:
+            logger.error(traceback.format_exc())
+            logger.error(f"Error removing logger during exception: {e}")
+
         raise err
 
 
@@ -659,7 +664,7 @@ def _add_row_to_spreadsheet(serverfile, absolute_uri, ith_annotation=0):
         try:
             google_spreadsheet_append(title="Pigleg Surgery Stats", creds=creds, data=df_novy)
         except Exception as e:
-            logger.error(f"Error saving data_row to XLSX: {str(e)}")
+            logger.error(f"Error saving data_row to google spreadsheet: {str(e)}")
             logger.error(traceback.format_exc())
             logger.debug(f"new_data_row={new_data_row}")
 

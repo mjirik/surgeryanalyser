@@ -57,6 +57,8 @@ def get_bboxes(
     img_results = None
     # if image_file is not None:
     logger.debug("saving single_image_detector result")
+    logger.debug(f"{image_file=}")
+
     img_results = single_image_model.show_result(
         img,
         bboxes,
@@ -104,7 +106,7 @@ def interpret_bboxes(
     bboxes: list,
     masks,
     calibration_micro_thr: float = 0.5,
-    ia_threshold: float = 0.8,
+    incision_bbox_threshold: float = 0.8,
     scene_area_threshold: float = 0.35,
 ):
     # -1: incision area
@@ -121,7 +123,7 @@ def interpret_bboxes(
     bboxes_incision_area = tools.sort_bboxes(bboxes_incision_area)
 
     bboxes_incision_area = tools.filter_bboxes_by_confidence(
-        bboxes_incision_area, ia_threshold
+        bboxes_incision_area, incision_bbox_threshold
     )
 
     scene_area_bboxes = tools.filter_bboxes_by_confidence(
@@ -196,7 +198,10 @@ def pixsize_from_bboxes_incision(bboxes_incision, incision_width_m=0.06):
 
 
 def bbox_info_extraction_from_frame(
-    img, qreader=None, device="cpu", debug_image_file: Optional[Path] = None
+    img, qreader=None, device="cpu", debug_image_file: Optional[Path] = None,
+        calibration_micro_thr: float = 0.5,
+        incision_bbox_threshold: float = 0.8,
+        scene_area_threshold: float = 0.35,
 ):
     img = np.asarray(img)
     width = img.shape[1]
@@ -212,7 +217,15 @@ def bbox_info_extraction_from_frame(
         qr_side_length,
         bboxes_calibration_micro,
         micro_side_length,
-    ) = interpret_bboxes(bboxes, masks)
+    ) = interpret_bboxes(
+        bboxes, masks,
+        calibration_micro_thr=calibration_micro_thr,
+        incision_bbox_threshold=incision_bbox_threshold,
+        scene_area_threshold=scene_area_threshold
+    )
+    # get best bbox and its confidence for incision area
+
+
 
     pix_sizes = []
     pix_sizes_weights = []

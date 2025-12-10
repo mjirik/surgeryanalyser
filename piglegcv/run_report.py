@@ -1344,7 +1344,6 @@ class MainReport:
 
         self.pix_size_m, self.is_qr_detected, self.scissors_frames = _qr_data_processing(meta)
 
-
         cap = cv2.VideoCapture(str(filename))
         self.frame_cnt = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         assert cap.isOpened(), f"Failed to load video file {filename}"
@@ -1547,30 +1546,14 @@ class MainReport:
             # frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
             #     outputdir, confidence_score_thr
             # )
+            half_size_of_bbox_m = 0.04
             self.extract_tracking_information(confidence_score_thr=confidence_score_thr)
 
+            # here i am not using the tracking information, maybe it could be redone
+            median_bbox = get_median_bbox(self.outputdir, self.pix_size_m, confidence_score_thr=confidence_score_thr,
+                                          half_size_of_bbox_m=half_size_of_bbox_m)
+
             # calculate median from data_pixels of first tool
-            data_pixels_0 = np.asarray(self.data_pixels[0])
-            logger.debug(f"{data_pixels_0.shape=}")
-            median_position = np.median(data_pixels_0, axis=0)
-            # create bbox from median_position
-
-            half_size_of_bbox_m = 0.04
-
-            # pixelsize = unit_conversion(pix_size_m, "m", unit)
-            half_size_of_bbox_px = half_size_of_bbox_m / (self.pix_size_m / 1.0)
-            logger.debug(f"{half_size_of_bbox_px=}, {half_size_of_bbox_m=}, {self.pix_size_m=}, {output_video_resize_factor=}")
-
-            # type of median_position is np.array
-            if (type(median_position) == np.ndarray) and len(median_position) > 1:
-                median_bbox = np.array([
-                    median_position[0] - half_size_of_bbox_px,
-                    median_position[1] - half_size_of_bbox_px,
-                    median_position[0] + half_size_of_bbox_px,
-                    median_position[1] + half_size_of_bbox_px,
-                ])
-            else:
-                median_bbox = None
             logger.debug(f"{median_bbox=}")
             relative_presence_median = RelativePresenceInOperatingArea(median_bbox, bbox_linecolor_rgb=median_oa_bbox_linecolor_rgb[::-1], name="median area presence")
 
@@ -1773,6 +1756,8 @@ class MainReport:
 
         for (name, cut_id, start_frame, stop_frame) in video_parts:
             part_duration_s = (stop_frame - start_frame) / self.fps
+            if part_duration_s < 2:
+                logger.warning("part_duration_s < 2s")
             track_points_general = {
                 "frame_ids": self.frame_ids,
                 "data_pixels": self.data_pixels,
@@ -1791,13 +1776,19 @@ class MainReport:
                 tpvp["frame_ids"][tool_id2], tpvp["data_pixels"][tool_id2],
                 self.fps,
                 pix_size=self.pix_size_m,
+                instrument1_name=str(tool_id1),
+                instrument2_name=str(tool_id2),
             )
+            if part_duration_s == 0:
+                needle_holder_to_forceps_below_threshold_relative = 0
+            else:
+                needle_holder_to_forceps_below_threshold_relative = dynamic_analysis.seconds_below_threshold(threshold_m)  / part_duration_s
             data_results[
                 f"Needle holder to forceps {long_name.lower()} average distance [m]"] = dynamic_analysis.average_distance()
             data_results[
                 f"Needle holder to forceps {long_name.lower()} below threshold [s]"] = dynamic_analysis.seconds_below_threshold(threshold_m)
             data_results[
-                f"Needle holder to forceps {long_name.lower()} below threshold [%]"] = 100 * (dynamic_analysis.seconds_below_threshold(threshold_m) / part_duration_s)
+                f"Needle holder to forceps {long_name.lower()} below threshold [%]"] = 100 * needle_holder_to_forceps_below_threshold_relative
 
     def get_video_parts_parameters(self, cut_frames:List[int], include_whole_video=False)->List[Tuple[str, int, int, int]]:
         # # find distances between two tools
@@ -2200,6 +2191,38 @@ def track_derivation_and_normalization(
     # T = np.sum(dt)
     return ds, dt, t
 
+
+def get_median_bbox(
+        outputdir:Path, pix_size_m:float, confidence_score_thr: float=0.0,
+        half_size_of_bbox_m = 0.04
+):
+    outputdir = str(outputdir)
+    frame_ids, data_pixels, sort_data = convert_track_bboxes_to_center_points(
+        outputdir, confidence_score_thr
+    )
+
+
+    # calculate median from data_pixels of first tool
+    data_pixels_0 = np.asarray(data_pixels[0])
+    logger.debug(f"{data_pixels_0.shape=}")
+    median_position = np.median(data_pixels_0, axis=0)
+    # create bbox from median_position
+
+
+    # pixelsize = unit_conversion(pix_size_m, "m", unit)
+    half_size_of_bbox_px = half_size_of_bbox_m / (pix_size_m / 1.0)
+
+    # type of median_position is np.array
+    if (type(median_position) == np.ndarray) and len(median_position) > 1:
+        median_bbox = np.array([
+            median_position[0] - half_size_of_bbox_px,
+            median_position[1] - half_size_of_bbox_px,
+            median_position[0] + half_size_of_bbox_px,
+            median_position[1] + half_size_of_bbox_px,
+        ])
+    else:
+        median_bbox = None
+    return median_bbox
 
 if __name__ == "__main__":
     main_report = MainReport(sys.argv[1], sys.argv[2], meta={})

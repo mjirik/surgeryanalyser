@@ -24,6 +24,7 @@ services:
       #      - "C:/Users/Jirik/projects/piglegsurgery:/webapps/piglegsurgery"
     networks:
       - piglegnet
+    restart: unless-stopped
 
   piglegcv:
     container_name: "${PIGLEG_IMAGE_PREFIX}piglegcv"
@@ -47,6 +48,7 @@ services:
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=0,1
+    restart: unless-stopped
 #    deploy:
 #      resources:
 #        reservations:
@@ -73,6 +75,7 @@ services:
       - certbot
     networks:
       - piglegnet
+    restart: unless-stopped
 
   certbot:
     image: certbot/certbot:latest
@@ -85,6 +88,7 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - piglegnet
+    restart: unless-stopped
 
 
 volumes:

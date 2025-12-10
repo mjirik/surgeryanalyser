@@ -596,6 +596,7 @@ def web_report(request, filename_hash: str, review_edit_hash: Optional[str] = No
             # annotation_filename = Path(serverfile.outputdir) / f"annotation_{review_idx}.json"
             annotation_filename = Path(serverfile.outputdir) / f"annotation_{new_review_idx}.json"
             logger.debug(f"{annotation_filename=}")
+            annotation_filename.parent.mkdir(parents=True, exist_ok=True)
             from django.core.serializers import serialize
             # dump as json file
             with open(annotation_filename, "w") as f:
@@ -646,7 +647,7 @@ def _find_video_for_annotation(student_id:Optional[int] = None):
     """
 
     now = timezone.now()
-    thirty_minutes_ago = now - timedelta(minutes=30)
+    thirty_minutes_ago = now - timedelta(minutes=20)
     today = timezone.now().date()
 
 

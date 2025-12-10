@@ -159,6 +159,7 @@ def get_frame_to_process(
     n_tries=None,
     reference_frame_position_from_end=0,
     step:int = 1,
+    purpose_log_text: Optional[str] = None
 ):
     """Get last frame from video or image.
     reference_frame_position_from_end: int we start with i-th frame position from the end
@@ -166,21 +167,24 @@ def get_frame_to_process(
     assert Path(filename).exists()
     if Path(filename).suffix.lower() in (".png", ".jpg", ".jpeg", ".tif", ".tiff"):
         # image
-        img = cv2.imread(str(filename))
+        imag = cv2.imread(str(filename))
         if return_metadata:
-            return np.asarray(img), {"filename_full": str(filename)}
+            return np.asarray(imag), {"filename_full": str(filename)}
 
-        return np.asarray(img)
+        return np.asarray(imag)
     else:
         cap = cv2.VideoCapture(str(filename))
         totalframecount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        logger.debug(f"Total frame count: {totalframecount}")
+        logger.debug(f"FPS: {fps}")
         if reference_frame_position_from_end >= 0:
             last_frame = totalframecount - 1
         else:
             last_frame = 0
         logger.debug(f"last_frame/reference_frame_position_from_end/step: {last_frame} / {reference_frame_position_from_end=} / {step=}")
         cap.set(cv2.CAP_PROP_POS_FRAMES, last_frame - reference_frame_position_from_end)
-        ret, img = cap.read()
+        ret, imag = cap.read()
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         if n_tries is None:
             n_tries = totalframecount
@@ -196,13 +200,25 @@ def get_frame_to_process(
                 cv2.CAP_PROP_POS_FRAMES,
                 last_frame - reference_frame_position_from_end - 1,
             )
-            ret, img = cap.read()
+            ret, imag = cap.read()
             reference_frame_position_from_end += step
+
+
+        if purpose_log_text is not None:
+            msg = f"For {purpose_log_text} "
+        else:
+            msg = ""
+        if ret is None:
+            msg += "not "
+        msg += "found frame."
+        logger.debug(msg)
+
+        logger.debug(f"  frame: {last_frame - reference_frame_position_from_end},  {last_frame=}, {reference_frame_position_from_end=}")
         cap.release()
         if not ret:
             logger.error("Last frame capture error")
-            img = None
-        # print(img.shape)
+            imag = None
+        # print(imag.shape)
         # plt.imshow(img)
         # plt.show()
         # exit()
@@ -213,10 +229,11 @@ def get_frame_to_process(
             "frame_count": totalframecount,
             "reference_frame_position_from_end": int(reference_frame_position_from_end),
         }
+    img_array_or_null = None if imag is None else np.asarray(imag)
     if return_metadata:
-        return np.asarray(img), metadata
+        return img_array_or_null, metadata
     else:
-        return np.asarray(img)
+        return img_array_or_null
 
 
 def do_incision_detection_by_tracks(img, outputdir, roi, needle_holder_id, canny_sigma):
