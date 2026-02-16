@@ -216,7 +216,7 @@ def get_frame_to_process(
         logger.debug(f"  frame: {last_frame - reference_frame_position_from_end},  {last_frame=}, {reference_frame_position_from_end=}")
         cap.release()
         if not ret:
-            logger.error("Last frame capture error")
+            logger.warning("Last frame capture error")
             imag = None
         # print(imag.shape)
         # plt.imshow(img)
