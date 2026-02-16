@@ -168,7 +168,7 @@ def google_spreadsheet_append(
 
     # --- update hlavičky pokud se změnila ---
     if header != all_cols:
-        sheet_instance.update([all_cols], range_name="A1")
+        sheet_instance.update("A1", [all_cols])
 
     # --- přidat nové řádky ---
     sheet_instance.append_rows(df_out2.values.tolist(), value_input_option="RAW")
