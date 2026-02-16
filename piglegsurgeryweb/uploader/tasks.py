@@ -253,13 +253,13 @@ def run_processing(
     except Exception as err:
         logger.error(err)
         logger.error(traceback.format_exc())
-        add_status_to_uploaded_file(serverfile, ok=False, status="Webapp error: " + str(err))
         logger.error("Processing finished in API with error")
+        add_status_to_uploaded_file(serverfile, ok=False, status="Webapp error: " + str(err))
         try:
             logger.remove(logger_id)
         except ValueError as e:
-            logger.error(traceback.format_exc())
-            logger.error(f"Error removing logger during exception: {e}")
+            logger.warning(traceback.format_exc())
+            logger.warning(f"Error removing logger during exception: {e}")
 
         raise err
 

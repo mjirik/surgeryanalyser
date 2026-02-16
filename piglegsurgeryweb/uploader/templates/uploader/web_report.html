@@ -314,7 +314,7 @@
                                                 poster="{{ videofile_url }}.jpg"
                                                 class="my-video"
                                         >
-                                            <source src="{% url 'uploader:stream_ith_video' serverfile.hash 0 %}"
+                                            <source src="{% url 'uploader:stream_ith_video' serverfile.hash forloop.counter0 %}"
                                                     type="video/mp4">
                                             {#                                    Your browser does not support the video tag.#}
                                             {#                                <source src="{{ videofile_url }}" type="video/mp4"/>#}

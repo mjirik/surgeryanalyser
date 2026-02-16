@@ -1199,9 +1199,22 @@ def download_original_video(request, uploadedfile_hash: str, ith_video:Optional[
         video_path = uploaded_file.mediafile.path
     else:
         # remove starting "_" from the video name
-        video_list = [ element for element in Path(uploaded_file.outputdir).glob("*.mp4") if not element.name.startswith("_")]
+        video_list = [
+            element
+            for element in Path(uploaded_file.outputdir).glob("*.mp4")
+            if not element.name.startswith("__")
+        ]
         logger.debug(f"{video_list=}")
-        video_path = str(video_list[ith_video])
+        if len(video_list) > ith_video:
+            video_path = str(video_list[ith_video])
+        else:
+            msg = f"Video index {ith_video} out of range for {video_list=}"
+            logger.error(msg)
+            # django message
+            from django.contrib import messages
+            messages.debug(request, msg)
+
+            raise Http404()
 
     logger.debug(f"{video_path=}")
     if not os.path.exists(video_path):
@@ -1226,9 +1239,17 @@ def stream_video(request, uploadedfile_hash:str, ith_video:Optional[int]=None):
 
     else:
         # remove starting "_" from the video name
-        video_list = [ element for element in Path(uploaded_file.outputdir).glob("*.mp4") if not element.name.startswith("_")]
+        video_list = [
+            element
+            for element in Path(uploaded_file.outputdir).glob("*.mp4")
+            if not element.name.startswith("__")
+        ]
         logger.debug(f"{video_list=}")
-        video_path = str(video_list[ith_video])
+        if len(video_list) > ith_video:
+            video_path = str(video_list[ith_video])
+        else:
+            logger.error(f"Video index {ith_video} out of range for {video_list=}")
+            raise Http404()
 
     logger.debug(f"{video_path=}")
     if not os.path.exists(video_path):
