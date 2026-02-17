@@ -7,6 +7,7 @@ SOCKFILE=/webapps/piglegsurgery/docker/run/gunicorn.sock  # we will communicte u
 #USER=scaffanweb                                        # the user to run as
 #GROUP=webapps                                     # the group to run as
 NUM_WORKERS=5                                     # how many worker processes should Gunicorn spawn
+NUM_THREADS=3                                     # how many threads should each worker process use
 DJANGO_SETTINGS_MODULE=piglegsurgeryweb.settings             # which settings file should Django use
 DJANGO_WSGI_MODULE=piglegsurgeryweb.wsgi                     # WSGI module name
 CONDA_ENV=piglegsurgery
@@ -32,6 +33,7 @@ test -d $RUNDIR || mkdir -p $RUNDIR
 exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --name $NAME \
   --workers $NUM_WORKERS \
+  --threads $NUM_THREADS \
 #  --user=$USER --group=$GROUP \
   --bind=unix:$SOCKFILE \
   --log-level=debug \
