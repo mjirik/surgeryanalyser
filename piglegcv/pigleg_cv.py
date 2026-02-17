@@ -1101,6 +1101,9 @@ def _get_X_px_fr_more_tools(data: dict, oa_bbox: Optional[list], tool_indexes:Li
         logger.debug(f"number of tools with points: {len(X_px_fr_list)=}")
         logger.debug(f"total number of points of all tools everywhere: {cumulative_length=}")
     # merge the lists
+    if len(X_px_fr_list) == 0:
+        logger.warning("No points found in the tracks for the selected tools.")
+        return np.array([])
     X_px_fr = np.concatenate(X_px_fr_list, axis=0)
     logger.debug(f"{X_px_fr.shape=}")
     # log sample of x_px_fr_list
@@ -1133,9 +1136,9 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
         return None
 
     if X_px.ndim < 2:
-        logger.error(f"{X_px.shape=}")
+        logger.warning(f"{X_px.shape=}")
         return None
-    if time_fr.ndim < 2:
+    if time_fr.warning < 2:
         logger.error(f"{time_fr.shape}")
         return None
 
