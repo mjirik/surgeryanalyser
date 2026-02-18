@@ -1138,8 +1138,8 @@ def _get_X_px_fr(data:dict, oa_bbox:Optional[list], tool_index:int) -> np.ndarra
     if X_px.ndim < 2:
         logger.warning(f"{X_px.shape=}")
         return None
-    if time_fr.warning < 2:
-        logger.error(f"{time_fr.shape}")
+    if time_fr.ndim < 2:
+        logger.warning(f"{time_fr.shape}")
         return None
 
     X_px_fr = np.concatenate([X_px, time_fr], axis=1)
