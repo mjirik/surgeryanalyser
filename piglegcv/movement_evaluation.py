@@ -66,7 +66,9 @@ class MovementEvaluation:
         for stitch_id, prediction in zip(stitch_ids, predictions):
             # limit prediction to range  [0, 5]
             prediction = max(0, min(5, prediction))
-            additional_results[f"AI movement evaluation stitch {stitch_id} [%]"] = 20. * prediction
+            prediction_percent = 20. * prediction
+            logger.debug(f"Prediction for stitch {stitch_id}: {prediction_percent} [%]")
+            additional_results[f"AI movement evaluation stitch {stitch_id} [%]"] = prediction_percent
         return additional_results
 
 
